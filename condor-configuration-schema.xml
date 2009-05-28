@@ -26,14 +26,14 @@
 
       <method name="AddGroup">
          <arg name="groupName" dir="I" type="sstr"/>
-         <arg name="groupQuery" dir="I" type="lstr"/>
+         <arg name="groupDefinition" dir="I" type="map"/>
       </method>
 
       <method name="ModifyGroup">
          <arg name="groupId" dir="I" type="uint32"/>
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="groupName" dir="I" type="sstr"/>
-         <arg name="groupQuery" dir="I" type="lstr"/>
+         <arg name="groupDefinition" dir="I" type="map"/>
       </method>
 
       <method name="GetFeatureList">
@@ -49,9 +49,9 @@
       <method name="AddFeature">
          <arg name="featureName" dir="I" type="sstr"/>
          <arg name="featureAttrs" dir="I" type="map"/>
-         <arg name="includedFeatures" dir="I" type="lstr"/>
-         <arg name="featureConflicts" dir="I" type="lstr"/>
-         <arg name="featureDepends" dir="I" type="lstr"/>
+         <arg name="includedFeatures" dir="I" type="map"/>
+         <arg name="featureConflicts" dir="I" type="map"/>
+         <arg name="featureDepends" dir="I" type="map"/>
       </method>
 
       <method name="ModifyFeature">
@@ -59,29 +59,29 @@
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="featureName" dir="I" type="sstr"/>
          <arg name="featureAttrs" dir="I" type="map"/>
-         <arg name="includedFeatures" dir="I" type="lstr"/>
-         <arg name="featureConflicts" dir="I" type="lstr"/>
-         <arg name="featureDepends" dir="I" type="lstr"/>
+         <arg name="includedFeatures" dir="I" type="map"/>
+         <arg name="featureConflicts" dir="I" type="map"/>
+         <arg name="featureDepends" dir="I" type="map"/>
       </method>
 
-      <method name="AddPoolConfiguration">
+      <method name="AddConfiguration">
          <arg name="configName" dir="I" type="sstr"/>
          <arg name="configFeatures" dir="I" type="map"/>
          <arg name="customAttrs" dir="I" type="map"/>
-         <arg name="defaultFeatures" dir="I" type="lstr"/>
+         <arg name="defaultFeatures" dir="I" type="map"/>
       </method>
 
-      <method name="ModifyPoolConfiguration">
+      <method name="ModifyConfiguration">
          <arg name="configId" dir="I" type="uint32"/>
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="configName" dir="I" type="sstr"/>
          <arg name="groupId" dir="I" type="uint32"/>
-         <arg name="featureIds" dir="I" type="lstr"/>
+         <arg name="featureIds" dir="I" type="map"/>
          <arg name="params" dir="I" type="map"/>
-         <arg name="defaultFeatures" dir="I" type="sstr"/>
+         <arg name="defaultFeatures" dir="I" type="map"/>
       </method>
 
-      <method name="ActivatePoolConfiguration">
+      <method name="ActivateConfiguration">
          <arg name="configId" dir="I" type="uint32"/>
       </method>
 
@@ -97,6 +97,11 @@
          <arg name="nodePool" dir="I" type="sstr"/>
       </method>
 
+      <method name="GetAttr">
+         <arg name="attrName" dir="I" type="sstr"/>
+         <arg name="attrObj" dir="O" type="objId"/>
+      </method>
+
       <method name="AddAttr">
          <arg name="attrName" dir="I" type="sstr"/>
          <arg name="attrType" dir="I" type="uint8"/>
@@ -106,8 +111,8 @@
          <arg name="attrMustNotBeNull" dir="I" type="bool"/>
          <arg name="attrLevel" dir="I" type="uint8"/>
          <arg name="attrRequiresRestart" dir="I" type="bool"/>
-         <arg name="attrDependsOn" dir="I" type="lstr"/>
-         <arg name="attrConflictsWith" dir="I" type="lstr"/>
+         <arg name="attrDependsOn" dir="I" type="map"/>
+         <arg name="attrConflictsWith" dir="I" type="map"/>
       </method>
 
       <method name="ModifyAttr">
@@ -120,8 +125,8 @@
          <arg name="attrMustNotBeNull" dir="I" type="bool"/>
          <arg name="attrLevel" dir="I" type="uint8"/>
          <arg name="attrRequiresRestart" dir="I" type="bool"/>
-         <arg name="attrDependsOn" dir="I" type="lstr"/>
-         <arg name="attrConflictsWith" dir="I" type="lstr"/>
+         <arg name="attrDependsOn" dir="I" type="map"/>
+         <arg name="attrConflictsWith" dir="I" type="map"/>
       </method>
    </class>
 
@@ -148,7 +153,7 @@
    </class>
 -->
 
-   <class name="CondorPoolConfig">
+   <class name="CondorConfig">
       <property name="configId" type="uint32" index="y"/>
       <property name="configName" type="sstr"/>
       <property name="configVersion" type="uint32"/>
@@ -157,7 +162,7 @@
                 desc="map(groupId, featureList)"/>
       <property name="customAttrs" type="map"
                 desc="map(groupId, map(param, value))"/>
-      <property name="defaultFeatures" type="lstr"
+      <property name="defaultFeatures" type="map"
                 desc="Features to be applied to nodes not explicitly defined"/>
 
       <method name="GetConfigId">
@@ -206,12 +211,12 @@
       </method>
 
       <method name="GetDefaultFeatures">
-         <arg name="defaultFeatures" dir="O" type="lstr"/>
+         <arg name="defaultFeatures" dir="O" type="map"/>
       </method>
 
       <method name="ModifyDefaultFeatures">
          <arg name="isDelete" dir="I" type="bool"/>
-         <arg name="defaultFeatures" dir="I" type="lstr"/>
+         <arg name="defaultFeatures" dir="I" type="map"/>
       </method>
    </class>
 
@@ -219,9 +224,9 @@
       <property name="featureId" type="uint32" index="y"/>
       <property name="featureName" type="sstr"/>
       <property name="attrList" type="map"/>
-      <property name="featureList" type="lstr"/>
-      <property name="conflictsWith" type="lstr"/>
-      <property name="dependsOn" type="lstr"/>
+      <property name="featureList" type="map"/>
+      <property name="conflictsWith" type="map"/>
+      <property name="dependsOn" type="map"/>
 
       <method name="GetFeatureId">
          <arg name="featureId" dir="O" type="uint32"/>
@@ -236,7 +241,7 @@
       </method>
 
       <method name="ModifyFeatureList">
-         <arg name="featureList" dir="I" type="lstr"/>
+         <arg name="featureList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
 
@@ -246,12 +251,12 @@
       </method>
 
       <method name="ModifyConflicts">
-         <arg name="conflictList" dir="I" type="lstr"/>
+         <arg name="conflictList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
 
       <method name="ModifyDepends">
-         <arg name="dependList" dir="I" type="lstr"/>
+         <arg name="dependList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
    </class>
@@ -261,7 +266,7 @@
       <property name="groupName" type="sstr"/>
 
       <method name="GetIncludedNodes">
-         <arg name="nodeList" dir="O" type="lstr"
+         <arg name="nodeList" dir="O" type="map"
               desc="The names of the nodes part of this group"/>
       </method>
 
@@ -315,8 +320,8 @@
       <property name="mustNotBeNull" type="bool"/>
       <property name="level" type="uint8"/>
       <property name="requiresRestart" type="bool"/>
-      <property name="dependsOn" type="lstr"/>
-      <property name="conflictsWith" type="lstr"/>
+      <property name="dependsOn" type="map"/>
+      <property name="conflictsWith" type="map"/>
 
       <method name="GetName">
          <arg name="attrName" dir="O" type="sstr"/>
@@ -383,12 +388,12 @@
       </method>
 
       <method name="ModifyDepends">
-         <arg name="attrDepends" dir="I" type="lstr"/>
+         <arg name="attrDepends" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
 
       <method name="ModifyConflicts">
-         <arg name="attrConflicts" dir="I" type="lstr"/>
+         <arg name="attrConflicts" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
    </class>
