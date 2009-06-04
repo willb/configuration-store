@@ -103,6 +103,10 @@
          <arg name="configId" dir="I" type="uint32"/>
       </method>
 
+      <method name="GetNodeList">
+         <arg name="nodeList" dir="O" type="map"/>
+      </method>
+
       <method name="AddNode">
          <arg name="nodeName" dir="I" type="sstr"/>
          <arg name="nodePool" dir="I" type="sstr"/>
