@@ -20,20 +20,38 @@
 
    <class name="CondorConfigStore">
       <method name="GetGroup">
-         <arg name="groupId" dir="I" type="uint32"/>
+         <arg name="groupQuery" dir="I" type="map"
+              desc="A query that defines the group desired.  Valid values for
+                    the key are 'ID', 'Name', or 'Query'.  'ID' keys should
+                    contain a specific GroupId as its value, 'Name' keys should
+                    contain a Group Name as its value, and 'Query' keys should
+                    contain a Query that the desired group uses to define
+                    the members of the goup"/>
          <arg name="groupObj" dir="O" type="objId"/>
       </method>
 
       <method name="AddGroup">
          <arg name="groupName" dir="I" type="sstr"/>
-         <arg name="groupDefinition" dir="I" type="map"/>
+         <arg name="groupDefinition" dir="I" type="map"
+              desc="The definition of members for the group.  Valid values for
+                    the map are 'NodeList' and 'Query'.  'NodeList' keys
+                    should contain a map of nodes to include in the group
+                    with the key being the priority, and the value the
+                    node name (1:name).  'Query' keys should contain a
+                    query string"/>
       </method>
 
       <method name="ModifyGroup">
          <arg name="groupId" dir="I" type="uint32"/>
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="groupName" dir="I" type="sstr"/>
-         <arg name="groupDefinition" dir="I" type="map"/>
+         <arg name="groupDefinition" dir="I" type="map"
+              desc="The definition of members for the group.  Valid values for
+                    the map are 'NodeList' and 'Query'.  'NodeList' keys
+                    should contain a map of nodes to include in the group
+                    with the key being the priority, and the value the
+                    node name (1:name).  'Query' keys should contain a
+                    query string"/>
       </method>
 
       <method name="GetFeatureList">
