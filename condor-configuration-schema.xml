@@ -305,15 +305,15 @@
       </method>
 
       <method name="GetFeatures">
-         <arg name="nodeFeatures" dir="O" type="map"/>
+         <arg name="groupFeatures" dir="O" type="map"/>
       </method>
 
       <method name="AddFeatures">
-         <arg name="nodeFeatures" dir="I" type="map"/>
+         <arg name="groupFeatures" dir="I" type="map"/>
       </method>
 
       <method name="RemoveFeatures">
-         <arg name="nodeFeatures" dir="I" type="map"/>
+         <arg name="groupFeatures" dir="I" type="map"/>
       </method>
 
       <method name="GetAttrs">
