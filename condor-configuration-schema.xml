@@ -54,19 +54,25 @@
                     query string"/>
       </method>
 
+<!--
       <method name="GetFeatureList">
          <arg name="featureList" dir="O" type="map"
               desc="Returns a map(featureId, featureName)"/>
       </method>
+-->
 
-      <method name="GetFeatureInfo">
-         <arg name="featureId" dir="I" type="uint32"/>
-         <arg name="featureInfo" dir="O" type="objId"/>
+      <method name="GetFeature">
+         <arg name="featureQuery" dir="I" type="map"
+              desc="A query that defines the feature desired.  Valid values for
+                    the key are 'ID' or 'Name'.  'ID' keys should contain a
+                    specific FeatureId as its value,  whereas 'Name' keys
+                    should contain a Feature Name as its value"/>
+         <arg name="featureObj" dir="O" type="objId"/>
       </method>
 
       <method name="AddFeature">
          <arg name="featureName" dir="I" type="sstr"/>
-         <arg name="featureAttrs" dir="I" type="map"/>
+         <arg name="featureParams" dir="I" type="map"/>
          <arg name="includedFeatures" dir="I" type="map"/>
          <arg name="featureConflicts" dir="I" type="map"/>
          <arg name="featureDepends" dir="I" type="map"/>
@@ -76,16 +82,27 @@
          <arg name="featureId" dir="I" type="uint32"/>
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="featureName" dir="I" type="sstr"/>
-         <arg name="featureAttrs" dir="I" type="map"/>
+         <arg name="featureParams" dir="I" type="map"/>
          <arg name="includedFeatures" dir="I" type="map"/>
          <arg name="featureConflicts" dir="I" type="map"/>
          <arg name="featureDepends" dir="I" type="map"/>
       </method>
 
+      <method name="GetConfiguration">
+         <arg name="configQuery" dir="I" type="map"
+              desc="A query that defines the configuration desired.  Valid
+                    values for the key are 'ID' or 'Name'.  'ID' keys should
+                    contain a specific ConfigurationId as its value,  whereas
+                    'Name' keys should contain a Configuration Name as its
+                    value"/>
+         <arg name="configObj" dir="O" type="objId"/>
+      </method>
+
+<!--
       <method name="AddConfiguration">
          <arg name="configName" dir="I" type="sstr"/>
          <arg name="configFeatures" dir="I" type="map"/>
-         <arg name="customAttrs" dir="I" type="map"/>
+         <arg name="customParams" dir="I" type="map"/>
          <arg name="defaultFeatures" dir="I" type="map"/>
       </method>
 
@@ -98,9 +115,31 @@
          <arg name="params" dir="I" type="map"/>
          <arg name="defaultFeatures" dir="I" type="map"/>
       </method>
+-->
+
+      <method name="SaveConfiguration">
+         <arg name="configName" dir="I" type="sstr"
+              desc="A name for this configuration.  A blank name will result
+                    in the store creating a name"/>
+         <arg name="configId" dir="O" type="uint32"/>
+         <arg name="failureReason" dir="O" type="map"
+              desc="A map containing a list of attributes for groups that must
+                    be set for the configuration to be valid, as well as the
+                    Id for the last valid configuration"/>
+      </method>
+
+      <method name="ChangeConfiguration">
+         <arg nane="configId" dir="I" type="uint32"/>
+      </method>
 
       <method name="ActivateConfiguration">
+         <arg name="failureReason" dir="O" type="map"
+              desc="A map containing a list of attributes for groups that must
+                    be set for the configuration to be valid, as well as the
+                    Id for the last valid configuration"/>
+<!--
          <arg name="configId" dir="I" type="uint32"/>
+-->
       </method>
 
       <method name="GetNodeList">
@@ -119,36 +158,36 @@
          <arg name="nodePool" dir="I" type="sstr"/>
       </method>
 
-      <method name="GetAttr">
-         <arg name="attrName" dir="I" type="sstr"/>
-         <arg name="attrObj" dir="O" type="objId"/>
+      <method name="GetParam">
+         <arg name="paramName" dir="I" type="sstr"/>
+         <arg name="paramObj" dir="O" type="objId"/>
       </method>
 
-      <method name="AddAttr">
-         <arg name="attrName" dir="I" type="sstr"/>
-         <arg name="attrType" dir="I" type="uint8"/>
-         <arg name="attrValue" dir="I" type="lstr"/>
-         <arg name="attrDefault" dir="I" type="lstr"/>
-         <arg name="attrDesc" dir="I" type="lstr"/>
-         <arg name="attrMustNotBeNull" dir="I" type="bool"/>
-         <arg name="attrLevel" dir="I" type="uint8"/>
-         <arg name="attrRequiresRestart" dir="I" type="bool"/>
-         <arg name="attrDependsOn" dir="I" type="map"/>
-         <arg name="attrConflictsWith" dir="I" type="map"/>
+      <method name="AddParam">
+         <arg name="paramName" dir="I" type="sstr"/>
+         <arg name="paramType" dir="I" type="uint8"/>
+         <arg name="paramValue" dir="I" type="lstr"/>
+         <arg name="paramDefault" dir="I" type="lstr"/>
+         <arg name="paramDesc" dir="I" type="lstr"/>
+         <arg name="paramMustNotBeNull" dir="I" type="bool"/>
+         <arg name="paramLevel" dir="I" type="uint8"/>
+         <arg name="paramRequiresRestart" dir="I" type="bool"/>
+         <arg name="paramDependsOn" dir="I" type="map"/>
+         <arg name="paramConflictsWith" dir="I" type="map"/>
       </method>
 
-      <method name="ModifyAttr">
-         <arg name="attrName" dir="I" type="sstr"/>
+      <method name="ModifyParam">
+         <arg name="paramName" dir="I" type="sstr"/>
          <arg name="isDelete" dir="I" type="bool"/>
-         <arg name="attrType" dir="I" type="uint8"/>
-         <arg name="attrValue" dir="I" type="lstr"/>
-         <arg name="attrDefault" dir="I" type="lstr"/>
-         <arg name="attrDesc" dir="I" type="lstr"/>
-         <arg name="attrMustNotBeNull" dir="I" type="bool"/>
-         <arg name="attrLevel" dir="I" type="uint8"/>
-         <arg name="attrRequiresRestart" dir="I" type="bool"/>
-         <arg name="attrDependsOn" dir="I" type="map"/>
-         <arg name="attrConflictsWith" dir="I" type="map"/>
+         <arg name="paramType" dir="I" type="uint8"/>
+         <arg name="paramValue" dir="I" type="lstr"/>
+         <arg name="paramDefault" dir="I" type="lstr"/>
+         <arg name="paramDesc" dir="I" type="lstr"/>
+         <arg name="paramMustNotBeNull" dir="I" type="bool"/>
+         <arg name="paramLevel" dir="I" type="uint8"/>
+         <arg name="paramRequiresRestart" dir="I" type="bool"/>
+         <arg name="paramDependsOn" dir="I" type="map"/>
+         <arg name="paramConflictsWith" dir="I" type="map"/>
       </method>
    </class>
 
@@ -182,7 +221,7 @@
       <property name="isActive" type="bool"/>
       <property name="featureList" type="map"
                 desc="map(groupId, featureList)"/>
-      <property name="customAttrs" type="map"
+      <property name="customParams" type="map"
                 desc="map(groupId, map(param, value))"/>
       <property name="defaultFeatures" type="map"
                 desc="Features to be applied to nodes not explicitly defined"/>
@@ -195,9 +234,11 @@
          <arg name="configName" dir="O" type="sstr"/>
       </method>
 
+<!--
       <method name="SetConfigName">
          <arg name="configName" dir="I" type="sstr"/>
       </method>
+-->
 
       <method name="GetConfigVersion">
          <arg name="configVersion" dir="O" type="uint32"/>
@@ -216,19 +257,21 @@
          <arg name="featureList" dir="O" type="map"/>
       </method>
 
+<!--
       <method name="ModifyFeatureList">
          <arg name="isDelete" dir="I" type="bool"/>
          <arg name="featureList" dir="I" type="map"
               desc="map(groupId, featureList)"/>
       </method>
+-->
 
-      <method name="GetCustomAttrs">
-         <arg name="customAttrs" dir="O" type="map"/>
+      <method name="GetCustomParams">
+         <arg name="customParams" dir="O" type="map"/>
       </method>
 
-      <method name="ModifyCustomAttrs">
+      <method name="ModifyCustomParams">
          <arg name="isDelete" dir="I" type="bool"/>
-         <arg name="customAttrs" dir="I" type="map"
+         <arg name="customParams" dir="I" type="map"
               desc="map(groupId, map(param, value))"/>
       </method>
 
@@ -245,7 +288,7 @@
    <class name="CondorConfigFeature">
       <property name="featureId" type="uint32" index="y"/>
       <property name="featureName" type="sstr"/>
-      <property name="attrList" type="map"/>
+      <property name="paramList" type="map"/>
       <property name="featureList" type="map"/>
       <property name="conflictsWith" type="map"/>
       <property name="dependsOn" type="map"/>
@@ -262,19 +305,35 @@
          <arg name="featureName" dir="I" type="sstr"/>
       </method>
 
+      <method name="GetFeatureList">
+         <arg name="featureList" dir="O" type="map"/>
+      </method>
+
       <method name="ModifyFeatureList">
          <arg name="featureList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
 
-      <method name="ModifyAttrList">
-         <arg name="attrList" dir="I" type="map"/>
+      <method name="GetParamList">
+         <arg name="paramList" dir="O" type="map"/>
+      </method>
+
+      <method name="ModifyParamList">
+         <arg name="paramList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="GetConflicts">
+         <arg name="conflictList" dir="O" type="map"/>
       </method>
 
       <method name="ModifyConflicts">
          <arg name="conflictList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="GetDepends">
+         <arg name="dependsList" dir="O" type="map"/>
       </method>
 
       <method name="ModifyDepends">
@@ -309,23 +368,32 @@
       </method>
 
       <method name="AddFeatures">
-         <arg name="groupFeatures" dir="I" type="map"/>
+         <arg name="groupFeatures" dir="I" type="map"
+              desc="A map(featureId, priority) of features to add to the
+                    group.  A priroty of 0 indicates indifference and 
+                    the store should assign a priority"/>
+         <arg name="paramsToSet" dir="O" type="map"
+              desc="A map(paramName, reasonString) for parameters that need
+                    to be set as a result of the features added before the
+                    configuration will be considered valid"/>
       </method>
 
       <method name="RemoveFeatures">
-         <arg name="groupFeatures" dir="I" type="map"/>
+         <arg name="groupFeatures" dir="I" type="map"
+              desc="A map(featureId, priority) of features to remove from the
+                    group"/>
       </method>
 
-      <method name="GetAttrs">
-         <arg name="customAttrs" dir="O" type="map"/>
+      <method name="GetParams">
+         <arg name="customParams" dir="O" type="map"/>
       </method>
 
-      <method name="AddAttrs">
-         <arg name="customAttrs" dir="I" type="map"/>
+      <method name="AddParams">
+         <arg name="customParams" dir="I" type="map"/>
       </method>
 
-      <method name="RemoveAttrs">
-         <arg name="customAttrs" dir="I" type="map"/>
+      <method name="RemoveParams">
+         <arg name="customParams" dir="I" type="map"/>
       </method>
 
       <method name="GetConfig">
@@ -333,9 +401,9 @@
       </method>
    </class>
 
-   <class name="CondorConfigAttribute">
+   <class name="CondorConfigParameter">
       <property name="name" type="sstr" index="y"/>
-      <property name="attrType" type="uint8"/>
+      <property name="paramType" type="uint8"/>
       <property name="value" type="lstr"/>
       <property name="default" type="lstr"/>
       <property name="desc" type="lstr"/>
@@ -346,76 +414,76 @@
       <property name="conflictsWith" type="map"/>
 
       <method name="GetName">
-         <arg name="attrName" dir="O" type="sstr"/>
+         <arg name="paramName" dir="O" type="sstr"/>
       </method>
 
       <method name="SetName">
-         <arg name="attrName" dir="I" type="sstr"/>
+         <arg name="paramName" dir="I" type="sstr"/>
       </method>
 
-      <method name="GetAttrType">
-         <arg name="attrType" dir="O" type="uint8"/>
+      <method name="GetParamType">
+         <arg name="paramType" dir="O" type="uint8"/>
       </method>
 
-      <method name="SetAttrType">
-         <arg name="attrType" dir="I" type="uint8"/>
+      <method name="SetParamType">
+         <arg name="paramType" dir="I" type="uint8"/>
       </method>
 
       <method name="GetValue">
-         <arg name="attrValue" dir="O" type="lstr"/>
+         <arg name="paramValue" dir="O" type="lstr"/>
       </method>
 
       <method name="SetValue">
-         <arg name="attrValue" dir="I" type="lstr"/>
+         <arg name="paramValue" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDefault">
-         <arg name="attrDefault" dir="O" type="lstr"/>
+         <arg name="paramDefault" dir="O" type="lstr"/>
       </method>
 
       <method name="SetDefault">
-         <arg name="attrDefault" dir="I" type="lstr"/>
+         <arg name="paramDefault" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDescription">
-         <arg name="attrDesc" dir="O" type="lstr"/>
+         <arg name="paramDesc" dir="O" type="lstr"/>
       </method>
 
       <method name="SetDescription">
-         <arg name="attrDesc" dir="I" type="lstr"/>
+         <arg name="paramDesc" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDefaultMustChange">
-         <arg name="attrMustChange" dir="O" type="bool"/>
+         <arg name="paramMustChange" dir="O" type="bool"/>
       </method>
 
       <method name="SetDefaultMustChange">
-         <arg name="attrMustChange" dir="I" type="bool"/>
+         <arg name="paramMustChange" dir="I" type="bool"/>
       </method>
 
       <method name="GetVisibilityLevel">
-         <arg name="attrLevel" dir="O" type="uint8"/>
+         <arg name="paramLevel" dir="O" type="uint8"/>
       </method>
 
       <method name="SetVisibilityLevel">
-         <arg name="attrLevel" dir="I" type="uint8"/>
+         <arg name="paramLevel" dir="I" type="uint8"/>
       </method>
 
       <method name="GetRequiresRestart">
-         <arg name="attrNeedsRestart" dir="O" type="bool"/>
+         <arg name="paramNeedsRestart" dir="O" type="bool"/>
       </method>
 
       <method name="SetRequiresRestart">
-         <arg name="attrNeedsRestart" dir="I" type="bool"/>
+         <arg name="paramNeedsRestart" dir="I" type="bool"/>
       </method>
 
       <method name="ModifyDepends">
-         <arg name="attrDepends" dir="I" type="map"/>
+         <arg name="paramDepends" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
 
       <method name="ModifyConflicts">
-         <arg name="attrConflicts" dir="I" type="map"/>
+         <arg name="paramConflicts" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
    </class>
