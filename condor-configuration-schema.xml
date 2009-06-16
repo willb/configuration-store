@@ -73,9 +73,15 @@
       <method name="AddFeature">
          <arg name="featureName" dir="I" type="sstr"/>
          <arg name="featureParams" dir="I" type="map"/>
-         <arg name="includedFeatures" dir="I" type="map"/>
-         <arg name="featureConflicts" dir="I" type="map"/>
-         <arg name="featureDepends" dir="I" type="map"/>
+         <arg name="includedFeatures" dir="I" type="map"
+              desc="A map(featureId, priority) of other features included in
+                    this feature"/>
+         <arg name="featureConflicts" dir="I" type="map"
+              desc="A map(featureId, priority) of other features this feature
+                    conflicts with"/>
+         <arg name="featureDepends" dir="I" type="map"
+              desc="A map(featureId, priority) of other features this feature
+                    depends on"/>
       </method>
 
       <method name="ModifyFeature">
@@ -163,6 +169,7 @@
          <arg name="paramObj" dir="O" type="objId"/>
       </method>
 
+<!--
       <method name="AddParam">
          <arg name="paramName" dir="I" type="sstr"/>
          <arg name="paramType" dir="I" type="uint8"/>
@@ -175,6 +182,7 @@
          <arg name="paramDependsOn" dir="I" type="map"/>
          <arg name="paramConflictsWith" dir="I" type="map"/>
       </method>
+-->
 
       <method name="ModifyParam">
          <arg name="paramName" dir="I" type="sstr"/>
@@ -477,9 +485,17 @@
          <arg name="paramNeedsRestart" dir="I" type="bool"/>
       </method>
 
+      <method name="GetDepends">
+         <arg name="paramDepends" dir="O" type="map"/>
+      </method>
+
       <method name="ModifyDepends">
          <arg name="paramDepends" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="GetConflicts">
+         <arg name="paramConflicts" dir="O" type="map"/>
       </method>
 
       <method name="ModifyConflicts">
