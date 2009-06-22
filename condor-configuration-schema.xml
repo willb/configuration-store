@@ -135,7 +135,7 @@
       </method>
 
       <method name="ChangeConfiguration">
-         <arg nane="configId" dir="I" type="uint32"/>
+         <arg name="configId" dir="I" type="uint32"/>
       </method>
 
       <method name="ActivateConfiguration">
@@ -300,6 +300,7 @@
       <property name="featureList" type="map"/>
       <property name="conflictsWith" type="map"/>
       <property name="dependsOn" type="map"/>
+      <property name="subsysList" type="map"/>
 
       <method name="GetFeatureId">
          <arg name="featureId" dir="O" type="uint32"/>
@@ -341,13 +342,23 @@
       </method>
 
       <method name="GetDepends">
-         <arg name="dependsList" dir="O" type="map"/>
+         <arg name="dependList" dir="O" type="map"/>
       </method>
 
       <method name="ModifyDepends">
          <arg name="dependList" dir="I" type="map"/>
          <arg name="isDelete" dir="I" type="bool"/>
       </method>
+
+      <method name="GetSubsys">
+         <arg name="subsysList" dir="O" type="map"/>
+      </method>
+
+      <method name="ModifySubsys">
+         <arg name="subsysList" dir="I" type="map"
+              desc="A map(subsysId, priority) of subsystems that collaborate
+                    with the feature"/>
+         <arg name="isDelete" dir="I" type="bool"/>
    </class>
 
    <class name="CondorConfigGroup">
@@ -504,10 +515,33 @@
       </method>
    </class>
 
+   <class name="CondorConfigSubsystem">
+      <property name="name" type="sstr" index="y"/>
+      <property name="subscribedAttrs" type="map"/>
+
+      <method name="GetName">
+         <arg name="subsysName" dir="O" type="sstr"/>
+      </method>
+
+      <method name="GetAttrs">
+         <arg name="subsysAttrs" dir="O" type="map"
+              desc="A map(paramName, priority) of parameter names and their
+                    priority that the subsystem is interested in."/>
+      </method>
+
+      <method name="ModifyAttrs">
+         <arg name="attrList" dir="I" type="map"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+   </class>
+
    <eventArguments>
       <arg name="AffectedNodes" type="lstr"/>
-      <arg name="RestartType" type="uint8"/>
+      <arg name="Restart" type="bool"/>
+      <arg name="Targets" type="map"
+           desc="A map(Application, Subsystem) of the applications or their
+                 subsystems that need to have the specified action performed"/>
    </eventArguments>
 
-   <event name="CondorRestartEvent" sev="alert" args="AffectedNodes,RestartType"/>
+   <event name="CondorRestartEvent" sev="alert" args="AffectedNodes,Restart,Targets"/>
 </schema>
