@@ -418,6 +418,10 @@
       <method name="GetConfig">
          <arg name="groupConfig" dir="O" type="map"/>
       </method>
+
+      <method name="CheckConfigVersion">
+         <arg name="configVersion" dir="I" type="unit32"/>
+      </method>
    </class>
 
    <class name="CondorConfigParameter">
