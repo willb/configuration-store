@@ -110,3 +110,81 @@ create table feature_params (
       on update cascade
 
 );
+
+create table configurations (
+	id integer primary key,
+	string name not null,
+);
+
+create table configuration_group_features (
+	id integer primary key,
+	configuration integer not null,
+	version integer not null,
+	group integer not null,
+	feature integer not null,
+	enable boolean default true,
+
+    constraint configuration_fk foreign key(configuration)
+       references configurations(id)
+       on delete cascade
+       on update cascade,
+    	
+	constraint feature_fk foreign key(feature)
+   	   references features(id)
+   	   on delete cascade
+       on update cascade,
+
+    constraint group_fk foreign key(group)
+       references groups(id)
+       on delete cascade
+       on update cascade,
+
+	constraint version_pos check (version >= 0)
+);
+
+create table configuration_group_mappings (
+	id integer primary key,
+	configuration integer not null,
+	version integer not null,
+	group integer not null,
+	param integer not null,
+	value string,
+	enable boolean default true,
+
+    constraint configuration_fk foreign key(configuration)
+       references configurations(id)
+       on delete cascade
+       on update cascade,
+    	
+	constraint param_fk foreign key(param)
+   	   references params(id)
+   	   on delete cascade
+       on update cascade,
+
+    constraint group_fk foreign key(group)
+       references groups(id)
+       on delete cascade
+       on update cascade,
+
+	constraint version_pos check (version >= 0)	
+);
+
+create table configuration_default_features (
+	id integer primary key,
+	configuration integer not null,
+	version integer not null,
+	feature integer not null,
+	enable boolean default true,
+
+    constraint configuration_fk foreign key(configuration)
+       references configurations(id)
+       on delete cascade
+       on update cascade,
+    	
+	constraint feature_fk foreign key(feature)
+   	   references features(id)
+   	   on delete cascade
+       on update cascade,
+
+	constraint version_pos check (version >= 0)
+);
