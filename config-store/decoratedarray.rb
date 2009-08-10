@@ -3,11 +3,11 @@ class DecoratedArray < Array
   alias :array_delete :delete
   alias :array_set :[]=
 
-  def initialize(options)
+    def initialize(options={})
     if options[:contents]
       super options[:contents]
     else
-      super
+      super 0
     end
     
     @onpush = options[:push_callback]
@@ -16,7 +16,7 @@ class DecoratedArray < Array
   end
   
   def push(val)
-    @onpush val if @onpush
+    @onpush.call(val) if @onpush
     array_push val
   end
   
@@ -25,12 +25,12 @@ class DecoratedArray < Array
   end
   
   def delete(val)
-    @ondelete val if @ondelete
+    @ondelete.call(val) if @ondelete
     array_delete val
   end
   
   def []=(pos, val)
-    @onset pos, val if @onset
+    @onset.call(pos, val) if @onset
     array_set pos, val
   end
 end
