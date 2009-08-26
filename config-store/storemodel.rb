@@ -77,6 +77,8 @@ module GridConfigStore
   class GroupMembership < Table
     declare_column :node, :integer, :not_null, references(Node, :on_delete => :cascade)
     declare_column :nodegroup, :integer, :not_null, references(NodeGroup, :on_delete => :cascade)
+
+    alias :created :version
     alias :group :nodegroup 
     alias :group= :nodegroup=
   end
@@ -153,21 +155,28 @@ module GridConfigStore
   
   # A relationship between features
   class FeatureArc < Table
+    alias :created :version
+
     declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :dest, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :label, :integer, :not_null, references(ArcLabel)
+    declare_column :deleted, :boolean, :default, :false
+
     declare_query :arcs, "source = :source and dest = :dest and label = :label"
     declare_query :arcs_from, "source = :source and label = :label"
     declare_query :arcs_to, "dest = :dest and label = :label"
+    
+    # XXX:  need to select by version, only get max, also get deleted status
     declare_custom_query :arcs_implicating, "select min(row_id), source, dest, label from __TABLE__ group by source, dest, label where (source = :feature or dest = :feature) and label = :label"
   end
   
   # A relationship identifying which parameter/value pairs are implied by a given feature
   class FeatureParamMembership < Table
+    alias :created :version
+
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :param, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :value, :string
-    declare_column :version, :integer, :not_null # Need this?
     declare_column :enable, :boolean, :default, :true
   end
   
@@ -176,16 +185,18 @@ module GridConfigStore
   end
   
   class ConfigurationGroupFeatureMapping < Table
+    alias :created :version
+
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
-    declare_column :version, :integer, :not_null
     declare_column :group, :integer, :not_null, references(Group, :on_delete=>:cascade)
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :enable, :boolean, :default, :true
   end
 
   class ConfigurationGroupParamMapping < Table
+    alias :created :version
+
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
-    declare_column :version, :integer, :not_null
     declare_column :group, :integer, :not_null, references(Group, :on_delete=>:cascade)
     declare_column :param, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :value, :string
@@ -193,15 +204,18 @@ module GridConfigStore
   end
     
   class ConfigurationDefaultFeatureMapping < Table
+    alias :created :version
+
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
-    declare_column :version, :integer, :not_null
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :enable, :boolean, :default, :true
   end
 
+  # Versioning is transparent; we use created-on timestamps from the model
   class ConfigurationSnapshot < Table
+    alias :created :version
+
     declare_column :name, :string, :not_null
-    declare_column :version, :integer, :not_null
   end
 
 end
