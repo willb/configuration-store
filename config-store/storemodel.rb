@@ -194,47 +194,15 @@ module GridConfigStore
     declare_index_on :source, :label
     declare_index_on :dest, :label
 
-    declare_custom_query :arcs_q, "
-SELECT freshest.* FROM ( 
-  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
-    SELECT * FROM __TABLE__ WHERE created < :version AND source = :source AND dest = :dest AND label = :label 
-  ) GROUP BY source, dest, label
-) AS fresh INNER JOIN __TABLE__ AS freshest ON 
-   fresh.source = freshest.source AND
-   fresh.dest = freshest.dest AND
-   fresh.label = freshest.label AND
-   fresh.current = freshest.created
-"
-
-    declare_custom_query :arcs_from_q, "
-SELECT freshest.* FROM ( 
-  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
-    SELECT * FROM __TABLE__ WHERE created < :version AND source = :feature AND label = :label 
-  ) GROUP BY source, dest, label
-) AS fresh INNER JOIN __TABLE__ AS freshest ON 
-   fresh.source = freshest.source AND
-   fresh.dest = freshest.dest AND
-   fresh.label = freshest.label AND
-   fresh.current = freshest.created
-"
-    declare_custom_query :arcs_to_q, "
-SELECT freshest.* FROM ( 
-  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
-    SELECT * FROM __TABLE__ WHERE created < :version AND dest = :feature AND label = :label 
-  ) GROUP BY source, dest, label
-) AS fresh INNER JOIN __TABLE__ AS freshest ON 
-   fresh.source = freshest.source AND
-   fresh.dest = freshest.dest AND
-   fresh.label = freshest.label AND
-   fresh.current = freshest.created
-"
     # Finds arcs to the given feature with the given label
     # Named params include :feature, :label, and :version
     # If version is supplied, choose the most recent revision not more
     # recent than version.  If not, choose the most recent revision.
     def arcs_to(args)
-      args[:version] ||= SQLBUtil::timestamp
-      arcs_to_q args
+      args = args.dup
+      version = args.delete(:version)
+      args[:dest] = args.delete(:feature)
+      FeatureArc.find_freshest :group_by=>[:source,:dest,:label], :select_by=>args, :version=>version
     end
 
     # Finds arcs from the given feature with the given label
@@ -242,33 +210,30 @@ SELECT freshest.* FROM (
     # If version is supplied, choose the most recent revision not more
     # recent than version.  If not, choose the most recent revision.
     def arcs_from(args)
-      args[:version] ||= SQLBUtil::timestamp
-      arcs_from_q args
+      args = args.dup
+      version = args.delete(:version)
+      args[:source] = args.delete(:feature)
+      FeatureArc.find_freshest :group_by=>[:source,:dest,:label], :select_by=>args, :version=>version
     end
 
     # Finds arcs from the given feature to the given feature, with the
     # given label.  Named params include :source, :dest, :label, and
-    # :version If version is supplied, choose the most recent revision
+    # :version.  If version is supplied, choose the most recent revision
     # not more recent than version.  If not, choose the most recent
     # revision.
     def arcs(args)
-      args[:version] ||= SQLBUtil::timestamp
-      arcs_q args
+      args = args.dup
+      version = args.delete(:version)
+      FeatureArc.find_freshest :group_by=>[:source,:dest,:label], :select_by=>args, :version=>version
     end
 
-    # arcs_implicating query with no versioning or deleted arcs (for reference)
-    declare_custom_query :arcs_implicating_nv, "select max(row_id), source, dest, label from __TABLE__ group by source, dest, label where (source = :feature or dest = :feature) and label = :label"
-
-    # arcs_implicating query; use the arcs_implicating method to not
-    # specify a version and get the latest.  parameters include
-    # :feature, :label, and :version; finds all arcs from or to
-    # :feature that have label :label and are the freshest version not
-    # later than :version
-    declare_custom_query :arcs_implicating_q, "SELECT * FROM __TABLE__ AS fresh LEFT OUTER JOIN __TABLE__ AS fresher WHERE fresh.source = fresher.source AND fresh.dest = fresher.dest AND fresh.label = fresher.label AND (fresh.source = :feature OR fresh.dest = :feature) AND fresh.label = :label AND fresh.created <= :version AND fresher.created <= :version AND fresh.created < fresher.created WHERE fresher.created IS NULL AND fresh.created <= :version"
-
+    # Finds arcs implicating a given feature.
+    # Parameters include :feature, :label, and :version; finds all
+    # arcs from or to :feature that have label :label and are the
+    # freshest version not later than :version.  If you don't specify
+    # a version, you get the latest.
     def arcs_implicating(args)
-      args[:version] ||= SQLBUtil::timestamp
-      arcs_implicating_q args
+      arcs_to(args) + args_from(args)
     end
   end
   
