@@ -120,35 +120,63 @@ module GridConfigStore
         end
       end
       contents_src = FeatureArc.arcs_implicating :feature=>row_id, :label=>@@feature_conflict.row_id
+      contents = contents_src.select {|fa| not fa.deleted }
       DecoratedArray.new :push_callback=>onpush, :contents=>contents
     end
 
-    # Returns a list of features that depend on this one.
-    # Appending a Feature object to this list will create a "dependency"
-    # association between this feature and that feature. 
-    def dependents
+    # Returns a list of features that depend on this one.  Appending a
+    # Feature object to this list will create a "dependency"
+    # association between this feature and that feature.  
+    #
+    # XXX: unlike the db-backed objects, the list returned by this
+    # method could get stale.  Don't let it hang around for too long.
+    def dependents(v=nil)
       @@feature_depend ||= ArcLabel.depends_on :feature
-      onpush = Proc.new do |f|
-        if not self.dependent? f
-          FeatureArc.create :source=>self, :dest=>f, :label=>@@feature_depend
+
+      onpush = ondelete = nil
+
+      if v == nil
+        v = SQLBUtil::timestamp
+        onpush = Proc.new do |f|
+          if not self.dependent? f
+            FeatureArc.create :source=>self, :dest=>f, :label=>@@feature_depend
+          end
         end
+
+        ondelete = 
       end
-      contents_src = FeatureArc.arcs_from :source=>self, :label=>@@feature_depend
+      contents_src = FeatureArc.arcs_from :source=>self, :label=>@@feature_depend, :version=>v
+      contents = contents_src.select {|fa| not fa.deleted }
       DecoratedArray.new :push_callback=>onpush, :contents=>contents
     end
 
     # Returns a list of features that this one depends on.
     # Appending a Feature object to this list will create a "dependency"
     # association between that feature and this feature. 
-    def dependences
+    def dependences(v=nil)
       @@feature_depend ||= ArcLabel.depends_on :feature
-      onpush = Proc.new do |f|
-        if not self.dependence? f
-          FeatureArc.create :source=>f, :dest=>self, :label=>@@feature_depend
+
+      onpush = nil
+      ondelete = nil
+
+      # XXX: log or throw an exception if we try to add/delete from a
+      # non-current version?
+
+      if v == nil
+        v = SQLBUtil::timestamp
+        onpush = Proc.new do |f|
+          if not self.dependence? f
+            FeatureArc.create :source=>f, :dest=>self, :label=>@@feature_depend
+          end
+        end
+
+        ondelete = Proc.new do |f|
+          f.deleted = true
         end
       end
-      contents_src = FeatureArc.arcs_to :source=>self, :label=>@@feature_depend
-      DecoratedArray.new :push_callback=>onpush, :contents=>contents
+
+      contents_src = FeatureArc.arcs_to :source=>self, :label=>@@feature_depend, :version=>v
+      DecoratedArray.new :push_callback=>onpush, :delete_callback=>ondelete, :contents=>contents
     end
 
   end
@@ -160,24 +188,52 @@ module GridConfigStore
     declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :dest, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :label, :integer, :not_null, references(ArcLabel)
-    declare_column :deleted, :boolean, :default, :false
+    declare_column :deleted, :boolean, :default, 0
 
     declare_index_on :source, :dest, :label
     declare_index_on :source, :label
     declare_index_on :dest, :label
 
-    declare_custom_query :arcs_q, "SELECT * FROM __TABLE__ AS fresh LEFT OUTER JOIN __TABLE__ AS fresher WHERE fresh.source = :source AND fresher.source = fresh.source AND fresh.dest = :dest AND fresher.dest = fresh.dest AND fresh.label = fresher.label AND fresh.created <= :version AND fresher.created <= :version AND fresh.created < fresher.created WHERE fresher.created IS NULL AND fresh.created <= :version"
+    declare_custom_query :arcs_q, "
+SELECT freshest.* FROM ( 
+  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
+    SELECT * FROM __TABLE__ WHERE created < :version AND source = :source AND dest = :dest AND label = :label 
+  ) GROUP BY source, dest, label
+) AS fresh INNER JOIN __TABLE__ AS freshest ON 
+   fresh.source = freshest.source AND
+   fresh.dest = freshest.dest AND
+   fresh.label = freshest.label AND
+   fresh.current = freshest.created
+"
 
-    declare_custom_query :arcs_from_q, "SELECT * FROM __TABLE__ AS fresh LEFT OUTER JOIN __TABLE__ AS fresher WHERE fresh.source = :feature AND fresher.source = fresh.source AND fresh.label = fresher.label AND fresh.created <= :version AND fresher.created <= :version AND fresh.created < fresher.created WHERE fresher.created IS NULL AND fresh.created <= :version"
-
-    declare_custom_query :arcs_to_q, "SELECT * FROM __TABLE__ AS fresh LEFT OUTER JOIN __TABLE__ AS fresher WHERE fresh.dest = :feature AND fresher.dest = fresh.dest AND fresh.label = fresher.label AND fresh.created <= :version AND fresher.created <= :version AND fresh.created < fresher.created WHERE fresher.created IS NULL AND fresh.created <= :version"
-
+    declare_custom_query :arcs_from_q, "
+SELECT freshest.* FROM ( 
+  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
+    SELECT * FROM __TABLE__ WHERE created < :version AND source = :feature AND label = :label 
+  ) GROUP BY source, dest, label
+) AS fresh INNER JOIN __TABLE__ AS freshest ON 
+   fresh.source = freshest.source AND
+   fresh.dest = freshest.dest AND
+   fresh.label = freshest.label AND
+   fresh.current = freshest.created
+"
+    declare_custom_query :arcs_to_q, "
+SELECT freshest.* FROM ( 
+  SELECT source, dest, label, deleted, MAX(created) AS current FROM ( 
+    SELECT * FROM __TABLE__ WHERE created < :version AND dest = :feature AND label = :label 
+  ) GROUP BY source, dest, label
+) AS fresh INNER JOIN __TABLE__ AS freshest ON 
+   fresh.source = freshest.source AND
+   fresh.dest = freshest.dest AND
+   fresh.label = freshest.label AND
+   fresh.current = freshest.created
+"
     # Finds arcs to the given feature with the given label
     # Named params include :feature, :label, and :version
     # If version is supplied, choose the most recent revision not more
     # recent than version.  If not, choose the most recent revision.
     def arcs_to(args)
-      args[:version] ||= Time.now.utc.to_i
+      args[:version] ||= SQLBUtil::timestamp
       arcs_to_q args
     end
 
@@ -186,7 +242,7 @@ module GridConfigStore
     # If version is supplied, choose the most recent revision not more
     # recent than version.  If not, choose the most recent revision.
     def arcs_from(args)
-      args[:version] ||= Time.now.utc.to_i
+      args[:version] ||= SQLBUtil::timestamp
       arcs_from_q args
     end
 
@@ -196,7 +252,7 @@ module GridConfigStore
     # not more recent than version.  If not, choose the most recent
     # revision.
     def arcs(args)
-      args[:version] ||= Time.now.utc.to_i
+      args[:version] ||= SQLBUtil::timestamp
       arcs_q args
     end
 
@@ -211,7 +267,7 @@ module GridConfigStore
     declare_custom_query :arcs_implicating_q, "SELECT * FROM __TABLE__ AS fresh LEFT OUTER JOIN __TABLE__ AS fresher WHERE fresh.source = fresher.source AND fresh.dest = fresher.dest AND fresh.label = fresher.label AND (fresh.source = :feature OR fresh.dest = :feature) AND fresh.label = :label AND fresh.created <= :version AND fresher.created <= :version AND fresh.created < fresher.created WHERE fresher.created IS NULL AND fresh.created <= :version"
 
     def arcs_implicating(args)
-      args[:version] ||= Time.now.utc.to_i
+      args[:version] ||= SQLBUtil::timestamp
       arcs_implicating_q args
     end
   end
@@ -224,7 +280,7 @@ module GridConfigStore
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
     declare_column :param, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :value, :string
-    declare_column :enable, :boolean, :default, :true
+    declare_column :enable, :boolean, :default, 1
   end
   
   class Configuration < Table
@@ -232,22 +288,23 @@ module GridConfigStore
   end
   
   class ConfigurationGroupFeatureMapping < Table
-    alias :created :version
-
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
-    declare_column :group, :integer, :not_null, references(Group, :on_delete=>:cascade)
+    declare_column :nodegroup, :integer, :not_null, references(NodeGroup, :on_delete=>:cascade)
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
-    declare_column :enable, :boolean, :default, :true
+    declare_column :enable, :boolean, :default, 1
+
+    alias :created :version
+    
   end
 
   class ConfigurationGroupParamMapping < Table
     alias :created :version
 
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
-    declare_column :group, :integer, :not_null, references(Group, :on_delete=>:cascade)
+    declare_column :nodegroup, :integer, :not_null, references(NodeGroup, :on_delete=>:cascade)
     declare_column :param, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :value, :string
-    declare_column :enable, :boolean, :default, :true
+    declare_column :enable, :boolean, :default, 1
   end
     
   class ConfigurationDefaultFeatureMapping < Table
@@ -255,7 +312,7 @@ module GridConfigStore
 
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
-    declare_column :enable, :boolean, :default, :true
+    declare_column :enable, :boolean, :default, 1
   end
 
   # Versioning is transparent; we use created-on timestamps from the model
