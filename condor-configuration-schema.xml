@@ -152,6 +152,13 @@
          <arg name="nodeList" dir="O" type="map"/>
       </method>
 
+      <method name="GetNodeConfig">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="nodeConfig" dir="O" type="map"
+              desc="A map(key, value) representing the configuration for"
+                   "the node supplied"/>
+      </method>
+
       <method name="AddNode">
          <arg name="nodeName" dir="I" type="sstr"/>
          <arg name="nodePool" dir="I" type="sstr"/>
