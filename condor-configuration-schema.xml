@@ -18,7 +18,7 @@
 */
 -->
 
-   <class name="CondorConfigStore">
+   <class name="ConfigStore">
       <property name="APIVersionNumber" type="uint32"
                 desc="The version of the API the store supports"/>
 
@@ -213,7 +213,7 @@
    </class>
 
 <!--
-   <class name="CondorConfigNode">
+   <class name="ConfigNode">
       <property name="nodeName" type="sstr" index="y"/>
 
       <method name="GetNodeName">
@@ -234,7 +234,7 @@
    </class>
 -->
 
-   <class name="CondorConfig">
+   <class name="Configuration">
       <property name="configID" type="uint32" index="y"/>
 
       <method name="GetConfigName">
@@ -300,7 +300,7 @@
       </method>
    </class>
 
-   <class name="CondorConfigFeature">
+   <class name="ConfigFeature">
       <property name="featureID" type="uint32" index="y"/>
 
       <method name="GetFeatureName">
@@ -393,7 +393,7 @@
       </method>
    </class>
 
-   <class name="CondorConfigGroup">
+   <class name="ConfigGroup">
       <property name="groupID" type="uint32" index="y"/>
 
       <method name="GetIncludedNodes">
@@ -461,7 +461,7 @@
       </method>
    </class>
 
-   <class name="CondorConfigParameter">
+   <class name="ConfigParameter">
       <property name="name" type="sstr" index="y"/>
 
       <method name="GetParamType">
@@ -551,7 +551,7 @@
       </method>
    </class>
 
-   <class name="CondorConfigSubsystem">
+   <class name="ConfigSubsystem">
       <property name="name" type="sstr" index="y"/>
 
       <method name="GetAttrs">
@@ -587,6 +587,5 @@
                  subsystems that need to have the specified action performed"/>
    </eventArguments>
 
-   <event name="CondorRestartEvent" sev="alert" args="AffectedNodes,Restart,Targ
-ets"/>
+   <event name="RestartEvent" sev="alert" args="AffectedNodes,Restart,Targets"/>
 </schema>
