@@ -19,6 +19,9 @@
 -->
 
    <class name="CondorConfigStore">
+      <property name="APIVersionNumber" type="uint32"
+                desc="The version of the API the store supports"/>
+
       <method name="GetGroup">
          <arg name="groupQuery" dir="I" type="map"
               desc="A map(queryType, value) that defines the group desired.
@@ -29,7 +32,7 @@
          <arg name="groupObj" dir="O" type="objId"/>
       </method>
 
-      <method name="AddStaticGroup">
+      <method name="AddExplicitGroup">
          <arg name="groupName" dir="I" type="sstr"/>
          <arg name="definition" dir="I" type="map"
               desc="A map(hostname, True) that defines the members of the
@@ -145,7 +148,7 @@
 -->
       </method>
 
-      <method name="GetNodeS">
+      <method name="GetNodes">
          <arg name="nodeList" dir="O" type="map"
               desc="A map(hostname, timestamp) of the nodes configured in the
                     store and the last time they checked in with the store."/>
@@ -232,11 +235,7 @@
 -->
 
    <class name="CondorConfig">
-      <property name="configId" type="uint32" index="y"/>
-
-      <method name="GetConfigId">
-         <arg name="configId" dir="O" type="uint32"/>
-      </method>
+      <property name="configID" type="uint32" index="y"/>
 
       <method name="GetConfigName">
          <arg name="configName" dir="O" type="sstr"/>
@@ -303,10 +302,6 @@
 
    <class name="CondorConfigFeature">
       <property name="featureID" type="uint32" index="y"/>
-
-      <method name="GetFeatureID">
-         <arg name="featureID" dir="O" type="sstr"/>
-      </method>
 
       <method name="GetFeatureName">
          <arg name="featureName" dir="O" type="sstr"/>
@@ -401,10 +396,6 @@
    <class name="CondorConfigGroup">
       <property name="groupID" type="uint32" index="y"/>
 
-      <method name="GetGroupID">
-         <arg name="groupID" dir="O" type="uint32"/>
-      </method>
-
       <method name="GetIncludedNodes">
          <arg name="nodeList" dir="O" type="map"
               desc="A map(hostname,priority) of the nodes associated with
@@ -472,14 +463,6 @@
 
    <class name="CondorConfigParameter">
       <property name="name" type="sstr" index="y"/>
-
-      <method name="GetName">
-         <arg name="paramName" dir="O" type="sstr"/>
-      </method>
-
-      <method name="SetName">
-         <arg name="paramName" dir="I" type="sstr"/>
-      </method>
 
       <method name="GetParamType">
          <arg name="paramType" dir="O" type="uint8"/>
@@ -570,10 +553,6 @@
 
    <class name="CondorConfigSubsystem">
       <property name="name" type="sstr" index="y"/>
-
-      <method name="GetName">
-         <arg name="subsysName" dir="O" type="sstr"/>
-      </method>
 
       <method name="GetAttrs">
          <arg name="subsysAttrs" dir="O" type="map"
