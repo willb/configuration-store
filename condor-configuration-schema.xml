@@ -23,45 +23,32 @@
                 desc="The version of the API the store supports"/>
 
       <method name="GetGroup">
-         <arg name="groupQuery" dir="I" type="map"
+         <arg name="query" dir="I" type="map"
               desc="A map(queryType, value) that defines the group desired.
                     The queryType can be either 'ID' or 'Name'.
                     'ID' queryTypes will search for a group with the ID
                     defined in value.  'Name' queryTypes will search for a
                     group with the name defined in value."/>
-         <arg name="groupObj" dir="O" type="objId"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
       <method name="AddExplicitGroup">
-         <arg name="groupName" dir="I" type="sstr"/>
-         <arg name="definition" dir="I" type="map"
-              desc="A map(hostname, True) that defines the members of the
-                    group."/>
-      </method>
-
-      <method name="ModifyGroup">
-         <arg name="groupID" dir="I" type="uint32"/>
-         <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
-         <arg name="nodes" dir="I" type="map"
-              desc="A map(hostname, True) that defines the members of the
-                    group."/>
-         <arg name="options" dir="I" type="map"/>
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
       <method name="RemoveGroup">
-         <arg name="groupID" dir="I" type="uint32"/>
+         <arg name="id" dir="I" type="uint32"/>
       </method>
 
       <method name="GetFeature">
-         <arg name="featureName" dir="I" type="sstr"/>
-         <arg name="featureObj" dir="O" type="objId"/>
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
       <method name="AddFeature">
-         <arg name="featureName" dir="I" type="sstr"/>
-         <arg name="featureObj" dir="O" type="objId"/>
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
 <!--
          <arg name="featureParams" dir="I" type="map"/>
          <arg name="includedFeatures" dir="I" type="map"
@@ -91,17 +78,17 @@
 -->
 
       <method name="RemoveFeature">
-         <arg name="featureID" dir="I" type="uint32"/>
+         <arg name="id" dir="I" type="uint32"/>
       </method>
 
       <method name="GetConfiguration">
-         <arg name="configQuery" dir="I" type="map"
+         <arg name="Query" dir="I" type="map"
               desc="A query that defines the configuration desired.  Valid
                     values for the key are 'ID' or 'Name'.  'ID' keys should
                     contain a specific ConfigurationId as its value,  whereas
                     'Name' keys should contain a Configuration Name as its
                     value"/>
-         <arg name="configObj" dir="O" type="objId"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
 <!--
@@ -124,67 +111,67 @@
 -->
 
       <method name="SaveConfiguration">
-         <arg name="configName" dir="I" type="sstr"
+         <arg name="name" dir="I" type="sstr"
               desc="A name for this configuration.  A blank name will result
                     in the store creating a name"/>
-         <arg name="configId" dir="O" type="uint32"/>
-         <arg name="failureReason" dir="O" type="map"
-              desc="A map containing a list of attributes for groups that must
-                    be set for the configuration to be valid, as well as the
-                    Id for the last valid configuration"/>
+         <arg name="id" dir="O" type="uint32"/>
+         <arg name="params" dir="O" type="map"
+              desc="A map (param:reasonString) containing a list of
+                    parameters and a reasonString for the parameter
+                    that must be set for the configuration to be valid"/>
       </method>
 
       <method name="ChangeConfiguration">
-         <arg name="configId" dir="I" type="uint32"/>
+         <arg name="id" dir="I" type="uint32"/>
       </method>
 
       <method name="ActivateConfiguration">
-         <arg name="failureReason" dir="O" type="map"
-              desc="A map containing a list of attributes for groups that must
-                    be set for the configuration to be valid, as well as the
-                    Id for the last valid configuration"/>
+         <arg name="params" dir="O" type="map"
+              desc="A map (param:reasonString) containing a list of
+                    parameters and a reasonString for the parameter
+                    that must be set for the configuration to be valid"/>
 <!--
          <arg name="configId" dir="I" type="uint32"/>
 -->
       </method>
 
       <method name="GetNodes">
-         <arg name="nodeList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(hostname, timestamp) of the nodes configured in the
                     store and the last time they checked in with the store."/>
       </method>
 
       <method name="GetNodeConfig">
-         <arg name="nodeName" dir="I" type="sstr"/>
-         <arg name="nodeConfig" dir="O" type="map"
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="config" dir="O" type="map"
               desc="A map(parameter, value) representing the configuration for
                    the node supplied"/>
       </method>
 
       <method name="AddNode">
-         <arg name="nodeName" dir="I" type="sstr"/>
-         <arg name="nodePool" dir="I" type="sstr"/>
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="pool" dir="I" type="sstr"/>
       </method>
 
       <method name="ModifyNode">
-         <arg name="nodeName" dir="I" type="sstr"/>
-         <arg name="nodePool" dir="I" type="sstr"/>
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="pool" dir="I" type="sstr"/>
       </method>
 
       <method name="RemoveNode">
-         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="name" dir="I" type="sstr"/>
       </method>
 
       <method name="GetParam">
-         <arg name="paramName" dir="I" type="sstr"/>
-         <arg name="paramObj" dir="O" type="objId"
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"
               desc="A reference to the parameter object that matches the name
                     supplied"/>
       </method>
 
       <method name="AddParam">
-         <arg name="paramName" dir="I" type="sstr"/>
-         <arg name="paramObj" dir="O" type="objId"
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"
               desc="A reference to the newly added parameter object"/>
       </method>
 
@@ -208,7 +195,7 @@
 -->
 
       <method name="RemoveParam">
-         <arg name="paramName" dir="I" type="sstr"/>
+         <arg name="name" dir="I" type="sstr"/>
       </method>
    </class>
 
@@ -235,10 +222,10 @@
 -->
 
    <class name="Configuration">
-      <property name="configID" type="uint32" index="y"/>
+      <property name="id" type="uint32" index="y"/>
 
-      <method name="GetConfigName">
-         <arg name="configName" dir="O" type="sstr"/>
+      <method name="GetName">
+         <arg name="name" dir="O" type="sstr"/>
       </method>
 
 <!--
@@ -248,7 +235,7 @@
 -->
 
       <method name="GetConfigVersion">
-         <arg name="configVersion" dir="O" type="uint32"/>
+         <arg name="version" dir="O" type="uint32"/>
       </method>
 
       <method name="IsConfigActive">
@@ -261,7 +248,7 @@
 -->
 
       <method name="GetFeatureList">
-         <arg name="featureList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(featureId, priority) of features and their priority
                     for a configuration"/>
       </method>
@@ -275,7 +262,7 @@
 -->
 
       <method name="GetCustomParams">
-         <arg name="customParams" dir="O" type="map"
+         <arg name="params" dir="O" type="map"
               desc="A map(paramName, value) of parameter/value pairs for
                     a configuration"/>
       </method>
@@ -284,35 +271,35 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="customParams" dir="I" type="map"
+         <arg name="params" dir="I" type="map"
               desc="map(groupId, map(param, value))"/>
       </method>
 
       <method name="GetDefaultFeatures">
-         <arg name="defaultFeatures" dir="O" type="map"/>
+         <arg name="features" dir="O" type="map"/>
       </method>
 
       <method name="ModifyDefaultFeatures">
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="defaultFeatures" dir="I" type="map"/>
+         <arg name="features" dir="I" type="map"/>
       </method>
    </class>
 
    <class name="ConfigFeature">
-      <property name="featureID" type="uint32" index="y"/>
+      <property name="id" type="uint32" index="y"/>
 
-      <method name="GetFeatureName">
-         <arg name="featureName" dir="O" type="sstr"/>
+      <method name="GetName">
+         <arg name="name" dir="O" type="sstr"/>
       </method>
 
-      <method name="SetFeatureName">
-         <arg name="featureName" dir="I" type="sstr"/>
+      <method name="SetName">
+         <arg name="name" dir="I" type="sstr"/>
       </method>
 
       <method name="GetFeatureList">
-         <arg name="featureList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(featureName, priority) of other features a feature
                     includes"/>
       </method>
@@ -321,13 +308,13 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="featureList" dir="I" type="map"
+         <arg name="features" dir="I" type="map"
               desc="A map(featureName, priority) of other features a feature
                     includes"/>
       </method>
 
       <method name="GetParamList">
-         <arg name="paramList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(paramName, value) of parameters and their
                     corresponding values that is specific to a group"/>
       </method>
@@ -336,13 +323,13 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="paramList" dir="I" type="map"
+         <arg name="params" dir="I" type="map"
               desc="A map(paramName, value) of parameters and their
                     corresponding values that is specific to a group"/>
       </method>
 
       <method name="GetConflicts">
-         <arg name="conflictList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(featureName, priority) of other features a feature
                     conflicts with for proper operation and the conflict
                     priorities"/>
@@ -352,13 +339,13 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="conflictList" dir="I" type="map"
-              desc="A map(featureName, priority) of other features a feature
-                    conflicts with and the priority level of the conflict"/>
+         <arg name="conflicts" dir="I" type="map"
+              desc="A map(featureName, True) of other feature names that
+                    conflict with the feature"/>
       </method>
 
       <method name="GetDepends">
-         <arg name="dependList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(featureName, priority) of other features a feature
                     depends on for proper operation and the dependency
                     priority"/>
@@ -368,13 +355,13 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="dependList" dir="I" type="map"
+         <arg name="depends" dir="I" type="map"
               desc="A map(featureName, priority) of other features a feature
                     depends on and the priority level of the dependency"/>
       </method>
 
       <method name="GetSubsys">
-         <arg name="subsysList" dir="O" type="map"
+         <arg name="list" dir="O" type="map"
               desc="A map(subsysName, priority) to subsystems that collaborate
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
@@ -385,7 +372,7 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="subsysList" dir="I" type="map"
+         <arg name="subsys" dir="I" type="map"
               desc="A map(subsysName, priority) of subsystems that collaborate
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
@@ -394,28 +381,38 @@
    </class>
 
    <class name="ConfigGroup">
-      <property name="groupID" type="uint32" index="y"/>
+      <property name="id" type="uint32" index="y"/>
 
-      <method name="GetIncludedNodes">
-         <arg name="nodeList" dir="O" type="map"
+      <method name="ModifyMembership">
+         <arg name="command" dir="I" type="sstr"
+              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
+                   'DIFF', and 'REPLACE'."/>
+         <arg name="nodes" dir="I" type="map"
+              desc="A map(hostname, True) that defines the members of the
+                    group."/>
+         <arg name="options" dir="I" type="map"/>
+      </method>
+
+      <method name="GetMembership">
+         <arg name="list" dir="O" type="map"
               desc="A map(hostname,priority) of the nodes associated with
                     this group"/>
       </method>
 
-      <method name="GetGroupName">
-         <arg name="groupName" dir="O" type="sstr"/>
+      <method name="GetName">
+         <arg name="name" dir="O" type="sstr"/>
       </method>
 
-      <method name="SetGroupName">
-         <arg name="groupName" dir="I" type="sstr"/>
+      <method name="SetName">
+         <arg name="name" dir="I" type="sstr"/>
       </method>
 
       <method name="GetFeatures">
-         <arg name="groupFeatures" dir="O" type="map"
+         <arg name="features" dir="O" type="map"
               desc="A map(featureName, priority) of features and their priority
                     included in the group"/>
       </method>
-
+<!--
       <method name="AddFeatures">
          <arg name="groupFeatures" dir="I" type="map"
               desc="A map(featureName, priority) of features to add to the
@@ -426,19 +423,36 @@
                     to be set as a result of the features added before the
                     configuration will be considered valid"/>
       </method>
+-->
 
+      <method name="ModifyFeatures">
+         <arg name="command" dir="I" type="sstr"
+              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
+                   'DIFF', and 'REPLACE'."/>
+         <arg name="features" dir="I" type="map"
+              desc="A map(featureName, priority) of feature names and their
+                    dependency priority"/>
+         <arg name="params" dir="O" type="map"
+              desc="A map(paramName, reasonString) for parameters that need
+                    to be set as a result of the features added before the
+                    configuration will be considered valid"/>
+      </method>
+
+<!--
       <method name="RemoveFeatures">
          <arg name="groupFeatures" dir="I" type="map"
               desc="A map(featureName, priority) of features to remove from the
                     group"/>
       </method>
+-->
 
       <method name="GetParams">
-         <arg name="customParams" dir="O" type="map"
+         <arg name="params" dir="O" type="map"
               desc="A map(paramName, value) of parameters and their values that
                     are specific to the group"/>
       </method>
 
+<!--
       <method name="AddParams">
          <arg name="customParams" dir="I" type="map"
               desc="A map(paramName, value) of parameters and their values to
@@ -450,78 +464,87 @@
               desc="A map(paramName, True) of parameters to remove from the
                     group"/>
       </method>
+-->
+      <method name="ModifyParams">
+         <arg name="command" dir="I" type="sstr"
+              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
+                   'DIFF', and 'REPLACE'."/>
+         <arg name="params" dir="I" type="map"
+              desc="A map(featureName, priority) of feature names and their
+                    dependency priority"/>
+      </method>
 
       <method name="GetConfig">
-         <arg name="groupConfig" dir="O" type="map"
+         <arg name="config" dir="O" type="map"
               desc="A map(paramName, value) of parameters and their values"/>
       </method>
 
       <method name="CheckConfigVersion">
-         <arg name="configVersion" dir="I" type="uint32"/>
+         <arg name="version" dir="I" type="uint32"/>
       </method>
    </class>
 
    <class name="ConfigParameter">
       <property name="name" type="sstr" index="y"/>
 
-      <method name="GetParamType">
-         <arg name="paramType" dir="O" type="uint8"/>
+      <method name="GetType">
+         <arg name="type" dir="O" type="uint8"/>
       </method>
 
-      <method name="SetParamType">
-         <arg name="paramType" dir="I" type="uint8"/>
+      <method name="SetType">
+         <arg name="type" dir="I" type="uint8"/>
       </method>
 
       <method name="GetValue">
-         <arg name="paramValue" dir="O" type="lstr"/>
+         <arg name="value" dir="O" type="lstr"/>
       </method>
 
       <method name="SetValue">
-         <arg name="paramValue" dir="I" type="lstr"/>
+         <arg name="value" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDefault">
-         <arg name="paramDefault" dir="O" type="lstr"/>
+         <arg name="default" dir="O" type="lstr"/>
       </method>
 
       <method name="SetDefault">
-         <arg name="paramDefault" dir="I" type="lstr"/>
+         <arg name="default" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDescription">
-         <arg name="paramDesc" dir="O" type="lstr"/>
+         <arg name="description" dir="O" type="lstr"/>
       </method>
 
       <method name="SetDescription">
-         <arg name="paramDesc" dir="I" type="lstr"/>
+         <arg name="description" dir="I" type="lstr"/>
       </method>
 
       <method name="GetDefaultMustChange">
-         <arg name="paramMustChange" dir="O" type="bool"/>
+         <arg name="mustChange" dir="O" type="bool"/>
       </method>
 
       <method name="SetDefaultMustChange">
-         <arg name="paramMustChange" dir="I" type="bool"/>
+         <arg name="mustChange" dir="I" type="bool"/>
       </method>
 
       <method name="GetVisibilityLevel">
-         <arg name="paramLevel" dir="O" type="uint8"/>
+         <arg name="level" dir="O" type="uint8"/>
       </method>
 
       <method name="SetVisibilityLevel">
-         <arg name="paramLevel" dir="I" type="uint8"/>
+         <arg name="level" dir="I" type="uint8"/>
       </method>
 
       <method name="GetRequiresRestart">
-         <arg name="paramNeedsRestart" dir="O" type="bool"/>
+         <arg name="needsRestart" dir="O" type="bool"/>
       </method>
 
       <method name="SetRequiresRestart">
-         <arg name="paramNeedsRestart" dir="I" type="bool"/>
+         <arg name="needsRestart" dir="I" type="bool"/>
       </method>
 
       <method name="GetDepends">
-         <arg name="paramDepends" dir="O" type="map"
+         <arg name="depends" dir="O" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     dependency priority"/>
       </method>
@@ -530,13 +553,13 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="paramDepends" dir="I" type="map"
+         <arg name="depends" dir="I" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     dependency priority"/>
       </method>
 
       <method name="GetConflicts">
-         <arg name="paramConflicts" dir="O" type="map"
+         <arg name="conflicts" dir="O" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     conflict priority"/>
       </method>
@@ -545,7 +568,7 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="paramConflicts" dir="I" type="map"
+         <arg name="conflicts" dir="I" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     conflict priority"/>
       </method>
@@ -555,7 +578,7 @@
       <property name="name" type="sstr" index="y"/>
 
       <method name="GetAttrs">
-         <arg name="subsysAttrs" dir="O" type="map"
+         <arg name="attrs" dir="O" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     priority that the subsystem is interested in"/>
       </method>
@@ -564,17 +587,8 @@
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="attrList" dir="I" type="map"
+         <arg name="attrs" dir="I" type="map"
               desc="A map(paramName, priority) of parameter names and their
-                    corresponding priorities"/>
-      </method>
-   </class>
-
-   <eventArguments>
-      <arg name="AffectedNodes" type="lstr"/>
-      <arg name="Restart" type="bool"/>
-      <arg name="Targets" type="map"
-           desc="A map(Application, Subsystem) of the applications or their
                     corresponding priorities"/>
       </method>
    </class>
