@@ -18,6 +18,8 @@
 */
 -->
 
+<!--  conventions:  "set of X" means a map from X to True; "list of X" means a map from naturals to X -->
+
    <class name="Store">
       <property name="APIVersionNumber" type="uint32"
                 desc="The version of the API the store supports"/>
@@ -156,8 +158,8 @@
 
       <method name="GetFeatures">
          <arg name="list" dir="O" type="map"
-              desc="A map(featureId, priority) of features and their priority
-                    for a configuration"/>
+              desc="A set of features defined in this
+                    configuration"/>
       </method>
 
       <method name="GetCustomParams">
