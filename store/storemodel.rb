@@ -1,4 +1,4 @@
-require 'sqlbackend'
+require 'rhubarb/rhubarb'
 require 'decoratedarray'
 
 
@@ -7,12 +7,14 @@ module GridConfigStore
   # XXX: should feature definitions be versioned?
 
   # A kind of param (integer, string, hostname, etc.)
-  class Kind < Table
+  class Kind
+    include Rhubarb::Persisting
     declare_column :description, :string
   end
   
   # A configuration parameter
-  class Param < Table
+  class Param
+    include Rhubarb::Persisting
     declare_column :kind, :integer, :not_null
     declare_column :name, :string, references(Kind)
     declare_column :description, :string
@@ -23,7 +25,8 @@ module GridConfigStore
   
   # A label on a relationship between things (e.g. param/feature X
   # *conflicts with* param/feature Y)
-  class ArcLabel < Table
+  class ArcLabel
+    include Rhubarb::Persisting
     declare_column :label, :string
 
     # Returns an ArcLabel that represents a conflict with a kind of
@@ -46,14 +49,16 @@ module GridConfigStore
   end
   
   # A relationship between parameters
-  class ParamArc < Table
+  class ParamArc
+    include Rhubarb::Persisting
     declare_column :source, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :dest, :integer, :not_null, references(Param, :on_delete=>:cascade)
     declare_column :label, :integer, :not_null, references(ArcLabel)
   end
   
   # A node in the pool
-  class Node < Table
+  class Node
+	include Rhubarb::Persisting
     declare_column :name, :string
     declare_column :pool, :string
     
@@ -70,11 +75,13 @@ module GridConfigStore
   end
   
   # An explicitly- (TODO: or implicitly-) declared group of nodes
-  class NodeGroup < Table
+  class NodeGroup
+    include Rhubarb::Persisting
     declare_column :name, :string
   end
   
-  class GroupMembership < Table
+  class GroupMembership
+    include Rhubarb::Persisting
     declare_column :node, :integer, :not_null, references(Node, :on_delete => :cascade)
     declare_column :nodegroup, :integer, :not_null, references(NodeGroup, :on_delete => :cascade)
 
@@ -83,7 +90,8 @@ module GridConfigStore
     alias :group= :nodegroup=
   end
   
-  class Feature < Table
+  class Feature
+    include Rhubarb::Persisting
     declare_column :name, :string
 
     # Returns true if this feature conflicts with the supplied feature
@@ -182,7 +190,8 @@ module GridConfigStore
   end
   
   # A relationship between features
-  class FeatureArc < Table
+  class FeatureArc
+    include Rhubarb::Persisting
     alias :created :version
 
     declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
@@ -239,7 +248,8 @@ module GridConfigStore
   
   # A relationship identifying which parameter/value pairs are implied
   # by a given feature
-  class FeatureParamMembership < Table
+  class FeatureParamMembership
+    include Rhubarb::Persisting
     alias :created :version
 
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
@@ -248,11 +258,13 @@ module GridConfigStore
     declare_column :enable, :boolean, :default, 1
   end
   
-  class Configuration < Table
+  class Configuration
+    include Rhubarb::Persisting
     declare_column :name, :string, :not_null
   end
   
-  class ConfigurationGroupFeatureMapping < Table
+  class ConfigurationGroupFeatureMapping
+    include Rhubarb::Persisting
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
     declare_column :nodegroup, :integer, :not_null, references(NodeGroup, :on_delete=>:cascade)
     declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
@@ -262,7 +274,8 @@ module GridConfigStore
     
   end
 
-  class ConfigurationGroupParamMapping < Table
+  class ConfigurationGroupParamMapping
+    include Rhubarb::Persisting
     alias :created :version
 
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
@@ -272,7 +285,8 @@ module GridConfigStore
     declare_column :enable, :boolean, :default, 1
   end
     
-  class ConfigurationDefaultFeatureMapping < Table
+  class ConfigurationDefaultFeatureMapping
+    include Rhubarb::Persisting
     alias :created :version
 
     declare_column :configuration, :integer, :not_null, references(Configuration, :on_delete=>:cascade)
@@ -281,7 +295,8 @@ module GridConfigStore
   end
 
   # Versioning is transparent; we use created-on timestamps from the model
-  class ConfigurationSnapshot < Table
+  class ConfigurationSnapshot
+    include Rhubarb::Persisting
     alias :created :version
 
     declare_column :name, :string, :not_null
