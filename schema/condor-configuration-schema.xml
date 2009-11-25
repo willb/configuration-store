@@ -141,6 +141,10 @@
               desc="A map(parameter, value) representing the configuration for
                     the node supplied"/>
       </method>
+
+      <method name="CheckConfigVersion">
+         <arg name="version" dir="I" type="uint32"/>
+      </method>
    </class>
 
    <class name="Configuration">
@@ -354,14 +358,6 @@
          <arg name="config" dir="O" type="map"
               desc="A map(paramName, value) of parameters and their values"/>
       </method>
--->
-
-<!-- why is this a method on the group?
-
-      <method name="CheckConfigVersion">
-         <arg name="version" dir="I" type="uint32"/>
-      </method>
-
 -->
    </class>
 
