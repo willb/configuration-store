@@ -15,8 +15,8 @@ module GridConfigStore
   # A configuration parameter
   class Param
     include Rhubarb::Persisting
-    declare_column :kind, :integer, :not_null
-    declare_column :name, :string, references(Kind)
+    declare_column :kind, :integer, :not_null, references(Kind)
+    declare_column :name, :string
     declare_column :description, :string
     declare_column :not_null, :boolean
     declare_column :expert, :boolean
@@ -58,7 +58,7 @@ module GridConfigStore
   
   # A node in the pool
   class Node
-	include Rhubarb::Persisting
+    include Rhubarb::Persisting
     declare_column :name, :string
     declare_column :pool, :string
     
