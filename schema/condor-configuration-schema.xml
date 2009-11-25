@@ -433,8 +433,8 @@
 
       <method name="GetConflicts">
          <arg name="conflicts" dir="O" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    conflict priority"/>
+              desc="A map(paramName, True) of parameter names that conflict
+                    with the parameter"/>
       </method>
 
       <method name="ModifyConflicts">
