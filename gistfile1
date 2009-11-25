@@ -1,0 +1,351 @@
+<schema package="mrg.grid">
+
+<!--
+/*
+ * Copyright 2008 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+-->
+
+   <class name="CondorConfigStore">
+      <method name="GetNodeConfig">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="nodeObj" dir="O" type="objId" references="mrg.grid.CondorConfigNode"/>
+      </method>
+
+      <method name="GetFeatureList">
+         <arg name="featureList" dir="O" type="map"
+              desc="Returns a map(featureId, featureName)"/>
+      </method>
+
+      <method name="GetFeatureInfo">
+         <arg name="featureId" dir="I" type="uint32"/>
+         <arg name="featureInfo" dir="O" type="objId" references="mrg.grid.CondorConfigFeature"/>
+      </method>
+
+      <method name="AddFeatureToStore">
+         <arg name="featureName" dir="I" type="sstr"/>
+         <arg name="featureAttrs" dir="I" type="map"/>
+         <arg name="includedFeatures" dir="I" type="lstr" optional="y"/>
+         <arg name="featureConflicts" dir="I" type="lstr" optional="y"/>
+         <arg name="featureDepends" dir="I" type="lstr" optional="y"/>
+      </method>
+
+      <method name="ModifyFeatureInStore">
+         <arg name="featureId" dir="I" type="uint32"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+         <arg name="featureName" dir="I" type="sstr" optional="y"/>
+         <arg name="featureAttrs" dir="I" type="map" optional="y"/>
+         <arg name="includedFeatures" dir="I" type="lstr" optional="y"/>
+         <arg name="featureConflicts" dir="I" type="lstr" optional="y"/>
+         <arg name="featureDepends" dir="I" type="lstr" optional="y"/>
+      </method>
+
+      <method name="AddFeaturesToNode">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="featureList" dir="I" type="lstr"
+              desc="Comma separated list of FeatureIds"/>
+      </method>
+
+      <method name="RemoveFeaturesFromNode">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="featureList" dir="I" type="lstr"
+              desc="Comma separated list of FeatureIds"/>
+      </method>
+
+      <method name="AddAttrsToNode">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="customAttrs" dir="I" type="map"/>
+      </method>
+
+      <method name="RemoveAttrsFromNode">
+         <arg name="nodeName" dir="I" type="sstr"/>
+         <arg name="customAttrs" dir="I" type="map"/>
+      </method>
+
+      <method name="AddPoolConfiguration">
+         <arg name="configName" dir="I" type="sstr"/>
+         <arg name="configFeatures" dir="I" type="map"/>
+         <arg name="customAttrs" dir="I" type="map"/>
+         <arg name="defaultFeatures" dir="I" type="lstr"/>
+      </method>
+
+      <method name="ModifyPoolConfiguration">
+         <arg name="configId" dir="I" type="uint32"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+         <arg name="configName" dir="I" type="sstr" optional="y"/>
+         <arg name="groupId" dir="I" type="uint32" optional="y"/>
+         <arg name="featureIds" dir="I" type="lstr" optional="y"/>
+         <arg name="params" dir="I" type="map" optional="y"/>
+         <ard name="defaultFeatures" dir="I" type="sstr" optional="y"/>
+      </method>
+
+      <method name="ActivatePoolConfiguration">
+         <arg name="configId" dir="I" type="uint32"/>
+      </method>
+   </class>
+
+   <class name="CondorConfigNode">
+      <property name="nodeName" type="sstr" index="y"/>
+      <property name="nodeConfig" type="map"/>
+      <property name="configuredFeatures" type="lstr"/>
+      <property name="pool" type="sstr"/>
+
+      <method name="GetNodeName">
+         <arg name="nodeName" dir="O" type="sstr"/>
+      </method>
+
+      <method name="SetNodeName">
+         <arg name="nodeName" dir="I" type="sstr"/>
+      </method>
+
+      <method name="GetNodeConfig">
+         <arg name="nodeConfig" dir="O" type="map"/>
+      </method>
+
+      <method name="GetPool">
+         <arg name="pool" dir="O" type="sstr"/>
+      </method>
+
+      <method name="SetPool">
+         <arg name="pool" dir="I" type="sstr"/>
+      </method>
+
+      <method name="GetFeatures">
+         <arg name="nodeFeatures" dir="O" type="lstr"/>
+      </method>
+
+      <method name="AddFeatures">
+         <arg name="nodeFeatures" dir="I" type="lstr"/>
+      </method>
+
+      <method name="RemoveFeatures">
+         <arg name="nodeFeatures" dir="I" type="lstr"/>
+      </method>
+   </class>
+
+   <class name="CondorPoolConfig">
+      <property name="configId" type="uint32" index="y"/>
+      <property name="configName" type="sstr"/>
+      <property name="configVersion" type="uint32"/>
+      <property name="isActive" type="bool"/>
+      <property name="featureList" type="map"
+                desc="map(groupId, featureList)"/>
+      <property name="customAttrs" type="map"
+                desc="map(groupId, map(param, value))"/>
+      <property name="defaultFeatures" type="lstr"
+                desc="Features to be applied to nodes not explicitly defined"/>
+
+      <method name="GetConfigId">
+         <arg name="configId" dir="O" type="uint32"/>
+      </method>
+
+      <method name="GetConfigName">
+         <arg name="configName" dir="O" type="sstr"/>
+      </method>
+
+      <method name="SetConfigName">
+         <arg name="configName" dir="I" type="sstr"/>
+      </method>
+
+      <method name="GetConfigVersion">
+         <arg name="configVersion" dir="O" type="uint32"/>
+      </method>
+
+      <method name="IsConfigActive">
+         <arg name="isActive" dir="O" type="bool"/>
+      </method>
+
+      <method name="SetConfigActive">
+      </method>
+
+      <method name="GetFeatureList">
+         <arg name="featureList" dir="O" type="map"/>
+      </method>
+
+      <method name="ModifyFeatureList">
+         <arg name="isDelete" dir="I" type="bool"/>
+         <arg name="featureList" dir="I" type="map"
+              desc="map(groupId, featureList)"/>
+      </method>
+
+      <method name="GetCustomAttrs">
+         <arg name="customAttrs" dir="O" type="map"/>
+      </method>
+
+      <method name="ModifyCustomAttrs">
+         <arg name="isDelete" dir="I" type="bool"/>
+         <arg name="customAttrs" dir="I" type="map"
+              desc="map(groupId, map(param, value))"/>
+      </method>
+
+      <method name="GetDefaultFeatures">
+         <arg name="defaultFeatures" dir="O" type="lstr"/>
+      </method>
+
+      <method name="ModifyDefaultFeatures">
+         <arg name="isDelete" dir="I" type="bool"/>
+         <arg name="defaultFeatures" dir="I" type="lstr"/>
+      </method>
+   </class>
+
+   <class name="CondorConfigFeature">
+      <property name="featureId" type="uint32" index="y"/>
+      <property name="featureName" type="sstr"/>
+      <property name="attrList" type="map"/>
+      <property name="featureList" type="lstr"/>
+      <property name="conflictsWith" type="lstr"/>
+      <property name="dependsOn" type="lstr"/>
+
+      <method name="GetFeatureId">
+         <arg name="featureId" dir="O" type="uint32"/>
+      </method>
+
+      <method name="GetFeatureName">
+         <arg name="featureName" dir="O" type="sstr"/>
+      </method>
+
+      <method name="SetFeatureName">
+         <arg name="featureName" dir="I" type="sstr"/>
+      </method>
+
+      <method name="ModifyFeatureList">
+         <arg name="featureList" dir="I" type="lstr"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="ModifyAttrList">
+         <arg name="attrList" dir="I" type="map"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="ModifyConflicts">
+         <arg name="conflictList" dir="I" type="lstr"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="ModifyDepends">
+         <arg name="dependList" dir="I" type="lstr"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+   </class>
+
+   <class name="CondorConfigGroup">
+      <property name="groupId" type="uint32" index="y"/>
+      <property name="groupName" type="sstr"/>
+
+      <method name="GetIncludedNodes">
+         <arg name="nodeList" dir="O" type="lstr"
+              desc="The names of the nodes part of this group"/>
+      </method>
+
+      <method name="GetGroupId">
+         <arg name="groupId" dir="O" type="uint32"/>
+      </method>
+   </class>
+
+   <class name="CondorConfigAttribute">
+      <property name="name" type="sstr" index="y"/>
+      <property name="attrType" type="uint8"/>
+      <property name="value" type="lstr"/>
+      <property name="default" type="lstr"/>
+      <property name="desc" type="lstr"/>
+      <property name="mustChangeDefault" type="bool"/>
+      <property name="level" type="uint8"/>
+      <property name="requiresRestart" type="bool"/>
+      <property name="dependsOn" type="lstr"/>
+      <property name="conflictsWith" type="lstr"/>
+
+      <method name="GetName">
+         <arg name="attrName" dir="O" type="sstr"/>
+      </method>
+
+      <method name="SetName">
+         <arg name="attrName" dir="I" type="sstr"/>
+      </method>
+
+      <method name="GetAttrType">
+         <arg name="attrType" dir="O" type="uint8"/>
+      </method>
+
+      <method name="SetAttrType">
+         <arg name="attrType" dir="I" type="uint8"/>
+      </method>
+
+      <method name="GetValue">
+         <arg name="attrValue" dir="O" type="lstr"/>
+      </method>
+
+      <method name="SetValue">
+         <arg name="attrValue" dir="I" type="lstr"/>
+      </method>
+
+      <method name="GetDefault">
+         <arg name="attrDefault" dir="O" type="lstr"/>
+      </method>
+
+      <method name="SetDefault">
+         <arg name="attrDefault" dir="I" type="lstr"/>
+      </method>
+
+      <method name="GetDescription">
+         <arg name="attrDesc" dir="O" type="lstr"/>
+      </method>
+
+      <method name="SetDescription">
+         <arg name="attrDesc" dir="I" type="lstr"/>
+      </method>
+
+      <method name="GetDefaultMustChange">
+         <arg name="attrMustChange" dir="O" type="bool"/>
+      </method>
+
+      <method name="SetDefaultMustChange">
+         <arg name="attrMustChange" dir="I" type="bool"/>
+      </method>
+
+      <method name="GetVisabilityLevel">
+         <arg name="attrLevel" dir="O" type="uint8"/>
+      </method>
+
+      <method name="SetVisabilityLevel">
+         <arg name="attrLevel" dir="I" type="uint8"/>
+      </method>
+
+      <method name="GetRequiresRestart">
+         <arg name="attrNeedsRestart" dir="O" type="bool"/>
+      </method>
+
+      <method name="SetRequiresRestart">
+         <arg name="attrNeedsRestart" dir="I" type="bool"/>
+      </method>
+
+      <method name="ModifyDepends">
+         <arg name="attrDepends" dir="I" type="lstr"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+
+      <method name="ModifyConflicts">
+         <arg name="attrConflicts" dir="I" type="lstr"/>
+         <arg name="isDelete" dir="I" type="bool"/>
+      </method>
+   </class>
+
+   <eventArguments>
+      <arg name="AffectedNodes" type="lstr"/>
+      <arg name="RestartType" type="uint8"/>
+   </eventArguments>
+
+   <event name="CondorRestartEvent" sev="alert" args="AffectedNodes,RestartType"/>
+</schema>
