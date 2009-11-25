@@ -89,27 +89,14 @@
                     that must be set for the configuration to be valid"/>
       </method>
 
-      <method name="GetNodes">
-         <arg name="list" dir="O" type="map"
-              desc="A map(hostname, timestamp) of the nodes configured in the
-                    store and the last time they checked in with the store."/>
-      </method>
-
-      <method name="GetNodeConfig">
-         <arg name="name" dir="I" type="sstr"/>
-         <arg name="config" dir="O" type="map"
-              desc="A map(parameter, value) representing the configuration for
-                   the node supplied"/>
-      </method>
-
       <method name="AddNode">
          <arg name="name" dir="I" type="sstr"/>
-         <arg name="pool" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
-      <method name="ModifyNode">
+      <method name="GetNode">
          <arg name="name" dir="I" type="sstr"/>
-         <arg name="pool" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
       </method>
 
       <method name="RemoveNode">
@@ -134,6 +121,27 @@
       </method>
    </class>
 
+   <class name="Node">
+      <property name="name" type="sstr" index"y"/>
+
+      <method name="GetPool">
+         <arg name="pool" dir="O" type="sstr"/>
+      </method>
+  
+      <method name="SetPool">
+         <arg name="pool" dir="I" type="sstr"/>
+      </method>
+
+      <method name="GetLastCheckinTime">
+         <arg name="time" dir="O" type="uint32"/>
+      </method>
+
+      <method name="GetConfig">
+         <arg name="config" dir="O" type="map"
+              desc="A map(parameter, value) representing the configuration for
+                    the node supplied"/>
+      </method>
+   </class>
 
    <class name="Configuration">
       <property name="uid" type="uint32" index="y"/>
