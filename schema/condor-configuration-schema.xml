@@ -173,6 +173,11 @@
       </method>
    </class>
 
+   <class name="Node">
+     <property name="name" type="sstr" index="y"/>
+     <property name="pool" type="sstr" />
+   </class>
+
    <class name="Feature">
       <property name="uid" type="uint32" index="y"/>
 
