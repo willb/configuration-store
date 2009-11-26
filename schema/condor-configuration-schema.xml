@@ -228,9 +228,8 @@
 
       <method name="GetDepends">
          <arg name="list" dir="O" type="map"
-              desc="A map(featureName, priority) of other features a feature
-                    depends on for proper operation and the dependency
-                    priority"/>
+              desc="A list of other features that this feature depends 
+		    on for proper operation, in priority order." />
       </method>
 
       <method name="ModifyDepends">
@@ -289,16 +288,29 @@
 
       <method name="GetFeatures">
          <arg name="features" dir="O" type="map"
-              desc="A map(featureName, priority) of features and their priority
-                    included in the group"/>
+              desc="A list of features to be applied to this group, in 
+		    priority order (that is, the first one will be 
+		    applied last, to take effect after ones with less 
+		    priority)" />
       </method>
 
-      <method name="ModifyFeatures">
+      <method name="ModifyFeaturePriorities">
+	<arg name="features" dir="IO" type="map" desc="A list of
+	     features in this group (as returned by GetFeatures), in a
+	     new priority order.  Features that are in this list but
+	     not in the group will be ignored.  Features that are in
+	     the group but not in this list will be placed in arbitrary 
+	     priority order after every feature in this list.  After this 
+	     method executes, features will contain the priority ordering 
+	     of every feature assigned to this group." />
+      </method>
+
+      <method name="ModifyFeatureSet">
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="features" dir="I" type="map"
-              desc="A map(featureName, priority) of feature names and their
+              desc="A set of features to apply to 
                     dependency priority"/>
          <arg name="params" dir="O" type="map"
               desc="A map(paramName, reasonString) for parameters that need
@@ -417,8 +429,7 @@
 
       <method name="GetAttrs">
          <arg name="attrs" dir="O" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    priority that the subsystem is interested in"/>
+              desc="A set of parameter names that the subsystem is interested in"/>
       </method>
 
       <method name="ModifyAttrs">
@@ -426,8 +437,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="attrs" dir="I" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    corresponding priorities"/>
+              desc="A set of parameter names"/>
       </method>
    </class>
 
