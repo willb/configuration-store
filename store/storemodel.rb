@@ -151,11 +151,13 @@ module GridConfigStore
           end
         end
 
-        ondelete = 
+        ondelete = Proc.new do |f|
+          f.deleted = true
+        end
       end
       contents_src = FeatureArc.arcs_from :source=>self, :label=>@@feature_depend, :version=>v
       contents = contents_src.select {|fa| not fa.deleted }
-      DecoratedArray.new :push_callback=>onpush, :contents=>contents
+      DecoratedArray.new :push_callback=>onpush, :contents=>contents, :delete_callback=>ondelete
     end
 
     # Returns a list of features that this one depends on.
