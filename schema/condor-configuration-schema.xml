@@ -107,11 +107,6 @@
          <arg name="pool" dir="I" type="sstr"/>
       </method>
 
-      <method name="ModifyNode">
-         <arg name="name" dir="I" type="sstr"/>
-         <arg name="pool" dir="I" type="sstr"/>
-      </method>
-
       <method name="RemoveNode">
          <arg name="name" dir="I" type="sstr"/>
       </method>
