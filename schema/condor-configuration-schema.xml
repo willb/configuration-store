@@ -134,27 +134,12 @@
       </method>
    </class>
 
-
    <class name="Configuration">
       <property name="uid" type="uint32" index="y"/>
 
-<!-- this doesn't make sense; not every configuration will have a name
-
-      <method name="GetName">
-         <arg name="name" dir="O" type="sstr"/>
-      </method>
--->
       <method name="GetVersion">
          <arg name="version" dir="O" type="uint32"/>
       </method>
-
-<!-- this doesn't make sense; we don't know which configuration is active without some extra work.
-     better would be "version of last active config"
-
-      <method name="IsConfigActive">
-         <arg name="isActive" dir="O" type="bool"/>
-      </method>
--->
 
       <method name="GetFeatures">
          <arg name="list" dir="O" type="map"
@@ -339,22 +324,6 @@
                     dependency priority"/>
       </method>
 
-<!-- we aren't going to support getting the config for a group, right?  just for nodes?
-
-
-      <method name="GetConfig">
-         <arg name="config" dir="O" type="map"
-              desc="A map(paramName, value) of parameters and their values"/>
-      </method>
--->
-
-<!-- why is this a method on the group?
-
-      <method name="CheckConfigVersion">
-         <arg name="version" dir="I" type="uint32"/>
-      </method>
-
--->
    </class>
 
    <class name="Parameter">
