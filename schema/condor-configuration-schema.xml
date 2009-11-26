@@ -223,8 +223,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="conflicts" dir="I" type="map"
-              desc="A map(featureName, True) of other feature names that
-                    conflict with the feature"/>
+              desc="A set of other feature names that conflict with the feature"/>
       </method>
 
       <method name="GetDepends">
@@ -239,13 +238,12 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="depends" dir="I" type="map"
-              desc="A map(featureName, True) of other features a feature
-                    depends on. "/>
+              desc="A set of other features a feature depends on. "/>
       </method>
 
       <method name="GetSubsys">
          <arg name="list" dir="O" type="map"
-              desc="A map(subsysName, True) to subsystems that collaborate
+              desc="A set of subsystem names that collaborate
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
                     changed"/>
@@ -256,7 +254,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="subsys" dir="I" type="map"
-              desc="A map(subsysName, True) of subsystems that collaborate
+              desc="A set of subsystem names that collaborate
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
                     changed"/>
@@ -271,14 +269,13 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="nodes" dir="I" type="map"
-              desc="A map(hostname, True) that defines the members of the
-                    group."/>
+              desc="A set of nodes"/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetMembership">
          <arg name="list" dir="O" type="map"
-              desc="A map(hostname,True) of the nodes associated with
+              desc="A set of the nodes associated with
                     this group"/>
       </method>
 
@@ -402,8 +399,7 @@
 
       <method name="GetConflicts">
          <arg name="conflicts" dir="O" type="map"
-              desc="A map(paramName, True) of parameter names that conflict
-                    with the parameter"/>
+              desc="A set of parameter names that conflict with the parameter"/>
       </method>
 
       <method name="ModifyConflicts">
