@@ -117,7 +117,7 @@
    </class>
 
    <class name="Node">
-      <property name="name" type="sstr" index"y"/>
+      <property name="name" type="sstr" index="y"/>
 
       <method name="GetPool">
          <arg name="pool" dir="O" type="sstr"/>
