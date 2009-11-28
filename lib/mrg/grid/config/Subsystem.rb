@@ -1,8 +1,10 @@
+require 'spqr/spqr'
+
 module Mrg
   module Grid
     module Config
       class Subsystem
-        include SPQR::Manageable
+        include ::SPQR::Manageable
         
         spqr_package 'mrg.grid.config'
         spqr_class 'Subsystem'
