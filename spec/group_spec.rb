@@ -3,9 +3,9 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 module Mrg
   module Grid
     module Config
-      describe Store do
+      describe Group do
         it "should have some examples" do
-          pending "No store examples yet"
+          pending "No group examples yet"
         end
       end
     end
