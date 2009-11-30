@@ -94,6 +94,11 @@
          <arg name="obj" dir="O" type="objId"/>
       </method>
 
+      <method name="GetNode">
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
+      </method>
+
       <method name="RemoveNode">
          <arg name="name" dir="I" type="sstr"/>
       </method>
