@@ -1,6 +1,8 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
+require 'rubygems'
+
 require 'mrg/grid/config/Store'
 require 'mrg/grid/config/Node'
 require 'mrg/grid/config/Configuration'
