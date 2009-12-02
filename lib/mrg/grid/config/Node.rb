@@ -1,34 +1,24 @@
 require 'spqr/spqr'
+require 'rhubarb/rhubarb'
 
 module Mrg
   module Grid
     module Config
       class Node
+        include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         
         spqr_package 'mrg.grid.config'
         spqr_class 'Node'
-        # Find method (NB:  you must implement this)
-        def Node.find_by_id(objid)
-          Node.new
-        end
         
-# Find-all method (NB:  you must implement this)
-        def Node.find_all
-          [Node.new]
+        def Node.find_by_id(oid)
+          self.find(oid)
         end
+
         ### Property method declarations
-        
-        # property name sstr 
-        def name
-          log.debug 'Requested property name'
-          nil
-        end
-        
-        def name=(val)
-          log.debug 'Set property name to #{val}'
-          nil
-        end
+        declare_column :name, :string, :not_null
+        declare_column :pool, :string
+        declare_index :name
         
         spqr_property :name, :sstr, :index=>true
         ### Schema method declarations
@@ -38,7 +28,7 @@ module Mrg
         # 
         def GetPool(args)
           # Assign values to out parameters
-          args["pool"] = args["pool"]
+          args["pool"] = pool
         end
         
         spqr_expose :GetPool do |args|
@@ -50,7 +40,8 @@ module Mrg
         # 
         def SetPool(args)
           # Print values of in parameters
-          log.debug "pool => #{args["pool"]}" # 
+          log.debug "setting pool to => #{args["pool"]}" # 
+          pool = args["pool"]
         end
         
         spqr_expose :SetPool do |args|
