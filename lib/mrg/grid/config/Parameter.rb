@@ -14,8 +14,10 @@ module Mrg
         # property name sstr 
 
         declare_column :name, :string, :not_null
-        declare_index :name
+        declare_index_on :name
         
+        declare_column :type, :string, :default, :string
+
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
@@ -23,8 +25,6 @@ module Mrg
         # * type (uint8/O)
         def GetType()
           # Assign values to output parameters
-          type ||= 0
-          # Return value
           return type
         end
         
@@ -37,6 +37,7 @@ module Mrg
         def SetType(type)
           # Print values of input parameters
           log.debug "SetType: type => #{type}"
+          self.type = type
         end
         
         expose :SetType do |args|

@@ -14,7 +14,7 @@ module Mrg
         # property uid uint32 
 
         declare_column :uid, :integer, :not_null
-        declare_index :uid
+        declare_index_on :uid
         
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
