@@ -8,13 +8,14 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
+        declare_table_name('nodegroup')
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Group'
         ### Property method declarations
         # property uid uint32 
 
         declare_column :uid, :integer, :not_null
-        declare_index :uid
+        declare_index_on :uid
         
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
