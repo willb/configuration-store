@@ -14,7 +14,7 @@ module Mrg
         # property name sstr 
 
         declare_column :name, :string, :not_null
-        declare_index :name
+        declare_index_on :name
         
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
