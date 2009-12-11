@@ -1,21 +1,18 @@
 require 'spqr/spqr'
-require 'rhubarb/rhubarb'
 
 module Mrg
   module Grid
     module Config
       class Store
-        include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Store'
+
         ### Property method declarations
         # property APIVersionNumber uint32 The version of the API the store supports
-
-        declare_column :APIVersionNumber, :integer
-        
-        qmf_property :APIVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
+        attr_accessor :apiVersionNumber
+        qmf_property :apiVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
         ### Schema method declarations
         
         # GetGroup 
@@ -110,12 +107,12 @@ module Mrg
         end
         
         # GetConfiguration 
-        # * Query (map/I)
+        # * query (map/I)
         #   A query that defines the configuration desired. Valid values for the key are 'ID' or 'Name'. 'ID' keys should contain a specific ConfigurationId as its value, whereas 'Name' keys should contain a Configuration Name as its value
         # * obj (objId/O)
-        def GetConfiguration(Query)
+        def GetConfiguration(query)
           # Print values of input parameters
-          log.debug "GetConfiguration: Query => #{Query}"
+          log.debug "GetConfiguration: query => #{query}"
           # Assign values to output parameters
           obj ||= nil
           # Return value
@@ -124,7 +121,7 @@ module Mrg
         
         expose :GetConfiguration do |args|
           args.declare :obj, :objId, :out, {}
-          args.declare :Query, :map, :in, {}
+          args.declare :query, :map, :in, {}
         end
         
         # MakeSnapshot 
@@ -180,13 +177,28 @@ module Mrg
         def AddNode(name)
           # Print values of input parameters
           log.debug "AddNode: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+
+          # Return a newly-created node
+          return Node.create(:name => name)
         end
         
         expose :AddNode do |args|
+          args.declare :obj, :objId, :out, {}
+          args.declare :name, :sstr, :in, {}
+        end
+
+        # GetNode 
+        # * name (sstr/I)
+        # * obj (objId/O)
+        def GetNode(name)
+          # Print values of input parameters
+          log.debug "GetNode: name => #{name}"
+
+          # Return the node with the given name
+          return Node.find_first_by_name(name)
+        end
+        
+        expose :GetNode do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
@@ -196,6 +208,9 @@ module Mrg
         def RemoveNode(name)
           # Print values of input parameters
           log.debug "RemoveNode: name => #{name}"
+
+          # Actually remove the node
+          Node.find_first_by_name(name).remove
         end
         
         expose :RemoveNode do |args|
@@ -227,10 +242,8 @@ module Mrg
         def AddParam(name)
           # Print values of input parameters
           log.debug "AddParam: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
           # Return value
-          return obj
+          return Parameter.create(:name => name)
         end
         
         expose :AddParam do |args|
