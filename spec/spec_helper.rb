@@ -17,3 +17,16 @@ require 'spec/autorun'
 Spec::Runner.configure do |config|
   
 end
+
+def setup_rhubarb(kwargs=nil)
+  kwargs ||= {}
+  dbname = kwargs[:dbname] || ":memory:"
+  classes = kwargs[:classes] || [Mrg::Grid::Config::Store, Mrg::Grid::Config::Node, Mrg::Grid::Config::Configuration, Mrg::Grid::Config::Feature, Mrg::Grid::Config::Group, Mrg::Grid::Config::Parameter, Mrg::Grid::Config::Subsystem]
+
+  Rhubarb::Persistence::open(kwargs[:dbname])
+  classes.each {|cl| cl.create_table}
+end
+
+def teardown_rhubarb
+  Rhubarb::Persistence::close
+end
