@@ -58,7 +58,7 @@
       </method>
 
       <method name="GetConfiguration">
-         <arg name="Query" dir="I" type="map"
+         <arg name="query" dir="I" type="map"
               desc="A query that defines the configuration desired.  Valid
                     values for the key are 'ID' or 'Name'.  'ID' keys should
                     contain a specific ConfigurationId as its value,  whereas
