@@ -18,12 +18,14 @@ Spec::Runner.configure do |config|
   
 end
 
+include Mrg::Grid::Config
+
 def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
-  classes = kwargs[:classes] || [Mrg::Grid::Config::Node, Mrg::Grid::Config::Configuration, Mrg::Grid::Config::Feature, Mrg::Grid::Config::Group, Mrg::Grid::Config::Parameter, Mrg::Grid::Config::Subsystem]
+  classes = kwargs[:classes] || [Node, Configuration, Feature, Group, Parameter, Subsystem]
 
-  Rhubarb::Persistence::open(kwargs[:dbname])
+  Rhubarb::Persistence::open(dbname)
   classes.each {|cl| cl.create_table}
 end
 
