@@ -94,6 +94,11 @@
          <arg name="obj" dir="O" type="objId"/>
       </method>
 
+      <method name="GetNode">
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"/>
+      </method>
+
       <method name="RemoveNode">
          <arg name="name" dir="I" type="sstr"/>
       </method>
@@ -167,6 +172,7 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="params" dir="I" type="map"
               desc="map(groupId, map(param, value))"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetDefaultFeatures">
@@ -178,6 +184,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="features" dir="I" type="map"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
@@ -203,6 +210,7 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="features" dir="I" type="map"
               desc="A list of other features a feature includes"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetParams">
@@ -218,6 +226,7 @@
          <arg name="params" dir="I" type="map"
               desc="A map(paramName, value) of parameters and their
                     corresponding values that is specific to a group"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetConflicts">
@@ -232,6 +241,7 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="conflicts" dir="I" type="map"
               desc="A set of other feature names that conflict with the feature"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetDepends">
@@ -246,6 +256,7 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="depends" dir="I" type="map"
               desc="A set of other features a feature depends on. "/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetSubsys">
@@ -265,6 +276,7 @@
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
                     changed"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
@@ -294,7 +306,7 @@
          <arg name="name" dir="I" type="sstr"/>
       </method>
 
-      <method name="GetFeatures">
+      <method name="GetFeatureSet">
          <arg name="features" dir="O" type="map"
               desc="A list of features to be applied to this group, in 
 		    priority order (that is, the first one will be 
@@ -303,14 +315,16 @@
       </method>
 
       <method name="ModifyFeaturePriorities">
-	<arg name="features" dir="IO" type="map" desc="A list of
-	     features in this group (as returned by GetFeatures), in a
-	     new priority order.  Features that are in this list but
-	     not in the group will be ignored.  Features that are in
-	     the group but not in this list will be placed in arbitrary 
-	     priority order after every feature in this list.  After this 
-	     method executes, features will contain the priority ordering 
-	     of every feature assigned to this group." />
+         <arg name="features" dir="IO" type="map"
+              desc="A list of features in this group (as returned by
+                    GetFeatureSet), in a new priority order.  Features that
+                    are in this list but not in the group will be ignored.
+                    Features that are in the group but not in this list
+                    will be placed in arbitrary priority order after every
+                    feature in this list.  After this method executes,
+                    features will contain the priority ordering of every
+                    feature assigned to this group." />
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="ModifyFeatureSet">
@@ -320,6 +334,7 @@
          <arg name="features" dir="I" type="map"
               desc="A set of features to apply to 
                     dependency priority"/>
+         <arg name="options" dir="I" type="map"/>
          <arg name="params" dir="O" type="map"
               desc="A map(paramName, reasonString) for parameters that need
                     to be set as a result of the features added before the
@@ -339,6 +354,7 @@
          <arg name="params" dir="I" type="map"
               desc="A map(featureName, priority) of feature names and their
                     dependency priority"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
    </class>
@@ -415,6 +431,7 @@
          <arg name="depends" dir="I" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     dependency priority"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
 
       <method name="GetConflicts">
@@ -429,6 +446,7 @@
          <arg name="conflicts" dir="I" type="map"
               desc="A map(paramName, priority) of parameter names and their
                     conflict priority"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
@@ -446,6 +464,7 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="attrs" dir="I" type="map"
               desc="A set of parameter names"/>
+         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
