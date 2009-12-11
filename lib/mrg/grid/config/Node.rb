@@ -7,80 +7,77 @@ module Mrg
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
-        
-        spqr_package 'mrg.grid.config'
-        spqr_class 'Node'
-        
-        def Node.find_by_id(oid)
-          self.find(oid)
-        end
 
+        qmf_package_name 'mrg.grid.config'
+        qmf_class_name 'Node'
         ### Property method declarations
+        # property name sstr 
+
         declare_column :name, :string, :not_null
-        declare_column :pool, :string
         declare_index :name
         
-        spqr_property :name, :sstr, :index=>true
+        qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
         # GetPool 
         # * pool (sstr/O)
-        # 
-        def GetPool(args)
-          # Assign values to out parameters
-          args["pool"] = pool
+        def GetPool()
+          # Assign values to output parameters
+          pool ||= ""
+          # Return value
+          return pool
         end
         
-        spqr_expose :GetPool do |args|
+        expose :GetPool do |args|
           args.declare :pool, :sstr, :out, {}
         end
         
         # SetPool 
         # * pool (sstr/I)
-        # 
-        def SetPool(args)
-          # Print values of in parameters
-          log.debug "setting pool to => #{args["pool"]}" # 
-          pool = args["pool"]
+        def SetPool(pool)
+          # Print values of input parameters
+          log.debug "SetPool: pool => #{pool}"
         end
         
-        spqr_expose :SetPool do |args|
+        expose :SetPool do |args|
           args.declare :pool, :sstr, :in, {}
         end
         
         # GetLastCheckinTime 
         # * time (uint32/O)
-        # 
-        def GetLastCheckinTime(args)
-          # Assign values to out parameters
-          args["time"] = args["time"]
+        def GetLastCheckinTime()
+          # Assign values to output parameters
+          time ||= 0
+          # Return value
+          return time
         end
         
-        spqr_expose :GetLastCheckinTime do |args|
+        expose :GetLastCheckinTime do |args|
           args.declare :time, :uint32, :out, {}
         end
         
         # GetConfig 
         # * config (map/O)
-        # A map(parameter, value) representing the configuration for the node supplied
-        def GetConfig(args)
-          # Assign values to out parameters
-          args["config"] = args["config"]
+        #   A map(parameter, value) representing the configuration for the node supplied
+        def GetConfig()
+          # Assign values to output parameters
+          config ||= {}
+          # Return value
+          return config
         end
         
-        spqr_expose :GetConfig do |args|
+        expose :GetConfig do |args|
           args.declare :config, :map, :out, {}
         end
         
         # CheckConfigVersion 
         # * version (uint32/I)
-        # 
-        def CheckConfigVersion(args)
-          # Print values of in parameters
-          log.debug "version => #{args["version"]}" # 
+        def CheckConfigVersion(version)
+          # Print values of input parameters
+          log.debug "CheckConfigVersion: version => #{version}"
         end
         
-        spqr_expose :CheckConfigVersion do |args|
+        expose :CheckConfigVersion do |args|
           args.declare :version, :uint32, :in, {}
         end
       end
