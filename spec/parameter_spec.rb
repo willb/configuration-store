@@ -4,8 +4,18 @@ module Mrg
   module Grid
     module Config
       describe Parameter do
-        it "should have some examples" do
-          pending "No parameter examples yet"
+        before(:each) do
+          setup_rhubarb
+          @store = Store.new
+        end
+        
+        after(:each) do
+          teardown_rhubarb
+        end
+
+        it "should be possible to create a parameter" do
+          param = @store.AddParam("BIOTECH")
+          param.name.should == "BIOTECH"
         end
       end
     end

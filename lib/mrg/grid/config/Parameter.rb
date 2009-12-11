@@ -16,7 +16,11 @@ module Mrg
         declare_column :name, :string, :not_null
         declare_index_on :name
         
-        declare_column :type, :string, :default, :string
+        declare_column :kind, :string, :default, :string
+        declare_column :default_val, :string
+        declare_column :must_change, :boolean, :default, :false
+        declare_column :level, :integer
+        declare_column :needsRestart, :boolean
 
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
@@ -25,7 +29,7 @@ module Mrg
         # * type (uint8/O)
         def GetType()
           # Assign values to output parameters
-          return type
+          return kind
         end
         
         expose :GetType do |args|
@@ -33,11 +37,11 @@ module Mrg
         end
         
         # SetType 
-        # * type (uint8/I)
+        # * ty (uint8/I)
         def SetType(type)
           # Print values of input parameters
           log.debug "SetType: type => #{type}"
-          self.type = type
+          self.kind = type
         end
         
         expose :SetType do |args|
@@ -72,9 +76,9 @@ module Mrg
         # * default (lstr/O)
         def GetDefault()
           # Assign values to output parameters
-          default ||= ""
+          self.default_val ||= ""
           # Return value
-          return default
+          return self.default_val
         end
         
         expose :GetDefault do |args|
@@ -86,6 +90,7 @@ module Mrg
         def SetDefault(default)
           # Print values of input parameters
           log.debug "SetDefault: default => #{default}"
+          self.default_val = default
         end
         
         expose :SetDefault do |args|
@@ -96,9 +101,9 @@ module Mrg
         # * description (lstr/O)
         def GetDescription()
           # Assign values to output parameters
-          description ||= ""
+          self.description ||= ""
           # Return value
-          return description
+          return self.description
         end
         
         expose :GetDescription do |args|
@@ -110,6 +115,7 @@ module Mrg
         def SetDescription(description)
           # Print values of input parameters
           log.debug "SetDescription: description => #{description}"
+          self.description = description
         end
         
         expose :SetDescription do |args|
@@ -119,10 +125,7 @@ module Mrg
         # GetDefaultMustChange 
         # * mustChange (bool/O)
         def GetDefaultMustChange()
-          # Assign values to output parameters
-          mustChange ||= false
-          # Return value
-          return mustChange
+          return self.must_change
         end
         
         expose :GetDefaultMustChange do |args|
@@ -134,6 +137,7 @@ module Mrg
         def SetDefaultMustChange(mustChange)
           # Print values of input parameters
           log.debug "SetDefaultMustChange: mustChange => #{mustChange}"
+          self.must_change = mustChange
         end
         
         expose :SetDefaultMustChange do |args|
@@ -143,10 +147,9 @@ module Mrg
         # GetVisibilityLevel 
         # * level (uint8/O)
         def GetVisibilityLevel()
-          # Assign values to output parameters
-          level ||= 0
+          self.level ||= 0
           # Return value
-          return level
+          return self.level
         end
         
         expose :GetVisibilityLevel do |args|
@@ -158,6 +161,7 @@ module Mrg
         def SetVisibilityLevel(level)
           # Print values of input parameters
           log.debug "SetVisibilityLevel: level => #{level}"
+          self.level = level
         end
         
         expose :SetVisibilityLevel do |args|
@@ -168,9 +172,9 @@ module Mrg
         # * needsRestart (bool/O)
         def GetRequiresRestart()
           # Assign values to output parameters
-          needsRestart ||= false
+          self.needsRestart ||= false
           # Return value
-          return needsRestart
+          return self.needsRestart
         end
         
         expose :GetRequiresRestart do |args|
@@ -182,6 +186,7 @@ module Mrg
         def SetRequiresRestart(needsRestart)
           # Print values of input parameters
           log.debug "SetRequiresRestart: needsRestart => #{needsRestart}"
+          self.needsRestart = needsRestart
         end
         
         expose :SetRequiresRestart do |args|
