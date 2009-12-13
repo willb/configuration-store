@@ -224,10 +224,8 @@ module Mrg
         def GetParam(name)
           # Print values of input parameters
           log.debug "GetParam: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+
+          return Parameter.find_first_by_name(name)
         end
         
         expose :GetParam do |args|

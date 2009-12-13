@@ -18,6 +18,7 @@ module Mrg
         
         declare_column :kind, :string, :default, :string
         declare_column :default_val, :string
+        declare_column :description, :string
         declare_column :must_change, :boolean, :default, :false
         declare_column :level, :integer
         declare_column :needsRestart, :boolean
