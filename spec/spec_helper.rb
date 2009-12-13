@@ -32,3 +32,19 @@ end
 def teardown_rhubarb
   Rhubarb::Persistence::close
 end
+
+module DescribeGetterAndSetter
+  def describe_getter_and_setter(setmsg, getmsg, values, key=nil)
+    key ||= @gskey
+    param = @store.send(@add_msg, key)
+    
+    values.each do |val|
+      param = @store.send(@find_msg, key)
+      param.send(setmsg, val)
+      
+      param = @store.send(@find_msg, key)
+      param.send(getmsg).should == val
+    end
+  end
+  
+end

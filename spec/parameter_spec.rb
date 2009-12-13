@@ -16,18 +16,7 @@ module Mrg
           teardown_rhubarb
         end
         
-        def test_getter_and_setter(setmsg, getmsg, values, key=nil)
-          key ||= @gskey
-          param = @store.send(@add_msg, key)
-          
-          values.each do |val|
-            param = @store.send(@find_msg, key)
-            param.send(setmsg, val)
-            
-            param = @store.send(@find_msg, key)
-            param.send(getmsg).should == val
-          end
-        end
+        include DescribeGetterAndSetter
 
         it "enables creating a parameter" do
           param = @store.AddParam("BIOTECH")
@@ -39,32 +28,33 @@ module Mrg
           param = @store.GetParam("BIOTECH")
           
           param.name.should == "BIOTECH"
-          
-          
         end
         
         it "enables setting a parameter's type" do
-          test_getter_and_setter(:SetType, :GetType, ["int", "string", "timestamp", "hostname"])
+          describe_getter_and_setter(:SetType, :GetType, ["int", "string", "timestamp", "hostname"])
         end
         
         it "enables setting a parameter's default value" do
-          test_getter_and_setter(:SetDefault, :GetDefault, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
+          describe_getter_and_setter(:SetDefault, :GetDefault, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
         end
         
         it "enables setting a parameter's description" do
           vals = ["Does anyone know what this does?", "Perhaps not.", "All right, then."]
-          test_getter_and_setter(:SetDescription, :GetDescription, vals)
+          describe_getter_and_setter(:SetDescription, :GetDescription, vals)
         end
         
         it "enables setting a parameter's visibility level" do
-          test_getter_and_setter(:SetVisibilityLevel, :GetVisibilityLevel, (0..12))
+          describe_getter_and_setter(:SetVisibilityLevel, :GetVisibilityLevel, (0..12))
         end
 
         it "enables setting a parameter's requires-restart property" do
-          test_getter_and_setter(:SetRequiresRestart, :GetRequiresRestart, [true, false])
+          describe_getter_and_setter(:SetRequiresRestart, :GetRequiresRestart, [true, false])
         end
 
-        
+        it "has no dependencies by default" do
+          param = @store.AddParam("BIOTECH")
+          param.GetDepends.should == {}
+        end
       end
     end
   end
