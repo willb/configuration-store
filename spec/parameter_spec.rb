@@ -64,11 +64,15 @@ module Mrg
           param = params[param_names.shift]
           added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
           
+          puts added_deps
+          
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          deps.should_have(added_deps.size).things
-          added_deps.each {|dep| deps.should_include dep }
+          puts deps
+          
+          deps.keys.size.should == added_deps.size
+          added_deps.each {|dep| deps.keys.should_include dep }
         end
       end
     end

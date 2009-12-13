@@ -199,12 +199,9 @@ module Mrg
         
         # GetDepends 
         # * depends (map/O)
-        #   A map(paramName, priority) of parameter names and their dependency priority
+        #   A set of parameter names that this one depends on
         def GetDepends()
-          # Assign values to output parameters
-          depends ||= {}
-          # Return value
-          return depends
+          return depends.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
         expose :GetDepends do |args|
@@ -216,10 +213,22 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * depends (map/I)
         #   A set of parameter names that this one depends on
-        def ModifyDepends(command,depends,options)
+        def ModifyDepends(command,deps,options)
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
-          log.debug "ModifyDepends: depends => #{depends}"
+          log.debug "ModifyDepends: depends => #{deps}"
+          case command
+          when "ADD" then 
+            old_deps = Set[*depends]
+            new_deps = Set[*deps.keys]
+            puts "old_deps = #{old_deps.inspect}"
+            puts "new_deps = #{new_deps.inspect}"
+            
+            puts "old_deps + new_deps = #{(old_deps + new_deps).inspect}"
+            
+            set_depends((old_deps + new_deps).to_a)
+          else nil
+          end
         end
         
         expose :ModifyDepends do |args|
@@ -262,29 +271,34 @@ module Mrg
         private
         
         def depends
-          PArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.name }
+          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.name }
         end
         
-        def depends=(deps)
+        def set_depends(deps)
           new_deps = Set[*deps]
           
+          puts "finding #{new_deps}..."
+          
           target_params = new_deps.map do |param|
+            puts "finding #{param}..."
             dest = Parameter.find_first_by_name(param)
             raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
+            puts "...got it, #{dest}"
             dest
           end
           
-          PArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.delete }
+          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.delete }
           
           target_params.each do |dest|
-            PArc.create(:source=>self, :dest=>dest, :label=>ArcLabel.depends_on('param'))
+            puts "making an arc from #{self} to #{dest}"
+            ParameterArc.create(:source=>self, :dest=>dest, :label=>ArcLabel.depends_on('param'))
           end
           
           new_deps.to_a
         end
       end
     
-      class PArc
+      class ParameterArc
         include ::Rhubarb::Persisting
         declare_column :source, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
         declare_column :dest, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
