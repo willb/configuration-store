@@ -429,8 +429,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="depends" dir="I" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    dependency priority"/>
+              desc="A set of parameter names that this parameter depends on"/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
@@ -444,8 +443,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="conflicts" dir="I" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    conflict priority"/>
+              desc="A set of parameter names that this parameter conflicts with"/>
          <arg name="options" dir="I" type="map"/>
       </method>
    </class>
