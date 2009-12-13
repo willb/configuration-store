@@ -51,9 +51,24 @@ module Mrg
           describe_getter_and_setter(:SetRequiresRestart, :GetRequiresRestart, [true, false])
         end
 
-        it "has no dependencies by default" do
+        it "has no dependencies or conflicts by default" do
           param = @store.AddParam("BIOTECH")
           param.GetDepends.should == {}
+          param.GetConflicts.should == {}
+        end
+        
+        it "accepts added dependencies" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          
+          param = params[param_names.shift]
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          
+          param.ModifyDepends("ADD", added_deps, {})
+          deps = param.GetDepends
+          
+          deps.should_have(added_deps.size).things
+          added_deps.each {|dep| deps.should_include dep }
         end
       end
     end

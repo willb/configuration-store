@@ -1,9 +1,12 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
+require 'mrg/grid/config/ArcLabel'
+
+require 'set'
 
 module Mrg
   module Grid
-    module Config
+    module Config      
       class Parameter
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
@@ -212,8 +215,8 @@ module Mrg
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * depends (map/I)
-        #   A map(paramName, priority) of parameter names and their dependency priority
-        def ModifyDepends(command,depends)
+        #   A set of parameter names that this one depends on
+        def ModifyDepends(command,depends,options)
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{depends}"
@@ -222,6 +225,7 @@ module Mrg
         expose :ModifyDepends do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :depends, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetConflicts 
@@ -242,8 +246,8 @@ module Mrg
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
-        #   A map(paramName, priority) of parameter names and their conflict priority
-        def ModifyConflicts(command,conflicts)
+        #   A set of parameter names that conflict with this one
+        def ModifyConflicts(command,conflicts,options)
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
@@ -252,7 +256,39 @@ module Mrg
         expose :ModifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :conflicts, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
+        
+        private
+        
+        def depends
+          PArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.name }
+        end
+        
+        def depends=(deps)
+          new_deps = Set[*deps]
+          
+          target_params = new_deps.map do |param|
+            dest = Parameter.find_first_by_name(param)
+            raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
+            dest
+          end
+          
+          PArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.delete }
+          
+          target_params.each do |dest|
+            PArc.create(:source=>self, :dest=>dest, :label=>ArcLabel.depends_on('param'))
+          end
+          
+          new_deps.to_a
+        end
+      end
+    
+      class PArc
+        include ::Rhubarb::Persisting
+        declare_column :source, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :dest, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :label, :integer, :not_null, references(ArcLabel)
       end
     end
   end
