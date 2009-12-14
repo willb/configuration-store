@@ -261,37 +261,19 @@ module Mrg
         include ArcUtils
         
         def depends
-          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|pa| pa.dest.name }
+          find_arcs(ParameterArc,ArcLabel.depends_on('param')) {|pa| pa.dest.name }
         end
         
         def conflicts
-          ParameterArc.find_by(:source=>self, :label=>ArcLabel.conflicts_with('param')).map {|pa| pa.dest.name }
+          find_arcs(ParameterArc,ArcLabel.conflicts_with('param')) {|pa| pa.dest.name }
         end
         
         def set_depends(deps)
-          set_arcs(ArcLabel.depends_on('param'), deps)
+          set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
         end
         
         def set_conflicts(conflicts)
-          set_arcs(ArcLabel.conflicts_with('param'), conflicts)
-        end
-        
-        def set_arcs(label, dests)
-          new_dests = Set[*dests]
-          
-          target_params = new_dests.map do |param|
-            dest = Parameter.find_first_by_name(param)
-            raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
-            dest
-          end
-          
-          ParameterArc.find_by(:source=>self, :label=>label).map {|p| p.delete }
-          
-          target_params.each do |dest|
-            ParameterArc.create(:source=>self.row_id, :dest=>dest.row_id, :label=>label.row_id)
-          end
-          
-          new_dests.to_a
+          set_arcs(ParameterArc, ArcLabel.conflicts_with('param'), conflicts, :find_first_by_name)
         end
       end
     

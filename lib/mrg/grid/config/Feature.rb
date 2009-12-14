@@ -1,5 +1,10 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
+require 'mrg/grid/config/Subsystem'
+require 'mrg/grid/config/ArcLabel'
+require 'mrg/grid/config/ArcUtils'
+
+require 'set'
 
 module Mrg
   module Grid
@@ -200,6 +205,23 @@ module Mrg
           args.declare :command, :sstr, :in, {}
           args.declare :subsys, :map, :in, {}
         end
+        
+        private
+        
+      end
+      
+      class FeatureArc
+        include ::Rhubarb::Persisting
+        declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
+        declare_column :dest, :integer, :not_null, references(Feature, :on_delete=>:cascade)
+        declare_column :label, :integer, :not_null, references(ArcLabel)
+      end
+      
+      class FeatureSubsys
+        include ::Rhubarb::Persisting
+        declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
+        declare_column :dest, :integer, :not_null, references(Subsystem, :on_delete=>:cascade)
+        declare_column :label, :integer, :not_null, references(ArcLabel)        
       end
     end
   end
