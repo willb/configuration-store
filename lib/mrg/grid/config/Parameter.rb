@@ -217,18 +217,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{deps}"
-          case command
-          when "ADD" then 
-            old_deps = Set[*depends]
-            new_deps = Set[*deps.keys]
-            raise ArgumentError.new("parameter #{name} cannot depend on itself") if new_deps.include? self.name
-            set_depends((old_deps + new_deps).to_a)
-          when "REPLACE" then 
-            new_deps = Set[*deps.keys]
-            raise ArgumentError.new("parameter #{name} cannot depend on itself") if new_deps.include? self.name
-            set_depends(new_deps.to_a)
-          else nil
-          end
+          ModifyArcs(command,deps,options,:depends,:set_depends,explain="depend upon")
         end
         
         expose :ModifyDepends do |args|
@@ -241,10 +230,7 @@ module Mrg
         # * conflicts (map/O)
         #   A set of parameter names that conflict with the parameter
         def GetConflicts()
-          # Assign values to output parameters
-          conflicts ||= {}
-          # Return value
-          return conflicts
+          return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
         expose :GetConflicts do |args|
@@ -260,6 +246,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
+          ModifyArcs(command,conflicts,options,:conflicts,:set_conflicts,explain="conflict with")
         end
         
         expose :ModifyConflicts do |args|
@@ -270,6 +257,23 @@ module Mrg
         
         private
         
+        def ModifyArcs(command,dests,options,getmsg,setmsg,explain="have an arc to")
+          case command
+          when "ADD" then 
+            old_dests = Set[*self.send(getmsg)]
+            new_dests = Set[*dests.keys]
+            raise ArgumentError.new("parameter #{name} cannot #{explain} itself") if new_dests.include? self.name
+            self.send(setmsg, (old_dests + new_dests).to_a)
+          when "REPLACE" then 
+            new_dests = Set[*dests.keys]
+            raise ArgumentError.new("parameter #{name} cannot #{explain} itself") if new_dests.include? self.name
+            self.send(setmsg, new_dests.to_a)
+          when "UNION", "REMOVE", "INTERSECT", "DIFF" then
+            raise RuntimeError.new("#{command} not implemented")            
+          else nil
+          end
+        end
+        
         def depends
           ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|pa| pa.dest.name }
         end
@@ -279,24 +283,13 @@ module Mrg
         end
         
         def set_depends(deps)
-          new_deps = Set[*deps]
-                    
-          target_params = new_deps.map do |param|
-            dest = Parameter.find_first_by_name(param)
-            raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
-            dest
-          end
-          
-          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.delete }
-          
-          target_params.each do |dest|
-            label = ArcLabel.depends_on('param')
-            ParameterArc.create(:source=>self.row_id, :dest=>dest.row_id, :label=>label.row_id)
-          end
-          
-          new_deps.to_a
+          set_arcs(ArcLabel.depends_on('param'), deps)
         end
-
+        
+        def set_conflicts(conflicts)
+          set_arcs(ArcLabel.conflicts_with('param'), conflicts)
+        end
+        
         def set_arcs(label, dests)
           new_dests = Set[*dests]
           

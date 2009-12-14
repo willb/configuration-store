@@ -13,9 +13,8 @@ module Mrg
         # Returns an ArcLabel that represents a conflict with a kind of
         # thing (e.g. ArcLabel.conflicts(:param) or ArcLabel.conflicts(:feature))
         def self.conflicts_with(kind)
-          key = ("conflicts_with_" + kind).to_sym
-          @kinds ||= {}
-          @kinds[key] ||= ArcLabel.find_first_by_label(key.to_s) or ArcLabel.create(:label=>key.to_s)
+          key = "conflicts_with_" + kind
+          (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
         end
   
         # As conflicts_with, except it returns an edge describing a dependency

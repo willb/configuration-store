@@ -133,13 +133,13 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
 
-          param.ModifyConflicts("ADD", added_deps, {})
-          deps = param.GetConflicts
+          param.ModifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.GetConflicts
 
-          deps.keys.size.should == added_deps.size
-          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+          cnfs.keys.size.should == added_cnfs.size
+          added_cnfs.keys.each {|dep| cnfs.keys.should include(dep) }
         end
 
         it "adds conflicts idempotently" do
@@ -147,17 +147,17 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
 
-          param.ModifyConflicts("ADD", added_deps, {})
-          deps = param.GetConflicts
+          param.ModifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.GetConflicts
 
-          pre_size = deps.keys.size
+          pre_size = cnfs.keys.size
 
-          param.ModifyConflicts("ADD", added_deps, {})
-          deps = param.GetConflicts
+          param.ModifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.GetConflicts
 
-          deps.keys.size.should == pre_size
+          cnfs.keys.size.should == pre_size
         end
 
         it "does not remove preexisting conflicts when adding new ones" do
@@ -168,20 +168,20 @@ module Mrg
           first_added = params[param_names.shift].name
 
           first_added_dep = fake_set_from_list([first_added])
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
 
           param.ModifyConflicts("ADD", first_added_dep, {})
-          deps = param.GetConflicts
+          cnfs = param.GetConflicts
 
-          pre_size = deps.keys.size
+          pre_size = cnfs.keys.size
 
-          param.ModifyConflicts("ADD", added_deps, {})
-          deps = param.GetConflicts
+          param.ModifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.GetConflicts
 
-          deps.keys.size.should == pre_size + added_deps.size
+          cnfs.keys.size.should == pre_size + added_cnfs.size
 
-          added_deps.keys.each {|dep| deps.keys.should include(dep) }
-          deps.keys.should include(first_added)
+          added_cnfs.keys.each {|dep| cnfs.keys.should include(dep) }
+          cnfs.keys.should include(first_added)
         end
 
         it "does not allow params to introduce a conflict with themselves" do
