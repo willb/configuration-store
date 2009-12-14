@@ -217,7 +217,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{deps}"
-          ModifyArcs(command,deps,options,:depends,:set_depends,explain="depend upon")
+          modify_arcs(command,deps,options,:depends,:set_depends,explain="depend upon")
         end
         
         expose :ModifyDepends do |args|
@@ -246,7 +246,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
-          ModifyArcs(command,conflicts,options,:conflicts,:set_conflicts,explain="conflict with")
+          modify_arcs(command,conflicts,options,:conflicts,:set_conflicts,explain="conflict with")
         end
         
         expose :ModifyConflicts do |args|
@@ -257,7 +257,7 @@ module Mrg
         
         private
         
-        def ModifyArcs(command,dests,options,getmsg,setmsg,explain="have an arc to")
+        def modify_arcs(command,dests,options,getmsg,setmsg,explain="have an arc to")
           case command
           when "ADD" then 
             old_dests = Set[*self.send(getmsg)]
