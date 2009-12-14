@@ -13,8 +13,16 @@ module Mrg
         ### Property method declarations
         # property uid uint32 
 
-        declare_column :uid, :integer, :not_null
-        declare_index_on :uid
+        declare_column :name, :string
+        declare_index_on :name
+        
+        def uid
+          @row_id
+        end
+        
+        def Feature.find_by_uid(u)
+          find(u)
+        end
         
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
