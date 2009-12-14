@@ -15,14 +15,13 @@ module Mrg
         def self.conflicts_with(kind)
           key = ("conflicts_with_" + kind).to_sym
           @kinds ||= {}
-          @kinds[key] ||= ArcLabel.find_by_label(key.to_s) or ArcLabel.new(:label=>key.to_s)
+          @kinds[key] ||= ArcLabel.find_first_by_label(key.to_s) or ArcLabel.create(:label=>key.to_s)
         end
   
         # As conflicts_with, except it returns an edge describing a dependency
         def self.depends_on(kind)
-          key = ("depends_on_" + kind).to_sym
-          @kinds ||= {}
-          @kinds[key] ||= ArcLabel.find_by_label(key.to_s) or ArcLabel.new(:label=>key.to_s)
+          key = "depends_on_" + kind
+          (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
         end
       end
     end

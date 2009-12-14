@@ -64,16 +64,134 @@ module Mrg
           param = params[param_names.shift]
           added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
           
-          puts added_deps
+          param.ModifyDepends("ADD", added_deps, {})
+          deps = param.GetDepends
+          
+          deps.keys.size.should == added_deps.size
+          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+        end
+
+        it "adds dependencies idempotently" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          
+          param = params[param_names.shift]
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          puts deps
+          pre_size = deps.keys.size
           
-          deps.keys.size.should == added_deps.size
-          added_deps.each {|dep| deps.keys.should_include dep }
+          param.ModifyDepends("ADD", added_deps, {})
+          deps = param.GetDepends
+          
+          deps.keys.size.should == pre_size
         end
+
+        it "does not remove preexisting dependencies when adding new ones" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          
+          param = params[param_names.shift]
+          first_added = params[param_names.shift].name
+
+          first_added_dep = fake_set_from_list([first_added])
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          
+          param.ModifyDepends("ADD", first_added_dep, {})
+          deps = param.GetDepends
+          
+          pre_size = deps.keys.size
+          
+          param.ModifyDepends("ADD", added_deps, {})
+          deps = param.GetDepends
+          
+          deps.keys.size.should == pre_size + added_deps.size
+          
+          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+          deps.keys.should include(first_added)
+        end
+
+        it "does not allow params to introduce a dependency on themselves" do
+          param = @store.AddParam("BIOTECH")
+          ["ADD", "REPLACE"].each do |cmd|
+            lambda { param.ModifyDepends(cmd, {"BIOTECH"=>true}, {}) }.should raise_error
+          end
+        end
+
+        it "allows replacing the dependency set" do
+          pending
+        end
+        
+        it "allows replacing the conflict set" do
+          pending
+        end
+
+        it "accepts added conflicts" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+
+          param = params[param_names.shift]
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+
+          param.ModifyConflicts("ADD", added_deps, {})
+          deps = param.GetConflicts
+
+          deps.keys.size.should == added_deps.size
+          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+        end
+
+        it "adds conflicts idempotently" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+
+          param = params[param_names.shift]
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+
+          param.ModifyConflicts("ADD", added_deps, {})
+          deps = param.GetConflicts
+
+          pre_size = deps.keys.size
+
+          param.ModifyConflicts("ADD", added_deps, {})
+          deps = param.GetConflicts
+
+          deps.keys.size.should == pre_size
+        end
+
+        it "does not remove preexisting conflicts when adding new ones" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+
+          param = params[param_names.shift]
+          first_added = params[param_names.shift].name
+
+          first_added_dep = fake_set_from_list([first_added])
+          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+
+          param.ModifyConflicts("ADD", first_added_dep, {})
+          deps = param.GetConflicts
+
+          pre_size = deps.keys.size
+
+          param.ModifyConflicts("ADD", added_deps, {})
+          deps = param.GetConflicts
+
+          deps.keys.size.should == pre_size + added_deps.size
+
+          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+          deps.keys.should include(first_added)
+        end
+
+        it "does not allow params to introduce a conflict with themselves" do
+          param = @store.AddParam("BIOTECH")
+          ["ADD", "REPLACE"].each do |cmd|
+            lambda { param.ModifyConflicts(cmd, {"BIOTECH"=>true}, {}) }.should raise_error
+          end
+        end
+        
+        
       end
     end
   end

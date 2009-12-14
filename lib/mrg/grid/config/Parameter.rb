@@ -221,12 +221,12 @@ module Mrg
           when "ADD" then 
             old_deps = Set[*depends]
             new_deps = Set[*deps.keys]
-            puts "old_deps = #{old_deps.inspect}"
-            puts "new_deps = #{new_deps.inspect}"
-            
-            puts "old_deps + new_deps = #{(old_deps + new_deps).inspect}"
-            
+            raise ArgumentError.new("parameter #{name} cannot depend on itself") if new_deps.include? self.name
             set_depends((old_deps + new_deps).to_a)
+          when "REPLACE" then 
+            new_deps = Set[*deps.keys]
+            raise ArgumentError.new("parameter #{name} cannot depend on itself") if new_deps.include? self.name
+            set_depends(new_deps.to_a)
           else nil
           end
         end
@@ -271,30 +271,48 @@ module Mrg
         private
         
         def depends
-          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.name }
+          ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|pa| pa.dest.name }
+        end
+        
+        def conflicts
+          ParameterArc.find_by(:source=>self, :label=>ArcLabel.conflicts_with('param')).map {|pa| pa.dest.name }
         end
         
         def set_depends(deps)
           new_deps = Set[*deps]
-          
-          puts "finding #{new_deps}..."
-          
+                    
           target_params = new_deps.map do |param|
-            puts "finding #{param}..."
             dest = Parameter.find_first_by_name(param)
             raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
-            puts "...got it, #{dest}"
             dest
           end
           
           ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|p| p.delete }
           
           target_params.each do |dest|
-            puts "making an arc from #{self} to #{dest}"
-            ParameterArc.create(:source=>self, :dest=>dest, :label=>ArcLabel.depends_on('param'))
+            label = ArcLabel.depends_on('param')
+            ParameterArc.create(:source=>self.row_id, :dest=>dest.row_id, :label=>label.row_id)
           end
           
           new_deps.to_a
+        end
+
+        def set_arcs(label, dests)
+          new_dests = Set[*dests]
+          
+          target_params = new_dests.map do |param|
+            dest = Parameter.find_first_by_name(param)
+            raise ArgumentError.new("#{param} is not a valid parameter name") unless dest
+            dest
+          end
+          
+          ParameterArc.find_by(:source=>self, :label=>label).map {|p| p.delete }
+          
+          target_params.each do |dest|
+            ParameterArc.create(:source=>self.row_id, :dest=>dest.row_id, :label=>label.row_id)
+          end
+          
+          new_dests.to_a
         end
       end
     
