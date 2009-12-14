@@ -1,6 +1,7 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config/ArcLabel'
+require 'mrg/grid/config/ArcUtils'
 
 require 'set'
 
@@ -257,22 +258,7 @@ module Mrg
         
         private
         
-        def modify_arcs(command,dests,options,getmsg,setmsg,explain="have an arc to")
-          case command
-          when "ADD" then 
-            old_dests = Set[*self.send(getmsg)]
-            new_dests = Set[*dests.keys]
-            raise ArgumentError.new("parameter #{name} cannot #{explain} itself") if new_dests.include? self.name
-            self.send(setmsg, (old_dests + new_dests).to_a)
-          when "REPLACE" then 
-            new_dests = Set[*dests.keys]
-            raise ArgumentError.new("parameter #{name} cannot #{explain} itself") if new_dests.include? self.name
-            self.send(setmsg, new_dests.to_a)
-          when "UNION", "REMOVE", "INTERSECT", "DIFF" then
-            raise RuntimeError.new("#{command} not implemented")            
-          else nil
-          end
-        end
+        include ArcUtils
         
         def depends
           ParameterArc.find_by(:source=>self, :label=>ArcLabel.depends_on('param')).map {|pa| pa.dest.name }
