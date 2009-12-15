@@ -58,7 +58,7 @@
       </method>
 
       <method name="GetConfiguration">
-         <arg name="Query" dir="I" type="map"
+         <arg name="query" dir="I" type="map"
               desc="A query that defines the configuration desired.  Valid
                     values for the key are 'ID' or 'Name'.  'ID' keys should
                     contain a specific ConfigurationId as its value,  whereas
@@ -206,10 +206,9 @@
 
       <method name="ModifyFeatures">
          <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
+              desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
          <arg name="features" dir="I" type="map"
-              desc="A list of other features a feature includes"/>
+              desc="A list of other features a feature includes, in priority order"/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
@@ -219,13 +218,12 @@
                     corresponding values that is specific to a group"/>
       </method>
 
-      <method name="ModifyParams">
+      <method name="SetParams">
          <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
+              desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
          <arg name="params" dir="I" type="map"
               desc="A map(paramName, value) of parameters and their
-                    corresponding values that is specific to a group"/>
+                    corresponding value as applied in this feature"/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
@@ -252,10 +250,9 @@
 
       <method name="ModifyDepends">
          <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
+              desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
          <arg name="depends" dir="I" type="map"
-              desc="A set of other features a feature depends on. "/>
+              desc="A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list."/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
@@ -429,8 +426,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="depends" dir="I" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    dependency priority"/>
+              desc="A set of parameter names that this parameter depends on"/>
          <arg name="options" dir="I" type="map"/>
       </method>
 
@@ -444,8 +440,7 @@
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
          <arg name="conflicts" dir="I" type="map"
-              desc="A map(paramName, priority) of parameter names and their
-                    conflict priority"/>
+              desc="A set of parameter names that this parameter conflicts with"/>
          <arg name="options" dir="I" type="map"/>
       </method>
    </class>

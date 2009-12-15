@@ -1,261 +1,287 @@
 require 'spqr/spqr'
+require 'rhubarb/rhubarb'
+require 'mrg/grid/config/ArcLabel'
+require 'mrg/grid/config/ArcUtils'
+
+require 'set'
 
 module Mrg
   module Grid
-    module Config
+    module Config      
       class Parameter
+        include ::Rhubarb::Persisting
         include ::SPQR::Manageable
-        
-        spqr_package 'mrg.grid.config'
-        spqr_class 'Parameter'
-        # Find method (NB:  you must implement this)
-        def Parameter.find_by_id(objid)
-          Parameter.new
-        end
-        
-# Find-all method (NB:  you must implement this)
-        def Parameter.find_all
-          [Parameter.new]
-        end
+
+        qmf_package_name 'mrg.grid.config'
+        qmf_class_name 'Parameter'
         ### Property method declarations
-        
         # property name sstr 
-        def name
-          log.debug 'Requested property name'
-          nil
-        end
+
+        declare_column :name, :string, :not_null
+        declare_index_on :name
         
-        def name=(val)
-          log.debug 'Set property name to #{val}'
-          nil
-        end
-        
-        spqr_property :name, :sstr, :index=>true
+        declare_column :kind, :string, :default, :string
+        declare_column :default_val, :string
+        declare_column :description, :string
+        declare_column :must_change, :boolean, :default, :false
+        declare_column :level, :integer
+        declare_column :needsRestart, :boolean
+
+        qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
         # GetType 
         # * type (uint8/O)
-        # 
-        def GetType(args)
-          # Assign values to out parameters
-          args["type"] = args["type"]
+        def GetType()
+          # Assign values to output parameters
+          return kind
         end
         
-        spqr_expose :GetType do |args|
+        expose :GetType do |args|
           args.declare :type, :uint8, :out, {}
         end
         
         # SetType 
-        # * type (uint8/I)
-        # 
-        def SetType(args)
-          # Print values of in parameters
-          log.debug "type => #{args["type"]}" # 
+        # * ty (uint8/I)
+        def SetType(type)
+          # Print values of input parameters
+          log.debug "SetType: type => #{type}"
+          self.kind = type
         end
         
-        spqr_expose :SetType do |args|
+        expose :SetType do |args|
           args.declare :type, :uint8, :in, {}
         end
         
         # GetValue 
         # * value (lstr/O)
-        # 
-        def GetValue(args)
-          # Assign values to out parameters
-          args["value"] = args["value"]
+        def GetValue()
+          # Assign values to output parameters
+          value ||= ""
+          # Return value
+          return value
         end
         
-        spqr_expose :GetValue do |args|
+        expose :GetValue do |args|
           args.declare :value, :lstr, :out, {}
         end
         
         # SetValue 
         # * value (lstr/I)
-        # 
-        def SetValue(args)
-          # Print values of in parameters
-          log.debug "value => #{args["value"]}" # 
+        def SetValue(value)
+          # Print values of input parameters
+          log.debug "SetValue: value => #{value}"
         end
         
-        spqr_expose :SetValue do |args|
+        expose :SetValue do |args|
           args.declare :value, :lstr, :in, {}
         end
         
         # GetDefault 
         # * default (lstr/O)
-        # 
-        def GetDefault(args)
-          # Assign values to out parameters
-          args["default"] = args["default"]
+        def GetDefault()
+          # Assign values to output parameters
+          self.default_val ||= ""
+          # Return value
+          return self.default_val
         end
         
-        spqr_expose :GetDefault do |args|
+        expose :GetDefault do |args|
           args.declare :default, :lstr, :out, {}
         end
         
         # SetDefault 
         # * default (lstr/I)
-        # 
-        def SetDefault(args)
-          # Print values of in parameters
-          log.debug "default => #{args["default"]}" # 
+        def SetDefault(default)
+          # Print values of input parameters
+          log.debug "SetDefault: default => #{default}"
+          self.default_val = default
         end
         
-        spqr_expose :SetDefault do |args|
+        expose :SetDefault do |args|
           args.declare :default, :lstr, :in, {}
         end
         
         # GetDescription 
         # * description (lstr/O)
-        # 
-        def GetDescription(args)
-          # Assign values to out parameters
-          args["description"] = args["description"]
+        def GetDescription()
+          # Assign values to output parameters
+          self.description ||= ""
+          # Return value
+          return self.description
         end
         
-        spqr_expose :GetDescription do |args|
+        expose :GetDescription do |args|
           args.declare :description, :lstr, :out, {}
         end
         
         # SetDescription 
         # * description (lstr/I)
-        # 
-        def SetDescription(args)
-          # Print values of in parameters
-          log.debug "description => #{args["description"]}" # 
+        def SetDescription(description)
+          # Print values of input parameters
+          log.debug "SetDescription: description => #{description}"
+          self.description = description
         end
         
-        spqr_expose :SetDescription do |args|
+        expose :SetDescription do |args|
           args.declare :description, :lstr, :in, {}
         end
         
         # GetDefaultMustChange 
         # * mustChange (bool/O)
-        # 
-        def GetDefaultMustChange(args)
-          # Assign values to out parameters
-          args["mustChange"] = args["mustChange"]
+        def GetDefaultMustChange()
+          return self.must_change
         end
         
-        spqr_expose :GetDefaultMustChange do |args|
+        expose :GetDefaultMustChange do |args|
           args.declare :mustChange, :bool, :out, {}
         end
         
         # SetDefaultMustChange 
         # * mustChange (bool/I)
-        # 
-        def SetDefaultMustChange(args)
-          # Print values of in parameters
-          log.debug "mustChange => #{args["mustChange"]}" # 
+        def SetDefaultMustChange(mustChange)
+          # Print values of input parameters
+          log.debug "SetDefaultMustChange: mustChange => #{mustChange}"
+          self.must_change = mustChange
         end
         
-        spqr_expose :SetDefaultMustChange do |args|
+        expose :SetDefaultMustChange do |args|
           args.declare :mustChange, :bool, :in, {}
         end
         
         # GetVisibilityLevel 
         # * level (uint8/O)
-        # 
-        def GetVisibilityLevel(args)
-          # Assign values to out parameters
-          args["level"] = args["level"]
+        def GetVisibilityLevel()
+          self.level ||= 0
+          # Return value
+          return self.level
         end
         
-        spqr_expose :GetVisibilityLevel do |args|
+        expose :GetVisibilityLevel do |args|
           args.declare :level, :uint8, :out, {}
         end
         
         # SetVisibilityLevel 
         # * level (uint8/I)
-        # 
-        def SetVisibilityLevel(args)
-          # Print values of in parameters
-          log.debug "level => #{args["level"]}" # 
+        def SetVisibilityLevel(level)
+          # Print values of input parameters
+          log.debug "SetVisibilityLevel: level => #{level}"
+          self.level = level
         end
         
-        spqr_expose :SetVisibilityLevel do |args|
+        expose :SetVisibilityLevel do |args|
           args.declare :level, :uint8, :in, {}
         end
         
         # GetRequiresRestart 
         # * needsRestart (bool/O)
-        # 
-        def GetRequiresRestart(args)
-          # Assign values to out parameters
-          args["needsRestart"] = args["needsRestart"]
+        def GetRequiresRestart()
+          # Assign values to output parameters
+          self.needsRestart ||= false
+          # Return value
+          return self.needsRestart
         end
         
-        spqr_expose :GetRequiresRestart do |args|
+        expose :GetRequiresRestart do |args|
           args.declare :needsRestart, :bool, :out, {}
         end
         
         # SetRequiresRestart 
         # * needsRestart (bool/I)
-        # 
-        def SetRequiresRestart(args)
-          # Print values of in parameters
-          log.debug "needsRestart => #{args["needsRestart"]}" # 
+        def SetRequiresRestart(needsRestart)
+          # Print values of input parameters
+          log.debug "SetRequiresRestart: needsRestart => #{needsRestart}"
+          self.needsRestart = needsRestart
         end
         
-        spqr_expose :SetRequiresRestart do |args|
+        expose :SetRequiresRestart do |args|
           args.declare :needsRestart, :bool, :in, {}
         end
         
         # GetDepends 
         # * depends (map/O)
-        # A map(paramName, priority) of parameter names and their dependency priority
-        def GetDepends(args)
-          # Assign values to out parameters
-          args["depends"] = args["depends"]
+        #   A set of parameter names that this one depends on
+        def GetDepends()
+          return depends.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
-        spqr_expose :GetDepends do |args|
+        expose :GetDepends do |args|
           args.declare :depends, :map, :out, {}
         end
         
         # ModifyDepends 
         # * command (sstr/I)
-        # Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * depends (map/I)
-        # A map(paramName, priority) of parameter names and their dependency priority
-        def ModifyDepends(args)
-          # Print values of in parameters
-          log.debug "command => #{args["command"]}" # 
-          log.debug "depends => #{args["depends"]}" # 
+        #   A set of parameter names that this one depends on
+        def ModifyDepends(command,deps,options)
+          # Print values of input parameters
+          log.debug "ModifyDepends: command => #{command}"
+          log.debug "ModifyDepends: depends => #{deps}"
+          modify_arcs(command,deps,options,:depends,:depends=,explain="depend upon")
         end
         
-        spqr_expose :ModifyDepends do |args|
+        expose :ModifyDepends do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :depends, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetConflicts 
         # * conflicts (map/O)
-        # A set of parameter names that conflict with the parameter
-        def GetConflicts(args)
-          # Assign values to out parameters
-          args["conflicts"] = args["conflicts"]
+        #   A set of parameter names that conflict with the parameter
+        def GetConflicts()
+          return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
-        spqr_expose :GetConflicts do |args|
+        expose :GetConflicts do |args|
           args.declare :conflicts, :map, :out, {}
         end
         
         # ModifyConflicts 
         # * command (sstr/I)
-        # Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
-        # A map(paramName, priority) of parameter names and their conflict priority
-        def ModifyConflicts(args)
-          # Print values of in parameters
-          log.debug "command => #{args["command"]}" # 
-          log.debug "conflicts => #{args["conflicts"]}" # 
+        #   A set of parameter names that conflict with this one
+        def ModifyConflicts(command,conflicts,options)
+          # Print values of input parameters
+          log.debug "ModifyConflicts: command => #{command}"
+          log.debug "ModifyConflicts: conflicts => #{conflicts}"
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,explain="conflict with")
         end
         
-        spqr_expose :ModifyConflicts do |args|
+        expose :ModifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :conflicts, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
+        
+        private
+        
+        include ArcUtils
+        
+        def depends
+          find_arcs(ParameterArc,ArcLabel.depends_on('param')) {|pa| pa.dest.name }
+        end
+        
+        def conflicts
+          find_arcs(ParameterArc,ArcLabel.conflicts_with('param')) {|pa| pa.dest.name }
+        end
+        
+        def depends=(deps)
+          set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
+        end
+        
+        def conflicts=(conflicts)
+          set_arcs(ParameterArc, ArcLabel.conflicts_with('param'), conflicts, :find_first_by_name)
+        end
+      end
+    
+      class ParameterArc
+        include ::Rhubarb::Persisting
+        declare_column :source, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :dest, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :label, :integer, :not_null, references(ArcLabel)
       end
     end
   end
