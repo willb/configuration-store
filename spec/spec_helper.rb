@@ -12,6 +12,8 @@ require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Subsystem'
 
+require 'mrg/grid/config/QmfUtils'
+
 require 'spec'
 require 'spec/autorun'
 
@@ -55,6 +57,6 @@ def fake_set_from_list(ls)
 end
 
 def fake_list_from_list(ls)
-  kvs = ls.zip((0..ls.size).to_a).flatten
+  kvs = ls.zip((0...ls.size).to_a).flatten
   Hash[*kvs]
 end

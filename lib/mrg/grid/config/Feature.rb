@@ -1,8 +1,10 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Subsystem'
+require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
+require 'mrg/grid/config/QmfUtils'
 
 require 'set'
 
@@ -212,7 +214,7 @@ module Mrg
         end
         
         def depends=(deps)
-          set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name)
+          set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
         
         def conflicts=(conflicts)
@@ -226,6 +228,13 @@ module Mrg
         declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
         declare_column :dest, :integer, :not_null, references(Feature, :on_delete=>:cascade)
         declare_column :label, :integer, :not_null, references(ArcLabel)
+      end
+      
+      class FeatureParam
+        include ::Rhubarb::Persisting
+        declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
+        declare_column :param, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :value, :string
       end
       
       class FeatureSubsys

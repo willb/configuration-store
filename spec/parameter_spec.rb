@@ -62,7 +62,7 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
           
           param = params[param_names.shift]
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
@@ -76,7 +76,7 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
           
           param = params[param_names.shift]
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
@@ -96,8 +96,8 @@ module Mrg
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
 
-          first_added_dep = fake_set_from_list([first_added])
-          added_deps = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          first_added_dep = FakeSet[*[first_added]]
+          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
           
           param.ModifyDepends("ADD", first_added_dep, {})
           deps = param.GetDepends
@@ -133,7 +133,7 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
@@ -147,7 +147,7 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
@@ -167,8 +167,8 @@ module Mrg
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
 
-          first_added_dep = fake_set_from_list([first_added])
-          added_cnfs = fake_set_from_list(param_names.sort_by{ rand }.slice(0..5))
+          first_added_dep = FakeSet[*[first_added]]
+          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
 
           param.ModifyConflicts("ADD", first_added_dep, {})
           cnfs = param.GetConflicts
