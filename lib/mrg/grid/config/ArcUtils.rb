@@ -38,9 +38,10 @@ module Mrg
           end
         end
         
-        def set_arcs(arc_class, label, dests, keyfindmsg, what=nil)
-          what ||= self.class.name.split("::").pop.downcase
-          dests = Set[*dests] unless @preserve_ordering
+        def set_arcs(arc_class, label, dests, keyfindmsg, options=nil)
+          options ||= {}
+          what = options[:what] or self.class.name.split("::").pop.downcase
+          dests = Set[*dests] unless options[:preserve_ordering]
           
           target_params = dests.map do |key|
             dest = self.class.send(keyfindmsg, key)
