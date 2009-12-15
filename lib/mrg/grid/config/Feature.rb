@@ -120,10 +120,7 @@ module Mrg
         # * list (map/O)
         #   A map(featureName, True) of other features a feature conflicts with for proper operation
         def GetConflicts()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+          return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
         expose :GetConflicts do |args|
@@ -150,10 +147,7 @@ module Mrg
         # * list (map/O)
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+          return depends.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
         expose :GetDepends do |args|
@@ -207,6 +201,23 @@ module Mrg
         end
         
         private
+        include ArcUtils
+        
+        def depends
+          find_arcs(FeatureArc,ArcLabel.depends_on('feature')) {|a| a.dest.name }
+        end
+        
+        def conflicts
+          find_arcs(FeatureArc,ArcLabel.conflicts_with('feature')) {|a| a.dest.name }
+        end
+        
+        def depends=(deps)
+          set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name)
+        end
+        
+        def conflicts=(conflicts)
+          set_arcs(FeatureArc, ArcLabel.conflicts_with('feature'), conflicts, :find_first_by_name)
+        end
         
       end
       

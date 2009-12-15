@@ -218,7 +218,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{deps}"
-          modify_arcs(command,deps,options,:depends,:set_depends,explain="depend upon")
+          modify_arcs(command,deps,options,:depends,:depends=,explain="depend upon")
         end
         
         expose :ModifyDepends do |args|
@@ -247,7 +247,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
-          modify_arcs(command,conflicts,options,:conflicts,:set_conflicts,explain="conflict with")
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,explain="conflict with")
         end
         
         expose :ModifyConflicts do |args|
@@ -268,11 +268,11 @@ module Mrg
           find_arcs(ParameterArc,ArcLabel.conflicts_with('param')) {|pa| pa.dest.name }
         end
         
-        def set_depends(deps)
+        def depends=(deps)
           set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
         end
         
-        def set_conflicts(conflicts)
+        def conflicts=(conflicts)
           set_arcs(ParameterArc, ArcLabel.conflicts_with('param'), conflicts, :find_first_by_name)
         end
       end

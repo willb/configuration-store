@@ -40,9 +40,9 @@ module Mrg
         
         def set_arcs(arc_class, label, dests, keyfindmsg, what=nil)
           what ||= self.class.name.split("::").pop.downcase
-          new_dests = Set[*dests]
+          dests = Set[*dests] unless @preserve_ordering
           
-          target_params = new_dests.map do |key|
+          target_params = dests.map do |key|
             dest = self.class.send(keyfindmsg, key)
             raise ArgumentError.new("#{key} is not a valid #{what} key") unless dest
             dest
@@ -54,7 +54,7 @@ module Mrg
             arc_class.create(:source=>self.row_id, :dest=>dest.row_id, :label=>label.row_id)
           end
           
-          new_dests.to_a
+          dests.to_a
         end
         
       end
