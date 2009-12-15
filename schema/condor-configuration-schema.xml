@@ -150,7 +150,7 @@
          <arg name="group" dir="O" type="objId"/>
       </method>
 
-      <method name="ModifyMemberships">
+      <method name="GetMemberships">
          <arg name="groups" dir="O" type="map"
               desc="A list of groups, in inverse priority order (most important first)"/>
       </method>
