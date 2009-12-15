@@ -50,13 +50,3 @@ module DescribeGetterAndSetter
     end
   end
 end
-
-# two functions for implementing sets and lists on top of maps (which is all we have in qmf atm)
-def fake_set_from_list(ls)
-  ls.inject({}) {|acc,v| acc[v] = true; acc }
-end
-
-def fake_list_from_list(ls)
-  kvs = ls.zip((0...ls.size).to_a).flatten
-  Hash[*kvs]
-end
