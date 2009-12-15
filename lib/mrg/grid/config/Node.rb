@@ -1,6 +1,9 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
+require 'mrg/grid/config/Group'
+require 'mrg/grid/config/QmfUtils'
+
 module Mrg
   module Grid
     module Config
@@ -15,6 +18,8 @@ module Mrg
 
         declare_column :name, :string, :not_null
         declare_index_on :name
+
+        declare_column :idgroup, :integer, references(Group)
         
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
@@ -60,9 +65,12 @@ module Mrg
         # * config (map/O)
         #   A map(parameter, value) representing the configuration for the node supplied
         def GetConfig()
-          # Assign values to output parameters
-          config ||= {}
-          # Return value
+          config = {}
+
+          memberships.reverse_each do |grp|
+            # FIXME: apply configuration for each feature in this group
+          end
+
           return config
         end
         
@@ -80,6 +88,93 @@ module Mrg
         expose :CheckConfigVersion do |args|
           args.declare :version, :uint32, :in, {}
         end
+        
+        def GetIdentityGroup
+          log.debug "GetIdentityGroup called"
+          self.idgroup ||= id_group_init
+        end
+
+        expose :GetIdentityGroup do |args|
+          args.declare :group, :objId, :out, {}
+        end
+        
+        # ModifyMemberships
+        # * command (sstr/I)
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+        # * groups (map/I)
+        #   A list of groups, in inverse priority order (most important first)
+        # * options (map/I)
+        def ModifyMemberships(command,groups,options)
+          # Print values of input parameters
+          log.debug "ModifyMemberships: command => #{command}"
+          log.debug "ModifyMemberships: nodes => #{nodes}"
+          log.debug "ModifyMemberships: options => #{options}"
+          
+          groups = grps.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |gn|
+            group = Group.find_first_by_name(gn)
+            raise "invalid parameter #{gn}" unless group
+            group
+          end
+
+          case command
+          when "ADD", "REMOVE" then
+            groups.each do |grow|
+              gn = grow.name
+
+              # Delete any prior mappings for each supplied grp in either case
+              NodeMembership.find_by(:node=>self, :grp=>grow).map {|nm| nm.delete unless nm.grp.is_identity_group}
+
+              # Add new mappings when requested
+              NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn]) if command == "ADD"
+            end
+          when "REPLACE"
+            memberships.map {|nm| nm.delete}
+
+            groups.each do |grow|
+              gn = grow.name
+
+              NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn])
+            end
+          end
+        end
+        
+        expose :ModifyMemberships do |args|
+          args.declare :command, :sstr, :in, {}
+          args.declare :groups, :map, :in, {}
+          args.declare :options, :map, :in, {}
+        end
+        
+        # GetMemberships 
+        # * list (map/O)
+        #   A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group
+        def GetMemberships()
+          FakeList[*memberships.map{|g| g.name}]
+        end
+        
+        expose :GetMemberships do |args|
+          args.declare :groups, :map, :out, {}
+        end
+        
+        private
+        def idgroupname
+          "+++#{Digest::MD5.hexdigest(self.name)}"
+        end
+        
+        def id_group_init
+          ig = Group.create(:name=>idgroupname, :is_identity_group=>true)
+          NodeMembership.create(:node=>self, :grp=>ig)
+          ig
+        end
+        
+        def memberships
+          NodeMembership.find_by(:node=>self, :is_identity_group=>false).map{|nm| nm.grp}
+        end
+      end
+      
+      class NodeMembership
+        include ::Rhubarb::Persisting
+        declare_column :node, :integer, references(Node, :on_delete=>:cascade)
+        declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
       end
     end
   end

@@ -1,5 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
+require 'digest/md5'
+
 module Mrg
   module Grid
     module Config
@@ -51,7 +53,14 @@ module Mrg
           n.should respond_to(:SetPool)
         end
 
-        
+        it "should have an affiliated identity group" do
+          n = @store.AddNode("blather.local.")
+          group = n.GetIdentityGroup
+          
+          expected_group_name = "+++#{Digest::MD5.hexdigest("blather.local.")}"
+          group.should_not == nil
+          group.name.should == expected_group_name
+        end
       end
 
     end
