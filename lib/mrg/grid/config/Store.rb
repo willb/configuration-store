@@ -67,10 +67,7 @@ module Mrg
         def GetFeature(name)
           # Print values of input parameters
           log.debug "GetFeature: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+          Feature.find_first_by_name(name)
         end
         
         expose :GetFeature do |args|
@@ -84,10 +81,8 @@ module Mrg
         def AddFeature(name)
           # Print values of input parameters
           log.debug "AddFeature: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+          raise "Feature name #{name} is already taken" if Feature.find_first_by_name(name)
+          return Feature.create(:name=>name)
         end
         
         expose :AddFeature do |args|

@@ -38,9 +38,7 @@ module Mrg
         # * name (sstr/O)
         def GetName()
           # Assign values to output parameters
-          name ||= ""
-          # Return value
-          return name
+          return self.name
         end
         
         expose :GetName do |args|
@@ -52,6 +50,8 @@ module Mrg
         def SetName(name)
           # Print values of input parameters
           log.debug "SetName: name => #{name}"
+          raise "Feature name #{name} is taken" if (self.name != name and Feature.find_first_by_name(name))
+          self.name = name
         end
         
         expose :SetName do |args|
@@ -74,7 +74,7 @@ module Mrg
         
         # ModifyFeatures 
         # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other features a feature includes
         def ModifyFeatures(command,features)
@@ -92,10 +92,7 @@ module Mrg
         # * list (map/O)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
         def GetParams()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
         expose :GetParams do |args|
@@ -104,13 +101,40 @@ module Mrg
         
         # ModifyParams 
         # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def ModifyParams(command,params)
+        def ModifyParams(command,pvmap)
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
-          log.debug "ModifyParams: params => #{params}"
+          log.debug "ModifyParams: params => #{pvmap}"
+          
+          params = pvmap.keys.map do |pn|
+            prow = Parameter.find_first_by_name(pn)
+            raise "invalid parameter #{pn}" unless prow
+            prow
+          end
+          
+          case command
+          when "ADD", "REMOVE" then
+            params.each do |prow|
+              pn = prow.name
+
+              # Delete any prior mappings for each supplied param in either case
+              FeatureParams.find_by(:feature=>self, :param=>prow).map {|fp| fp.delete}
+              
+              # Add new mappings when requested
+              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
+            end
+          when "REPLACE"
+            FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
+
+            params.each do |prow|
+              pn = prow.name
+
+              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn])
+            end
+          end
         end
         
         expose :ModifyParams do |args|
@@ -122,7 +146,7 @@ module Mrg
         # * list (map/O)
         #   A map(featureName, True) of other features a feature conflicts with for proper operation
         def GetConflicts()
-          return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
+          return FakeSet[*conflicts]
         end
         
         expose :GetConflicts do |args|
@@ -149,7 +173,7 @@ module Mrg
         # * list (map/O)
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
-          return depends.inject({}) {|acc,v| acc[v] = true ; acc}
+          return FakeSet[*depends]
         end
         
         expose :GetDepends do |args|
@@ -158,9 +182,9 @@ module Mrg
         
         # ModifyDepends 
         # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * depends (map/I)
-        #   A set of other features a feature depends on. 
+        #   A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
         def ModifyDepends(command,depends)
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
@@ -212,6 +236,10 @@ module Mrg
         def conflicts
           find_arcs(FeatureArc,ArcLabel.conflicts_with('feature')) {|a| a.dest.name }
         end
+
+        def includes
+          find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
+        end
         
         def depends=(deps)
           set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
@@ -219,6 +247,10 @@ module Mrg
         
         def conflicts=(conflicts)
           set_arcs(FeatureArc, ArcLabel.conflicts_with('feature'), conflicts, :find_first_by_name)
+        end
+
+        def includes=(deps)
+          set_arcs(FeatureArc, ArcLabel.inclusion('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
         
       end
@@ -230,7 +262,7 @@ module Mrg
         declare_column :label, :integer, :not_null, references(ArcLabel)
       end
       
-      class FeatureParam
+      class FeatureParams
         include ::Rhubarb::Persisting
         declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
         declare_column :param, :integer, :not_null, references(Parameter, :on_delete=>:cascade)

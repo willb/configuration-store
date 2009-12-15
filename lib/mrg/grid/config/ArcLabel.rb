@@ -22,6 +22,13 @@ module Mrg
           key = "depends_on_" + kind
           (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
         end
+
+        # As conflicts_with, except it returns an edge describing inclusion
+        def self.inclusion(kind)
+          key = "includes_" + kind
+          (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
+        end
+
       end
     end
   end
