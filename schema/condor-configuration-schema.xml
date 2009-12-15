@@ -145,6 +145,24 @@
       <method name="CheckConfigVersion">
          <arg name="version" dir="I" type="uint32"/>
       </method>
+
+      <method name="GetIdentityGroup">
+         <arg name="group" dir="O" type="objId"/>
+      </method>
+
+      <method name="ModifyMemberships">
+         <arg name="groups" dir="O" type="map"
+              desc="A list of groups, in inverse priority order (most important first)"/>
+      </method>
+
+      <method name="ModifyMemberships">
+         <arg name="command" dir="I" type="sstr"
+              desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
+         <arg name="groups" dir="I" type="map"
+              desc="A list of groups"/>
+         <arg name="options" dir="I" type="map"/>
+      </method>
+
    </class>
 
    <class name="Configuration">
@@ -279,15 +297,6 @@
 
    <class name="Group">
       <property name="uid" type="uint32" index="y"/>
-
-      <method name="ModifyMembership">
-         <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
-         <arg name="nodes" dir="I" type="map"
-              desc="A set of nodes"/>
-         <arg name="options" dir="I" type="map"/>
-      </method>
 
       <method name="GetMembership">
          <arg name="list" dir="O" type="map"
