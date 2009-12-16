@@ -77,7 +77,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other features a feature includes
-        def ModifyFeatures(command,features)
+        def ModifyFeatures(command,features,options={})
           # Print values of input parameters
           log.debug "ModifyFeatures: command => #{command}"
           log.debug "ModifyFeatures: features => #{features}"
@@ -86,6 +86,7 @@ module Mrg
         expose :ModifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :features, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetParams 
@@ -104,10 +105,12 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def ModifyParams(command,pvmap)
+        def ModifyParams(command,pvmap,options={})
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{pvmap}"
+          
+          pvmap ||= {}
           
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
@@ -140,6 +143,7 @@ module Mrg
         expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetConflicts 
@@ -158,7 +162,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of other feature names that conflict with the feature
-        def ModifyConflicts(command,conflicts)
+        def ModifyConflicts(command,conflicts,options={})
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
@@ -167,6 +171,7 @@ module Mrg
         expose :ModifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :conflicts, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetDepends 
@@ -185,7 +190,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * depends (map/I)
         #   A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
-        def ModifyDepends(command,depends)
+        def ModifyDepends(command,depends,options={})
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{depends}"
@@ -194,6 +199,7 @@ module Mrg
         expose :ModifyDepends do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :depends, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         # GetSubsys 

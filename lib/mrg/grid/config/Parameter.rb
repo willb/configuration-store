@@ -215,10 +215,11 @@ module Mrg
         # * depends (map/I)
         #   A set of parameter names that this one depends on
         def ModifyDepends(command,deps,options)
+          deps ||= {}
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{deps}"
-          modify_arcs(command,deps,options,:depends,:depends=,explain="depend upon")
+          modify_arcs(command,deps,options,:depends,:depends=,"depend upon")
         end
         
         expose :ModifyDepends do |args|
@@ -244,10 +245,11 @@ module Mrg
         # * conflicts (map/I)
         #   A set of parameter names that conflict with this one
         def ModifyConflicts(command,conflicts,options)
+          conflicts ||= {}
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
-          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,explain="conflict with")
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,"conflict with")
         end
         
         expose :ModifyConflicts do |args|

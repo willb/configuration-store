@@ -24,6 +24,13 @@ module Mrg
       end
       
       class FakeList < Hash
+        def self.normalize(dict)
+          dict ||= {}
+          result = FakeList.new
+          dict.each {|k,v| result[k.to_i] = v}
+          result
+        end
+
         def self.[](*args)
           result = FakeList.new
           (0...args.size).to_a.zip(args) do |k,v|

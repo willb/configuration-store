@@ -94,10 +94,12 @@ module Mrg
         #   A list of features to apply to this group dependency priority
         # * params (map/O)
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
-        def ModifyFeatures(command,fs)
+        def ModifyFeatures(command,fs,options={})
           # Print values of input parameters
           log.debug "ModifyFeatureSet: command => #{command}"
           log.debug "ModifyFeatureSet: features => #{fs}"
+          
+          fs = FakeList.normalize(fs)
 
           feats = fs.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |fn|
             frow = Feature.find_first_by_name(fn)
@@ -132,6 +134,7 @@ module Mrg
         expose :ModifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :features, :map, :in, {}
+          args.declare :options, :map, :in, {}
           args.declare :params, :map, :out, {}
         end
         
@@ -151,7 +154,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(featureName, priority) of parameter/value mappings
-        def ModifyParams(command,pvmap)
+        def ModifyParams(command,pvmap,options={})
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{pvmap}"
@@ -187,6 +190,7 @@ module Mrg
         expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
         
         def features
