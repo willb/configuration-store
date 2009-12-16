@@ -226,6 +226,13 @@ module Mrg
           args.declare :subsys, :map, :in, {}
         end
         
+        def apply_to(dict)
+          self.GetParams.each do |k,v|
+            dict[k] = v
+          end
+          dict
+        end
+        
         private
         include ArcUtils
         

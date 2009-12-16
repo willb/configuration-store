@@ -2,6 +2,8 @@ require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
 require 'mrg/grid/config/Node'
+require 'mrg/grid/config/Feature'
+require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/QmfUtils'
 require 'digest/md5'
 
@@ -97,30 +99,31 @@ module Mrg
           log.debug "ModifyFeatureSet: command => #{command}"
           log.debug "ModifyFeatureSet: features => #{fs}"
 
-          features = fs.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |fn|
-            frow = feature.find_first_by_name(fn)
+          feats = fs.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |fn|
+            frow = Feature.find_first_by_name(fn)
             raise "invalid feature #{fn}" unless frow
             frow
           end
 
+          puts "IN MF; FEATS --> #{feats.inspect}"
+          puts "IN MF; FEATURES --> #{features.inspect}"
+
           case command
           when "ADD", "REMOVE" then
-            features.each do |frow|
-              fn = frow.name
-
+            feats.each do |frow|
               # Delete any prior mappings for each supplied grp in either case
-              GroupFeatures.find_by(:grp=>self, :feature=>frow).map {|nm| nm.delete}
+              GroupFeatures.find_by(:grp=>self, :feature=>frow).each {|nm| nm.delete}
 
               # Add new mappings when requested
-              GroupFeatures.create(:grp=>self, :feature=>frow, :value=>pvmap[fn]) if command == "ADD"
+              GroupFeatures.create(:grp=>self, :feature=>frow) if command == "ADD"
+              
+              puts "IN MF; FEATURES --> #{features.inspect}"
             end
           when "REPLACE"
-            GroupFeatures.find_by(:grp=>self).map {|nm| fp.delete}
+            GroupFeatures.find_by(:grp=>self).each {|nm| nm.delete}
 
-            features.each do |frow|
-              fn = frow.name
-
-              GroupFeatures.create(:grp=>self, :feature=>frow, :value=>pvmap[fn])
+            feats.each do |frow|
+              GroupFeatures.create(:grp=>self, :feature=>frow)
             end
           end
           
@@ -157,6 +160,8 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{pvmap}"
+
+          puts "COMMAND is #{command}, PVMAP is #{pvmap.inspect}"
           
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
@@ -174,6 +179,9 @@ module Mrg
 
               # Add new mappings when requested
               GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
+              
+              puts "CREATED grp:#{self}, param:#{prow}, value:#{pvmap[pn]}"
+              puts "FOUND:  #{GroupParams.find_by(:grp=>self).map{|gp| [gp.param, gp.value]}.inspect}"
             end
           when "REPLACE"
             GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
@@ -190,6 +198,15 @@ module Mrg
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
         end
+        
+        def features
+          GroupFeatures.find_by(:grp=>self).map{|gf| gf.feature}
+        end
+        
+        def params
+          puts GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.inspect
+          Hash[*GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.flatten]
+        end
       end
       
       class GroupFeatures
@@ -201,7 +218,7 @@ module Mrg
       class GroupParams
         include ::Rhubarb::Persisting
         declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
-        declare_column :param, :integer, references(Param, :on_delete=>:cascade)
+        declare_column :param, :integer, references(Parameter, :on_delete=>:cascade)
         declare_column :value, :string
       end
     end
