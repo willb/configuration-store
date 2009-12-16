@@ -23,7 +23,7 @@ if DO_CREATE
   end
 end
 
-app = SPQR::App.new(:loglevel => :debug)
+app = SPQR::App.new(:loglevel => :debug, :user => "guest", :password => "guest")
 app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::Configuration,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem
 
 app.main
