@@ -1,5 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
+require 'digest/md5'
+
 module Mrg
   module Grid
     module Config
@@ -51,8 +53,66 @@ module Mrg
           n.should respond_to(:SetPool)
         end
 
+        it "should have an affiliated identity group" do
+          n = @store.AddNode("blather.local.")
+          group = n.GetIdentityGroup
+          
+          expected_group_name = "+++#{Digest::MD5.hexdigest("blather.local.")}"
+          group.should_not == nil
+          group.name.should == expected_group_name
+        end
+
+        it "should be possible to install params on the identity group" do
+          n = @store.AddNode("blather.local.")
+          group = n.GetIdentityGroup
+          prm = @store.AddParam("BIOTECH")
+
+          group.ModifyParams("ADD", {"BIOTECH"=>"true"})
+
+          conf = n.GetConfig
+
+          conf.keys.should include("BIOTECH")
+          conf["BIOTECH"].should == "true"
+        end
+
+        it "should be possible to install features on the identity group" do
+          n = @store.AddNode("blather.local.")
+          group = n.GetIdentityGroup
+          
+          @store.AddParam("BIOTECH")
+          @store.AddParam("UKULELE")
+          
+          f1 = @store.AddFeature("BLAH1")
+          f2 = @store.AddFeature("BLAH2")
+
+          f1.ModifyParams("ADD", {"BIOTECH"=>"ichi"})
+          f1.ModifyParams("ADD", {"UKULELE"=>"gcae"})
+          group.ModifyFeatures("ADD", {0=>"BLAH1"})
+
+          conf = n.GetConfig
+          conf.keys.should include("BIOTECH")
+          conf["BIOTECH"].should == "ichi"
+          conf["UKULELE"].should == "gcae"
+
+          f2.ModifyParams("ADD", {"BIOTECH"=>"ni"})
+          group.ModifyFeatures("REPLACE", {0=>"BLAH2", 1=>"BLAH1"})
+
+          conf = n.GetConfig
+          conf.keys.should include("BIOTECH")
+          conf["BIOTECH"].should == "ni"
+          conf["UKULELE"].should == "gcae"
+          
+          group.ModifyParams("ADD", {"BIOTECH"=>"san"})
+
+          conf = n.GetConfig
+          conf.keys.should include("BIOTECH")
+          conf["BIOTECH"].should == "san"
+          conf["UKULELE"].should == "gcae"
+        end
         
+
       end
+      
 
     end
   end

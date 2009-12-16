@@ -1,6 +1,12 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
+require 'mrg/grid/config/Node'
+require 'mrg/grid/config/Feature'
+require 'mrg/grid/config/Parameter'
+require 'mrg/grid/config/QmfUtils'
+require 'digest/md5'
+
 module Mrg
   module Grid
     module Config
@@ -14,39 +20,28 @@ module Mrg
         ### Property method declarations
         # property uid uint32 
 
-        declare_column :uid, :integer, :not_null
-        declare_index_on :uid
+        def uid
+          @row_id
+        end
+        
+        def Group.find_by_uid(u)
+          find(u)
+        end
         
         qmf_property :uid, :uint32, :index=>true
+
+        declare_column :name, :string
+
+        declare_column :is_identity_group, :boolean, :default, :false
+        qmf_property :is_identity_group, :boolean
+
         ### Schema method declarations
-        
-        # ModifyMembership 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * nodes (map/I)
-        #   A set of nodes
-        # * options (map/I)
-        def ModifyMembership(command,nodes,options)
-          # Print values of input parameters
-          log.debug "ModifyMembership: command => #{command}"
-          log.debug "ModifyMembership: nodes => #{nodes}"
-          log.debug "ModifyMembership: options => #{options}"
-        end
-        
-        expose :ModifyMembership do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :nodes, :map, :in, {}
-          args.declare :options, :map, :in, {}
-        end
-        
+                
         # GetMembership 
         # * list (map/O)
         #   A set of the nodes associated with this group
         def GetMembership()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+          FakeList[*NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}]
         end
         
         expose :GetMembership do |args|
@@ -57,9 +52,9 @@ module Mrg
         # * name (sstr/O)
         def GetName()
           # Assign values to output parameters
-          name ||= ""
+          self.name ||= ""
           # Return value
-          return name
+          return self.name
         end
         
         expose :GetName do |args|
@@ -71,6 +66,7 @@ module Mrg
         def SetName(name)
           # Print values of input parameters
           log.debug "SetName: name => #{name}"
+          self.name = name
         end
         
         expose :SetName do |args|
@@ -91,53 +87,59 @@ module Mrg
           args.declare :features, :map, :out, {}
         end
         
-        # ModifyFeaturePriorities 
-        # * features (map/IO)
-        #   A list of features in this group (as returned by GetFeatures), in a new priority order. Features that are in this list but not in the group will be ignored. Features that are in the group but not in this list will be placed in arbitrary priority order after every feature in this list. After this method executes, features will contain the priority ordering of every feature assigned to this group.
-        def ModifyFeaturePriorities(features)
-          # Print values of input parameters
-          log.debug "ModifyFeaturePriorities: features => #{features}"
-          # Assign values to output parameters
-          features ||= {}
-          # Return value
-          return features
-        end
-        
-        expose :ModifyFeaturePriorities do |args|
-          args.declare :features, :map, :inout, {}
-        end
-        
-        # ModifyFeatureSet 
+        # ModifyFeatures 
         # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
-        #   A set of features to apply to dependency priority
+        #   A list of features to apply to this group dependency priority
         # * params (map/O)
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
-        def ModifyFeatureSet(command,features)
+        def ModifyFeatures(command,fs)
           # Print values of input parameters
           log.debug "ModifyFeatureSet: command => #{command}"
-          log.debug "ModifyFeatureSet: features => #{features}"
+          log.debug "ModifyFeatureSet: features => #{fs}"
+
+          feats = fs.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |fn|
+            frow = Feature.find_first_by_name(fn)
+            raise "invalid feature #{fn}" unless frow
+            frow
+          end
+
+          case command
+          when "ADD", "REMOVE" then
+            feats.each do |frow|
+              # Delete any prior mappings for each supplied grp in either case
+              GroupFeatures.find_by(:grp=>self, :feature=>frow).each {|nm| nm.delete}
+
+              # Add new mappings when requested
+              GroupFeatures.create(:grp=>self, :feature=>frow) if command == "ADD"
+            end
+          when "REPLACE"
+            GroupFeatures.find_by(:grp=>self).each {|nm| nm.delete}
+
+            feats.each do |frow|
+              GroupFeatures.create(:grp=>self, :feature=>frow)
+            end
+          end
+          
+          # FIXME:  not implemented from here on out
           # Assign values to output parameters
           params ||= {}
           # Return value
           return params
         end
         
-        expose :ModifyFeatureSet do |args|
-          args.declare :params, :map, :out, {}
+        expose :ModifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :features, :map, :in, {}
+          args.declare :params, :map, :out, {}
         end
         
         # GetParams 
         # * params (map/O)
         #   A map(paramName, value) of parameters and their values that are specific to the group
         def GetParams()
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
+          Hash[*GroupParams.find_by(:grp=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
         expose :GetParams do |args|
@@ -146,19 +148,67 @@ module Mrg
         
         # ModifyParams 
         # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
+        #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
-        #   A map(featureName, priority) of feature names and their dependency priority
-        def ModifyParams(command,params)
+        #   A map(featureName, priority) of parameter/value mappings
+        def ModifyParams(command,pvmap)
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
-          log.debug "ModifyParams: params => #{params}"
+          log.debug "ModifyParams: params => #{pvmap}"
+
+          params = pvmap.keys.map do |pn|
+            prow = Parameter.find_first_by_name(pn)
+            raise "invalid parameter #{pn}" unless prow
+            prow
+          end
+
+          case command
+          when "ADD", "REMOVE" then
+            params.each do |prow|
+              pn = prow.name
+
+              # Delete any prior mappings for each supplied param in either case
+              GroupParams.find_by(:grp=>self, :param=>prow).map {|gp| gp.delete}
+
+              # Add new mappings when requested
+              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
+            end
+          when "REPLACE"
+            GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
+
+            params.each do |prow|
+              pn = prow.name
+
+              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn])
+            end
+          end
         end
         
         expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
         end
+        
+        def features
+          GroupFeatures.find_by(:grp=>self).map{|gf| gf.feature}
+        end
+        
+        def params
+          Hash[*GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.flatten]
+        end
+      end
+      
+      class GroupFeatures
+        include ::Rhubarb::Persisting
+        declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
+        declare_column :feature, :integer, references(Feature, :on_delete=>:cascade)
+      end
+      
+      class GroupParams
+        include ::Rhubarb::Persisting
+        declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
+        declare_column :param, :integer, references(Parameter, :on_delete=>:cascade)
+        declare_column :value, :string
       end
     end
   end
