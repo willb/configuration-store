@@ -33,7 +33,7 @@ module Mrg
         declare_column :name, :string
 
         declare_column :is_identity_group, :boolean, :default, :false
-        qmf_property :is_identity_group, :boolean
+        qmf_property :is_identity_group, :bool
 
         ### Schema method declarations
                 

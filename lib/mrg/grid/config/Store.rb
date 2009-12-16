@@ -9,6 +9,15 @@ module Mrg
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Store'
 
+        def Store.find_by_id(u)
+          @singleton ||= Store.new
+        end
+
+        def Store.find_all
+          @singleton ||= Store.new
+          [@singleton]
+        end
+
         ### Property method declarations
         # property APIVersionNumber uint32 The version of the API the store supports
         attr_accessor :apiVersionNumber
