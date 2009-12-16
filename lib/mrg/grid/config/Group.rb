@@ -105,9 +105,6 @@ module Mrg
             frow
           end
 
-          puts "IN MF; FEATS --> #{feats.inspect}"
-          puts "IN MF; FEATURES --> #{features.inspect}"
-
           case command
           when "ADD", "REMOVE" then
             feats.each do |frow|
@@ -116,8 +113,6 @@ module Mrg
 
               # Add new mappings when requested
               GroupFeatures.create(:grp=>self, :feature=>frow) if command == "ADD"
-              
-              puts "IN MF; FEATURES --> #{features.inspect}"
             end
           when "REPLACE"
             GroupFeatures.find_by(:grp=>self).each {|nm| nm.delete}
@@ -161,8 +156,6 @@ module Mrg
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{pvmap}"
 
-          puts "COMMAND is #{command}, PVMAP is #{pvmap.inspect}"
-          
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
             raise "invalid parameter #{pn}" unless prow
@@ -179,9 +172,6 @@ module Mrg
 
               # Add new mappings when requested
               GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
-              
-              puts "CREATED grp:#{self}, param:#{prow}, value:#{pvmap[pn]}"
-              puts "FOUND:  #{GroupParams.find_by(:grp=>self).map{|gp| [gp.param, gp.value]}.inspect}"
             end
           when "REPLACE"
             GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
@@ -204,7 +194,6 @@ module Mrg
         end
         
         def params
-          puts GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.inspect
           Hash[*GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.flatten]
         end
       end

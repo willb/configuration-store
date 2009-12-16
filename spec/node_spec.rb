@@ -89,8 +89,6 @@ module Mrg
           f1.ModifyParams("ADD", {"UKULELE"=>"gcae"})
           group.ModifyFeatures("ADD", {0=>"BLAH1"})
 
-          puts "FEATURES ARE:  #{group.features.inspect}"
-
           conf = n.GetConfig
           conf.keys.should include("BIOTECH")
           conf["BIOTECH"].should == "ichi"
@@ -98,8 +96,6 @@ module Mrg
 
           f2.ModifyParams("ADD", {"BIOTECH"=>"ni"})
           group.ModifyFeatures("REPLACE", {0=>"BLAH2", 1=>"BLAH1"})
-
-          puts "FEATURES ARE:  #{group.features.inspect}"
 
           conf = n.GetConfig
           conf.keys.should include("BIOTECH")

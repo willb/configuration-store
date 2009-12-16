@@ -69,30 +69,23 @@ module Mrg
           config = {}
 
           memberships.reverse_each do |grp|
-            puts "#{self} is a member of #{grp}; processing features..."
             # apply each feature
             grp.features.reverse_each do |feature|
-              puts "...processing feature #{feature}; config was #{config}"
               config = feature.apply_to(config)
-              puts "...done processing feature; config is #{config}"
             end
             
-            puts "#{self} is a member of #{grp}; processing group-specific params..."
             # apply group-specific param settings
             grp.params.each do |k,v|
-              puts "...like #{k} --> #{v}"
               config[k] = v
             end
           end
 
           self.idgroup.features.reverse_each do |feature|
-            puts "identity group feature:  #{feature}"
             config = feature.apply_to(config)            
           end
 
           # apply group-specific param settings
           self.idgroup.params.each do |k,v|
-            puts "identity group mapping:  #{k} --> #{v}"
             config[k] = v
           end
 
