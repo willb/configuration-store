@@ -38,7 +38,7 @@ module Mrg
         end
         
         expose :GetType do |args|
-          args.declare :type, :uint8, :out, {}
+          args.declare :type, :sstr, :out, {}
         end
         
         # SetType 
@@ -50,7 +50,7 @@ module Mrg
         end
         
         expose :SetType do |args|
-          args.declare :type, :uint8, :in, {}
+          args.declare :type, :sstr, :in, {}
         end
         
         # GetValue 
