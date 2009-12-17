@@ -131,6 +131,15 @@ module Mrg
           args.declare :param, :sstr, :in, {}
         end
         
+        def ClearParams
+          self.ModifyParams("REPLACE", {})
+          0
+        end
+        
+        expose :ClearParams do |args|
+          args.declare :ret, :int, :out, {}
+        end
+        
         # ModifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
