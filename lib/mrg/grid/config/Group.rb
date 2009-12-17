@@ -164,10 +164,12 @@ module Mrg
         end
         
         def AddFeature(f)
+          log.debug("In AddFeature, with f == #{f.inspect}")
           self.ModifyFeatures("ADD", FakeList[f])
         end
         
         def RemoveFeature(f)
+          log.debug("In RemoveFeature, with f == #{f.inspect}")
           self.ModifyFeatures("REMOVE", FakeList[f])
         end
         
