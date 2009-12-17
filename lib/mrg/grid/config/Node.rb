@@ -20,6 +20,8 @@ module Mrg
         declare_column :name, :string, :not_null
         declare_index_on :name
 
+        declare_column :pool, :string, :not_null
+
         declare_column :idgroup, :integer, references(Group)
         
         qmf_property :name, :sstr, :index=>true
@@ -28,10 +30,8 @@ module Mrg
         # GetPool 
         # * pool (sstr/O)
         def GetPool()
-          # Assign values to output parameters
-          pool ||= ""
           # Return value
-          return pool
+          return self.pool
         end
         
         expose :GetPool do |args|
@@ -43,6 +43,7 @@ module Mrg
         def SetPool(pool)
           # Print values of input parameters
           log.debug "SetPool: pool => #{pool}"
+          self.pool = pool
         end
         
         expose :SetPool do |args|
