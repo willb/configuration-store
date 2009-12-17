@@ -84,6 +84,14 @@ module Mrg
           args.declare :features, :map, :out, {}
         end
         
+        def GetFeaturesAsString()
+          features.map{|f| f.name}.inspect
+        end
+        
+        expose :GetFeaturesAsString do |args|
+          args.declare :features, :lstr, :out, {}
+        end
+        
         # ModifyFeatures 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
@@ -135,6 +143,22 @@ module Mrg
           args.declare :params, :map, :out, {}
         end
         
+        def AddFeature(f)
+          self.ModifyFeatures("ADD", FakeList[f])
+        end
+        
+        def RemoveFeature(f)
+          self.ModifyFeatures("REMOVE", FakeList[f])
+        end
+        
+        expose :AddFeature do |args|
+          args.declare :feature, :lstr, :in
+        end
+
+        expose :RemoveFeature do |args|
+          args.declare :feature, :lstr, :in
+        end
+        
         # GetParams 
         # * params (map/O)
         #   A map(paramName, value) of parameters and their values that are specific to the group
@@ -146,6 +170,37 @@ module Mrg
           args.declare :params, :map, :out, {}
         end
         
+        def GetParamsAsString
+          hash = self.GetParams
+          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
+        end
+        
+        expose :GetParamsAsString do |args|
+          args.declare :params, :lstr, :out, {}
+        end
+        
+        def AddParamMapping(param,value)
+          log.debug "AddParam:  param => #{param}"
+          log.debug "AddParam:  value => #{value}"
+          
+          self.ModifyParams("ADD", {param=>value})
+        end
+
+        expose :AddParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+          args.declare :value, :sstr, :in, {}
+        end
+
+        def RemoveParamMapping(param)
+          log.debug "RemoveParam:  param => #{param}"
+          
+          self.ModifyParams("REMOVE", {param=>true})
+        end
+
+        expose :RemoveParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+        end
+                
         # ModifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.

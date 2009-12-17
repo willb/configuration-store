@@ -117,6 +117,22 @@ module Mrg
           args.declare :group, :objId, :out, {}
         end
         
+        def AddMembership(group)
+          self.ModifyMemberships("ADD", FakeList[group])
+        end
+
+        def RemoveMembership(group)
+          self.ModifyMemberships("REMOVE", FakeList[group])
+        end
+        
+        expose :AddMembership do |args|
+          args.declare :group, :sstr, :out, {}
+        end
+        
+        expose :RemoveMembership do |args|
+          args.declare :group, :sstr, :out, {}
+        end
+        
         # ModifyMemberships
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
@@ -173,6 +189,24 @@ module Mrg
         expose :GetMemberships do |args|
           args.declare :groups, :map, :out, {}
         end
+
+        def GetMembershipsAsString()
+          memberships.map{|g| g.name}.inspect
+        end
+        
+        expose :GetMembershipsAsString do |args|
+          args.declare :groups, :lstr, :out, {}
+        end
+        
+        def GetConfigAsString
+          hash = self.GetConfig
+          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
+        end
+        
+        expose :GetConfigAsString do |args|
+          args.declare :config_hash, :lstr, :out, {}
+        end
+        
         
         private
         def idgroupname
