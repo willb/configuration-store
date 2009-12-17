@@ -191,7 +191,9 @@ module Mrg
         end
 
         def GetMembershipsAsString()
-          memberships.map{|g| g.name}.inspect
+          ls = memberships.map{|g| g.name}
+          ls << idgroupname
+          ls.inspect
         end
         
         expose :GetMembershipsAsString do |args|
