@@ -77,10 +77,7 @@ module Mrg
         # * features (map/O)
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
         def GetFeatures()
-          # Assign values to output parameters
-          features ||= {}
-          # Return value
-          return features
+          return FakeList[features.map{|f| f.name})]
         end
         
         expose :GetFeatures do |args|
