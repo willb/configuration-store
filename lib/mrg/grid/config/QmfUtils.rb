@@ -36,6 +36,7 @@ module Mrg
           (0...args.size).to_a.zip(args) do |k,v|
             result[k] = v
           end
+          result
         end
         
         def to_a
