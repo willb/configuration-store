@@ -43,7 +43,7 @@ module Mrg
         end
 
         def GetGroupByName(name)
-          Group.find_by_name(name)
+          Group.find_first_by_name(name)
         end
         
         expose :GetGroupByName do |args|
