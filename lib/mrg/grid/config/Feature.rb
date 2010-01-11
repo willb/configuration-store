@@ -100,6 +100,46 @@ module Mrg
           args.declare :list, :map, :out, {}
         end
         
+        def GetParamsAsString
+          hash = self.GetParams
+          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
+        end
+        
+        expose :GetParamsAsString do |args|
+          args.declare :params, :lstr, :out, {}
+        end
+        
+        def AddParamMapping(param,value)
+          log.debug "AddParam:  param => #{param}"
+          log.debug "AddParam:  value => #{value}"
+          
+          self.ModifyParams("ADD", {param=>value})
+        end
+
+        expose :AddParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+          args.declare :value, :sstr, :in, {}
+        end
+
+        def RemoveParamMapping(param)
+          log.debug "RemoveParam:  param => #{param}"
+          
+          self.ModifyParams("REMOVE", {param=>true})
+        end
+
+        expose :RemoveParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+        end
+        
+        def ClearParams
+          self.ModifyParams("REPLACE", {})
+          0
+        end
+        
+        expose :ClearParams do |args|
+          args.declare :ret, :int, :out, {}
+        end
+        
         # ModifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.

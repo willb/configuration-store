@@ -67,27 +67,40 @@ module Mrg
         # * config (map/O)
         #   A map(parameter, value) representing the configuration for the node supplied
         def GetConfig()
+          log.debug "in GetConfig"
           config = {}
 
           memberships.reverse_each do |grp|
             # apply each feature
             grp.features.reverse_each do |feature|
+              log.debug("applying config for #{feature.name}")
               config = feature.apply_to(config)
+              log.debug("config is #{config.inspect}")
             end
             
             # apply group-specific param settings
             grp.params.each do |k,v|
+              log.debug("applying config params #{k.inspect} --> #{v.inspect}")
               config[k] = v
+              log.debug("config is #{config.inspect}")
             end
           end
 
+          log.debug("self.idgroup --> #{self.idgroup.name}")
+          log.debug("#{self.idgroup.name} has #{self.idgroup.features.size} features")
+
           self.idgroup.features.reverse_each do |feature|
-            config = feature.apply_to(config)            
+            log.debug("applying config for #{feature.name}")
+            config = feature.apply_to(config)
+            log.debug("config is #{config.inspect}")
           end
 
+          log.debug("#{self.idgroup.name} has #{self.idgroup.params.size} params")
           # apply group-specific param settings
           self.idgroup.params.each do |k,v|
+            log.debug("applying config params #{k.inspect} --> #{v.inspect}")
             config[k] = v
+            log.debug("config is #{config.inspect}")
           end
 
           config
@@ -115,6 +128,22 @@ module Mrg
 
         expose :GetIdentityGroup do |args|
           args.declare :group, :objId, :out, {}
+        end
+        
+        def AddMembership(group)
+          self.ModifyMemberships("ADD", FakeList[group])
+        end
+
+        def RemoveMembership(group)
+          self.ModifyMemberships("REMOVE", FakeList[group])
+        end
+        
+        expose :AddMembership do |args|
+          args.declare :group, :sstr, :out, {}
+        end
+        
+        expose :RemoveMembership do |args|
+          args.declare :group, :sstr, :out, {}
         end
         
         # ModifyMemberships
@@ -173,6 +202,26 @@ module Mrg
         expose :GetMemberships do |args|
           args.declare :groups, :map, :out, {}
         end
+
+        def GetMembershipsAsString()
+          ls = memberships.map{|g| g.name}
+          ls << idgroupname
+          ls.inspect
+        end
+        
+        expose :GetMembershipsAsString do |args|
+          args.declare :groups, :lstr, :out, {}
+        end
+        
+        def GetConfigAsString
+          hash = self.GetConfig
+          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
+        end
+        
+        expose :GetConfigAsString do |args|
+          args.declare :config_hash, :lstr, :out, {}
+        end
+        
         
         private
         def idgroupname

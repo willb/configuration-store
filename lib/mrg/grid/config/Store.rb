@@ -41,6 +41,15 @@ module Mrg
           args.declare :obj, :objId, :out, {}
           args.declare :query, :map, :in, {}
         end
+
+        def GetGroupByName(name)
+          Group.find_first_by_name(name)
+        end
+        
+        expose :GetGroupByName do |args|
+          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, {}
+        end
         
         # AddExplicitGroup 
         # * name (sstr/I)

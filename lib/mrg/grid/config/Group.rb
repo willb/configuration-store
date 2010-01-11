@@ -77,15 +77,40 @@ module Mrg
         # * features (map/O)
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
         def GetFeatures()
-          # Assign values to output parameters
-          features ||= {}
-          # Return value
-          return features
+          return FakeList[features.map{|f| f.name}]
         end
         
         expose :GetFeatures do |args|
           args.declare :features, :map, :out, {}
         end
+        
+        def GetFeaturesAsString()
+          features.map{|f| f.name}.inspect
+        end
+        
+        expose :GetFeaturesAsString do |args|
+          args.declare :features, :lstr, :out, {}
+        end
+        
+        def ClearParams
+          self.ModifyParams("REPLACE", {})
+        end
+        
+        expose :ClearParams do |args|
+          args.declare :ret, :int, :out, {}
+        end
+        
+        def ClearFeatures
+          self.ModifyFeatures("REPLACE", {})
+          0
+        end
+        
+        expose :ClearFeatures do |args|
+          args.declare :ret, :int, :out, {}
+        end
+        
+        
+        
         
         # ModifyFeatures 
         # * command (sstr/I)
@@ -138,6 +163,24 @@ module Mrg
           args.declare :params, :map, :out, {}
         end
         
+        def AddFeature(f)
+          log.debug("In AddFeature, with f == #{f.inspect}")
+          self.ModifyFeatures("ADD", FakeList[f])
+        end
+        
+        def RemoveFeature(f)
+          log.debug("In RemoveFeature, with f == #{f.inspect}")
+          self.ModifyFeatures("REMOVE", FakeList[f])
+        end
+        
+        expose :AddFeature do |args|
+          args.declare :feature, :lstr, :in
+        end
+
+        expose :RemoveFeature do |args|
+          args.declare :feature, :lstr, :in
+        end
+        
         # GetParams 
         # * params (map/O)
         #   A map(paramName, value) of parameters and their values that are specific to the group
@@ -149,6 +192,37 @@ module Mrg
           args.declare :params, :map, :out, {}
         end
         
+        def GetParamsAsString
+          hash = self.GetParams
+          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
+        end
+        
+        expose :GetParamsAsString do |args|
+          args.declare :params, :lstr, :out, {}
+        end
+        
+        def AddParamMapping(param,value)
+          log.debug "AddParam:  param => #{param}"
+          log.debug "AddParam:  value => #{value}"
+          
+          self.ModifyParams("ADD", {param=>value})
+        end
+
+        expose :AddParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+          args.declare :value, :sstr, :in, {}
+        end
+
+        def RemoveParamMapping(param)
+          log.debug "RemoveParam:  param => #{param}"
+          
+          self.ModifyParams("REMOVE", {param=>true})
+        end
+
+        expose :RemoveParamMapping do |args|
+          args.declare :param, :sstr, :in, {}
+        end
+                
         # ModifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
