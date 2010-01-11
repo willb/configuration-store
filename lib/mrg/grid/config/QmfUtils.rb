@@ -27,7 +27,7 @@ module Mrg
         def self.normalize(dict)
           dict ||= {}
           result = FakeList.new
-          dict.each {|k,v| result[k.to_i] = v}
+          dict.each {|k,v| result[k.to_s] = v}
           result
         end
 
