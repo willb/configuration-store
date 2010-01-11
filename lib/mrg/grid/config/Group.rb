@@ -128,9 +128,7 @@ module Mrg
           log.debug "ModifyFeatureSet: command => #{command}"
           log.debug "ModifyFeatureSet: features => #{fs}"
           
-          fs = FakeList.normalize(fs)
-
-          feats = fs.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |fn|
+          feats = fs.to_a.map do |fn|
             frow = Feature.find_first_by_name(fn)
             raise "invalid feature #{fn}" unless frow
             frow

@@ -34,13 +34,14 @@ module Mrg
         def self.[](*args)
           result = FakeList.new
           (0...args.size).to_a.zip(args) do |k,v|
-            result[k] = v
+            # QMF map keys must be strings
+            result[k.to_s] = v
           end
           result
         end
         
         def to_a
-          self.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}
+          self.sort {|a,b| a[0].to_i <=> b[0].to_i}.map {|t| t[1]}
         end
       end
     end
