@@ -30,6 +30,7 @@ module Mrg
         # GetPool 
         # * pool (sstr/O)
         def GetPool()
+          log.debug "GetPool called on node #{self.inspect}"
           # Return value
           return self.pool
         end
@@ -53,6 +54,7 @@ module Mrg
         # GetLastCheckinTime 
         # * time (uint32/O)
         def GetLastCheckinTime()
+          log.debug "GetLastCheckinTime called on node #{self.inspect}"
           # Assign values to output parameters
           time ||= 0
           # Return value
@@ -67,7 +69,7 @@ module Mrg
         # * config (map/O)
         #   A map(parameter, value) representing the configuration for the node supplied
         def GetConfig()
-          log.debug "in GetConfig"
+          log.debug "GetConfig called on node #{self.inspect}"
           config = {}
 
           memberships.reverse_each do |grp|
@@ -122,7 +124,7 @@ module Mrg
         end
         
         def GetIdentityGroup
-          log.debug "GetIdentityGroup called"
+          log.debug "GetIdentityGroup called on node #{self.inspect}"
           self.idgroup ||= id_group_init
         end
 
@@ -196,6 +198,7 @@ module Mrg
         # * list (map/O)
         #   A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group
         def GetMemberships()
+          log.debug "GetMemberships called on node #{self.inspect}"
           FakeList[*memberships.map{|g| g.name}]
         end
         
@@ -204,6 +207,7 @@ module Mrg
         end
 
         def GetMembershipsAsString()
+          log.debug "GetMembershipsAsString called on node #{self.inspect}"
           ls = memberships.map{|g| g.name}
           ls << idgroupname
           ls.inspect
@@ -214,6 +218,7 @@ module Mrg
         end
         
         def GetConfigAsString
+          log.debug "GetConfigAsString called on node #{self.inspect}"
           hash = self.GetConfig
           "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
         end
