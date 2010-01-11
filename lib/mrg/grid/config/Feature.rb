@@ -37,6 +37,7 @@ module Mrg
         # GetName 
         # * name (sstr/O)
         def GetName()
+          log.debug "GetName called on feature #{self.inspect}"
           # Assign values to output parameters
           return self.name
         end
@@ -62,8 +63,10 @@ module Mrg
         # * list (map/O)
         #   list of other features a feature includes
         def GetFeatures()
+          log.debug "GetFeatures called on feature #{self.inspect}"
           # Assign values to output parameters
           list ||= {}
+          log.warn "GetFeatures() is not implemented"
           # Return value
           return list
         end
@@ -93,6 +96,7 @@ module Mrg
         # * list (map/O)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
         def GetParams()
+          log.debug "GetParams called on feature #{self.inspect}"
           Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
@@ -101,6 +105,7 @@ module Mrg
         end
         
         def GetParamsAsString
+          log.debug "GetParamsAsString called on feature #{self.inspect}"
           hash = self.GetParams
           "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
         end
@@ -132,6 +137,7 @@ module Mrg
         end
         
         def ClearParams
+          log.debug "ClearParams called on feature #{self.inspect}"
           self.ModifyParams("REPLACE", {})
           0
         end
@@ -190,6 +196,7 @@ module Mrg
         # * list (map/O)
         #   A map(featureName, True) of other features a feature conflicts with for proper operation
         def GetConflicts()
+          log.debug "GetConflicts called on feature #{self.inspect}"
           return FakeSet[*conflicts]
         end
         
@@ -218,6 +225,7 @@ module Mrg
         # * list (map/O)
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
+          log.debug "GetDepends called on feature #{self.inspect}"
           return FakeSet[*depends]
         end
         
@@ -246,8 +254,10 @@ module Mrg
         # * list (map/O)
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
         def GetSubsys()
+          log.debug "GetSubsys called on feature #{self.inspect}"
           # Assign values to output parameters
           list ||= {}
+          log.warn "GetSubsys() is not implemented"
           # Return value
           return list
         end
@@ -265,6 +275,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifySubsys: command => #{command}"
           log.debug "ModifySubsys: subsys => #{subsys}"
+          log.warn "ModifySubsys() is not implemented"
         end
         
         expose :ModifySubsys do |args|

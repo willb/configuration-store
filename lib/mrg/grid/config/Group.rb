@@ -41,6 +41,7 @@ module Mrg
         # * list (map/O)
         #   A set of the nodes associated with this group
         def GetMembership()
+          log.debug "GetMembership called on group #{self.inspect}"
           FakeList[*NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}]
         end
         
@@ -51,6 +52,7 @@ module Mrg
         # GetName 
         # * name (sstr/O)
         def GetName()
+          log.debug "GetName called on group #{self.inspect}"
           # Assign values to output parameters
           self.name ||= ""
           # Return value
@@ -77,6 +79,7 @@ module Mrg
         # * features (map/O)
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
         def GetFeatures()
+          log.debug "GetFeatures called on group #{self.inspect}"
           return FakeList[features.map{|f| f.name}]
         end
         
@@ -85,6 +88,7 @@ module Mrg
         end
         
         def GetFeaturesAsString()
+          log.debug "GetFeaturesAsString called on group #{self.inspect}"
           features.map{|f| f.name}.inspect
         end
         
@@ -185,6 +189,7 @@ module Mrg
         # * params (map/O)
         #   A map(paramName, value) of parameters and their values that are specific to the group
         def GetParams()
+          log.debug "GetParams called on group #{self.inspect}"
           Hash[*GroupParams.find_by(:grp=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
@@ -193,6 +198,7 @@ module Mrg
         end
         
         def GetParamsAsString
+          log.debug "GetParamsAsString called on group #{self.inspect}"
           hash = self.GetParams
           "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
         end

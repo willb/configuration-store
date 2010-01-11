@@ -33,6 +33,7 @@ module Mrg
         # GetType 
         # * type (uint8/O)
         def GetType()
+          log.debug "GetType called on param #{self.inspect}"
           # Assign values to output parameters
           return kind
         end
@@ -56,6 +57,7 @@ module Mrg
         # GetValue 
         # * value (lstr/O)
         def GetValue()
+          log.debug "GetValue called on param #{self.inspect}"
           # Assign values to output parameters
           value ||= ""
           # Return value
@@ -80,6 +82,7 @@ module Mrg
         # GetDefault 
         # * default (lstr/O)
         def GetDefault()
+          log.debug "GetDefault called on param #{self.inspect}"
           # Assign values to output parameters
           self.default_val ||= ""
           # Return value
@@ -105,6 +108,7 @@ module Mrg
         # GetDescription 
         # * description (lstr/O)
         def GetDescription()
+          log.debug "GetDescription called on param #{self.inspect}"
           # Assign values to output parameters
           self.description ||= ""
           # Return value
@@ -130,6 +134,7 @@ module Mrg
         # GetDefaultMustChange 
         # * mustChange (bool/O)
         def GetDefaultMustChange()
+          log.debug "GetDefaultMustChange called on param #{self.inspect}"
           return self.must_change
         end
         
@@ -152,6 +157,7 @@ module Mrg
         # GetVisibilityLevel 
         # * level (uint8/O)
         def GetVisibilityLevel()
+          log.debug "GetVisibilityLevel called on param #{self.inspect}"
           self.level ||= 0
           # Return value
           return self.level
@@ -176,6 +182,7 @@ module Mrg
         # GetRequiresRestart 
         # * needsRestart (bool/O)
         def GetRequiresRestart()
+          log.debug "GetRequiresRestart called on param #{self.inspect}"
           # Assign values to output parameters
           self.needsRestart ||= false
           # Return value
@@ -202,6 +209,7 @@ module Mrg
         # * depends (map/O)
         #   A set of parameter names that this one depends on
         def GetDepends()
+          log.debug "GetDepends called on param #{self.inspect}"
           return depends.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
@@ -232,6 +240,7 @@ module Mrg
         # * conflicts (map/O)
         #   A set of parameter names that conflict with the parameter
         def GetConflicts()
+          log.debug "GetConflicts called on param #{self.inspect}"
           return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
         end
         
