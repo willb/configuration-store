@@ -35,6 +35,15 @@ module Mrg
           
           @store.send(@find_msg, @gskey).should == nil
         end
+        
+        
+        it "should not be possible to set a group's name to a taken name" do
+          group = @store.send(@add_msg, @gskey)
+          group2 = @store.send(@add_msg, @gskey.reverse)
+          
+          lambda { group2.SetName(@gskey) }.should raise_error
+        end
+        
       end
     end
   end

@@ -68,6 +68,7 @@ module Mrg
         def SetName(name)
           # Print values of input parameters
           log.debug "SetName: name => #{name}"
+          raise "Group name #{name} is taken" if (self.name != name and Group.find_first_by_name(name))
           self.name = name
         end
         
