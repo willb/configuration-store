@@ -112,6 +112,7 @@ module Mrg
         def RemoveFeature(uid)
           # Print values of input parameters
           log.debug "RemoveFeature: uid => #{uid}"
+          Feature.find(uid).delete
         end
         
         expose :RemoveFeature do |args|

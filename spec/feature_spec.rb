@@ -23,6 +23,12 @@ module Mrg
           feature = @store.AddFeature(@gskey)
           @store.GetFeature(@gskey).row_id.should == feature.row_id
         end
+
+        it "should not persist after deletion" do
+          feature = @store.AddFeature(@gskey)
+          @store.RemoveFeature(feature.row_id)
+          @store.GetFeature(@gskey).should == nil
+        end
         
         it "should allow setting a feature's name" do
           vals = ["Fewer ponies", "Some ponies", "No ponies"]
