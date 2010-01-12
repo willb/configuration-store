@@ -87,7 +87,7 @@ module Mrg
 
           f1.ModifyParams("ADD", {"BIOTECH"=>"ichi"})
           f1.ModifyParams("ADD", {"UKULELE"=>"gcae"})
-          group.ModifyFeatures("ADD", {0=>"BLAH1"})
+          group.ModifyFeatures("ADD", FakeList["BLAH1"])
 
           conf = n.GetConfig
           conf.keys.should include("BIOTECH")
@@ -95,7 +95,7 @@ module Mrg
           conf["UKULELE"].should == "gcae"
 
           f2.ModifyParams("ADD", {"BIOTECH"=>"ni"})
-          group.ModifyFeatures("REPLACE", {0=>"BLAH2", 1=>"BLAH1"})
+          group.ModifyFeatures("REPLACE", FakeList["BLAH2", "BLAH1"])
 
           conf = n.GetConfig
           conf.keys.should include("BIOTECH")
