@@ -1,0 +1,2 @@
+* failed getters should raise (descriptive) exceptions
+* modify- methods on Feature
