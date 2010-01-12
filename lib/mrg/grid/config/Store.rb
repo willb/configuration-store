@@ -57,10 +57,8 @@ module Mrg
         def AddExplicitGroup(name)
           # Print values of input parameters
           log.debug "AddExplicitGroup: name => #{name}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+          raise "Group name #{name} is already taken" if Group.find_first_by_name(name)
+          Group.create(:name=>name)
         end
         
         expose :AddExplicitGroup do |args|
@@ -73,6 +71,7 @@ module Mrg
         def RemoveGroup(uid)
           # Print values of input parameters
           log.debug "RemoveGroup: uid => #{uid}"
+          Group.find(uid).delete
         end
         
         expose :RemoveGroup do |args|

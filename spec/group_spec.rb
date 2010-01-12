@@ -4,8 +4,36 @@ module Mrg
   module Grid
     module Config
       describe Group do
-        it "should have some examples" do
-          pending "No group examples yet"
+        before(:each) do
+          setup_rhubarb
+          @store = Store.new
+          @add_msg = :AddExplicitGroup
+          @find_msg = :GetGroupByName
+          @gskey = "PONY_GROUP"
+        end
+
+        after(:each) do
+          teardown_rhubarb
+        end
+
+        include DescribeGetterAndSetter
+        
+        it "should be instantiable" do
+          thing = @store.send(@add_msg, @gskey)
+          thing.should_not == nil
+          @store.send(@find_msg, @gskey).row_id.should == thing.row_id
+        end
+
+        it "should disallow creating two groups with the same name" do
+          thing = @store.send(@add_msg, @gskey)
+          lambda { thing2 = @store.send(@add_msg, @gskey) }.should raise_error
+        end
+
+        it "should no longer exist after it is deleted" do
+          thing = @store.send(@add_msg, @gskey)
+          @store.RemoveGroup(thing.row_id)
+          
+          @store.send(@find_msg, @gskey).should == nil
         end
       end
     end
