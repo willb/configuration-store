@@ -36,6 +36,25 @@ module Mrg
           
           @store.GetParam("BIOTECH").should == nil
         end
+
+        it "should delete all traces of a deleted parameter" do
+          OLD_DEFAULT = "The quick brown fox jumps over the lazy dad"
+          OLD_TYPE = "timestamp"
+          
+          param = @store.AddParam("BIOTECH")
+          old_id = param.row_id
+          param.SetDefault(OLD_DEFAULT)
+          param.SetType(OLD_TYPE)
+          @store.RemoveParam("BIOTECH")
+          
+          param = @store.AddParam("BIOTECH")
+          param = @store.GetParam("BIOTECH")
+          param.should_not == nil
+          param.GetDefault.should_not == OLD_DEFAULT
+          param.GetType.should_not == OLD_TYPE
+          # param.row_id.should_not == old_id
+        end
+
         
         it "enables setting a parameter's type" do
           describe_getter_and_setter(:SetType, :GetType, ["int", "string", "timestamp", "hostname"])
