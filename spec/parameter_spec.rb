@@ -23,6 +23,12 @@ module Mrg
           param.name.should == "BIOTECH"
         end
 
+        it "disallows creating a parameter with a name already in use" do
+          param = @store.AddParam("BIOTECH")
+          lambda { @store.AddParam("BIOTECH") }.should raise_error
+        end
+
+
         it "enables finding a created parameter" do
           param = @store.AddParam("BIOTECH")
           param = @store.GetParam("BIOTECH")

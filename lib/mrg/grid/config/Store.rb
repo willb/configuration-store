@@ -253,6 +253,7 @@ module Mrg
         def AddParam(name)
           # Print values of input parameters
           log.debug "AddParam: name => #{name}"
+           raise "Parameter name #{name} is already taken" if Parameter.find_first_by_name(name)
           # Return value
           return Parameter.create(:name => name)
         end
