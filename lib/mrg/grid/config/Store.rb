@@ -267,6 +267,7 @@ module Mrg
         def RemoveParam(name)
           # Print values of input parameters
           log.debug "RemoveParam: name => #{name}"
+          Parameter.find_first_by_name(name).delete
         end
         
         expose :RemoveParam do |args|

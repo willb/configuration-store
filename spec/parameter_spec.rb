@@ -30,6 +30,13 @@ module Mrg
           param.name.should == "BIOTECH"
         end
         
+        it "should be possible to delete a parameter" do
+          param = @store.AddParam("BIOTECH")
+          @store.RemoveParam("BIOTECH")
+          
+          @store.GetParam("BIOTECH").should == nil
+        end
+        
         it "enables setting a parameter's type" do
           describe_getter_and_setter(:SetType, :GetType, ["int", "string", "timestamp", "hostname"])
         end
