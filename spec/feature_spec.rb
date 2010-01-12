@@ -21,7 +21,7 @@ module Mrg
         
         it "should be instantiable" do
           feature = @store.AddFeature(@gskey)
-          @store.GetFeature(@gskey).row_id == feature.row_id
+          @store.GetFeature(@gskey).row_id.should == feature.row_id
         end
         
         it "should allow setting a feature's name" do
