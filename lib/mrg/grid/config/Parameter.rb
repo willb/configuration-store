@@ -54,31 +54,6 @@ module Mrg
           args.declare :type, :sstr, :in, {}
         end
         
-        # GetValue 
-        # * value (lstr/O)
-        def GetValue()
-          log.debug "GetValue called on param #{self.inspect}"
-          # Assign values to output parameters
-          value ||= ""
-          # Return value
-          return value
-        end
-        
-        expose :GetValue do |args|
-          args.declare :value, :lstr, :out, {}
-        end
-        
-        # SetValue 
-        # * value (lstr/I)
-        def SetValue(value)
-          # Print values of input parameters
-          log.debug "SetValue: value => #{value}"
-        end
-        
-        expose :SetValue do |args|
-          args.declare :value, :lstr, :in, {}
-        end
-        
         # GetDefault 
         # * default (lstr/O)
         def GetDefault()
