@@ -164,7 +164,7 @@ module Mrg
             prow
           end
           
-          case command
+          case command.upcase
           when "ADD", "REMOVE" then
             params.each do |prow|
               pn = prow.name
@@ -173,7 +173,7 @@ module Mrg
               FeatureParams.find_by(:feature=>self, :param=>prow).map {|fp| fp.delete}
               
               # Add new mappings when requested
-              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
+              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn]) if command.upcase == "ADD"
             end
           when "REPLACE"
             FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
