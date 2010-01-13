@@ -12,7 +12,7 @@ module Mrg
         # * keymsg is the message to get the key value from self
         def modify_arcs(command,dests,options,getmsg,setmsg,explain="have an arc to",keymsg=:name,what=nil)
           what ||= self.class.name.split("::").pop.downcase
-          case command
+          case command.upcase
           when "ADD" then 
             old_dests = Set[*self.send(getmsg)]
             new_dests = Set[*dests.keys]
