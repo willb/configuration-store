@@ -173,7 +173,7 @@ module Mrg
               FeatureParams.find_by(:feature=>self, :param=>prow).map {|fp| fp.delete}
               
               # Add new mappings when requested
-              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn]) if command.upcase == "ADD"
+              FeatureParams.create(:feature=>self, :param=>prow, :given_value=>pvmap[pn]) if command.upcase == "ADD"
             end
           when "REPLACE"
             FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
@@ -181,7 +181,7 @@ module Mrg
             params.each do |prow|
               pn = prow.name
 
-              FeatureParams.create(:feature=>self, :param=>prow, :value=>pvmap[pn])
+              FeatureParams.create(:feature=>self, :param=>prow, :given_value=>pvmap[pn])
             end
           end
         end
@@ -330,7 +330,16 @@ module Mrg
         include ::Rhubarb::Persisting
         declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
         declare_column :param, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
-        declare_column :value, :string
+        declare_column :given_value, :string
+        declare_column :uses_default, :boolean, :default, :false
+        def value
+          return self.given_value unless self.uses_default
+          self.param.default_val
+        end
+        
+        def value=(val)
+          self.given_value = val
+        end
       end
       
       class FeatureSubsys
