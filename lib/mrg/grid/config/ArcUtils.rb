@@ -8,21 +8,36 @@ module Mrg
         # * options are provided by the tool
         # * getmsg is the message to get the current set of arcs
         # * setmsg is the message to set the current set of arcs
-        # * explain is a string describing the relationship modeled by the arc (for error messages)
-        # * keymsg is the message to get the key value from self
-        def modify_arcs(command,dests,options,getmsg,setmsg,explain="have an arc to",keymsg=:name,what=nil)
-          what ||= self.class.name.split("::").pop.downcase
+        # * keyword arguments include
+        # ** =:explain= is a string describing the relationship modeled by the arc (for error messages)
+        # ** =:keymsg= is the message to get the key value from self
+        # ** =:preserve_order= is true if these arcs represent a list
+        def modify_arcs(command,dests,options,getmsg,setmsg,kwargs=nil)
+          # NB:  this must work for lists and sets; note the ADD/UNION case
+          
+          kwargs ||= {}
+          
+          explain = kwargs[:explain] || "have an arc to"
+          what = kwargs[:what] || self.class.name.split("::").pop.downcase
+          keymsg = kwargs[:name] || :name
+          preserve_order = kwargs[:preserve_order]
+          
           case command.upcase
-          when "ADD" then 
-            old_dests = Set[*self.send(getmsg)]
-            new_dests = Set[*dests.keys]
+          when "ADD", "UNION" then 
+            old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
+            new_dests = preserve_order ? dests.keys : Set[*dests.keys]
             raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
-            self.send(setmsg, (old_dests + new_dests).to_a)
+            self.send(setmsg, (old_dests + new_dests).to_a.uniq) # the uniq is important so this can work either as a list or set
           when "REPLACE" then 
             new_dests = Set[*dests.keys]
             raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, new_dests.to_a)
-          when "UNION", "REMOVE", "INTERSECT", "DIFF" then
+          when "REMOVE" then
+            old_dests = self.send(getmsg)
+            removed_dests = dests.keys
+            new_dests = old_dests - removed_dests
+            self.send(setmsg, new_dests)
+          when "INTERSECT", "DIFF" then
             raise RuntimeError.new("#{command} not implemented")            
           else nil
           end

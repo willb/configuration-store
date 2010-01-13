@@ -202,7 +202,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{deps}"
-          modify_arcs(command,deps,options,:depends,:depends=,"depend upon")
+          modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon")
         end
         
         expose :ModifyDepends do |args|
@@ -233,7 +233,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
-          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,"conflict with")
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
         end
         
         expose :ModifyConflicts do |args|
