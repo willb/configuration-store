@@ -138,7 +138,7 @@ module Mrg
         
         def ClearParams
           log.debug "ClearParams called on feature #{self.inspect}"
-          self.ModifyParams("REPLACE", {})
+          FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
           0
         end
         
@@ -184,7 +184,7 @@ module Mrg
               FeatureParams.create(attributes) if command.upcase == "ADD"
             end
           when "REPLACE"
-            FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
+            self.ClearParams
             self.ModifyParams("ADD",pvmap,options)
           end
         end
