@@ -1,6 +1,6 @@
 * failed getters should raise (descriptive) exceptions
 * modify- methods on Feature
-* Set/Get of conflicts/params on Parameter doesn't work
-* SetValue doesn't work on Parameter
 * Get/ModifySubsys on Feature
 * GetConflicts/Depends doesn't work (maybe Modify as well?) on Feature
+* Param verification on Feature
+* Node with no config should return empty config not error
