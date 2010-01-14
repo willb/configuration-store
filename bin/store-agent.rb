@@ -68,7 +68,14 @@ if DO_CREATE
   end
 end
 
-app = SPQR::App.new(:loglevel => debug, :user => username, :password => password, :host => host, :port => port)
+options = {}
+options[:loglevel] = debug
+options[:user] = username if username
+options[:password] = password if password
+options[:host] = host
+options[:port] = port
+
+app = SPQR::App.new(options)
 app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::Configuration,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem
 
 app.main
