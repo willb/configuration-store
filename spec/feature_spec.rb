@@ -95,6 +95,103 @@ module Mrg
           end
         end
 
+        it "should allow replacing parameter/value mappings" do
+          param_names = ("XAA".."XAZ").to_a
+          param_values = param_names.map {|pn| pn.downcase}
+          
+          nvps = *param_names.zip(param_values)
+          
+          pvmap1 = Hash[*nvps.slice(0,5).flatten]
+          pvmap2 = Hash[*nvps.slice(5,nvps.size).flatten]
+
+          params = param_names.map {|pn| @store.AddParam(pn)}
+
+          feature = @store.AddFeature(@gskey)
+          feature.ModifyParams("ADD", pvmap1)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == pvmap1.size
+          
+          feature.ModifyParams("REPLACE", pvmap2)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == pvmap2.size
+          
+          pvmap2.each do |k,v|
+            mappings.keys.should include(k)
+            mappings[k].should == v
+          end
+        end
+
+        it "should allow adding parameter/value mappings to existing mappings" do
+          param_names = ("XAA".."XAZ").to_a
+          param_values = param_names.map {|pn| pn.downcase}
+          
+          nvps = *param_names.zip(param_values)
+          
+          pvmap1 = Hash[*nvps.slice(0,5).flatten]
+          pvmap2 = Hash[*nvps.slice(5,nvps.size).flatten]
+
+          params = param_names.map {|pn| @store.AddParam(pn)}
+
+          feature = @store.AddFeature(@gskey)
+          feature.ModifyParams("ADD", pvmap1)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == pvmap1.size
+          
+          feature.ModifyParams("ADD", pvmap2)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == param_names.size
+          
+          param_names.zip(param_values).each do |k,v|
+            mappings.keys.should include(k)
+            mappings[k].should == v
+          end
+        end
+
+        it "should replace preexisting mappings if their params appear in an ADD" do
+          param_names = ("XAA".."XAZ").to_a
+          param_values = param_names.map {|pn| pn.downcase}
+          
+          nvps = *param_names.zip(param_values)
+          
+          pvmap = Hash[*nvps.flatten]
+
+          params = param_names.map {|pn| @store.AddParam(pn)}
+
+          feature = @store.AddFeature(@gskey)
+          feature.ModifyParams("ADD", pvmap)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == pvmap.size
+          
+          expected_pvmap = pvmap.dup
+          pvmap = {}
+          
+          param_names.slice(0,5).each do |pn|
+            pvmap[pn] = pn.downcase.reverse
+            expected_pvmap[pn] = pn.downcase.reverse
+          end
+          
+          feature.ModifyParams("ADD", pvmap)
+          
+          mappings = feature.GetParams
+          
+          mappings.size.should == param_names.size
+          
+          expected_pvmap.each do |k,v|
+            mappings.keys.should include(k)
+            mappings[k].should == v
+          end
+        end
+
         it "should allow removing parameter/value mappings all at once" do
           param_names = ("XAA".."XAZ").to_a
           param_values = param_names.map {|pn| pn.downcase}
