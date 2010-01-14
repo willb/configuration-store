@@ -169,20 +169,23 @@ module Mrg
             params.each do |prow|
               pn = prow.name
 
+              attributes = {:feature=>self, :param=>prow}
+
               # Delete any prior mappings for each supplied param in either case
-              FeatureParams.find_by(:feature=>self, :param=>prow).map {|fp| fp.delete}
+              FeatureParams.find_by(attributes).map {|fp| fp.delete}
+              
+              if pvmap[pn].is_a? String
+                attributes[:given_value] = pvmap[pn]
+              else
+                attributes[:uses_default] = true
+              end
               
               # Add new mappings when requested
-              FeatureParams.create(:feature=>self, :param=>prow, :given_value=>pvmap[pn]) if command.upcase == "ADD"
+              FeatureParams.create(attributes) if command.upcase == "ADD"
             end
           when "REPLACE"
             FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
-
-            params.each do |prow|
-              pn = prow.name
-
-              FeatureParams.create(:feature=>self, :param=>prow, :given_value=>pvmap[pn])
-            end
+            self.ModifyParams("ADD",pvmap,options)
           end
         end
         
