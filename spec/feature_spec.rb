@@ -244,6 +244,10 @@ module Mrg
           end
         end
         
+        it "should give parameters default values when they are added as mapped to nil or false" do
+          pending
+        end
+        
       end
     end
   end
