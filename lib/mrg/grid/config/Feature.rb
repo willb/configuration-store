@@ -75,13 +75,13 @@ module Mrg
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
-        #   A list of other features a feature includes
+        #   A list of other feature names a feature includes
         def ModifyFeatures(command,features,options={})
           # Print values of input parameters
           log.debug "ModifyFeatures: command => #{command}"
           log.debug "ModifyFeatures: features => #{features}"
           log.debug "ModifyFeatures: options => #{options}"
-          fl = FakeList.normalize(features).to_a.map {|f| f.name}
+          fl = FakeList.normalize(features).to_a.map
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true)
         end
         
@@ -196,10 +196,10 @@ module Mrg
         
         # GetConflicts 
         # * list (map/O)
-        #   A map(featureName, True) of other features a feature conflicts with for proper operation
+        #   A list of other features that this feature conflicts with
         def GetConflicts()
           log.debug "GetConflicts called on feature #{self.inspect}"
-          return FakeSet[*conflicts]
+          return FakeList[*conflicts]
         end
         
         expose :GetConflicts do |args|
@@ -215,6 +215,10 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
+          
+          conflicts = FakeList.normalize(conflicts).to_a
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
+          
         end
         
         expose :ModifyConflicts do |args|
@@ -228,7 +232,7 @@ module Mrg
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
           log.debug "GetDepends called on feature #{self.inspect}"
-          return FakeSet[*depends]
+          return FakeList[*depends]
         end
         
         expose :GetDepends do |args|
@@ -247,6 +251,7 @@ module Mrg
           log.debug "ModifyDepends: options => #{options}"
           
           depends = FakeList.normalize(depends).to_a
+          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true)
           
         end
         

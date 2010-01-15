@@ -248,125 +248,130 @@ module Mrg
           pending
         end
         
-        # genericize this!
-        
-        it "should include no other features by default" do
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.GetFeatures.size.should == 0
-        end
-        
-        it "should be able to include other features" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
-          end
-          
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.ModifyFeatures("ADD", FakeList[*dep_features])
-          
-          feature.GetFeatures.size.should == dep_features.size
-        end
-        
-        it "should include other features in order" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
-          end
-          
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.ModifyFeatures("ADD", FakeList[*dep_features])
-          
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(dep_features).each do |of,ef| 
-            ef.name.should == of
-          end
-        end
-        
-        it "should include additional features after all preexisting feature arcs" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
-          end
-          
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.ModifyFeatures("ADD", FakeList[*dep_features.slice(0,2)])
-          
-          feature.GetFeatures.keys.size.should == dep_features.slice(0,2).size
-          
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(dep_features.slice(0,2)).each do |of,ef| 
-            ef.name.should == of
-          end
-          
-          feature.ModifyFeatures("ADD", FakeList[dep_features[-1]])
-          feature.GetFeatures.keys.size.should == dep_features.size
-          
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(dep_features).each do |of,ef| 
-            ef.name.should == of
-          end
-        end
-        
-        it "should include additional features idempotently" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
-          end
-          
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.ModifyFeatures("ADD", FakeList[*dep_features])
-          feature.GetFeatures.keys.size.should == dep_features.size
+        [["include", "inclusion", :GetFeatures, :ModifyFeatures, true], ["depend on", "dependence", :GetDepends, :ModifyDepends, true], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving|
 
-          feature.ModifyFeatures("ADD", FakeList[*dep_features])
-          feature.GetFeatures.keys.size.should == dep_features.size
-          
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(dep_features).each do |of,ef| 
-            ef.name.should == of
-          end
-        end
-        
-        it "should include additional features idempotently even if they appear multiple times in the same call" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
+          it "should #{verb} no other features by default" do
+            feature = @store.AddFeature("Pony Accelerator")
+
+            feature.send(inspect_msg).size.should == 0
           end
 
-          feature = @store.AddFeature("Pony Accelerator")
+          it "should be able to #{verb} other features" do
+            dep_features = []
+            ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+              dep_features << @store.AddFeature(fn)
+            end
 
-          supplied_features = (dep_features+dep_features+dep_features+dep_features).sort_by {rand}
+            feature = @store.AddFeature("Pony Accelerator")
 
-          feature.ModifyFeatures("ADD", FakeList[*supplied_features])
-          feature.GetFeatures.keys.size.should == dep_features.size
+            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
 
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(supplied_features.uniq).each do |of,ef| 
-            ef.name.should == of
+            feature.send(inspect_msg).size.should == dep_features.size
+          end
+
+          it "should #{verb} additional features idempotently" do
+            dep_features = []
+            ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+              dep_features << @store.AddFeature(fn)
+            end
+
+            feature = @store.AddFeature("Pony Accelerator")
+
+            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_features.size
+
+            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_features.size
+
+            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+            dep_features.each do |ef| 
+              observed_features.should include(ef.name)
+            end
+          end
+
+          it "should #{verb} additional features idempotently even if they appear multiple times in the same call" do
+            dep_features = []
+            ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+              dep_features << @store.AddFeature(fn)
+            end
+
+            feature = @store.AddFeature("Pony Accelerator")
+
+            supplied_features = (dep_features+dep_features+dep_features+dep_features).sort_by {rand}
+
+            feature.send(modify_msg, "ADD", FakeList[*supplied_features.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_features.size
+
+            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+            
+            supplied_features.uniq.each do |ef| 
+              observed_features.should include(ef.name)
+            end
+          end
+
+          it "should be possible to remove features from the #{adjective} list" do
+            dep_features = []
+            ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+              dep_features << @store.AddFeature(fn)
+            end
+
+            feature = @store.AddFeature("Pony Accelerator")
+
+            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+
+            feature.send(modify_msg, "REMOVE", FakeList[*dep_features.pop.name])
+
+            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+            dep_features.each do |ef| 
+              observed_features.should include(ef.name)
+            end
+          end
+
+          if order_preserving
+            it "should #{verb} other features in order" do
+              dep_features = []
+              ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+                dep_features << @store.AddFeature(fn)
+              end
+
+              feature = @store.AddFeature("Pony Accelerator")
+
+              feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+
+              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features.zip(dep_features).each do |of,ef| 
+                ef.name.should == of
+              end
+            end
+
+            it "should #{verb} additional features after all preexisting #{adjective}s" do
+              dep_features = []
+              ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+                dep_features << @store.AddFeature(fn)
+              end
+
+              feature = @store.AddFeature("Pony Accelerator")
+
+              feature.send(modify_msg, "ADD", FakeList[*dep_features.slice(0,2).map {|f| f.name}])
+
+              feature.send(inspect_msg).keys.size.should == dep_features.slice(0,2).size
+
+              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features.zip(dep_features.slice(0,2)).each do |of,ef| 
+                ef.name.should == of
+              end
+
+              feature.send(modify_msg, "ADD", FakeList[dep_features[-1].name])
+              feature.send(inspect_msg).keys.size.should == dep_features.size
+
+              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features.zip(dep_features).each do |of,ef| 
+                ef.name.should == of
+              end
+            end
           end
         end
 
-        it "should be possible to remove features from the include list" do
-          dep_features = []
-          ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_features << @store.AddFeature(fn)
-          end
-          
-          feature = @store.AddFeature("Pony Accelerator")
-          
-          feature.ModifyFeatures("ADD", FakeList[*dep_features])
-          
-          feature.ModifyFeatures("REMOVE", FakeList[*dep_features.pop])
-          
-          observed_features = FakeList.normalize(feature.GetFeatures).to_a
-          observed_features.zip(dep_features).each do |of,ef| 
-            ef.name.should == of
-          end
-        end
         
       end
 
