@@ -14,6 +14,10 @@ module Mrg
           result
         end
         
+        def self.normalize(dict)
+          return self[*dict.keys]
+        end
+        
         def to_set
           Set[*self.keys]
         end
