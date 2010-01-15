@@ -61,14 +61,10 @@ module Mrg
         
         # GetFeatures 
         # * list (map/O)
-        #   list of other features a feature includes
+        #   list of other feature names a feature includes
         def GetFeatures()
           log.debug "GetFeatures called on feature #{self.inspect}"
-          # Assign values to output parameters
-          list ||= {}
-          log.warn "GetFeatures() is not implemented"
-          # Return value
-          return list
+          return FakeList[*includes]
         end
         
         expose :GetFeatures do |args|
@@ -84,6 +80,9 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyFeatures: command => #{command}"
           log.debug "ModifyFeatures: features => #{features}"
+          log.debug "ModifyFeatures: options => #{options}"
+          fl = FakeList.normalize(features).to_a.map {|f| f.name}
+          modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true)
         end
         
         expose :ModifyFeatures do |args|
@@ -245,6 +244,10 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command}"
           log.debug "ModifyDepends: depends => #{depends}"
+          log.debug "ModifyDepends: options => #{options}"
+          
+          depends = FakeList.normalize(depends).to_a
+          
         end
         
         expose :ModifyDepends do |args|

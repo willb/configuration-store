@@ -15,6 +15,8 @@ module Mrg
         def modify_arcs(command,dests,options,getmsg,setmsg,kwargs=nil)
           # NB:  this must work for lists and sets; note the ADD/UNION case
           
+          dests = dests.keys if dests.is_a? Hash
+          
           kwargs ||= {}
           
           explain = kwargs[:explain] || "have an arc to"
@@ -25,16 +27,16 @@ module Mrg
           case command.upcase
           when "ADD", "UNION" then 
             old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
-            new_dests = preserve_order ? dests.keys : Set[*dests.keys]
+            new_dests = preserve_order ? dests : Set[*dests]
             raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, (old_dests + new_dests).to_a.uniq) # the uniq is important so this can work either as a list or set
           when "REPLACE" then 
-            new_dests = Set[*dests.keys]
+            new_dests = Set[*dests]
             raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, new_dests.to_a)
           when "REMOVE" then
             old_dests = self.send(getmsg)
-            removed_dests = dests.keys
+            removed_dests = dests
             new_dests = old_dests - removed_dests
             self.send(setmsg, new_dests)
           when "INTERSECT", "DIFF" then
