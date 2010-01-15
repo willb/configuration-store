@@ -60,7 +60,7 @@ module Mrg
         end
         
         # GetFeatures 
-        # * list (map/O)
+        # * features (map/O)
         #   list of other feature names a feature includes
         def GetFeatures()
           log.debug "GetFeatures called on feature #{self.inspect}"
@@ -68,7 +68,7 @@ module Mrg
         end
         
         expose :GetFeatures do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :features, :map, :out, {}
         end
         
         # ModifyFeatures 
@@ -92,7 +92,7 @@ module Mrg
         end
         
         # GetParams 
-        # * list (map/O)
+        # * params (map/O)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
         def GetParams()
           log.debug "GetParams called on feature #{self.inspect}"
@@ -100,7 +100,7 @@ module Mrg
         end
         
         expose :GetParams do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :params, :map, :out, {}
         end
         
         def GetParamsAsString
@@ -195,7 +195,7 @@ module Mrg
         end
         
         # GetConflicts 
-        # * list (map/O)
+        # * conflicts (map/O)
         #   A set of other features that this feature conflicts with
         def GetConflicts()
           log.debug "GetConflicts called on feature #{self.inspect}"
@@ -203,7 +203,7 @@ module Mrg
         end
         
         expose :GetConflicts do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :conflicts, :map, :out, {}
         end
         
         # ModifyConflicts 
@@ -227,7 +227,7 @@ module Mrg
         end
         
         # GetDepends 
-        # * list (map/O)
+        # * depends (map/O)
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
           log.debug "GetDepends called on feature #{self.inspect}"
@@ -235,7 +235,7 @@ module Mrg
         end
         
         expose :GetDepends do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :depends, :map, :out, {}
         end
         
         # ModifyDepends 
@@ -261,7 +261,7 @@ module Mrg
         end
         
         # GetSubsys 
-        # * list (map/O)
+        # * subsystems (map/O)
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
         def GetSubsys()
           log.debug "GetSubsys called on feature #{self.inspect}"
@@ -273,7 +273,7 @@ module Mrg
         end
         
         expose :GetSubsys do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :subsystems, :map, :out, {}
         end
         
         # ModifySubsys 

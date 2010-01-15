@@ -38,7 +38,7 @@ module Mrg
         ### Schema method declarations
                 
         # GetMembership 
-        # * list (map/O)
+        # * nodes (map/O)
         #   A set of the nodes associated with this group
         def GetMembership()
           log.debug "GetMembership called on group #{self.inspect}"
@@ -46,7 +46,7 @@ module Mrg
         end
         
         expose :GetMembership do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :nodes, :map, :out, {}
         end
         
         # GetName 

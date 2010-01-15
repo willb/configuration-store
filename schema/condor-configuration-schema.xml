@@ -190,7 +190,7 @@
       </method>
 
       <method name="GetFeatures">
-         <arg name="list" dir="O" type="map"
+         <arg name="features" dir="O" type="map"
               desc="A set of features defined in this
                     configuration"/>
       </method>
@@ -235,7 +235,7 @@
       </method>
 
       <method name="GetFeatures">
-         <arg name="list" dir="O" type="map"
+         <arg name="features" dir="O" type="map"
               desc="list of other features a feature includes"/>
       </method>
 
@@ -248,7 +248,7 @@
       </method>
 
       <method name="GetParams">
-         <arg name="list" dir="O" type="map"
+         <arg name="params" dir="O" type="map"
               desc="A map(paramName, value) of parameters and their
                     corresponding values that is specific to a group"/>
       </method>
@@ -263,7 +263,7 @@
       </method>
 
       <method name="GetConflicts">
-         <arg name="list" dir="O" type="map"
+         <arg name="conflicts" dir="O" type="map"
               desc="A map(featureName, True) of other features a feature
                     conflicts with for proper operation"/>
       </method>
@@ -278,7 +278,7 @@
       </method>
 
       <method name="GetDepends">
-         <arg name="list" dir="O" type="map"
+         <arg name="depends" dir="O" type="map"
               desc="A list of other features that this feature depends 
 		    on for proper operation, in priority order." />
       </method>
@@ -292,7 +292,7 @@
       </method>
 
       <method name="GetSubsys">
-         <arg name="list" dir="O" type="map"
+         <arg name="subsystems" dir="O" type="map"
               desc="A set of subsystem names that collaborate
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
@@ -315,7 +315,7 @@
       <property name="uid" type="uint32" index="y"/>
 
       <method name="GetMembership">
-         <arg name="list" dir="O" type="map"
+         <arg name="nodes" dir="O" type="map"
               desc="A set of the nodes associated with
                     this group"/>
       </method>
@@ -336,23 +336,9 @@
 		    priority)" />
       </method>
 
-      <method name="ModifyFeaturePriorities">
-         <arg name="features" dir="IO" type="map"
-              desc="A list of features in this group (as returned by
-                    GetFeatureSet), in a new priority order.  Features that
-                    are in this list but not in the group will be ignored.
-                    Features that are in the group but not in this list
-                    will be placed in arbitrary priority order after every
-                    feature in this list.  After this method executes,
-                    features will contain the priority ordering of every
-                    feature assigned to this group." />
-         <arg name="options" dir="I" type="map"/>
-      </method>
-
-      <method name="ModifyFeatureet>
+      <method name="ModifyFeatures">
          <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
+              desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
          <arg name="features" dir="I" type="map"
               desc="A set of features to apply to 
                     dependency priority"/>
@@ -465,16 +451,16 @@
    <class name="Subsystem">
       <property name="name" type="sstr" index="y"/>
 
-      <method name="GetAttrs">
-         <arg name="attrs" dir="O" type="map"
+      <method name="GetParams">
+         <arg name="params" dir="O" type="map"
               desc="A set of parameter names that the subsystem is interested in"/>
       </method>
 
-      <method name="ModifyAttrs">
+      <method name="ModifyParams">
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
-         <arg name="attrs" dir="I" type="map"
+         <arg name="params" dir="I" type="map"
               desc="A set of parameter names"/>
       </method>
    </class>

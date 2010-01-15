@@ -43,7 +43,7 @@ module Mrg
         end
         
         expose :GetFeatures do |args|
-          args.declare :list, :map, :out, {}
+          args.declare :features, :map, :out, {}
         end
         
         # GetCustomParams 
