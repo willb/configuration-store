@@ -119,6 +119,23 @@
       <method name="RemoveParam">
          <arg name="name" dir="I" type="sstr"/>
       </method>
+
+      <method name="GetSubsys">
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"
+              desc="A reference to the subsystem object that matches the name
+                    supplied"/>
+      </method>
+
+      <method name="AddSubsys">
+         <arg name="name" dir="I" type="sstr"/>
+         <arg name="obj" dir="O" type="objId"
+              desc="A reference to the newly added subsystem object"/>
+      </method>
+
+      <method name="RemoveSubsys">
+         <arg name="name" dir="I" type="sstr"/>
+      </method>
    </class>
 
    <class name="Node">
@@ -236,7 +253,7 @@
                     corresponding values that is specific to a group"/>
       </method>
 
-      <method name="SetParams">
+      <method name="ModifyParams">
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."/>
          <arg name="params" dir="I" type="map"
@@ -291,7 +308,6 @@
                     with the feature.  This is used to determine subsystems
                     that may need to be restarted if a configuration is
                     changed"/>
-         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
@@ -312,7 +328,7 @@
          <arg name="name" dir="I" type="sstr"/>
       </method>
 
-      <method name="GetFeatureSet">
+      <method name="GetFeatures">
          <arg name="features" dir="O" type="map"
               desc="A list of features to be applied to this group, in 
 		    priority order (that is, the first one will be 
@@ -333,7 +349,7 @@
          <arg name="options" dir="I" type="map"/>
       </method>
 
-      <method name="ModifyFeatureSet">
+      <method name="ModifyFeatureet>
          <arg name="command" dir="I" type="sstr"
               desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
                    'DIFF', and 'REPLACE'."/>
@@ -369,19 +385,11 @@
       <property name="name" type="sstr" index="y"/>
 
       <method name="GetType">
-         <arg name="type" dir="O" type="uint8"/>
+         <arg name="type" dir="O" type="sstr"/>
       </method>
 
       <method name="SetType">
-         <arg name="type" dir="I" type="uint8"/>
-      </method>
-
-      <method name="GetValue">
-         <arg name="value" dir="O" type="lstr"/>
-      </method>
-
-      <method name="SetValue">
-         <arg name="value" dir="I" type="lstr"/>
+         <arg name="type" dir="I" type="sstr"/>
       </method>
 
       <method name="GetDefault">
@@ -468,7 +476,6 @@
                    'DIFF', and 'REPLACE'."/>
          <arg name="attrs" dir="I" type="map"
               desc="A set of parameter names"/>
-         <arg name="options" dir="I" type="map"/>
       </method>
    </class>
 
