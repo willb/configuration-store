@@ -1,7 +1,6 @@
 * failed getters should raise (descriptive) exceptions
 * modify- methods on Feature
 * Get/ModifySubsys on Feature
-* GetConflicts/Depends doesn't work (maybe Modify as well?) on Feature
 * Param verification on Feature -- it should be impossible to:
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
