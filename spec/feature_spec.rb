@@ -250,6 +250,8 @@ module Mrg
         
         [["include", "inclusion", :GetFeatures, :ModifyFeatures, true], ["depend on", "dependence", :GetDepends, :ModifyDepends, true], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving|
 
+          fake_collection = order_preserving ? FakeList : FakeSet
+
           it "should #{verb} no other features by default" do
             feature = @store.AddFeature("Pony Accelerator")
 
@@ -264,7 +266,7 @@ module Mrg
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
 
             feature.send(inspect_msg).size.should == dep_features.size
           end
@@ -277,13 +279,13 @@ module Mrg
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
             feature.send(inspect_msg).keys.size.should == dep_features.size
 
-            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
             feature.send(inspect_msg).keys.size.should == dep_features.size
 
-            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
             dep_features.each do |ef| 
               observed_features.should include(ef.name)
             end
@@ -299,11 +301,11 @@ module Mrg
 
             supplied_features = (dep_features+dep_features+dep_features+dep_features).sort_by {rand}
 
-            feature.send(modify_msg, "ADD", FakeList[*supplied_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*supplied_features.map {|f| f.name}])
             feature.send(inspect_msg).keys.size.should == dep_features.size
 
-            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
-            
+            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
+
             supplied_features.uniq.each do |ef| 
               observed_features.should include(ef.name)
             end
@@ -317,11 +319,11 @@ module Mrg
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
 
-            feature.send(modify_msg, "REMOVE", FakeList[*dep_features.pop.name])
+            feature.send(modify_msg, "REMOVE", fake_collection[*dep_features.pop.name])
 
-            observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
             dep_features.each do |ef| 
               observed_features.should include(ef.name)
             end
@@ -336,9 +338,9 @@ module Mrg
 
               feature = @store.AddFeature("Pony Accelerator")
 
-              feature.send(modify_msg, "ADD", FakeList[*dep_features.map {|f| f.name}])
+              feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
 
-              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
               observed_features.zip(dep_features).each do |of,ef| 
                 ef.name.should == of
               end
@@ -352,19 +354,19 @@ module Mrg
 
               feature = @store.AddFeature("Pony Accelerator")
 
-              feature.send(modify_msg, "ADD", FakeList[*dep_features.slice(0,2).map {|f| f.name}])
+              feature.send(modify_msg, "ADD", fake_collection[*dep_features.slice(0,2).map {|f| f.name}])
 
               feature.send(inspect_msg).keys.size.should == dep_features.slice(0,2).size
 
-              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
               observed_features.zip(dep_features.slice(0,2)).each do |of,ef| 
                 ef.name.should == of
               end
 
-              feature.send(modify_msg, "ADD", FakeList[dep_features[-1].name])
+              feature.send(modify_msg, "ADD", fake_collection[dep_features[-1].name])
               feature.send(inspect_msg).keys.size.should == dep_features.size
 
-              observed_features = FakeList.normalize(feature.send(inspect_msg)).to_a
+              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
               observed_features.zip(dep_features).each do |of,ef| 
                 ef.name.should == of
               end

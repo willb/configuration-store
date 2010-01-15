@@ -196,10 +196,10 @@ module Mrg
         
         # GetConflicts 
         # * list (map/O)
-        #   A list of other features that this feature conflicts with
+        #   A set of other features that this feature conflicts with
         def GetConflicts()
           log.debug "GetConflicts called on feature #{self.inspect}"
-          return FakeList[*conflicts]
+          return FakeSet[*conflicts]
         end
         
         expose :GetConflicts do |args|
@@ -216,8 +216,7 @@ module Mrg
           log.debug "ModifyConflicts: command => #{command}"
           log.debug "ModifyConflicts: conflicts => #{conflicts}"
           
-          conflicts = FakeList.normalize(conflicts).to_a
-          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
+          modify_arcs(command,conflicts.keys,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           
         end
         
