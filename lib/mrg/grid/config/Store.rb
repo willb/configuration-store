@@ -263,6 +263,40 @@ module Mrg
           args.declare :name, :sstr, :in, {}
         end
         
+        # GetSubsys 
+        # * name (sstr/I)
+        # * obj (objId/O)
+        #   A reference to the subsystem object that matches the name supplied
+        def GetSubsys(name)
+          # Print values of input parameters
+          log.debug "GetSubsys: name => #{name}"
+
+          return Subsystem.find_first_by_name(name)
+        end
+
+        expose :GetSubsys do |args|
+          args.declare :obj, :objId, :out, {}
+          args.declare :name, :sstr, :in, {}
+        end
+
+        # AddSubsys 
+        # * name (sstr/I)
+        # * obj (objId/O)
+        #   A reference to the newly added subsystem object
+        def AddSubsys(name)
+          # Print values of input parameters
+          log.debug "AddSubsys: name => #{name}"
+           raise "Subsystem name #{name} is already taken" if Subsystem.find_first_by_name(name)
+          # Return value
+          return Subsystem.create(:name => name)
+        end
+
+        expose :AddSubsys do |args|
+          args.declare :obj, :objId, :out, {}
+          args.declare :name, :sstr, :in, {}
+        end
+        
+        
         # RemoveParam 
         # * name (sstr/I)
         def RemoveParam(name)
