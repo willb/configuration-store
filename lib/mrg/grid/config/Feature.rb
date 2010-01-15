@@ -265,11 +265,7 @@ module Mrg
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
         def GetSubsys()
           log.debug "GetSubsys called on feature #{self.inspect}"
-          # Assign values to output parameters
-          list ||= {}
-          log.warn "GetSubsys() is not implemented"
-          # Return value
-          return list
+          return FakeSet[*subsystems]
         end
         
         expose :GetSubsys do |args|
@@ -281,11 +277,14 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * subsys (map/I)
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
-        def ModifySubsys(command,subsys)
+        def ModifySubsys(command,subsys,options={})
           # Print values of input parameters
           log.debug "ModifySubsys: command => #{command}"
           log.debug "ModifySubsys: subsys => #{subsys}"
           log.warn "ModifySubsys() is not implemented"
+
+          depends = FakeList.normalize(depends).to_a
+          modify_arcs(command,subsys,options,:subsystems,:subsystems=,:explain=>"implicate the subsystem")
         end
         
         expose :ModifySubsys do |args|
@@ -315,6 +314,10 @@ module Mrg
           find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
         end
         
+        def subsystems
+          find_arcs(FeatureSubsys,ArcLabel.implication('subsystem')) {|a| a.dest.name }
+        end
+        
         def depends=(deps)
           set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
@@ -325,6 +328,10 @@ module Mrg
 
         def includes=(deps)
           set_arcs(FeatureArc, ArcLabel.inclusion('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
+        end
+
+        def subsystems=(deps)
+          set_arcs(FeatureSubsys, ArcLabel.implication('subsystem'), deps, :find_first_by_name)
         end
         
       end

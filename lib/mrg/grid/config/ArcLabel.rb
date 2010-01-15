@@ -29,6 +29,12 @@ module Mrg
           (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
         end
 
+        # As conflicts_with, except it returns an edge describing implication
+        def self.implication(kind)
+          key = "implicates_" + kind
+          (ArcLabel.find_first_by_label(key) || ArcLabel.create(:label=>key))
+        end
+
       end
     end
   end
