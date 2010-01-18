@@ -281,10 +281,8 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifySubsys: command => #{command}"
           log.debug "ModifySubsys: subsys => #{subsys}"
-          log.warn "ModifySubsys() is not implemented"
 
-          depends = FakeList.normalize(depends).to_a
-          modify_arcs(command,subsys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
+          modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
         end
         
         expose :ModifySubsys do |args|
