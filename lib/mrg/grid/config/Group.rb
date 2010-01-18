@@ -135,14 +135,14 @@ module Mrg
             frow
           end
 
-          case command
+          case command.upcase
           when "ADD", "REMOVE" then
             feats.each do |frow|
               # Delete any prior mappings for each supplied grp in either case
               GroupFeatures.find_by(:grp=>self, :feature=>frow).each {|nm| nm.delete}
 
               # Add new mappings when requested
-              GroupFeatures.create(:grp=>self, :feature=>frow) if command == "ADD"
+              GroupFeatures.create(:grp=>self, :feature=>frow) if command.upcase == "ADD"
             end
           when "REPLACE"
             GroupFeatures.find_by(:grp=>self).each {|nm| nm.delete}
@@ -244,7 +244,7 @@ module Mrg
             prow
           end
 
-          case command
+          case command.upcase
           when "ADD", "REMOVE" then
             params.each do |prow|
               pn = prow.name
@@ -253,7 +253,7 @@ module Mrg
               GroupParams.find_by(:grp=>self, :param=>prow).map {|gp| gp.delete}
 
               # Add new mappings when requested
-              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
+              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command.upcase == "ADD"
             end
           when "REPLACE"
             GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
