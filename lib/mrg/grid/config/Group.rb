@@ -14,7 +14,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        declare_table_name('nodegroup')
+        declare_table_name('nodegroup') # this line is necessary because you can't have a SQL table named "group"
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Group'
         ### Property method declarations
