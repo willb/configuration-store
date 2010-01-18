@@ -22,10 +22,7 @@ module Mrg
         # * params (map/O)
         #   A set of parameter names that the subsystem is interested in
         def GetParams()
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
+          return FakeSet[*params]
         end
         
         expose :GetParams do |args|
@@ -42,6 +39,8 @@ module Mrg
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{params}"
           log.debug "ModifyParams: options => #{options}"
+          
+          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
         end
         
         expose :ModifyParams do |args|
@@ -53,11 +52,11 @@ module Mrg
         private
         include ArcUtils
         
-        def subsystems
+        def params
           find_arcs(SubsystemParams,ArcLabel.implication('parameter')) {|a| a.dest.name }
         end
         
-        def subsystems=(deps)
+        def params=(deps)
           set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name)
         end
         
