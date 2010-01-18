@@ -251,14 +251,15 @@ module Mrg
         [["include", "inclusion", :GetFeatures, :ModifyFeatures, true, :AddFeature], ["depend on", "dependence", :GetDepends, :ModifyDepends, true, :AddFeature], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false, :AddFeature], ["affect", "implication", :GetSubsys, :ModifySubsys, false, :AddSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = order_preserving ? FakeList : FakeSet
+          nouns = create_dest_msg == :AddFeature ? "features" : "subsystems"
 
-          it "should #{verb} no other features by default" do
+          it "should #{verb} no other #{nouns} by default" do
             feature = @store.AddFeature("Pony Accelerator")
 
             feature.send(inspect_msg).size.should == 0
           end
 
-          it "should be able to #{verb} other features" do
+          it "should be able to #{verb} other #{nouns}" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -271,7 +272,17 @@ module Mrg
             feature.send(inspect_msg).size.should == dep_dests.size
           end
 
-          it "should #{verb} additional features idempotently" do
+          it "should be able to #{verb} the empty set of other #{nouns}" do
+            dep_dests = []
+
+            feature = @store.AddFeature("Pony Accelerator")
+
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests])
+
+            feature.send(inspect_msg).size.should == dep_dests.size
+          end
+
+          it "should #{verb} additional #{nouns} idempotently" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -291,7 +302,7 @@ module Mrg
             end
           end
 
-          it "should #{verb} additional features idempotently even if they appear multiple times in the same call" do
+          it "should #{verb} additional #{nouns} idempotently even if they appear multiple times in the same call" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -311,7 +322,7 @@ module Mrg
             end
           end
 
-          it "should be possible to remove features from the #{adjective} list" do
+          it "should be possible to remove #{nouns} from the #{adjective} list" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -330,7 +341,7 @@ module Mrg
           end
 
           if order_preserving
-            it "should #{verb} other features in order" do
+            it "should #{verb} other #{nouns} in order" do
               dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
                 dep_dests << @store.send(create_dest_msg, fn)
@@ -346,7 +357,7 @@ module Mrg
               end
             end
 
-            it "should #{verb} additional features after all preexisting #{adjective}s" do
+            it "should #{verb} additional #{nouns} after all preexisting #{adjective}s" do
               dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
                 dep_dests << @store.send(create_dest_msg, fn)
