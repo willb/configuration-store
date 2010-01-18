@@ -126,8 +126,8 @@ module Mrg
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
         def ModifyFeatures(command,fs,options={})
           # Print values of input parameters
-          log.debug "ModifyFeatureSet: command => #{command}"
-          log.debug "ModifyFeatureSet: features => #{fs}"
+          log.debug "ModifyFeatures: command => #{command}"
+          log.debug "ModifyFeatures: features => #{fs}"
           
           feats = fs.to_a.map do |fn|
             frow = Feature.find_first_by_name(fn)
