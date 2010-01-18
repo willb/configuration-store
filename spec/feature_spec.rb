@@ -248,7 +248,7 @@ module Mrg
           pending
         end
         
-        [["include", "inclusion", :GetFeatures, :ModifyFeatures, true], ["depend on", "dependence", :GetDepends, :ModifyDepends, true], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving|
+        [["include", "inclusion", :GetFeatures, :ModifyFeatures, true, :AddFeature], ["depend on", "dependence", :GetDepends, :ModifyDepends, true, :AddFeature], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false, :AddFeature], ["affect", "implication", :GetSubsys, :ModifySubsys, false, :AddSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = order_preserving ? FakeList : FakeSet
 
@@ -259,115 +259,115 @@ module Mrg
           end
 
           it "should be able to #{verb} other features" do
-            dep_features = []
+            dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-              dep_features << @store.AddFeature(fn)
+              dep_dests << @store.send(create_dest_msg, fn)
             end
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
-            feature.send(inspect_msg).size.should == dep_features.size
+            feature.send(inspect_msg).size.should == dep_dests.size
           end
 
           it "should #{verb} additional features idempotently" do
-            dep_features = []
+            dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-              dep_features << @store.AddFeature(fn)
+              dep_dests << @store.send(create_dest_msg, fn)
             end
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_features.size
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_dests.size
 
-            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_features.size
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_dests.size
 
-            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
-            dep_features.each do |ef| 
-              observed_features.should include(ef.name)
+            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            dep_dests.each do |ef| 
+              observed_dests.should include(ef.name)
             end
           end
 
           it "should #{verb} additional features idempotently even if they appear multiple times in the same call" do
-            dep_features = []
+            dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-              dep_features << @store.AddFeature(fn)
+              dep_dests << @store.send(create_dest_msg, fn)
             end
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            supplied_features = (dep_features+dep_features+dep_features+dep_features).sort_by {rand}
+            supplied_dests = (dep_dests+dep_dests+dep_dests+dep_dests).sort_by {rand}
 
-            feature.send(modify_msg, "ADD", fake_collection[*supplied_features.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_features.size
+            feature.send(modify_msg, "ADD", fake_collection[*supplied_dests.map {|f| f.name}])
+            feature.send(inspect_msg).keys.size.should == dep_dests.size
 
-            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
 
-            supplied_features.uniq.each do |ef| 
-              observed_features.should include(ef.name)
+            supplied_dests.uniq.each do |ef| 
+              observed_dests.should include(ef.name)
             end
           end
 
           it "should be possible to remove features from the #{adjective} list" do
-            dep_features = []
+            dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-              dep_features << @store.AddFeature(fn)
+              dep_dests << @store.send(create_dest_msg, fn)
             end
 
             feature = @store.AddFeature("Pony Accelerator")
 
-            feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
-            feature.send(modify_msg, "REMOVE", fake_collection[*dep_features.pop.name])
+            feature.send(modify_msg, "REMOVE", fake_collection[*dep_dests.pop.name])
 
-            observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
-            dep_features.each do |ef| 
-              observed_features.should include(ef.name)
+            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            dep_dests.each do |ef| 
+              observed_dests.should include(ef.name)
             end
           end
 
           if order_preserving
             it "should #{verb} other features in order" do
-              dep_features = []
+              dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-                dep_features << @store.AddFeature(fn)
+                dep_dests << @store.send(create_dest_msg, fn)
               end
 
               feature = @store.AddFeature("Pony Accelerator")
 
-              feature.send(modify_msg, "ADD", fake_collection[*dep_features.map {|f| f.name}])
+              feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
-              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
-              observed_features.zip(dep_features).each do |of,ef| 
+              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
             end
 
             it "should #{verb} additional features after all preexisting #{adjective}s" do
-              dep_features = []
+              dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-                dep_features << @store.AddFeature(fn)
+                dep_dests << @store.send(create_dest_msg, fn)
               end
 
               feature = @store.AddFeature("Pony Accelerator")
 
-              feature.send(modify_msg, "ADD", fake_collection[*dep_features.slice(0,2).map {|f| f.name}])
+              feature.send(modify_msg, "ADD", fake_collection[*dep_dests.slice(0,2).map {|f| f.name}])
 
-              feature.send(inspect_msg).keys.size.should == dep_features.slice(0,2).size
+              feature.send(inspect_msg).keys.size.should == dep_dests.slice(0,2).size
 
-              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
-              observed_features.zip(dep_features.slice(0,2)).each do |of,ef| 
+              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests.zip(dep_dests.slice(0,2)).each do |of,ef| 
                 ef.name.should == of
               end
 
-              feature.send(modify_msg, "ADD", fake_collection[dep_features[-1].name])
-              feature.send(inspect_msg).keys.size.should == dep_features.size
+              feature.send(modify_msg, "ADD", fake_collection[dep_dests[-1].name])
+              feature.send(inspect_msg).keys.size.should == dep_dests.size
 
-              observed_features = fake_collection.normalize(feature.send(inspect_msg)).to_a
-              observed_features.zip(dep_features).each do |of,ef| 
+              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
             end

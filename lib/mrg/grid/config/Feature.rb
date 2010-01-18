@@ -284,7 +284,7 @@ module Mrg
           log.warn "ModifySubsys() is not implemented"
 
           depends = FakeList.normalize(depends).to_a
-          modify_arcs(command,subsys,options,:subsystems,:subsystems=,:explain=>"implicate the subsystem")
+          modify_arcs(command,subsys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
         end
         
         expose :ModifySubsys do |args|
@@ -331,7 +331,7 @@ module Mrg
         end
 
         def subsystems=(deps)
-          set_arcs(FeatureSubsys, ArcLabel.implication('subsystem'), deps, :find_first_by_name)
+          set_arcs(FeatureSubsys, ArcLabel.implication('subsystem'), deps, :find_first_by_name, :klass=>Subsystem)
         end
         
       end
