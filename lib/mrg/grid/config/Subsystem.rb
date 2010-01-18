@@ -19,34 +19,34 @@ module Mrg
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
-        # GetAttrs 
-        # * attrs (map/O)
+        # GetParams 
+        # * params (map/O)
         #   A set of parameter names that the subsystem is interested in
-        def GetAttrs()
+        def GetParams()
           # Assign values to output parameters
-          attrs ||= {}
+          params ||= {}
           # Return value
-          return attrs
+          return params
         end
         
-        expose :GetAttrs do |args|
-          args.declare :attrs, :map, :out, {}
+        expose :GetParams do |args|
+          args.declare :params, :map, :out, {}
         end
         
-        # ModifyAttrs 
+        # ModifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * attrs (map/I)
+        # * params (map/I)
         #   A set of parameter names
-        def ModifyAttrs(command,attrs)
+        def ModifyParams(command,params)
           # Print values of input parameters
-          log.debug "ModifyAttrs: command => #{command}"
-          log.debug "ModifyAttrs: attrs => #{attrs}"
+          log.debug "ModifyParams: command => #{command}"
+          log.debug "ModifyParams: params => #{params}"
         end
         
-        expose :ModifyAttrs do |args|
+        expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :attrs, :map, :in, {}
+          args.declare :params, :map, :in, {}
         end
       end
     end
