@@ -50,7 +50,27 @@ module Mrg
           args.declare :params, :map, :in, {}
           args.declare :options, :map, :in, {}
         end
+        
+        private
+        include ArcUtils
+        
+        def subsystems
+          find_arcs(SubsystemParams,ArcLabel.implication('parameter')) {|a| a.dest.name }
+        end
+        
+        def subsystems=(deps)
+          set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name)
+        end
+        
       end
+
+      class SubsystemParams
+        include ::Rhubarb::Persisting
+        declare_column :source, :integer, :not_null, references(Subsystem, :on_delete=>:cascade)
+        declare_column :dest, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
+        declare_column :label, :integer, :not_null, references(ArcLabel)
+      end
+
     end
   end
 end
