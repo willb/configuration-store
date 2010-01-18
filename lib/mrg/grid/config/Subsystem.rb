@@ -38,15 +38,17 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * params (map/I)
         #   A set of parameter names
-        def ModifyParams(command,params)
+        def ModifyParams(command,params,options={})
           # Print values of input parameters
           log.debug "ModifyParams: command => #{command}"
           log.debug "ModifyParams: params => #{params}"
+          log.debug "ModifyParams: options => #{options}"
         end
         
         expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
+          args.declare :options, :map, :in, {}
         end
       end
     end
