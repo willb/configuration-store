@@ -1,5 +1,4 @@
-require 'spqr/spqr'
-require 'rhubarb/rhubarb'
+require 'mrg/grid/config'
 
 module Mrg
   module Grid
