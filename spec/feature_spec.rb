@@ -43,7 +43,7 @@ module Mrg
           end
         end
         
-        it "should not allow creating a feature's with a taken name" do
+        it "should not allow creating a feature with a taken name" do
           feature = @store.AddFeature(@gskey)
           lambda { feature2 = @store.AddFeature(@gskey) }.should raise_error
           
