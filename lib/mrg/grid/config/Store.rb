@@ -64,6 +64,7 @@ module Mrg
           # Print values of input parameters
           log.debug "AddExplicitGroup: name => #{name}"
           raise "Group name #{name} is already taken" if Group.find_first_by_name(name)
+          raise "Group name #{name} is invalid; group names may not start with '+++'" if name.slice(0,3) == "+++"
           Group.create(:name=>name)
         end
         
