@@ -123,7 +123,9 @@ module Mrg
             frow
           end
 
-          case command.upcase
+          command = command.upcase
+
+          case command
           when "ADD", "REMOVE" then
             feats.each do |frow|
               # Delete any prior mappings for each supplied grp in either case
@@ -132,12 +134,13 @@ module Mrg
               # Add new mappings when requested
               GroupFeatures.create(:grp=>self, :feature=>frow) if command.upcase == "ADD"
             end
-          when "REPLACE"
+          when "REPLACE" then
             GroupFeatures.find_by(:grp=>self).each {|nm| nm.delete}
 
             feats.each do |frow|
               GroupFeatures.create(:grp=>self, :feature=>frow)
             end
+          else raise ArgumentError.new("invalid command #{command}")
           end
           
           # FIXME:  not implemented from here on out
@@ -200,7 +203,9 @@ module Mrg
             prow
           end
 
-          case command.upcase
+          command = command.upcase
+
+          case command
           when "ADD", "REMOVE" then
             params.each do |prow|
               pn = prow.name
@@ -209,9 +214,9 @@ module Mrg
               GroupParams.find_by(:grp=>self, :param=>prow).map {|gp| gp.delete}
 
               # Add new mappings when requested
-              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command.upcase == "ADD"
+              GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn]) if command == "ADD"
             end
-          when "REPLACE"
+          when "REPLACE" then
             GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
 
             params.each do |prow|
@@ -219,6 +224,7 @@ module Mrg
 
               GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn])
             end
+          else raise ArgumentError.new("invalid command #{command}")
           end
         end
         

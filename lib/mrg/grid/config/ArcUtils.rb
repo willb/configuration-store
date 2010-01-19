@@ -24,7 +24,9 @@ module Mrg
           keymsg = kwargs[:name] || :name
           preserve_order = kwargs[:preserve_order]
           
-          case command.upcase
+          command = command.upcase
+          
+          case command
           when "ADD", "UNION" then 
             old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
             new_dests = preserve_order ? dests : Set[*dests]
@@ -40,8 +42,8 @@ module Mrg
             new_dests = old_dests - removed_dests
             self.send(setmsg, new_dests)
           when "INTERSECT", "DIFF" then
-            raise RuntimeError.new("#{command} not implemented")            
-          else nil
+            raise RuntimeError.new("#{command} not implemented")
+          else raise ArgumentError.new("invalid command #{command}")
           end
         end
         

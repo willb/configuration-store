@@ -163,7 +163,9 @@ module Mrg
             prow
           end
           
-          case command.upcase
+          command = command.upcase
+          
+          case command
           when "ADD", "REMOVE" then
             params.each do |prow|
               pn = prow.name
@@ -180,11 +182,12 @@ module Mrg
               end
               
               # Add new mappings when requested
-              FeatureParams.create(attributes) if command.upcase == "ADD"
+              FeatureParams.create(attributes) if command == "ADD"
             end
           when "REPLACE"
             self.ClearParams
             self.ModifyParams("ADD",pvmap,options)
+          else raise ArgumentError.new("invalid command #{command}")
           end
         end
         

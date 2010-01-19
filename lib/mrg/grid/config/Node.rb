@@ -177,7 +177,7 @@ module Mrg
               # Add new mappings when requested
               NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn]) if command == "ADD"
             end
-          when "REPLACE"
+          when "REPLACE" then
             memberships.map {|nm| nm.delete}
 
             groups.each do |grow|
@@ -185,6 +185,7 @@ module Mrg
 
               NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn])
             end
+          else raise ArgumentError.new("invalid command #{command}")
           end
         end
         
