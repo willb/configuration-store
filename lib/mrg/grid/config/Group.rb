@@ -81,7 +81,7 @@ module Mrg
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
         def GetFeatures()
           log.debug "GetFeatures called on group #{self.inspect}"
-          return FakeList[features.map{|f| f.name}]
+          return FakeList[*features.map{|f| f.name}]
         end
         
         expose :GetFeatures do |args|
