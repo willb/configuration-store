@@ -111,6 +111,22 @@ module Mrg
             conf["UKULELE"].should == "gcae"
           end
         end
+        
+        it "should not be a member of any groups by default" do
+          n = @store.AddNode("blather.local.")
+          n.GetMemberships.size.should == 0
+        end
+        
+        it "should be possible to add a node to a group" do
+          n = @store.AddNode("blather.local.")
+          groupnames = %w{ExecuteNodes HASchedulers DesktopMachines}
+          groups = groupnames.map {|g| @store.AddExplicitGroup(g)}
+          n.ModifyMemberships("ADD", FakeList[*groupnames])
+          
+          n.GetMemberships.size.should == groupnames.size
+          n.GetMemberships.should == FakeList[*groupnames]
+        end
+        
 
       end
       

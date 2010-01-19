@@ -154,17 +154,19 @@ module Mrg
         # * groups (map/I)
         #   A list of groups, in inverse priority order (most important first)
         # * options (map/I)
-        def ModifyMemberships(command,groups,options)
+        def ModifyMemberships(command,groups,options={})
           # Print values of input parameters
           log.debug "ModifyMemberships: command => #{command}"
-          log.debug "ModifyMemberships: nodes => #{nodes}"
+          log.debug "ModifyMemberships: groups => #{groups}"
           log.debug "ModifyMemberships: options => #{options}"
           
-          groups = grps.sort {|a,b| a[0] <=> b[0]}.map {|t| t[1]}.map do |gn|
+          groups = FakeList.normalize(groups).to_a.map do |gn|
             group = Group.find_first_by_name(gn)
-            raise "invalid parameter #{gn}" unless group
+            raise "Invalid group #{gn}" unless group
             group
           end
+
+          command = command.upcase
 
           case command
           when "ADD", "REMOVE" then
@@ -175,7 +177,7 @@ module Mrg
               NodeMembership.find_by(:node=>self, :grp=>grow).map {|nm| nm.delete unless nm.grp.is_identity_group}
 
               # Add new mappings when requested
-              NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn]) if command == "ADD"
+              NodeMembership.create(:node=>self, :grp=>grow) if command == "ADD"
             end
           when "REPLACE" then
             memberships.map {|nm| nm.delete}
@@ -183,7 +185,7 @@ module Mrg
             groups.each do |grow|
               gn = grow.name
 
-              NodeMembership.create(:node=>self, :grp=>grow, :value=>pvmap[gn])
+              NodeMembership.create(:node=>self, :grp=>grow)
             end
           else raise ArgumentError.new("invalid command #{command}")
           end
