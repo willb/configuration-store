@@ -43,7 +43,7 @@ module Mrg
         # * pool (sstr/I)
         def SetPool(pool)
           # Print values of input parameters
-          log.debug "SetPool: pool => #{pool}"
+          log.debug "SetPool: pool => #{pool.inspect}"
           self.pool = pool
         end
         
@@ -116,7 +116,7 @@ module Mrg
         # * version (uint32/I)
         def CheckConfigVersion(version)
           # Print values of input parameters
-          log.debug "CheckConfigVersion: version => #{version}"
+          log.debug "CheckConfigVersion: version => #{version.inspect}"
         end
         
         expose :CheckConfigVersion do |args|
@@ -156,9 +156,9 @@ module Mrg
         # * options (map/I)
         def ModifyMemberships(command,groups,options={})
           # Print values of input parameters
-          log.debug "ModifyMemberships: command => #{command}"
-          log.debug "ModifyMemberships: groups => #{groups}"
-          log.debug "ModifyMemberships: options => #{options}"
+          log.debug "ModifyMemberships: command => #{command.inspect}"
+          log.debug "ModifyMemberships: groups => #{groups.inspect}"
+          log.debug "ModifyMemberships: options => #{options.inspect}"
           
           groups = FakeList.normalize(groups).to_a.map do |gn|
             group = Group.find_first_by_name(gn)

@@ -62,7 +62,7 @@ module Mrg
         # * obj (objId/O)
         def AddExplicitGroup(name)
           # Print values of input parameters
-          log.debug "AddExplicitGroup: name => #{name}"
+          log.debug "AddExplicitGroup: name => #{name.inspect}"
           raise "Group name #{name} is already taken" if Group.find_first_by_name(name)
           raise "Group name #{name} is invalid; group names may not start with '+++'" if name.slice(0,3) == "+++"
           Group.create(:name=>name)
@@ -77,7 +77,7 @@ module Mrg
         # * uid (uint32/I)
         def RemoveGroup(uid)
           # Print values of input parameters
-          log.debug "RemoveGroup: uid => #{uid}"
+          log.debug "RemoveGroup: uid => #{uid.inspect}"
           Group.find(uid).delete
         end
         
@@ -90,7 +90,7 @@ module Mrg
         # * obj (objId/O)
         def GetFeature(name)
           # Print values of input parameters
-          log.debug "GetFeature: name => #{name}"
+          log.debug "GetFeature: name => #{name.inspect}"
           Feature.find_first_by_name(name)
         end
         
@@ -104,7 +104,7 @@ module Mrg
         # * obj (objId/O)
         def AddFeature(name)
           # Print values of input parameters
-          log.debug "AddFeature: name => #{name}"
+          log.debug "AddFeature: name => #{name.inspect}"
           raise "Feature name #{name} is already taken" if Feature.find_first_by_name(name)
           return Feature.create(:name=>name)
         end
@@ -118,7 +118,7 @@ module Mrg
         # * uid (uint32/I)
         def RemoveFeature(uid)
           # Print values of input parameters
-          log.debug "RemoveFeature: uid => #{uid}"
+          log.debug "RemoveFeature: uid => #{uid.inspect}"
           Feature.find(uid).delete
         end
         
@@ -132,7 +132,7 @@ module Mrg
         # * obj (objId/O)
         def GetConfiguration(query)
           # Print values of input parameters
-          log.debug "GetConfiguration: query => #{query}"
+          log.debug "GetConfiguration: query => #{query.inspect}"
           # Assign values to output parameters
           obj ||= nil
           # Return value
@@ -152,7 +152,7 @@ module Mrg
         #   A map (param:reasonString) containing a list of parameters and a reasonString for the parameter that must be set for the configuration to be valid
         def MakeSnapshot(name)
           # Print values of input parameters
-          log.debug "MakeSnapshot: name => #{name}"
+          log.debug "MakeSnapshot: name => #{name.inspect}"
           # Assign values to output parameters
           uid ||= 0
           params ||= {}
@@ -170,7 +170,7 @@ module Mrg
         # * uid (uint32/I)
         def ChangeConfiguration(uid)
           # Print values of input parameters
-          log.debug "ChangeConfiguration: uid => #{uid}"
+          log.debug "ChangeConfiguration: uid => #{uid.inspect}"
         end
         
         expose :ChangeConfiguration do |args|
@@ -196,7 +196,7 @@ module Mrg
         # * obj (objId/O)
         def AddNode(name)
           # Print values of input parameters
-          log.debug "AddNode: name => #{name}"
+          log.debug "AddNode: name => #{name.inspect}"
 
           # Return a newly-created node
           return Node.create(:name => name)
@@ -212,7 +212,7 @@ module Mrg
         # * obj (objId/O)
         def GetNode(name)
           # Print values of input parameters
-          log.debug "GetNode: name => #{name}"
+          log.debug "GetNode: name => #{name.inspect}"
 
           # Return the node with the given name
           return Node.find_first_by_name(name)
@@ -227,7 +227,7 @@ module Mrg
         # * name (sstr/I)
         def RemoveNode(name)
           # Print values of input parameters
-          log.debug "RemoveNode: name => #{name}"
+          log.debug "RemoveNode: name => #{name.inspect}"
 
           # Actually remove the node
           Node.find_first_by_name(name).remove
@@ -243,7 +243,7 @@ module Mrg
         #   A reference to the parameter object that matches the name supplied
         def GetParam(name)
           # Print values of input parameters
-          log.debug "GetParam: name => #{name}"
+          log.debug "GetParam: name => #{name.inspect}"
 
           return Parameter.find_first_by_name(name)
         end
@@ -259,7 +259,7 @@ module Mrg
         #   A reference to the newly added parameter object
         def AddParam(name)
           # Print values of input parameters
-          log.debug "AddParam: name => #{name}"
+          log.debug "AddParam: name => #{name.inspect}"
            raise "Parameter name #{name} is already taken" if Parameter.find_first_by_name(name)
           # Return value
           return Parameter.create(:name => name)
@@ -276,7 +276,7 @@ module Mrg
         #   A reference to the subsystem object that matches the name supplied
         def GetSubsys(name)
           # Print values of input parameters
-          log.debug "GetSubsys: name => #{name}"
+          log.debug "GetSubsys: name => #{name.inspect}"
 
           return Subsystem.find_first_by_name(name)
         end
@@ -292,7 +292,7 @@ module Mrg
         #   A reference to the newly added subsystem object
         def AddSubsys(name)
           # Print values of input parameters
-          log.debug "AddSubsys: name => #{name}"
+          log.debug "AddSubsys: name => #{name.inspect}"
            raise "Subsystem name #{name} is already taken" if Subsystem.find_first_by_name(name)
           # Return value
           return Subsystem.create(:name => name)
@@ -308,7 +308,7 @@ module Mrg
         # * name (sstr/I)
         def RemoveParam(name)
           # Print values of input parameters
-          log.debug "RemoveParam: name => #{name}"
+          log.debug "RemoveParam: name => #{name.inspect}"
           Parameter.find_first_by_name(name).delete
         end
         

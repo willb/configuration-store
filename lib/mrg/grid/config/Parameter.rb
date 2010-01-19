@@ -46,7 +46,7 @@ module Mrg
         # * ty (uint8/I)
         def SetType(type)
           # Print values of input parameters
-          log.debug "SetType: type => #{type}"
+          log.debug "SetType: type => #{type.inspect}"
           self.kind = type
         end
         
@@ -72,7 +72,7 @@ module Mrg
         # * default (lstr/I)
         def SetDefault(default)
           # Print values of input parameters
-          log.debug "SetDefault: default => #{default}"
+          log.debug "SetDefault: default => #{default.inspect}"
           self.default_val = default
         end
         
@@ -98,7 +98,7 @@ module Mrg
         # * description (lstr/I)
         def SetDescription(description)
           # Print values of input parameters
-          log.debug "SetDescription: description => #{description}"
+          log.debug "SetDescription: description => #{description.inspect}"
           self.description = description
         end
         
@@ -121,7 +121,7 @@ module Mrg
         # * mustChange (bool/I)
         def SetDefaultMustChange(mustChange)
           # Print values of input parameters
-          log.debug "SetDefaultMustChange: mustChange => #{mustChange}"
+          log.debug "SetDefaultMustChange: mustChange => #{mustChange.inspect}"
           self.must_change = mustChange
         end
         
@@ -146,7 +146,7 @@ module Mrg
         # * level (uint8/I)
         def SetVisibilityLevel(level)
           # Print values of input parameters
-          log.debug "SetVisibilityLevel: level => #{level}"
+          log.debug "SetVisibilityLevel: level => #{level.inspect}"
           self.level = level
         end
         
@@ -172,7 +172,7 @@ module Mrg
         # * needsRestart (bool/I)
         def SetRequiresRestart(needsRestart)
           # Print values of input parameters
-          log.debug "SetRequiresRestart: needsRestart => #{needsRestart}"
+          log.debug "SetRequiresRestart: needsRestart => #{needsRestart.inspect}"
           self.needsRestart = needsRestart
         end
         
@@ -200,8 +200,8 @@ module Mrg
         def ModifyDepends(command,deps,options)
           deps ||= {}
           # Print values of input parameters
-          log.debug "ModifyDepends: command => #{command}"
-          log.debug "ModifyDepends: depends => #{deps}"
+          log.debug "ModifyDepends: command => #{command.inspect}"
+          log.debug "ModifyDepends: depends => #{deps.inspect}"
           modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon")
         end
         
@@ -231,8 +231,8 @@ module Mrg
         def ModifyConflicts(command,conflicts,options)
           conflicts ||= {}
           # Print values of input parameters
-          log.debug "ModifyConflicts: command => #{command}"
-          log.debug "ModifyConflicts: conflicts => #{conflicts}"
+          log.debug "ModifyConflicts: command => #{command.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
         end
         

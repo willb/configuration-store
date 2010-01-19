@@ -67,7 +67,7 @@ module Mrg
         # * name (sstr/I)
         def SetName(name)
           # Print values of input parameters
-          log.debug "SetName: name => #{name}"
+          log.debug "SetName: name => #{name.inspect}"
           raise "Group name #{name} is taken" if (self.name != name and Group.find_first_by_name(name))
           self.name = name
         end
@@ -114,8 +114,8 @@ module Mrg
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
         def ModifyFeatures(command,fs,options={})
           # Print values of input parameters
-          log.debug "ModifyFeatures: command => #{command}"
-          log.debug "ModifyFeatures: features => #{fs}"
+          log.debug "ModifyFeatures: command => #{command.inspect}"
+          log.debug "ModifyFeatures: features => #{fs.inspect}"
           
           feats = fs.to_a.map do |fn|
             frow = Feature.find_first_by_name(fn)
@@ -194,8 +194,8 @@ module Mrg
         #   A map(featureName, priority) of parameter/value mappings
         def ModifyParams(command,pvmap,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command}"
-          log.debug "ModifyParams: params => #{pvmap}"
+          log.debug "ModifyParams: command => #{command.inspect}"
+          log.debug "ModifyParams: params => #{pvmap.inspect}"
 
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)

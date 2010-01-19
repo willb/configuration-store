@@ -67,8 +67,8 @@ module Mrg
         #   map(groupId, map(param, value))
         def ModifyCustomParams(command,params)
           # Print values of input parameters
-          log.debug "ModifyCustomParams: command => #{command}"
-          log.debug "ModifyCustomParams: params => #{params}"
+          log.debug "ModifyCustomParams: command => #{command.inspect}"
+          log.debug "ModifyCustomParams: params => #{params.inspect}"
         end
         
         expose :ModifyCustomParams do |args|
@@ -95,8 +95,8 @@ module Mrg
         # * features (map/I)
         def ModifyDefaultFeatures(command,features)
           # Print values of input parameters
-          log.debug "ModifyDefaultFeatures: command => #{command}"
-          log.debug "ModifyDefaultFeatures: features => #{features}"
+          log.debug "ModifyDefaultFeatures: command => #{command.inspect}"
+          log.debug "ModifyDefaultFeatures: features => #{features.inspect}"
         end
         
         expose :ModifyDefaultFeatures do |args|

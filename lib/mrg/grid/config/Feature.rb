@@ -50,7 +50,7 @@ module Mrg
         # * name (sstr/I)
         def SetName(name)
           # Print values of input parameters
-          log.debug "SetName: name => #{name}"
+          log.debug "SetName: name => #{name.inspect}"
           raise "Feature name #{name} is taken" if (self.name != name and Feature.find_first_by_name(name))
           self.name = name
         end
@@ -78,9 +78,9 @@ module Mrg
         #   A list of other feature names a feature includes
         def ModifyFeatures(command,features,options={})
           # Print values of input parameters
-          log.debug "ModifyFeatures: command => #{command}"
-          log.debug "ModifyFeatures: features => #{features}"
-          log.debug "ModifyFeatures: options => #{options}"
+          log.debug "ModifyFeatures: command => #{command.inspect}"
+          log.debug "ModifyFeatures: features => #{features.inspect}"
+          log.debug "ModifyFeatures: options => #{options.inspect}"
           fl = FakeList.normalize(features).to_a.map
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true)
         end
@@ -114,8 +114,8 @@ module Mrg
         end
         
         def AddParamMapping(param,value)
-          log.debug "AddParam:  param => #{param}"
-          log.debug "AddParam:  value => #{value}"
+          log.debug "AddParam:  param => #{param.inspect}"
+          log.debug "AddParam:  value => #{value.inspect}"
           
           self.ModifyParams("ADD", {param=>value})
         end
@@ -126,7 +126,7 @@ module Mrg
         end
 
         def RemoveParamMapping(param)
-          log.debug "RemoveParam:  param => #{param}"
+          log.debug "RemoveParam:  param => #{param.inspect}"
           
           self.ModifyParams("REMOVE", {param=>true})
         end
@@ -152,8 +152,8 @@ module Mrg
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
         def ModifyParams(command,pvmap,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command}"
-          log.debug "ModifyParams: params => #{pvmap}"
+          log.debug "ModifyParams: command => #{command.inspect}"
+          log.debug "ModifyParams: params => #{pvmap.inspect}"
           
           pvmap ||= {}
           
@@ -216,8 +216,8 @@ module Mrg
         #   A set of other feature names that conflict with the feature
         def ModifyConflicts(command,conflicts,options={})
           # Print values of input parameters
-          log.debug "ModifyConflicts: command => #{command}"
-          log.debug "ModifyConflicts: conflicts => #{conflicts}"
+          log.debug "ModifyConflicts: command => #{command.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           
           modify_arcs(command,conflicts.keys,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           
@@ -248,9 +248,9 @@ module Mrg
         #   A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
         def ModifyDepends(command,depends,options={})
           # Print values of input parameters
-          log.debug "ModifyDepends: command => #{command}"
-          log.debug "ModifyDepends: depends => #{depends}"
-          log.debug "ModifyDepends: options => #{options}"
+          log.debug "ModifyDepends: command => #{command.inspect}"
+          log.debug "ModifyDepends: depends => #{depends.inspect}"
+          log.debug "ModifyDepends: options => #{options.inspect}"
           
           depends = FakeList.normalize(depends).to_a
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true)
@@ -282,8 +282,8 @@ module Mrg
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
         def ModifySubsys(command,subsys,options={})
           # Print values of input parameters
-          log.debug "ModifySubsys: command => #{command}"
-          log.debug "ModifySubsys: subsys => #{subsys}"
+          log.debug "ModifySubsys: command => #{command.inspect}"
+          log.debug "ModifySubsys: subsys => #{subsys.inspect}"
 
           modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
         end

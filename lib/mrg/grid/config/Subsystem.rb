@@ -36,9 +36,9 @@ module Mrg
         #   A set of parameter names
         def ModifyParams(command,params,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command}"
-          log.debug "ModifyParams: params => #{params}"
-          log.debug "ModifyParams: options => #{options}"
+          log.debug "ModifyParams: command => #{command.inspect}"
+          log.debug "ModifyParams: params => #{params.inspect}"
+          log.debug "ModifyParams: options => #{options.inspect}"
           
           modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
         end
