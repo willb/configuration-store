@@ -29,12 +29,18 @@ module Mrg
         #   A map(queryType, value) that defines the group desired. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID defined in value. 'Name' queryTypes will search for a group with the name defined in value.
         # * obj (objId/O)
         def GetGroup(query)
-          # Print values of input parameters
-          log.debug "GetGroup: query => #{query}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
+          qentries = query.entries
+          raise ArgumentError.new("Invalid group query #{query.inspect}") if qentries.size != 1
+          qkind, qkey = query.entries.pop
+          qkind = qkind.upcase
+          
+          case qkind
+          when "ID"
+            return Group.find(qkey)
+          when "NAME"
+            return Group.find_first_by_name(qkey)
+          else raise ArgumentError.new("Invalid group query kind #{qkind}")
+          end
         end
         
         expose :GetGroup do |args|
@@ -43,7 +49,7 @@ module Mrg
         end
 
         def GetGroupByName(name)
-          Group.find_first_by_name(name)
+          GetGroup({"NAME"=>name})
         end
         
         expose :GetGroupByName do |args|
