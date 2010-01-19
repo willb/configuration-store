@@ -40,7 +40,7 @@ module Mrg
           log.debug "ModifyParams: params => #{params}"
           log.debug "ModifyParams: options => #{options}"
           
-          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param",:klass=>Parameter)
+          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
         end
         
         expose :ModifyParams do |args|
@@ -57,7 +57,7 @@ module Mrg
         end
         
         def params=(deps)
-          set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name)
+          set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name, :klass=>Parameter)
         end
         
       end

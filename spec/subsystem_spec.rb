@@ -37,7 +37,39 @@ module Mrg
         end
         
         it "should accept additional implicated parameters" do
-          pending
+          param_names = ("XAA".."XAZ").to_a
+          params = param_names.map {|pn| @store.AddParam(pn)}
+          ss = @store.AddSubsys(@gskey)
+          old_size = 0
+          
+          param_names.each do |k|
+            ss.ModifyParams("ADD", {k=>true})
+            mappings = ss.GetParams
+            mappings.size.should == old_size + 1
+            mappings.keys.should include(k)
+            
+            old_size = mappings.size
+          end
+        end
+        
+        it "should accept sets of additional implicated parameters" do
+          param_names = ("XAA".."XAZ").to_a
+          param_values = [true] * param_names.size
+          
+          pvmap = Hash[*param_names.zip(param_values).flatten]
+
+          params = param_names.map {|pn| @store.AddParam(pn)}
+
+          ss = @store.AddSubsys(@gskey)
+          ss.ModifyParams("ADD", pvmap)
+          
+          mappings = ss.GetParams
+          
+          mappings.size.should == pvmap.size
+          
+          param_names.each do |k|
+            mappings.keys.should include(k)
+          end
         end
         
         it "should allow removing implicated parameters" do
