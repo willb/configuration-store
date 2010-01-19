@@ -40,7 +40,7 @@ module Mrg
           log.debug "ModifyParams: params => #{params}"
           log.debug "ModifyParams: options => #{options}"
           
-          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
+          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param",:klass=>Parameter)
         end
         
         expose :ModifyParams do |args|
