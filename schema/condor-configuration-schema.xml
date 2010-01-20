@@ -57,36 +57,26 @@
          <arg name="uid" dir="I" type="uint32"/>
       </method>
 
-      <method name="GetConfiguration">
-         <arg name="query" dir="I" type="map"
-              desc="A query that defines the configuration desired.  Valid
-                    values for the key are 'ID' or 'Name'.  'ID' keys should
-                    contain a specific ConfigurationId as its value,  whereas
-                    'Name' keys should contain a Configuration Name as its
-                    value"/>
-         <arg name="obj" dir="O" type="objId"/>
-      </method>
-
       <method name="MakeSnapshot">
          <arg name="name" dir="I" type="sstr"
               desc="A name for this configuration.  A blank name will result
                     in the store creating a name"/>
          <arg name="uid" dir="O" type="uint32"/>
-         <arg name="params" dir="O" type="map"
-              desc="A map (param:reasonString) containing a list of
-                    parameters and a reasonString for the parameter
-                    that must be set for the configuration to be valid"/>
       </method>
 
-      <method name="ChangeConfiguration">
-         <arg name="uid" dir="I" type="uint32"/>
+      <method name="LoadSnapshot">
+         <arg name="name" dir="I" type="sstr"/>
+      </method>
+
+      <method name="RemoveSnapshot">
+         <arg name="name" dir="I" type="sstr"/>
       </method>
 
       <method name="ActivateConfiguration">
          <arg name="params" dir="O" type="map"
-              desc="A map (param:reasonString) containing a list of
-                    parameters and a reasonString for the parameter
-                    that must be set for the configuration to be valid"/>
+              desc="A map (node:parmList) containing a list of
+                    nodes and the parameters that must be set for the
+                    configuration to be valid"/>
       </method>
 
       <method name="AddNode">
@@ -183,44 +173,7 @@
    </class>
 
    <class name="Configuration">
-      <property name="uid" type="uint32" index="y"/>
-
-      <method name="GetVersion">
-         <arg name="version" dir="O" type="uint32"/>
-      </method>
-
-      <method name="GetFeatures">
-         <arg name="features" dir="O" type="map"
-              desc="A set of features defined in this
-                    configuration"/>
-      </method>
-
-      <method name="GetCustomParams">
-         <arg name="params" dir="O" type="map"
-              desc="A map(paramName, value) of parameter/value pairs for
-                    a configuration"/>
-      </method>
-
-      <method name="ModifyCustomParams">
-         <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
-         <arg name="params" dir="I" type="map"
-              desc="map(groupId, map(param, value))"/>
-         <arg name="options" dir="I" type="map"/>
-      </method>
-
-      <method name="GetDefaultFeatures">
-         <arg name="features" dir="O" type="map"/>
-      </method>
-
-      <method name="ModifyDefaultFeatures">
-         <arg name="command" dir="I" type="sstr"
-              desc="Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT',
-                   'DIFF', and 'REPLACE'."/>
-         <arg name="features" dir="I" type="map"/>
-         <arg name="options" dir="I" type="map"/>
-      </method>
+      <property name="name" type="sstr" index="y"/>
    </class>
 
    <class name="Feature">
