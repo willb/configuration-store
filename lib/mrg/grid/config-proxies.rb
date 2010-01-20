@@ -76,11 +76,16 @@ module Mrg
       
       class Node
         include DefaultStruct
-        declare_column :name, :string, :not_null
-        declare_column :pool, :string
-        declare_column :idgroup, String
+        field :name, String
+        field :pool, String
+        field :idgroup, String
       end        
-        
+      
+      class Subsystem
+        include DefaultStruct
+        field :name, String
+        field :params, Set
+      end
     end
   end  
 end
