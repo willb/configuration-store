@@ -61,7 +61,6 @@
          <arg name="name" dir="I" type="sstr"
               desc="A name for this configuration.  A blank name will result
                     in the store creating a name"/>
-         <arg name="uid" dir="O" type="uint32"/>
       </method>
 
       <method name="LoadSnapshot">
