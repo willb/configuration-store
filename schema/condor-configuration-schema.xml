@@ -163,7 +163,7 @@
 
    </class>
 
-   <class name="Configuration">
+   <class name="Snapshot">
       <property name="name" type="sstr" index="y"/>
    </class>
 
