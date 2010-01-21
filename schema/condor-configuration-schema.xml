@@ -130,14 +130,6 @@
    <class name="Node">
       <property name="name" type="sstr" index="y"/>
 
-      <method name="GetPool">
-         <arg name="pool" dir="O" type="sstr"/>
-      </method>
-  
-      <method name="SetPool">
-         <arg name="pool" dir="I" type="sstr"/>
-      </method>
-
       <method name="GetLastCheckinTime">
          <arg name="time" dir="O" type="uint32"/>
       </method>

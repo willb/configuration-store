@@ -1,7 +1,12 @@
 * failed getters should raise (descriptive) exceptions
-* modify- methods on Feature
-* Get/ModifySubsys on Feature
 * Param verification on Feature -- it should be impossible to:
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
-* Node with no config should return empty config not error
+* Dirty lists
+* Default catch-all group
+* Events
+* Snapshots
+* ValidateConfig
+* Remove Pool methods
+* Implied subsystems on Feature
+* GetNode creates node objects for unknown nodes
