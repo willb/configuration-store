@@ -315,6 +315,19 @@ module Mrg
         expose :RemoveParam do |args|
           args.declare :name, :sstr, :in, {}
         end
+
+        # RemoveSubsys 
+        # * name (sstr/I)
+        def RemoveSubsys(name)
+          # Print values of input parameters
+          log.debug "RemoveSubsys: name => #{name.inspect}"
+          Subsystem.find_first_by_name(name).delete
+        end
+
+        expose :RemoveSubsys do |args|
+          args.declare :name, :sstr, :in, {}
+        end
+
       end
     end
   end
