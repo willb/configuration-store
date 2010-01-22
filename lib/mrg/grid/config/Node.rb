@@ -132,22 +132,6 @@ module Mrg
           args.declare :group, :objId, :out, {}
         end
         
-        def AddMembership(group)
-          self.ModifyMemberships("ADD", FakeList[group])
-        end
-
-        def RemoveMembership(group)
-          self.ModifyMemberships("REMOVE", FakeList[group])
-        end
-        
-        expose :AddMembership do |args|
-          args.declare :group, :sstr, :out, {}
-        end
-        
-        expose :RemoveMembership do |args|
-          args.declare :group, :sstr, :out, {}
-        end
-        
         # ModifyMemberships
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
