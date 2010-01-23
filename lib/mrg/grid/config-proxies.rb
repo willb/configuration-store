@@ -4,7 +4,7 @@ require 'yaml'
 
 module Mrg
   module Grid
-    module ConfigProxies
+    module SerializedConfigs
       module DefaultStruct
         module Cm
           def saved_fields
@@ -45,6 +45,15 @@ module Mrg
         end
       end
       
+      class Store
+        include DefaultStruct
+        field :nodes, Set
+        field :groups, Set
+        field :params, Set
+        field :features, Set
+        field :subsystems, Set
+      end
+      
       class Feature
         include DefaultStruct
         field :name, String
@@ -60,7 +69,6 @@ module Mrg
         field :name, String
         field :is_identity_group, false
         field :params, Hash
-        field :membership, Set
       end
       
       class Parameter
@@ -71,7 +79,7 @@ module Mrg
         field :description, String
         field :must_change, false
         field :level, Fixnum
-        field :needsRestart, false
+        field :needs_restart, false
       end
       
       class Node
@@ -79,12 +87,72 @@ module Mrg
         field :name, String
         field :pool, String
         field :idgroup, String
+        field :membership, List
       end        
       
       class Subsystem
         include DefaultStruct
         field :name, String
         field :params, Set
+      end
+      
+      class ConfigSerializer
+        module QmfConfigSerializer
+        end
+        
+        module InStoreConfigSerializer
+          # this is a no-op if we aren't over qmf
+          def get_object(o)
+            o
+          end
+          
+          def get_instances(klass)
+            ::Mrg::Grid::Config.const_get(klass).find_all
+          end
+        end
+        
+        def initialize(store, over_qmf=false, console=nil)
+          @store = store
+          @console = console if over_qmf
+          @struct = Store.new
+        end
+        
+        def serialize
+          @struct.nodes = serialize_nodes
+          @struct.groups = serialize_groups
+          @struct.params = serialize_params
+          @struct.features = serialize_features
+          @struct.subsystems = serialize_subsystems
+        end
+        
+        private
+        def serialize_nodes
+          get_instances(:Node).map do |n|
+            node = get_object(n)
+            out = Node.new
+            out.name = node.GetName
+            out.pool = node.GetPool
+            # XXX:  idgroup should be set up automatically
+            out.membership = FakeList.normalize(node.GetMemberships).to_a
+            out
+          end
+        end
+        
+        def serialize_groups
+          nil
+        end
+        
+        def serialize_params
+          nil
+        end
+        
+        def serialize_features
+          nil
+        end
+        
+        def serialize_subsystems
+          nil
+        end
       end
     end
   end  
