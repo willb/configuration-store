@@ -185,7 +185,7 @@ module Mrg
         #   A set of parameter names that this one depends on
         def GetDepends()
           log.debug "GetDepends called on param #{self.inspect}"
-          return depends.inject({}) {|acc,v| acc[v] = true ; acc}
+          return FakeSet[*depends]
         end
         
         expose :GetDepends do |args|
@@ -216,7 +216,7 @@ module Mrg
         #   A set of parameter names that conflict with the parameter
         def GetConflicts()
           log.debug "GetConflicts called on param #{self.inspect}"
-          return conflicts.inject({}) {|acc,v| acc[v] = true ; acc}
+          return FakeSet[*conflicts]
         end
         
         expose :GetConflicts do |args|
