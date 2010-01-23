@@ -7,6 +7,10 @@ require 'mrg/grid/config/QmfUtils'
 module Mrg
   module Grid
     module Config
+
+      # forward declaration
+      class Group
+      end
       
       class Node
         include ::Rhubarb::Persisting
