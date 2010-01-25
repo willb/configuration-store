@@ -171,7 +171,7 @@ module Mrg
           get_instances(:Group).map do |g|
             group = get_object(g)
             out = Group.new
-            out.name = group.name
+            out.name = group.GetName
             out.is_identity_group = group.is_identity_group
             out.features = FakeList.normalize(group.GetFeatures).to_a
             out.params = group.GetParams
