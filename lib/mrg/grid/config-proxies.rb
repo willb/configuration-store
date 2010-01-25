@@ -214,7 +214,7 @@ module Mrg
           get_instances(:Subsystem).map do |s|
             subsys = get_object(s)
             out = Subsystem.new
-            out.name = subsys.GetName
+            out.name = subsys.name
             out.params = fs_normalize(subsys.GetParams)
             puts out.inspect
             out
