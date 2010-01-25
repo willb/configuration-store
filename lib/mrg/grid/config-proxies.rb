@@ -58,7 +58,7 @@ module Mrg
         include DefaultStruct
         field :name, String
         field :params, Hash
-        field :included, Set
+        field :included, Array
         field :conflicts, Set
         field :depends, Array
         field :subsystems, Set
@@ -68,6 +68,7 @@ module Mrg
         include DefaultStruct
         field :name, String
         field :is_identity_group, false
+        field :features, List
         field :params, Hash
       end
       
@@ -80,6 +81,8 @@ module Mrg
         field :must_change, false
         field :level, Fixnum
         field :needs_restart, false
+        field :conflicts, Set
+        field :depends, Set
       end
       
       class Node
@@ -98,6 +101,17 @@ module Mrg
       
       class ConfigSerializer
         module QmfConfigSerializer
+          # this is a no-op if we're using ConfigClients
+          def get_object(o)
+            o
+          end
+          
+          def get_instances(klass)
+            @console.objects(:class=>klass).map do |obj|
+              obj = @console.object(:object_id=>o)
+              ::Mrg::Grid::ConfigClients.const_get(klass).new(obj, @console)
+            end
+          end
         end
         
         module InStoreConfigSerializer
@@ -115,6 +129,16 @@ module Mrg
           @store = store
           @console = console if over_qmf
           @struct = Store.new
+          
+          if over_qmf
+            class << self
+              include QmfConfigSerializer
+            end
+          else
+            class << self
+              include InStoreConfigSerializer
+            end
+          end
         end
         
         def serialize
@@ -123,6 +147,7 @@ module Mrg
           @struct.params = serialize_params
           @struct.features = serialize_features
           @struct.subsystems = serialize_subsystems
+          @struct
         end
         
         private
@@ -139,19 +164,56 @@ module Mrg
         end
         
         def serialize_groups
-          nil
+          get_instances(:Group).map do |g|
+            group = get_object(g)
+            out = Group.new
+            out.name = group.name
+            out.is_identity_group = group.is_identity_group
+            out.features = FakeList.normalize(group.GetFeatures).to_a
+            out.params = group.GetParams
+            out
+          end
         end
         
         def serialize_params
-          nil
+          get_instances(:Parameter).map do |p|
+            param = get_object(p)
+            out = Parameter.new
+            out.name = param.name
+            out.type = param.GetType
+            out.default_val = param.GetDefault
+            out.description = param.GetDescription
+            out.must_change = param.GetDefaultMustChange
+            out.level = param.GetVisibilityLevel
+            out.needs_restart = param.GetNeedsRestart
+            out.conflicts = param.GetConflicts.values
+            out.depends = param.GetDepends.values
+            out
+          end
         end
         
         def serialize_features
-          nil
+          get_instances(:Feature).map do |f|
+            feature = get_object(f)
+            out = Feature.new
+            out.name = feature.GetName
+            out.params = feature.GetParams
+            out.included = FakeList.normalize(feature.GetIncluded).to_a
+            out.conflicts = feature.GetConflicts.values
+            out.depends = FakeList.normalize(feature.GetDepends).to_a
+            out.subsystems = feature.GetSubsys.values
+            out
+          end
         end
         
         def serialize_subsystems
-          nil
+          get_instances(:Subsystem).map do |s|
+            subsys = get_object(s)
+            out = Subsystem.new
+            out.name = subsys.GetName
+            out.params = subsys.GetParams.values
+            out
+          end
         end
       end
     end

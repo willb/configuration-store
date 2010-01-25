@@ -105,6 +105,14 @@ module Mrg
           @qmfo.SetRequiresRestart(needsRestart)
         end
 
+        def GetDefaultMustChange
+          @qmfo.GetDefaultMustChange.mustChange
+        end
+        
+        def SetDefaultMustChange(mustChange)
+          @qmfo.SetDefaultMustChange(mustChange)
+        end
+
         def GetDepends
           @qmfo.GetDepends.depends
         end
