@@ -60,13 +60,13 @@ module Mrg
         include ObjResolver
       end
 
-      class Param < ClientObj
+      class Parameter < ClientObj
         def name
           @qmfo.name
         end
         
         def GetType
-          @qmfo.GetType.type
+          @qmfo.GetType.args["type"]
         end
 
         def SetType(t)
@@ -277,11 +277,11 @@ module Mrg
         end
 
         def AddParam(name)
-          get_object(@qmfo.AddParam(name).obj, Param)
+          get_object(@qmfo.AddParam(name).obj, Parameter)
         end
 
         def GetParam(name)
-          get_object(@qmfo.GetParam(name).obj, Param)
+          get_object(@qmfo.GetParam(name).obj, Parameter)
         end
 
         def RemoveParam(name)

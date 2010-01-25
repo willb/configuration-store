@@ -1,6 +1,9 @@
-require 'mrg/grid/config'
+require 'mrg/grid/config/QmfUtils'
 require 'set'
 require 'yaml'
+
+FakeList = Mrg::Grid::Config::FakeList
+FakeSet = Mrg::Grid::Config::FakeSet
 
 module Mrg
   module Grid
@@ -18,7 +21,8 @@ module Mrg
         end
         
         module Im
-          def initialize(kwargs)
+          def initialize(kwargs=nil)
+            kwargs ||= {}
             sf = self.class.saved_fields
 
             sf.keys.each do |key|
@@ -68,7 +72,7 @@ module Mrg
         include DefaultStruct
         field :name, String
         field :is_identity_group, false
-        field :features, List
+        field :features, Array
         field :params, Hash
       end
       
@@ -79,7 +83,7 @@ module Mrg
         field :default_val, String
         field :description, String
         field :must_change, false
-        field :level, Fixnum
+        field :level, 0
         field :needs_restart, false
         field :conflicts, Set
         field :depends, Set
@@ -90,7 +94,7 @@ module Mrg
         field :name, String
         field :pool, String
         field :idgroup, String
-        field :membership, List
+        field :membership, Array
       end        
       
       class Subsystem
@@ -107,9 +111,9 @@ module Mrg
           end
           
           def get_instances(klass)
-            @console.objects(:class=>klass).map do |obj|
-              obj = @console.object(:object_id=>o)
-              ::Mrg::Grid::ConfigClients.const_get(klass).new(obj, @console)
+            @console.objects(:class=>klass.to_s, :timeout=>45).map do |obj|
+#              obj = @console.object(:object_id=>obj)
+              ::Mrg::Grid::ConfigClient.const_get(klass).new(obj, @console)
             end
           end
         end
@@ -155,7 +159,7 @@ module Mrg
           get_instances(:Node).map do |n|
             node = get_object(n)
             out = Node.new
-            out.name = node.GetName
+            out.name = node.name
             out.pool = node.GetPool
             # XXX:  idgroup should be set up automatically
             out.membership = FakeList.normalize(node.GetMemberships).to_a
@@ -180,14 +184,14 @@ module Mrg
             param = get_object(p)
             out = Parameter.new
             out.name = param.name
-            out.type = param.GetType
-            out.default_val = param.GetDefault
+            out.kind = param.GetType
+            out.default_val = param.GetDefault.to_s
             out.description = param.GetDescription
             out.must_change = param.GetDefaultMustChange
             out.level = param.GetVisibilityLevel
-            out.needs_restart = param.GetNeedsRestart
-            out.conflicts = param.GetConflicts.values
-            out.depends = param.GetDepends.values
+            out.needs_restart = param.GetRequiresRestart
+            out.conflicts = fs_normalize(param.GetConflicts)
+            out.depends = fs_normalize(param.GetDepends)
             out
           end
         end
@@ -198,10 +202,10 @@ module Mrg
             out = Feature.new
             out.name = feature.GetName
             out.params = feature.GetParams
-            out.included = FakeList.normalize(feature.GetIncluded).to_a
-            out.conflicts = feature.GetConflicts.values
+            out.included = FakeList.normalize(feature.GetFeatures).to_a
+            out.conflicts = fs_normalize(feature.GetConflicts)
             out.depends = FakeList.normalize(feature.GetDepends).to_a
-            out.subsystems = feature.GetSubsys.values
+            out.subsystems = fs_normalize(feature.GetSubsys)
             out
           end
         end
@@ -211,9 +215,15 @@ module Mrg
             subsys = get_object(s)
             out = Subsystem.new
             out.name = subsys.GetName
-            out.params = subsys.GetParams.values
+            out.params = fs_normalize(subsys.GetParams)
+            puts out.inspect
             out
           end
+        end
+        
+        def fs_normalize(fs)
+          return fs if fs.is_a? Array
+          fs.keys
         end
       end
     end
