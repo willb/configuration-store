@@ -60,7 +60,7 @@ module Mrg
         include ObjResolver
       end
 
-      class Parameter < ClientObj
+      class Param < ClientObj
         def name
           @qmfo.name
         end
