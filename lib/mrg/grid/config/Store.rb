@@ -198,8 +198,10 @@ module Mrg
           # Print values of input parameters
           log.debug "AddNode: name => #{name.inspect}"
 
-          # Return a newly-created node
-          return Node.create(:name => name)
+          # Return a newly-created node after ensuring that its identity group is initialized
+          n = Node.create(:name => name)
+          n.GetIdentityGroup
+          n
         end
         
         expose :AddNode do |args|
@@ -327,7 +329,27 @@ module Mrg
         expose :RemoveSubsys do |args|
           args.declare :name, :sstr, :in, {}
         end
-
+        
+        def Initialize(kwargs=nil)
+          kwargs ||= {}
+          if kwargs.keys.map {|k| k.upcase}.include? "RESETDB"
+            clear_db
+          end
+          
+          Group.create(:name => "+++DEFAULT")
+          nil
+        end
+        
+        expose :initialize do |args|
+          args.declare :options, :map, :in, {}
+        end
+        
+        private
+        def clear_db
+          MAIN_DB_TABLES.each do |table|
+            table.delete_all rescue table.find_all.each {|row| row.delete}
+          end
+        end
       end
     end
   end
