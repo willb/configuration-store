@@ -14,4 +14,10 @@ require 'mrg/grid/config/Group'
 require 'mrg/grid/config/Node'
 require 'mrg/grid/config/Subsystem'
 
-require 'mrg/grid/config/dbmeta'
+module Mrg
+  module Grid
+    module Config
+      autoload :MAIN_DB_TABLES, 'mrg/grid/config/dbmeta'
+    end
+  end
+end
