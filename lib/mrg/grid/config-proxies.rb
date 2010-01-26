@@ -103,6 +103,63 @@ module Mrg
         field :params, Set
       end
       
+      class ConfigLoader
+        def initialize(store, ymlfile)
+          @store = store
+          yrepr = YAML::load(ymlfile).translate
+          
+          @nodes = dictify(yrepr.nodes)
+          @groups = dictify(yrepr.groups)
+          @params = dictify(yrepr.params)
+          @features = dictify(yrepr.features)
+          @subsystems = dictify(yrepr.subsystems)
+        end
+        
+        def load
+          create_entities
+          create_relationships
+        end
+        
+        private
+        def create_entities
+          create_nodes
+          create_groups
+          create_params
+          create_features
+          create_subsystems
+        end
+        
+        def create_nodes
+          # def serialize_nodes
+          #             get_instances(:Node).map do |n|
+          #               node = get_object(n)
+          #               out = Node.new
+          #               out.name = node.name
+          #               out.pool = node.GetPool
+          #               # XXX:  idgroup should be set up automatically
+          #               out.membership = FakeList.normalize(node.GetMemberships).to_a
+          #               out
+          #             end
+          #           end
+          
+          @nodes.each do |name, old_node|
+            node = @store.AddNode(name)
+            node.SetPool(old_node.GetPool)
+            memberships = old_node.membership
+            if memberships.size > 0
+              
+          end
+        end
+        
+        def create_relationships
+          
+        end
+        
+        def dictify(ls)
+          Hash[*ls.map {|obj| [obj, (obj.name rescue obj.GetName)]}.flatten]
+        end
+      end
+      
       class ConfigSerializer
         module QmfConfigSerializer
           # this is a no-op if we're using ConfigClients
