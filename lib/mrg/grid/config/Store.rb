@@ -330,7 +330,7 @@ module Mrg
           args.declare :name, :sstr, :in, {}
         end
         
-        def Initialize(kwargs=nil)
+        def initialize(kwargs=nil)
           kwargs ||= {}
           if kwargs.keys.map {|k| k.upcase}.include? "RESETDB"
             clear_db
