@@ -18,6 +18,7 @@ module Mrg
   module Grid
     module Config
       autoload :MAIN_DB_TABLES, 'mrg/grid/config/dbmeta'
+      autoload :SNAP_DB_TABLES, 'mrg/grid/config/dbmeta'
     end
   end
 end

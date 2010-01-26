@@ -330,7 +330,7 @@ module Mrg
           args.declare :name, :sstr, :in, {}
         end
         
-        def initialize(kwargs=nil)
+        def storeinit(kwargs=nil)
           kwargs ||= {}
           if kwargs.keys.map {|k| k.upcase}.include? "RESETDB"
             clear_db
@@ -340,7 +340,7 @@ module Mrg
           nil
         end
         
-        expose :initialize do |args|
+        expose :storeinit do |args|
           args.declare :options, :map, :in, {}
         end
         

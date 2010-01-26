@@ -3,16 +3,7 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'rubygems'
 
-require 'mrg/grid/config/Store'
-require 'mrg/grid/config/Node'
-require 'mrg/grid/config/Configuration'
-require 'mrg/grid/config/Feature'
-require 'mrg/grid/config/Group'
-require 'mrg/grid/config/ArcLabel'
-require 'mrg/grid/config/Parameter'
-require 'mrg/grid/config/Subsystem'
-
-require 'mrg/grid/config/QmfUtils'
+require 'mrg/grid/config'
 
 require 'spec'
 require 'spec/autorun'
@@ -26,7 +17,7 @@ include Mrg::Grid::Config
 def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
-  classes = kwargs[:classes] || [Node, Configuration, Feature, FeatureArc, Group, Parameter, Subsystem, ArcLabel, ParameterArc, FeatureParams, NodeMembership, GroupParams, GroupFeatures, FeatureSubsys, SubsystemParams]
+  classes = kwargs[:classes] || MAIN_DB_TABLES
 
   Rhubarb::Persistence::open(dbname)
   classes.each {|cl| cl.create_table}
