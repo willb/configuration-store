@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
+require 'rubygems' rescue nil
 
 require 'spqr/spqr'
 require 'spqr/app'

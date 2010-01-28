@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
+require 'rubygems' rescue nil
 
 require 'qmf'
 require 'mrg/grid/config-client'
