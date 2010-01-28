@@ -8,6 +8,7 @@ require 'spqr/app'
 require 'mrg/grid/config'
 
 dbname = ":memory:"
+snapdb = ":memory:"
 host = "localhost"
 port = 5672
 username = nil
@@ -19,6 +20,10 @@ op = OptionParser.new do |opts|
   
   opts.on("-d", "--dbname FILE", "file for persistent storage (will be created if it doesn't exist)") do |db| 
     dbname = db
+  end
+  
+  opts.on("-s", "--snapdb FILE", "file for store snapshots (will be created if it doesn't exist)") do |db|
+    snapdb = db
   end
   
   opts.on("-h", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
@@ -50,9 +55,12 @@ rescue OptionParser::InvalidOption
 end
 
 puts "storing results to #{dbname}"
+puts "storing snapshots to #{snapdb}"
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
+DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 
 Rhubarb::Persistence::open(dbname)
+Rhubarb::Persistence::open(snapdb,:snapshot)
 
 if DO_CREATE
   classes = Mrg::Grid::Config::MAIN_DB_TABLES
@@ -63,6 +71,10 @@ if DO_CREATE
   Mrg::Grid::Config::Store.find_by_id(0).storeinit
 end
 
+if DO_SNAPCREATE
+  Mrg::Grid::Config::Snapshot.create_table(:snapshot)
+end
+
 options = {}
 options[:loglevel] = debug
 options[:user] = username if username
@@ -71,6 +83,6 @@ options[:host] = host
 options[:port] = port
 
 app = SPQR::App.new(options)
-app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::Configuration,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem
+app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::Configuration,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot
 
 app.main
