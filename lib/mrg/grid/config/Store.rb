@@ -1,5 +1,7 @@
 require 'spqr/spqr'
 
+require 'mrg/grid/config-proxies'
+
 module Mrg
   module Grid
     module Config
@@ -343,6 +345,30 @@ module Mrg
         expose :storeinit do |args|
           args.declare :options, :map, :in, {}
         end
+        
+        # <method name="MakeSnapshot">
+        #    <arg name="name" dir="I" type="sstr"
+        #         desc="A name for this configuration.  A blank name will result
+        #               in the store creating a name"/>
+        # </method>
+        
+        def MakeSnapshot(name)
+          result = Snapshot.create(:name=>name)
+          result.snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, false).serialize
+        end
+        
+        expose :MakeSnapshot do |args|
+          args.declare :name, :sstr, :in, :desc=>"A name for this configuration.  A blank name will result in the store creating a name"
+        end
+        
+        # <method name="LoadSnapshot">
+        #    <arg name="name" dir="I" type="sstr"/>
+        # </method>
+        # 
+        # <method name="RemoveSnapshot">
+        #    <arg name="name" dir="I" type="sstr"/>
+        # </method>
+        
         
         private
         def clear_db

@@ -31,6 +31,7 @@ module Mrg
         def snaptext=(st)
           self.orig_snaptext = SQLite::Blob.new(Zlib::Deflate.deflate(st, Zlib::BEST_COMPRESSION))
         end
+      end
     end
   end
 end
