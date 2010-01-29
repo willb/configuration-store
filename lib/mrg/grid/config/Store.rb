@@ -354,7 +354,7 @@ module Mrg
         
         def MakeSnapshot(name)
           result = Snapshot.create(:name=>name)
-          result.snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, false).serialize
+          result.snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize
         end
         
         expose :MakeSnapshot do |args|

@@ -62,6 +62,8 @@ DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 Rhubarb::Persistence::open(dbname)
 Rhubarb::Persistence::open(snapdb,:snapshot)
 
+puts Rhubarb::Persistence::dbs.inspect
+
 if DO_CREATE
   classes = Mrg::Grid::Config::MAIN_DB_TABLES
   classes.each do |cl| 
@@ -72,6 +74,7 @@ if DO_CREATE
 end
 
 if DO_SNAPCREATE
+  puts "creating snapshot table"
   Mrg::Grid::Config::Snapshot.create_table(:snapshot)
 end
 
