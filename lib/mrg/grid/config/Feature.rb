@@ -1,10 +1,10 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
-require 'mrg/grid/config/Parameter'
-require 'mrg/grid/config/Subsystem'
-require 'mrg/grid/config/ArcLabel'
-require 'mrg/grid/config/ArcUtils'
-require 'mrg/grid/config/QmfUtils'
+require 'configstore/mrg/grid/config/Parameter'
+require 'configstore/mrg/grid/config/Subsystem'
+require 'configstore/mrg/grid/config/ArcLabel'
+require 'configstore/mrg/grid/config/ArcUtils'
+require 'configstore/mrg/grid/config/QmfUtils'
 
 require 'set'
 

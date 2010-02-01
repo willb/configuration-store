@@ -1,11 +1,9 @@
 #!/usr/bin/env ruby
 
-require 'rubygems' rescue nil
-
 require 'spqr/spqr'
 require 'spqr/app'
 
-require 'mrg/grid/config'
+require 'configstore/mrg/grid/config'
 
 dbname = ":memory:"
 host = "localhost"

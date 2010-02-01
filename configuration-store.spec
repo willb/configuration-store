@@ -11,7 +11,7 @@ URL: http://git.fedorahosted.org/git/grid/configuration-store.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby
-Requires: spqr
+Requires: ruby-spqr
 Requires: ruby-qmf
 Requires: ruby-config-store
 BuildArch: noarch
