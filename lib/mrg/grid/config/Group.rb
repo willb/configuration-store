@@ -1,10 +1,10 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
-require 'mrg/grid/config/Node'
-require 'mrg/grid/config/Parameter'
-require 'mrg/grid/config/Feature'
-require 'mrg/grid/config/QmfUtils'
+require 'configstore/mrg/grid/config/Node'
+require 'configstore/mrg/grid/config/Parameter'
+require 'configstore/mrg/grid/config/Feature'
+require 'configstore/mrg/grid/config/QmfUtils'
 require 'digest/md5'
 
 module Mrg

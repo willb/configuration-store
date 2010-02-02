@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-
 require 'qmf'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'

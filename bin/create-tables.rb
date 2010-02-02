@@ -2,8 +2,6 @@
 
 # creates non-existent tables in a preexisting db.  utility only.
 
-require 'rubygems'
-
 require 'spqr/spqr'
 require 'spqr/app'
 

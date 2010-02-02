@@ -1,4 +1,4 @@
-require 'mrg/grid/config/QmfUtils'
+require 'configstore/mrg/grid/config/QmfUtils'
 require 'set'
 require 'yaml'
 
