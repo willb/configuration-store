@@ -232,7 +232,7 @@ module Mrg
           log.debug "RemoveNode: name => #{name.inspect}"
 
           # Actually remove the node
-          Node.find_first_by_name(name).remove
+          Node.find_first_by_name(name).delete
         end
         
         expose :RemoveNode do |args|
