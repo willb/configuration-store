@@ -357,6 +357,22 @@ module Mrg
               end
             end
 
+            it "should replace #{adjective}s in order" do
+              dep_dests = []
+              ["High-Availability Stable", "Peer-to-peer Oat Store", "Equine Management", "Low-Latency Saddle Provisioning", "Alpheus", "Peneus"].sort_by { rand }.each do |fn|
+                dep_dests << @store.send(create_dest_msg, fn)
+              end
+
+              feature = @store.AddFeature("Pony Accelerator")
+
+              feature.send(modify_msg, "REPLACE", fake_collection[*dep_dests.map {|f| f.name}])
+
+              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests.zip(dep_dests).each do |of,ef| 
+                ef.name.should == of
+              end
+            end
+
             it "should #{verb} additional #{nouns} after all preexisting #{adjective}s" do
               dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|

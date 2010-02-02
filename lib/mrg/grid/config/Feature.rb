@@ -81,7 +81,7 @@ module Mrg
           log.debug "ModifyFeatures: command => #{command.inspect}"
           log.debug "ModifyFeatures: features => #{features.inspect}"
           log.debug "ModifyFeatures: options => #{options.inspect}"
-          fl = FakeList.normalize(features).to_a.map
+          fl = FakeList.normalize(features).to_a
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true)
         end
         
