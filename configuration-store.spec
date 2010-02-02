@@ -12,6 +12,7 @@ Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby
 Requires: ruby-spqr
+Requires: ruby-rhubarb
 Requires: ruby-qmf
 Requires: ruby-config-store
 BuildArch: noarch
@@ -57,8 +58,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-, root, root, -)
-%doc LICENSE
-%doc README.rdoc
+%doc LICENSE README.rdoc TODO VERSION
 %defattr(0755,root,root,-)
 %{_bindir}/store-agent.rb
 
@@ -72,7 +72,6 @@ rm -rf %{buildroot}
 %files -n ruby-config-store
 %defattr(-, root, root, -)
 %{ruby_sitelib}/configstore/*
-
 
 %changelog
 * Wed Jan 27 2010 root <root@fedora12-test> - 0.1.0-1
