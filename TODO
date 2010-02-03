@@ -4,7 +4,6 @@
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
 * Nodes w/o configuration should return empty config not error
 * Dirty lists
-* Default catch-all group
 * Events
 * Snapshots
 * ValidateConfig
