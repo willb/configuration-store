@@ -26,6 +26,14 @@ module Mrg
         qmf_property :apiVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
         ### Schema method declarations
         
+        def GetDefaultGroup
+          return Group.DEFAULT_GROUP
+        end
+        
+        expose :GetDefaultGroup do |args|
+          args.declare :obj, :objId, :out, {}
+        end
+        
         # GetGroup 
         # * query (map/I)
         #   A map(queryType, value) that defines the group desired. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID defined in value. 'Name' queryTypes will search for a group with the name defined in value.
@@ -338,7 +346,7 @@ module Mrg
             clear_db
           end
           
-          Group.create(:name => "+++DEFAULT") unless Group.find_first_by_name("+++DEFAULT")
+          Group.DEFAULT_GROUP
           nil
         end
         

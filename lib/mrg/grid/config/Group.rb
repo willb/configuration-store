@@ -28,6 +28,10 @@ module Mrg
           find(u)
         end
         
+        def Group.DEFAULT_GROUP
+          (Group.find_first_by_name("+++DEFAULT") or Group.create(:name => "+++DEFAULT"))
+        end
+        
         qmf_property :uid, :uint32, :index=>true
 
         declare_column :name, :string
@@ -232,6 +236,30 @@ module Mrg
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
           args.declare :options, :map, :in, {}
+        end
+        
+        def GetConfig
+          log.debug "GetConfig called for group #{self.inspect}"
+          config = {}
+          
+          features.reverse_each do |feature|
+            log.debug("applying config for #{feature.name}")
+            config = feature.apply_to(config)
+            log.debug("config is #{config.inspect}")
+          end
+          
+          # apply group-specific param settings
+          params.each do |k,v|
+            log.debug("applying config params #{k.inspect} --> #{v.inspect}")
+            config[k] = v
+            log.debug("config is #{config.inspect}")
+          end
+          
+          config
+        end
+        
+        expose :GetConfig do |args|
+          args.declare :config, :map, :out, {}
         end
         
         def features
