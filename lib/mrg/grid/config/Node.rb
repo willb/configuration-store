@@ -77,38 +77,14 @@ module Mrg
           config = {}
 
           memberships.reverse_each do |grp|
-            # apply each feature
-            grp.features.reverse_each do |feature|
-              log.debug("applying config for #{feature.name}")
-              config = feature.apply_to(config)
-              log.debug("config is #{config.inspect}")
-            end
+            log.debug("#{self.name} is a member of #{grp.name}")
+            log.debug("#{grp.name} has #{grp.features.size} features")
             
-            # apply group-specific param settings
-            grp.params.each do |k,v|
-              log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-              config[k] = v
-              log.debug("config is #{config.inspect}")
-            end
+            config = config.merge(grp.GetConfig)
           end
 
-          log.debug("self.idgroup --> #{self.idgroup.name}")
-          log.debug("#{self.idgroup.name} has #{self.idgroup.features.size} features")
-
-          self.idgroup.features.reverse_each do |feature|
-            log.debug("applying config for #{feature.name}")
-            config = feature.apply_to(config)
-            log.debug("config is #{config.inspect}")
-          end
-
-          log.debug("#{self.idgroup.name} has #{self.idgroup.params.size} params")
-          # apply group-specific param settings
-          self.idgroup.params.each do |k,v|
-            log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-            config[k] = v
-            log.debug("config is #{config.inspect}")
-          end
-
+          config = config.merge(idgroup.GetConfig)
+          
           config
         end
         

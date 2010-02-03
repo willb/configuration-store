@@ -234,6 +234,30 @@ module Mrg
           args.declare :options, :map, :in, {}
         end
         
+        def GetConfig
+          log.debug "GetConfig called for group #{self.inspect}"
+          config = {}
+          
+          features.reverse_each do |feature|
+            log.debug("applying config for #{feature.name}")
+            config = feature.apply_to(config)
+            log.debug("config is #{config.inspect}")
+          end
+          
+          # apply group-specific param settings
+          params.each do |k,v|
+            log.debug("applying config params #{k.inspect} --> #{v.inspect}")
+            config[k] = v
+            log.debug("config is #{config.inspect}")
+          end
+          
+          config
+        end
+        
+        expose :GetConfig do |args|
+          args.declare :config, :map, :out, {}
+        end
+        
         def features
           GroupFeatures.find_by(:grp=>self).map{|gf| gf.feature}
         end
