@@ -1,8 +1,8 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
-require 'configstore/mrg/grid/config/Group'
-require 'configstore/mrg/grid/config/QmfUtils'
+require 'mrg/grid/config/Group'
+require 'mrg/grid/config/QmfUtils'
 
 module Mrg
   module Grid

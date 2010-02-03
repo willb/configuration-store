@@ -3,7 +3,7 @@
 require 'spqr/spqr'
 require 'spqr/app'
 
-require 'configstore/mrg/grid/config'
+require 'mrg/grid/config'
 
 dbname = ":memory:"
 snapdb = ":memory:"

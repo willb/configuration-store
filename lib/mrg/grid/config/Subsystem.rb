@@ -1,4 +1,4 @@
-require 'configstore/mrg/grid/config'
+require 'mrg/grid/config'
 
 module Mrg
   module Grid

@@ -6,7 +6,7 @@
 # alia, a much smarter method_missing that introspected over qmf method
 # results and converted input sets and lists to FakeSet/FakeList
 
-require 'configstore/mrg/grid/config'
+require 'mrg/grid/config'
 
 module Mrg
   module Grid
