@@ -28,6 +28,10 @@ module Mrg
           find(u)
         end
         
+        def Group.DEFAULT_GROUP
+          (Group.find_first_by_name("+++DEFAULT") or Group.create(:name => "+++DEFAULT"))
+        end
+        
         qmf_property :uid, :uint32, :index=>true
 
         declare_column :name, :string

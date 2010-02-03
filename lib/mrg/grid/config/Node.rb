@@ -8,8 +8,11 @@ module Mrg
   module Grid
     module Config
 
-      # forward declaration
+      # forward declarations
       class Group
+      end
+      
+      class Store
       end
       
       class Node
@@ -74,7 +77,8 @@ module Mrg
         #   A map(parameter, value) representing the configuration for the node supplied
         def GetConfig()
           log.debug "GetConfig called on node #{self.inspect}"
-          config = {}
+          config = Group.DEFAULT_GROUP.GetConfig
+          log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
 
           memberships.reverse_each do |grp|
             log.debug("#{self.name} is a member of #{grp.name}")
