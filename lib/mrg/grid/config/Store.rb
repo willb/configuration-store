@@ -1,5 +1,7 @@
 require 'spqr/spqr'
 
+require 'mrg/grid/config-proxies'
+
 module Mrg
   module Grid
     module Config
@@ -336,13 +338,64 @@ module Mrg
             clear_db
           end
           
-          Group.create(:name => "+++DEFAULT")
+          Group.create(:name => "+++DEFAULT") unless Group.find_first_by_name("+++DEFAULT")
           nil
         end
         
         expose :storeinit do |args|
           args.declare :options, :map, :in, {}
         end
+        
+        # <method name="MakeSnapshot">
+        #    <arg name="name" dir="I" type="sstr"
+        #         desc="A name for this configuration.  A blank name will result
+        #               in the store creating a name"/>
+        # </method>
+        
+        def MakeSnapshot(name)
+          tm = Time.now.utc
+          name = "Automatically generated snapshot at #{tm} -- #{((tm.tv_sec * 1000000) + tm.tv_usec).to_s(16)}" if name.size == 0
+          result = Snapshot.create(:name=>name)
+          snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
+          result.snaptext = snaptext
+        end
+        
+        expose :MakeSnapshot do |args|
+          args.declare :name, :sstr, :in, :desc=>"A name for this configuration.  A blank name will result in the store creating a name"
+        end
+        
+        def LoadSnapshot(name)
+          snap = Snapshot.find_first_by_name(name)
+          
+          raise "Invalid snapshot name #{name}" unless snap
+          snaptext = snap.snaptext
+          
+          storeinit("RESETDB"=>true)
+          
+          ::Mrg::Grid::SerializedConfigs::ConfigLoader.new(self, snaptext).load
+          
+        end
+        
+        expose :LoadSnapshot do |args|
+          args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
+        end
+        
+        def RemoveSnapshot(name)
+          Snapshot.find_first_by_name(name).delete
+        end
+        
+        expose :RemoveSnapshot do |args|
+          args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
+        end
+
+        # <method name="LoadSnapshot">
+        #    <arg name="name" dir="I" type="sstr"/>
+        # </method>
+        # 
+        # <method name="RemoveSnapshot">
+        #    <arg name="name" dir="I" type="sstr"/>
+        # </method>
+        
         
         private
         def clear_db
