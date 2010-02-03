@@ -1,4 +1,4 @@
-require 'configstore/mrg/grid/config/QmfUtils'
+require 'mrg/grid/config/QmfUtils'
 require 'set'
 require 'yaml'
 
@@ -182,7 +182,7 @@ module Mrg
             group = nil
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
-              group = @store.GetGroup(name)
+              group = @store.GetGroup("NAME"=>name)
             else
               group = @store.AddGroup(name)
             end
