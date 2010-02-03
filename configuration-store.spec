@@ -46,12 +46,12 @@ Functions used by various parts of the qmf configuration store
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{ruby_sitelib}/configstore
+mkdir -p %{buildroot}/%{ruby_sitelib}/mrg
 mkdir -p %{buildroot}/%{_bindir}
 cp -f bin/store-dump.rb %{buildroot}/%{_bindir}
 cp -f bin/store-load.rb %{buildroot}/%{_bindir}
 cp -f bin/store-agent.rb %{buildroot}/%{_bindir}
-cp -Rf lib/* %{buildroot}/%{ruby_sitelib}/configstore
+cp -Rf lib/mrg/* %{buildroot}/%{ruby_sitelib}/mrg
 
 %clean
 rm -rf %{buildroot}
@@ -71,7 +71,7 @@ rm -rf %{buildroot}
 
 %files -n ruby-config-store
 %defattr(-, root, root, -)
-%{ruby_sitelib}/configstore/*
+%{ruby_sitelib}/mrg/*
 
 %changelog
 * Wed Jan 27 2010 root <root@fedora12-test> - 0.1.0-1
