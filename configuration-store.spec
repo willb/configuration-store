@@ -11,6 +11,7 @@ URL: http://git.fedorahosted.org/git/grid/configuration-store.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby(abi) = 1.8
+Requires: ruby
 Requires: ruby-spqr
 Requires: ruby-rhubarb
 Requires: ruby-qmf
@@ -24,6 +25,7 @@ Configuration store.
 Summary: Configuration store utilities
 Group: Applications/System
 Requires: ruby(abi) = 1.8
+Requires: ruby
 Requires: ruby-qmf
 Requires: ruby-config-store
 
@@ -34,7 +36,9 @@ Utilities for interacting with the configration store
 Summary: Functions used by the qmf configuration store
 Group: Applications/System
 Requires: ruby(abi) = 1.8
+Requires: ruby
 Requires: ruby-qmf
+BuildRequires: ruby
 
 %description -n ruby-config-store
 Functions used by various parts of the qmf configuration store
