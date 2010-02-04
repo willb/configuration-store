@@ -10,7 +10,7 @@ License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/configuration-store.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: ruby
+Requires: ruby(abi) = 1.8
 Requires: ruby-spqr
 Requires: ruby-rhubarb
 Requires: ruby-qmf
@@ -23,7 +23,7 @@ Configuration store.
 %package utils
 Summary: Configuration store utilities
 Group: Applications/System
-Requires: ruby
+Requires: ruby(abi) = 1.8
 Requires: ruby-qmf
 Requires: ruby-config-store
 
@@ -33,7 +33,7 @@ Utilities for interacting with the configration store
 %package -n ruby-config-store
 Summary: Functions used by the qmf configuration store
 Group: Applications/System
-Requires: ruby
+Requires: ruby(abi) = 1.8
 Requires: ruby-qmf
 
 %description -n ruby-config-store
@@ -46,12 +46,15 @@ Functions used by various parts of the qmf configuration store
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{ruby_sitelib}/mrg
+mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 mkdir -p %{buildroot}/%{_bindir}
 cp -f bin/store-dump.rb %{buildroot}/%{_bindir}
 cp -f bin/store-load.rb %{buildroot}/%{_bindir}
 cp -f bin/store-agent.rb %{buildroot}/%{_bindir}
-cp -Rf lib/mrg/* %{buildroot}/%{ruby_sitelib}/mrg
+cp -f lib/mrg/grid/config-client.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -f lib/mrg/grid/config-proxies.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -f lib/mrg/grid/config.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -f lib/mrg/grid/config/* %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 
 %clean
 rm -rf %{buildroot}
@@ -71,7 +74,21 @@ rm -rf %{buildroot}
 
 %files -n ruby-config-store
 %defattr(-, root, root, -)
-%{ruby_sitelib}/mrg/*
+%{ruby_sitelib}/mrg/grid/config.rb
+%{ruby_sitelib}/mrg/grid/config-client.rb
+%{ruby_sitelib}/mrg/grid/config-proxies.rb
+%{ruby_sitelib}/mrg/grid/config/ArcLabel.rb
+%{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
+%{ruby_sitelib}/mrg/grid/config/Configuration.rb
+%{ruby_sitelib}/mrg/grid/config/Feature.rb
+%{ruby_sitelib}/mrg/grid/config/Group.rb
+%{ruby_sitelib}/mrg/grid/config/Node.rb
+%{ruby_sitelib}/mrg/grid/config/Parameter.rb
+%{ruby_sitelib}/mrg/grid/config/QmfUtils.rb
+%{ruby_sitelib}/mrg/grid/config/Snapshot.rb
+%{ruby_sitelib}/mrg/grid/config/Store.rb
+%{ruby_sitelib}/mrg/grid/config/Subsystem.rb
+%{ruby_sitelib}/mrg/grid/config/dbmeta.rb
 
 %changelog
 * Wed Jan 27 2010 root <root@fedora12-test> - 0.1.0-1
