@@ -31,6 +31,8 @@ module Mrg
 
         declare_column :idgroup, :integer, references(Group)
         
+        declare_column :provisioned, :boolean, :default, :true
+        
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
@@ -56,6 +58,15 @@ module Mrg
         
         expose :SetPool do |args|
           args.declare :pool, :sstr, :in, {}
+        end
+        
+        [:MakeProvisioned, :MakeUnprovisioned].each do |name|
+          define_method name do
+            log.debug "#{name} called on #{self}"
+            self.provisioned = (name == :MakeProvisioned)
+          end
+          
+          expose name do |args| ; end
         end
         
         # GetLastCheckinTime 

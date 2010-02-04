@@ -208,8 +208,17 @@ module Mrg
           # Print values of input parameters
           log.debug "AddNode: name => #{name.inspect}"
 
-          # Return a newly-created node after ensuring that its identity group is initialized
-          n = Node.create(:name => name)
+          n = Node.find_first_by_name(name)
+          
+          if n
+            # Since this node already exists but is being explicitly added now, ensure that it is marked as "provisioned"
+            n.provisioned = true
+          else
+            # Return a newly-created node 
+            n = Node.create(:name => name)
+          end
+          
+          # Return the appropriate node after ensuring that its identity group is initialized
           n.GetIdentityGroup
           n
         end
@@ -227,7 +236,7 @@ module Mrg
           log.debug "GetNode: name => #{name.inspect}"
 
           # Return the node with the given name
-          return Node.find_first_by_name(name)
+          return (Node.find_first_by_name(name) or Node.create(name))
         end
         
         expose :GetNode do |args|

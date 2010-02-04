@@ -95,6 +95,7 @@ module Mrg
         field :pool, String
         field :idgroup, String
         field :membership, Array
+        field :provisioned, true
       end        
       
       class Subsystem
@@ -168,6 +169,7 @@ module Mrg
           @nodes.each do |name, old_node|
             node = @store.AddNode(name)
             node.SetPool(old_node.GetPool)
+            node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0
               @callbacks << lambda do
@@ -318,6 +320,7 @@ module Mrg
             node = get_object(n)
             out = Node.new
             out.name = node.name
+            out.provisioned = node.provisioned
             out.pool = node.GetPool
             out.membership = FakeList.normalize(node.GetMemberships).to_a
             out

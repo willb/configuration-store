@@ -207,6 +207,10 @@ module Mrg
         def name
           @qmfo.name
         end
+        
+        def provisioned
+          @qmfo.provisioned
+        end
 
         def GetPool
           @qmfo.GetPool.pool
