@@ -69,7 +69,7 @@ if DO_CREATE
     puts "creating table for #{cl.name}..."
     cl.create_table
   end
-  Rhubarb::Persistence::db.execute("PRAGMA user_version = ?", Mrg::Grid::Config::DBVERSION)
+  Rhubarb::Persistence::db.execute("PRAGMA user_version = #{Mrg::Grid::Config::DBVERSION}")
   Mrg::Grid::Config::Store.find_by_id(0).storeinit
 end
 
