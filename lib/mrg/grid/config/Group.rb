@@ -1,7 +1,6 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
-require 'mrg/grid/config/Node'
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/QmfUtils'
@@ -10,6 +9,10 @@ require 'digest/md5'
 module Mrg
   module Grid
     module Config
+      # forward declaration
+      class NodeMembership
+      end
+
       class Group
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable

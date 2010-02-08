@@ -12,6 +12,7 @@ require 'mrg/grid/config/Configuration'
 require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/Group'
 require 'mrg/grid/config/Node'
+require 'mrg/grid/config/NodeMembership'
 require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/Snapshot'
 

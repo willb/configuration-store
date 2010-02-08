@@ -9,7 +9,7 @@ module Mrg
     module Config
 
       # forward declarations
-      class Group
+      class NodeMembership
       end
       
       class Store
@@ -225,13 +225,6 @@ module Mrg
           NodeMembership.find_by(:node=>self).map{|nm| nm.grp}.select {|g| not g.is_identity_group}
         end
       end
-      
-      class NodeMembership
-        include ::Rhubarb::Persisting
-        declare_column :node, :integer, references(Node, :on_delete=>:cascade)
-        declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
-      end
-      
     end
   end
 end
