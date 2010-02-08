@@ -50,15 +50,14 @@ Functions used by various parts of the qmf configuration store
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config
+mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{_bindir}
 cp -f bin/store-dump.rb %{buildroot}/%{_bindir}
 cp -f bin/store-load.rb %{buildroot}/%{_bindir}
 cp -f bin/store-agent.rb %{buildroot}/%{_bindir}
-cp -f lib/mrg/grid/config-client.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
-cp -f lib/mrg/grid/config-proxies.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
-cp -f lib/mrg/grid/config.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
+cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 
 %clean
 rm -rf %{buildroot}
@@ -93,6 +92,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/Store.rb
 %{ruby_sitelib}/mrg/grid/config/Subsystem.rb
 %{ruby_sitelib}/mrg/grid/config/dbmeta.rb
+%{ruby_sitelib}/mrg/grid/config/dbmigrate/1.rb
 
 %changelog
 * Wed Jan 27 2010 root <root@fedora12-test> - 0.1.0-1
