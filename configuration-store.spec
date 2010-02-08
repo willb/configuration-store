@@ -58,7 +58,7 @@ cp -f bin/store-agent.rb %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/config-client.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config-proxies.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
-cp -f lib/mrg/grid/config/* %{buildroot}/%{ruby_sitelib}/mrg/grid/config
+cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 
 %clean
 rm -rf %{buildroot}
