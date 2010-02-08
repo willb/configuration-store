@@ -86,6 +86,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
 %{ruby_sitelib}/mrg/grid/config/Group.rb
 %{ruby_sitelib}/mrg/grid/config/Node.rb
+%{ruby_sitelib}/mrg/grid/config/NodeMembership.rb
 %{ruby_sitelib}/mrg/grid/config/Parameter.rb
 %{ruby_sitelib}/mrg/grid/config/QmfUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Snapshot.rb
