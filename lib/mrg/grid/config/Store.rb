@@ -236,7 +236,7 @@ module Mrg
           log.debug "GetNode: name => #{name.inspect}"
 
           # Return the node with the given name
-          return (Node.find_first_by_name(name) or Node.create(name))
+          return (Node.find_first_by_name(name) || Node.create(:name=>name, :provisioned=>false))
         end
         
         expose :GetNode do |args|
