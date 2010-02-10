@@ -15,6 +15,7 @@ require 'mrg/grid/config/Node'
 require 'mrg/grid/config/NodeMembership'
 require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/Snapshot'
+require 'mrg/grid/config/DirtyElement'
 
 module Mrg
   module Grid

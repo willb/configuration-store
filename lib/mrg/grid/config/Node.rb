@@ -209,7 +209,16 @@ module Mrg
           args.declare :config_hash, :lstr, :out, {}
         end
         
-        
+        declare_custom_query :get_dirty_nodes, <<QUERY
+SELECT * FROM __TABLE__ WHERE row_id IN (
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN nodemembership WHERE dirtyelement.grp = nodemembership.grp UNION 
+  SELECT node FROM dirtyelement UNION
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN groupfeatures, nodemembership WHERE dirtyelement.feature = groupfeatures.feature AND nodemembership.grp = groupfeatures.grp UNION
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN groupparams, nodemembership WHERE dirtyelement.parameter = groupparams.param AND nodemembership.grp = groupparams.grp UNION 
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN groupfeatures, nodemembership WHERE dirtyelement.feature = groupfeatures.feature AND nodemembership.grp = groupfeatures.grp
+)
+QUERY
+
         private
         def idgroupname
           "+++#{Digest::MD5.hexdigest(self.name)}"
