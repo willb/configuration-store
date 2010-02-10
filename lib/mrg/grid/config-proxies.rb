@@ -186,7 +186,7 @@ module Mrg
               # this is an identity or default group; don't create it
               group = @store.GetGroup("NAME"=>name)
             else
-              group = @store.AddGroup(name)
+              group = @store.AddExplicitGroup(name)
             end
             
             if old_group.features.size > 0
