@@ -83,6 +83,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/ArcLabel.rb
 %{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Configuration.rb
+%{ruby_sitelib}/mrg/grid/config/DirtyElement.rb
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
 %{ruby_sitelib}/mrg/grid/config/Group.rb
 %{ruby_sitelib}/mrg/grid/config/Node.rb
@@ -94,6 +95,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/Subsystem.rb
 %{ruby_sitelib}/mrg/grid/config/dbmeta.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/1.rb
+%{ruby_sitelib}/mrg/grid/config/dbmigrate/2.rb
 
 %changelog
 * Wed Feb 10 2010 rrati <rrati@redhat> - 0.1.0-0.1
