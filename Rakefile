@@ -4,11 +4,11 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "configuration-store"
+    gem.name = "wallaby"
     gem.summary = %Q{Grid configuration store.}
     gem.description = %Q{Grid configuration store.}
     gem.email = "willb@redhat.com"
-    gem.homepage = "http://git.fedorahosted.org/git/grid/configuration-store.git"
+    gem.homepage = "http://git.fedorahosted.org/git/grid/wallaby.git"
     gem.authors = ["William Benton"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_dependency "spqr", ">= 0.0.0"
@@ -25,7 +25,7 @@ def pkg_version
 end
 
 def pkg_name
-  return 'configuration-store'
+  return 'wallaby'
 end
 
 def pkg_spec
@@ -126,7 +126,7 @@ Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "configuration-store #{version}"
+  rdoc.title = "wallaby #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end

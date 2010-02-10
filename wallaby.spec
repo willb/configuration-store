@@ -1,13 +1,13 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
 %define rel 0.1
 
-Summary: Configuration store
-Name: configuration-store
+Summary: Configuration store via QMF
+Name: wallaby
 Version: 0.1.0
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
-URL: http://git.fedorahosted.org/git/grid/configuration-store.git
+URL: http://git.fedorahosted.org/git/grid/wallaby.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby(abi) = 1.8
@@ -15,11 +15,11 @@ Requires: ruby
 Requires: ruby-spqr
 Requires: ruby-rhubarb
 Requires: ruby-qmf
-Requires: ruby-config-store
+Requires: ruby-wallaby
 BuildArch: noarch
 
 %description
-Configuration store.
+A QMF accessible configuration store.
 
 %package utils
 Summary: Configuration store utilities
@@ -27,21 +27,21 @@ Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
 Requires: ruby-qmf
-Requires: ruby-config-store
+Requires: ruby-wallaby
 
 %description utils
-Utilities for interacting with the configration store
+Utilities for interacting with wallaby
 
-%package -n ruby-config-store
-Summary: Functions used by the qmf configuration store
+%package -n ruby-wallaby
+Summary: wallaby qmf api methods
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
 Requires: ruby-qmf
 BuildRequires: ruby
 
-%description -n ruby-config-store
-Functions used by various parts of the qmf configuration store
+%description -n ruby-wallaby
+Functions to communicate with wallaby over qmf
 
 %prep
 %setup -q
@@ -52,9 +52,9 @@ Functions used by various parts of the qmf configuration store
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{_bindir}
-cp -f bin/store-dump.rb %{buildroot}/%{_bindir}
-cp -f bin/store-load.rb %{buildroot}/%{_bindir}
-cp -f bin/store-agent.rb %{buildroot}/%{_bindir}
+cp -f bin/wallaby-dump %{buildroot}/%{_bindir}
+cp -f bin/wallaby-load %{buildroot}/%{_bindir}
+cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
@@ -66,16 +66,16 @@ rm -rf %{buildroot}
 %defattr(-, root, root, -)
 %doc LICENSE README.rdoc TODO VERSION
 %defattr(0755,root,root,-)
-%{_bindir}/store-agent.rb
+%{_bindir}/wallaby-agent
 
 %files utils
 %defattr(-, root, root, -)
 %doc LICENSE
 %defattr(0755,root,root,-)
-%{_bindir}/store-load.rb
-%{_bindir}/store-dump.rb
+%{_bindir}/wallaby-load
+%{_bindir}/wallaby-dump
 
-%files -n ruby-config-store
+%files -n ruby-wallaby
 %defattr(-, root, root, -)
 %{ruby_sitelib}/mrg/grid/config.rb
 %{ruby_sitelib}/mrg/grid/config-client.rb
@@ -96,5 +96,5 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/1.rb
 
 %changelog
-* Wed Jan 27 2010 root <root@fedora12-test> - 0.1.0-1
+* Wed Feb 10 2010 rrati <rrati@redhat> - 0.1.0-0.1
 - Initial package
