@@ -168,7 +168,7 @@ module Mrg
         def create_nodes
           @nodes.each do |name, old_node|
             node = @store.AddNode(name)
-            node.SetPool(old_node.GetPool)
+            node.SetPool(old_node.pool)
             node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0
