@@ -64,6 +64,7 @@ module Mrg
           define_method name do
             log.debug "#{name} called on #{self}"
             self.provisioned = (name == :MakeProvisioned)
+            # NB: these don't change the dirty status of this node
           end
           
           expose name do |args| ; end
@@ -168,6 +169,8 @@ module Mrg
             end
           else raise ArgumentError.new("invalid command #{command}")
           end
+          
+          DirtyElement.dirty_node(self)
         end
         
         expose :ModifyMemberships do |args|

@@ -73,6 +73,7 @@ module Mrg
         def SetDefault(default)
           # Print values of input parameters
           log.debug "SetDefault: default => #{default.inspect}"
+          DirtyElement.dirty_parameter(self)
           self.default_val = default
         end
         
@@ -99,6 +100,8 @@ module Mrg
         def SetDescription(description)
           # Print values of input parameters
           log.debug "SetDescription: description => #{description.inspect}"
+          # XXX:  is this necessary?
+          # DirtyElement.dirty_parameter(self)
           self.description = description
         end
         
@@ -122,6 +125,7 @@ module Mrg
         def SetDefaultMustChange(mustChange)
           # Print values of input parameters
           log.debug "SetDefaultMustChange: mustChange => #{mustChange.inspect}"
+          DirtyElement.dirty_parameter(self)
           self.must_change = mustChange
         end
         
@@ -147,6 +151,8 @@ module Mrg
         def SetVisibilityLevel(level)
           # Print values of input parameters
           log.debug "SetVisibilityLevel: level => #{level.inspect}"
+          # XXX:  Is this necessary?
+          # DirtyElement.dirty_parameter(self)
           self.level = level
         end
         
@@ -173,6 +179,7 @@ module Mrg
         def SetRequiresRestart(needsRestart)
           # Print values of input parameters
           log.debug "SetRequiresRestart: needsRestart => #{needsRestart.inspect}"
+          DirtyElement.dirty_parameter(self)
           self.needsRestart = needsRestart
         end
         
@@ -203,6 +210,7 @@ module Mrg
           log.debug "ModifyDepends: command => #{command.inspect}"
           log.debug "ModifyDepends: depends => #{deps.inspect}"
           modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon")
+          DirtyElement.dirty_parameter(self)
         end
         
         expose :ModifyDepends do |args|
@@ -234,6 +242,7 @@ module Mrg
           log.debug "ModifyConflicts: command => #{command.inspect}"
           log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
+          DirtyElement.dirty_parameter(self)
         end
         
         expose :ModifyConflicts do |args|

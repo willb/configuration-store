@@ -96,7 +96,9 @@ module Mrg
         end
         
         def ClearParams
+          DirtyElement.dirty_group(self);
           self.ModifyParams("REPLACE", {})
+          0
         end
         
         expose :ClearParams do |args|
@@ -104,6 +106,7 @@ module Mrg
         end
         
         def ClearFeatures
+          DirtyElement.dirty_group(self);
           self.ModifyFeatures("REPLACE", {})
           0
         end
@@ -149,6 +152,8 @@ module Mrg
             end
           else raise ArgumentError.new("invalid command #{command}")
           end
+          
+          DirtyElement.dirty_group(self);
           
           # FIXME:  not implemented from here on out
           # Assign values to output parameters
@@ -233,6 +238,8 @@ module Mrg
             end
           else raise ArgumentError.new("invalid command #{command}")
           end
+          
+          DirtyElement.dirty_group(self);
         end
         
         expose :ModifyParams do |args|

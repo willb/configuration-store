@@ -41,6 +41,7 @@ module Mrg
           log.debug "ModifyParams: options => #{options.inspect}"
           
           modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
+          DirtyElement.dirty_subsystem(self)
         end
         
         expose :ModifyParams do |args|
