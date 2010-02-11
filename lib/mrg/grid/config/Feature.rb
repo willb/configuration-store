@@ -294,6 +294,11 @@ module Mrg
         end
         
         def apply_to(dict)
+          includes.reverse_each do |ifname|
+            included_feature = self.find_first_by_name(ifname)
+            dict = included_feature.apply_to(dict)
+          end
+          
           self.GetParams.each do |k,v|
             dict[k] = v
           end
