@@ -30,7 +30,7 @@ module Mrg
         end
         
         def self.dirty_parameter(param)
-          self.create(:kind=>KIND_PARAMETER, :parameter=>param) unless self.find_first_by_parameter(parameter)
+          self.create(:kind=>KIND_PARAMETER, :parameter=>param) unless self.find_first_by_parameter(param)
         end
         
         def self.dirty_feature(feature)
