@@ -14,3 +14,4 @@
   node to check in for it's configuration
 * StringSet Param type.  Allows concatenating different values for a param
   into a single value (needed for DAEMON_LIST)
+* Check for cycles in feature inclusion/dependency (currently we only check for cycles of length 1)
