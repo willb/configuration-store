@@ -127,7 +127,7 @@ module Mrg
           log.debug "ModifyFeatures: command => #{command.inspect}"
           log.debug "ModifyFeatures: features => #{fs.inspect}"
           
-          feats = fs.to_a.map do |fn|
+          feats = FakeList.normalize(fs).to_a.map do |fn|
             frow = Feature.find_first_by_name(fn)
             raise "invalid feature #{fn}" unless frow
             frow
