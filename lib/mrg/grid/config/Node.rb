@@ -142,7 +142,7 @@ module Mrg
           
           groups = FakeList.normalize(groups).to_a.map do |gn|
             group = Group.find_first_by_name(gn)
-            raise "Invalid group #{gn}" unless group
+            raise "Invalid group #{gn.inspect}" unless group
             group
           end
 
