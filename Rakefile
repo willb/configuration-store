@@ -48,11 +48,36 @@ def rpm_dirs
   return %w{BUILD BUILDROOT RPMS SOURCES SPECS SRPMS}
 end
 
+def db_pkg_version
+  return '1.0'
+end
+
+def db_pkg_name
+  return 'condor-wallaby-base-db'
+end
+
+def db_pkg_spec
+  return db_pkg_name() + ".spec"
+end
+
+def db_pkg_source
+  return db_pkg_name() + "-" + db_pkg_version() + "-" + db_pkg_rel() + ".tar.gz"
+end
+
+def db_pkg_rel
+  return `grep -i 'define rel' #{db_pkg_spec} | awk '{print $3}'`.chomp()
+end
+
+def db_pkg_dir
+  return db_pkg_name() + "-" + db_pkg_version()
+end
+
 desc "create RPMs"
 task :rpms => [:build, :tarball] do
   require 'fileutils'
-  FileUtils.cp pkg_spec(), 'SPECS'
+  FileUtils.cp [pkg_spec(), db_pkg_spec()], 'SPECS'
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{pkg_spec}"
+  sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{db_pkg_spec}"
 end
 
 desc "Create a tarball"
@@ -61,22 +86,27 @@ task :tarball => :make_rpmdirs do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO', 'VERSION'], pkg_dir()
+  FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
   sh "tar -cf #{pkg_source} #{pkg_dir}"
+  sh "tar -cf #{db_pkg_source} #{db_pkg_dir}"
   FileUtils.mv pkg_source(), 'SOURCES'
+  FileUtils.mv db_pkg_source(), 'SOURCES'
 end
 
 desc "Make dirs for building RPM"
-task :make_rpmdirs => :rpm_clean do
+task :make_rpmdirs => :clean do
   require 'fileutils'
   FileUtils.mkdir pkg_dir()
+  FileUtils.mkdir db_pkg_dir()
   FileUtils.mkdir rpm_dirs()
 end
 
 desc "Cleanup after an RPM build"
-task :rpm_clean do
+task :clean do
   require 'fileutils'
-  FileUtils.rm_r pkg_dir(), :force => true
-  FileUtils.rm_r rpm_dirs(), :force => true
+  FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_name() + ".gemspec"], :force => true
+  FileUtils.rm_r db_pkg_dir(), :force => true
+#  FileUtils.rm_r rpm_dirs(), :force => true
 end
 
 require 'spec/rake/spectask'
