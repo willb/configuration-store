@@ -2,14 +2,11 @@
 * Param verification on Feature -- it should be impossible to:
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
-* Nodes w/o configuration should return empty config not error
 * Dirty lists
 * Events
-* Snapshots
 * ValidateConfig
 * Remove Pool methods
 * Implied subsystems on Feature
-* GetNode creates node objects for unknown nodes
 * Empty parameter to Node::CheckConfigVersion should produce an event for the
   node to check in for it's configuration
 * StringSet Param type.  Allows concatenating different values for a param
