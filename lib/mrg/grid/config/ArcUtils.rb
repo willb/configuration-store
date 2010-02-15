@@ -12,6 +12,7 @@ module Mrg
         # ** =:explain= is a string describing the relationship modeled by the arc (for error messages)
         # ** =:keymsg= is the message to get the key value from self
         # ** =:preserve_order= is true if these arcs represent a list
+        # ** =:xc= is a message to get the transitive closure of this relation from self
         def modify_arcs(command,dests,options,getmsg,setmsg,kwargs=nil)
           # NB:  this must work for lists and sets; note the ADD/UNION case
           
@@ -23,8 +24,12 @@ module Mrg
           what = kwargs[:what] || self.class.name.split("::").pop.downcase
           keymsg = kwargs[:name] || :name
           preserve_order = kwargs[:preserve_order]
-          
+          xcmsg = kwargs[:xc]
           command = command.upcase
+          
+          if xcmsg and %w{ADD UNION REPLACE}.include? command then
+            raise "Including #{what}s #{dests.inspect} in #{self.send(keymsg)} would introduce a cycle" if self.send(xcmsg, dests).include? self.send(keymsg)
+          end
           
           case command
           when "ADD", "UNION" then 

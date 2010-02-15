@@ -5,6 +5,8 @@ require 'rubygems' rescue nil
 
 require 'mrg/grid/config'
 
+require 'enumerator'
+
 require 'spec'
 require 'spec/autorun'
 

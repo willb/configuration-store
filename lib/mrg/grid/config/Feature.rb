@@ -82,7 +82,8 @@ module Mrg
           log.debug "ModifyFeatures: features => #{features.inspect}"
           log.debug "ModifyFeatures: options => #{options.inspect}"
           fl = FakeList.normalize(features).to_a
-          modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true)
+          
+          modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           DirtyElement.dirty_feature(self);
         end
         
@@ -256,7 +257,7 @@ module Mrg
           log.debug "ModifyDepends: options => #{options.inspect}"
           
           depends = FakeList.normalize(depends).to_a
-          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true)
+          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           DirtyElement.dirty_feature(self);
         end
         
@@ -307,6 +308,24 @@ module Mrg
             dict[k] = v
           end
           dict
+        end
+        
+        def x_includes(xtra = nil)
+          xtra ||= []
+          (includes | xtra).inject(Set.new) do |acc,feat|
+            acc << feat
+            acc |= Feature.find_first_by_name(feat).x_includes
+            acc
+          end
+        end
+        
+        def x_depends(xtra = nil)
+          xtra ||= []
+          (depends | xtra).inject(Set.new) do |acc,feat|
+            acc << feat
+            acc |= Feature.find_first_by_name(feat).x_depends
+            acc
+          end
         end
         
         private

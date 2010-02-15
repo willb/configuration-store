@@ -248,6 +248,37 @@ module Mrg
           pending
         end
         
+        it "should be able to detect inclusion cycles" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+          
+          dep_dests.each_cons(2) do |feature, dependent|
+            feature.ModifyFeatures("ADD", FakeList[dependent.name])
+          end
+          
+          lambda {
+            dep_dests[-1].ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          }.should raise_error
+        end
+
+
+        it "should be able to detect dependence cycles" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+          
+          dep_dests.each_cons(2) do |feature, dependent|
+            feature.ModifyDepends("ADD", FakeList[dependent.name])
+          end
+          
+          lambda {
+            dep_dests[-1].ModifyDepends("ADD", FakeList[dep_dests[0].name])
+          }.should raise_error
+        end
+        
         [["include", "inclusion", :GetFeatures, :ModifyFeatures, true, :AddFeature], ["depend on", "dependence", :GetDepends, :ModifyDepends, true, :AddFeature], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false, :AddFeature], ["affect", "implication", :GetSubsys, :ModifySubsys, false, :AddSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = order_preserving ? FakeList : FakeSet
