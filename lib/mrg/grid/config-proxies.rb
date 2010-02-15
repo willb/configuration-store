@@ -353,7 +353,7 @@ module Mrg
             out.name = node.name
             out.provisioned = node.provisioned
             out.pool = node.GetPool
-            out.membership = FakeList.normalize(node.GetMemberships).to_a
+            out.membership = fl_normalize(node.GetMemberships)
             out
           end
         end
@@ -364,7 +364,7 @@ module Mrg
             out = Group.new
             out.name = group.GetName
             out.is_identity_group = group.is_identity_group
-            out.features = FakeList.normalize(group.GetFeatures).to_a
+            out.features = fl_normalize(group.GetFeatures)
             out.params = group.GetParams
             out
           end
@@ -393,9 +393,9 @@ module Mrg
             out = Feature.new
             out.name = feature.GetName
             out.params = feature.GetParams
-            out.included = FakeList.normalize(feature.GetFeatures).to_a
+            out.included = fl_normalize(feature.GetFeatures)
             out.conflicts = fs_normalize(feature.GetConflicts)
-            out.depends = FakeList.normalize(feature.GetDepends).to_a
+            out.depends = fl_normalize(feature.GetDepends)
             out.subsystems = fs_normalize(feature.GetSubsys)
             out
           end
@@ -414,6 +414,11 @@ module Mrg
         def fs_normalize(fs)
           return fs if fs.is_a? Array
           fs.keys
+        end
+        
+        def fl_normalize(fl)
+          return fl if fl.is_a? Array
+          FakeList.normalize(fl).to_a
         end
       end
     end
