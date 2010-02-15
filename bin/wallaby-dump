@@ -8,10 +8,11 @@ host = "localhost"
 port = 5672
 username = nil
 password = nil
+outfile = nil
 debug = :warn
 
 op = OptionParser.new do |opts|
-  opts.banner = "Usage store-dump.rb [options]"
+  opts.banner = "Usage wallaby-dump [options] outfile"
 
   opts.on("-h", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
     host = h
@@ -37,6 +38,14 @@ rescue OptionParser::InvalidOption
   exit
 end
 
+if ARGV.size > 1
+  puts "wallaby-dump: You must specify only one output file (or \"--\")."
+  puts op
+  exit
+end
+
+outfile = (ARGV[0] || "--")
+
 console = Qmf::Console.new
 
 settings = Qmf::ConnectionSettings.new
@@ -57,4 +66,10 @@ s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, true, console)
 
 serialized = s.serialize
 
-puts serialized.to_yaml
+if outfile != "--" then
+  File.open(outfile) do |of|
+    of.write(serialized.to_yaml)
+  end
+else
+  puts serialized.to_yaml
+end
