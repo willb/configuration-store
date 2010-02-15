@@ -154,28 +154,6 @@ module Mrg
           args.declare :query, :map, :in, {}
         end
         
-        # MakeSnapshot 
-        # * name (sstr/I)
-        #   A name for this configuration. A blank name will result in the store creating a name
-        # * uid (uint32/O)
-        # * params (map/O)
-        #   A map (param:reasonString) containing a list of parameters and a reasonString for the parameter that must be set for the configuration to be valid
-        def MakeSnapshot(name)
-          # Print values of input parameters
-          log.debug "MakeSnapshot: name => #{name.inspect}"
-          # Assign values to output parameters
-          uid ||= 0
-          params ||= {}
-          # Return value
-          return [uid, params]
-        end
-        
-        expose :MakeSnapshot do |args|
-          args.declare :uid, :uint32, :out, {}
-          args.declare :params, :map, :out, {}
-          args.declare :name, :sstr, :in, {}
-        end
-        
         # ChangeConfiguration 
         # * uid (uint32/I)
         def ChangeConfiguration(uid)
@@ -372,6 +350,7 @@ module Mrg
         def MakeSnapshot(name)
           tm = Time.now.utc
           name = "Automatically generated snapshot at #{tm} -- #{((tm.tv_sec * 1000000) + tm.tv_usec).to_s(16)}" if name.size == 0
+          raise "Snapshot name #{name} already taken" if Snapshot.find_first_by_name(name)
           result = Snapshot.create(:name=>name)
           snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
           result.snaptext = snaptext
@@ -389,7 +368,14 @@ module Mrg
           
           storeinit("RESETDB"=>true)
           
-          ::Mrg::Grid::SerializedConfigs::ConfigLoader.new(self, snaptext).load
+          ::Mrg::Grid::SerializedConfigs::ConfigLoader.log = log
+          
+          ::Rhubarb::Persistence::db.synchronous = 0
+          begin
+            ::Mrg::Grid::SerializedConfigs::ConfigLoader.new(self, snaptext).load
+          ensure
+            ::Rhubarb::Persistence::db.synchronous = 2
+          end
           
         end
         

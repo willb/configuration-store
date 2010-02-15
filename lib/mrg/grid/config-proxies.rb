@@ -8,6 +8,12 @@ FakeSet = Mrg::Grid::Config::FakeSet
 module Mrg
   module Grid
     module SerializedConfigs
+      class MsgSink
+        def method_missing(sym, *args)
+          nil
+        end
+      end
+      
       module DefaultStruct
         module Cm
           def saved_fields
@@ -107,11 +113,11 @@ module Mrg
       class ConfigLoader
         module InternalHelpers
           def listify(ls)
-            ls
+            FakeList[*ls]
           end
           
           def setify(s)
-            s
+            FakeSet[*s]
           end
         end
         
@@ -125,16 +131,30 @@ module Mrg
           end
         end
         
+        def ConfigLoader.log
+          @log ||= MsgSink.new
+        end
+        
+        def ConfigLoader.log=(lg)
+          @log = lg
+        end
+        
+        def log
+          self.class.log
+        end
+        
         def initialize(store, ymltxt)
           @store = store
           
           if @store.class.to_s == "Mrg::Grid::Config::Store"
             # "internal" -- not operating over qmf
+            log.debug "ConfigLoader IS NOT operating over QMF"
             class << self
               include InternalHelpers
             end
           else
             # operating over QMF via the config-client lib
+            log.debug "ConfigLoader IS operating over QMF"
             class << self
               include QmfHelpers
             end
@@ -167,13 +187,17 @@ module Mrg
         
         def create_nodes
           @nodes.each do |name, old_node|
+            log.debug("creating node '#{name}'")
             node = @store.AddNode(name)
             node.SetPool(old_node.pool)
             node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
+            log.debug("node #{name} has the following memberships:  #{memberships.inspect}")
             if memberships.size > 0
+              flmemberships = listify(memberships)
               @callbacks << lambda do
-                node.ModifyMemberships("ADD", listify(memberships), {})
+                log.debug("calling ModifyMemberships for node #{name} with argument #{flmemberships.inspect}")
+                node.ModifyMemberships("ADD", flmemberships, {})
               end
             end
           end
@@ -181,6 +205,8 @@ module Mrg
         
         def create_groups
           @groups.each do |name, old_group|
+            log.debug("creating group '#{name}'")
+            
             group = nil
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
@@ -190,13 +216,18 @@ module Mrg
             end
             
             if old_group.features.size > 0
+              log.debug("scheduling features #{old_group.features.inspect} for addition to group '#{name}'")
+              flfeatures = listify(old_group.features)
               @callbacks << lambda do
-                group.ModifyFeatures("ADD", listify(old_group.features), {})
+                log.debug("calling ModifyFeatures for group #{name} with argument #{flfeatures.inspect}")
+                group.ModifyFeatures("ADD", flfeatures, {})
               end
             end
             
             if old_group.params.size > 0
+              log.debug("scheduling params #{old_group.params.inspect} for addition to group '#{name}'")
               @callbacks << lambda do
+                log.debug("calling ModifyParams for group #{name} with argument #{old_group.params.inspect}")
                 group.ModifyParams("ADD", old_group.params, {})
               end
             end
