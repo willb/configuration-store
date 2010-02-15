@@ -236,8 +236,8 @@ module Mrg
         
         def create_params
           @params.each do |name, old_param|
-            puts "#{name} --> #{name.inspect}"
-            puts "#{old_param} --> #{old_param.inspect}"
+            log.debug "#{name} --> #{name.inspect}"
+            log.debug "#{old_param} --> #{old_param.inspect}"
             
             param = @store.AddParam(name)
             param.SetType(old_param.kind)
