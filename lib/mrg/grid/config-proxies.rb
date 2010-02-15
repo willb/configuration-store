@@ -123,11 +123,11 @@ module Mrg
         
         module QmfHelpers
           def listify(ls)
-            FakeList[*ls]
+            ls
           end
           
           def setify(ls)
-            FakeSet[*ls]
+            ls
           end
         end
         
