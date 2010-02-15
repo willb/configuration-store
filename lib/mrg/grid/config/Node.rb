@@ -34,6 +34,7 @@ module Mrg
         declare_column :provisioned, :boolean, :default, :true
         
         qmf_property :name, :sstr, :index=>true
+        qmf_property :provisioned, :bool
         ### Schema method declarations
         
         # GetPool 
