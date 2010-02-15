@@ -67,7 +67,7 @@ s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, true, console)
 serialized = s.serialize
 
 if outfile != "--" then
-  File.open(outfile) do |of|
+  File.open(outfile, "w") do |of|
     of.write(serialized.to_yaml)
   end
 else
