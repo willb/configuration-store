@@ -370,11 +370,8 @@ module Mrg
           
           ::Mrg::Grid::SerializedConfigs::ConfigLoader.log = log
           
-          ::Rhubarb::Persistence::db.synchronous = 0
-          begin
+          ::Rhubarb::Persistence::db.transaction do |the_db|
             ::Mrg::Grid::SerializedConfigs::ConfigLoader.new(self, snaptext).load
-          ensure
-            ::Rhubarb::Persistence::db.synchronous = 2
           end
           
         end
