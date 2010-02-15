@@ -73,16 +73,19 @@ def db_pkg_dir
 end
 
 desc "create RPMs"
-task :rpms => [:build, :tarball] do
-  require 'fileutils'
+task :rpms => [:build, :tarball, :gen_spec] do
   FileUtils.cp [pkg_spec(), db_pkg_spec()], 'SPECS'
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{pkg_spec}"
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{db_pkg_spec}"
 end
 
+desc "Generate the specfile"
+task :gen_spec do
+  sh "cat #{pkg_spec}" + ".in" + "| sed 's/WALLABY_VERSION/#{pkg_version}/' > #{pkg_spec}"
+end
+
 desc "Create a tarball"
-task :tarball => :make_rpmdirs do
-  require 'fileutils'
+task :tarball => [:make_rpmdirs, :gen_spec] do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO', 'VERSION'], pkg_dir()
@@ -95,7 +98,6 @@ end
 
 desc "Make dirs for building RPM"
 task :make_rpmdirs => :clean do
-  require 'fileutils'
   FileUtils.mkdir pkg_dir()
   FileUtils.mkdir db_pkg_dir()
   FileUtils.mkdir rpm_dirs()

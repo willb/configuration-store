@@ -1,9 +1,9 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 0.1
+%define rel 0.2
 
 Summary: Configuration store via QMF
 Name: wallaby
-Version: 0.1.0
+Version: WALLABY_VERSION
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
