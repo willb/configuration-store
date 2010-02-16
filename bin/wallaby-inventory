@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+require 'qmf'
+require 'ostruct'
+
+require 'mrg/grid/config-client'
+
+def format_time(t)
+  return "never" if t == 0
+  Time.at(t/1000000,t%1000000).to_s
+end
+
+host = "localhost"
+port = 5672
+username = nil
+password = nil
+outfile = nil
+debug = :warn
+sortby = 'name'
+allnodes = true
+nodekind = ''
+SORTKEYS = %w{name checkin}
+NODEKINDS = %w{provisioned unprovisioned}
+
+op = OptionParser.new do |opts|
+  opts.banner = "Usage wallaby-inventory [options]"
+
+  opts.on("-h", "--host HOSTNAME", "qpid broker host", "   (default localhost)") do |h|
+    host = h
+  end
+
+  opts.on("-p", "--port NUM", "qpid broker port","   (default 5672)") do |num|
+    port = num.to_i
+  end
+
+  opts.on("-U", "--user NAME", "qpid username") do |name|
+    username = name
+  end
+
+  opts.on("-P", "--password PASS", "qpid password") do |pass|
+    password = pass
+  end
+  
+  opts.on("-s", "--sort KEY", SORTKEYS, "sort by key", "   (#{SORTKEYS.join(", ")})") do |sort|
+    sortby = sort.downcase
+  end
+
+  opts.on("-a", "--all", "show all nodes (default)") do
+    allnodes = true
+  end
+
+  opts.on("-o", "--only KIND", NODEKINDS, "show only KIND nodes", "   (#{NODEKINDS.join(", ")})") do |nkind|
+    allnodes = false
+    nodekind = nkind
+  end
+end
+
+begin
+  op.parse!
+rescue OptionParser::InvalidOption
+  puts op
+  exit
+rescue OptionParser::InvalidArgument => ia
+  puts ia
+  puts op
+  exit
+end
+
+console = Qmf::Console.new
+
+settings = Qmf::ConnectionSettings.new
+settings.username = username if username
+settings.password = password if password
+settings.host = host
+settings.port = port
+
+connection = Qmf::Connection.new(settings)
+
+broker = console.add_connection(connection)
+
+broker.wait_for_stable
+
+nodes = console.objects(:class=>"Node")
+
+nodes = nodes.map do |node|
+  n = OpenStruct.new
+  n.name = node.name
+  n.provisioned = node.provisioned
+  n.checkin = node.last_checkin
+  (allnodes || ((nodekinds == provisioned) == n.provisioned)) && n
+end.compact
+
+printf("%25.25s %15.15s %40.40s\n", "node name", "is provisioned?", "last checkin") if nodes.size > 0
+printf("%25.25s %15.15s %40.40s\n", "---------", "---------------", "------------") if nodes.size > 0
+
+nodes.sort_by {|node| node.send(sortby)}.each do |node|
+  printf("%25.25s %15.15s %40.40s\n", node.name, node.provisioned ? "provisioned" : "unprovisioned", format_time(node.checkin))
+end
