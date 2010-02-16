@@ -300,7 +300,7 @@ module Mrg
         
         def apply_to(dict)
           includes.reverse_each do |ifname|
-            included_feature = self.find_first_by_name(ifname)
+            included_feature = self.class.find_first_by_name(ifname)
             dict = included_feature.apply_to(dict)
           end
           
