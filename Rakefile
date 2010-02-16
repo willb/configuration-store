@@ -106,9 +106,8 @@ end
 desc "Cleanup after an RPM build"
 task :clean do
   require 'fileutils'
-  FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_name() + ".gemspec"], :force => true
+  FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec"], :force => true
   FileUtils.rm_r db_pkg_dir(), :force => true
-#  FileUtils.rm_r rpm_dirs(), :force => true
 end
 
 require 'spec/rake/spectask'

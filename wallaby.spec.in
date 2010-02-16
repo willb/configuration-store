@@ -75,6 +75,7 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby-load
 %{_bindir}/wallaby-dump
+%{_bindir}/wallaby-inventory
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
