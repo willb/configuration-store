@@ -98,7 +98,6 @@ module Mrg
       class Node
         include DefaultStruct
         field :name, String
-        field :pool, String
         field :idgroup, String
         field :membership, Array
         field :provisioned, true
@@ -189,7 +188,6 @@ module Mrg
           @nodes.each do |name, old_node|
             log.debug("creating node '#{name}'")
             node = @store.AddNode(name)
-            node.SetPool(old_node.pool)
             node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             log.debug("node #{name} has the following memberships:  #{memberships.inspect}")
@@ -352,7 +350,6 @@ module Mrg
             out = Node.new
             out.name = node.name
             out.provisioned = node.provisioned
-            out.pool = node.GetPool
             out.membership = fl_normalize(node.GetMemberships)
             out
           end

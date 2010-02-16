@@ -212,12 +212,8 @@ module Mrg
           @qmfo.provisioned
         end
 
-        def GetPool
-          @qmfo.GetPool.pool
-        end
-
-        def SetPool(pool)
-          @qmfo.SetPool(pool)
+        def last_checkin
+          @qmfo.last_checkin
         end
 
         def GetIdentityGroup

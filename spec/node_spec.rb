@@ -43,16 +43,6 @@ module Mrg
           n.row_id.should == rid
         end
 
-        it "should have a way to access the pool value" do
-          n = @store.AddNode("blather.local.")
-          n.should respond_to(:GetPool)
-        end
-
-        it "should have a way to modify the pool value" do
-          n = @store.AddNode("blather.local.")
-          n.should respond_to(:SetPool)
-        end
-
         it "should have an affiliated identity group" do
           n = @store.AddNode("blather.local.")
           group = n.GetIdentityGroup
