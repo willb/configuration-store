@@ -166,8 +166,8 @@ module Mrg
         end
         
         # ActivateConfiguration 
-        # * params (map/O)
-        #   A map (param:reasonString) containing a list of parameters and a reasonString for the parameter that must be set for the configuration to be valid
+        # * explain (map/O)
+        #   A map containing an explanation of why the configuration isn't valid, or the single key "OK" if the configuration was successfully pushed out
         def ActivateConfiguration()
           # Assign values to output parameters
           params ||= {}
@@ -176,7 +176,7 @@ module Mrg
         end
         
         expose :ActivateConfiguration do |args|
-          args.declare :params, :map, :out, {}
+          args.declare :explain, :map, :out, {}
         end
         
         # AddNode 

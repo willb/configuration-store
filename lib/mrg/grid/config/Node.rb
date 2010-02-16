@@ -191,6 +191,17 @@ module Mrg
           args.declare :config_hash, :lstr, :out, {}
         end
         
+        # Validate ensures the following for a given node N:
+        #  1.  if N enables some feature F that depends on F', N must also include F', 
+        #        enable F', or enable some feature F'' that includes F'
+        #  2.  if N enables some feature F that depends on some param P being set,
+        #        N must provide a value for P
+        #  
+        #  Other consistency properties are ensured by other parts of the database (e.g. that a group)
+        def validate
+          
+        end
+        
         declare_custom_query :get_dirty_nodes, <<QUERY
 SELECT * FROM __TABLE__ WHERE row_id IN (
   SELECT nodemembership.node AS node FROM dirtyelement JOIN nodemembership WHERE dirtyelement.grp = nodemembership.grp UNION 
@@ -202,6 +213,18 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
 QUERY
 
         private
+        def my_features
+          my_groups.inject([]) do |acc, grp|
+            current_features = grp.features
+            acc |= grp.features
+            acc
+          end
+        end
+
+        def my_groups
+          [Group.DEFAULT_GROUP] + memberships + [idgroup]
+        end
+        
         def idgroupname
           "+++#{Digest::MD5.hexdigest(self.name)}"
         end

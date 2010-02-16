@@ -73,9 +73,7 @@
 
       <method name="ActivateConfiguration">
          <arg name="params" dir="O" type="map"
-              desc="A map (node:parmList) containing a list of
-                    nodes and the parameters that must be set for the
-                    configuration to be valid"/>
+              desc="A map containing an explanation of why the configuration isn't valid"/>
       </method>
 
       <method name="AddNode">
