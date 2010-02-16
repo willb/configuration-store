@@ -12,3 +12,4 @@ end
 
 require 'mrg/grid/config/dbmigrate/1'
 require 'mrg/grid/config/dbmigrate/2'
+require 'mrg/grid/config/dbmigrate/3'

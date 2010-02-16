@@ -32,34 +32,12 @@ module Mrg
         declare_column :idgroup, :integer, references(Group)
         
         declare_column :provisioned, :boolean, :default, :true
+        declare_column :last_checkin, :integer
         
         qmf_property :name, :sstr, :index=>true
         qmf_property :provisioned, :bool
+        qmf_property :last_checkin, :uint64
         ### Schema method declarations
-        
-        # GetPool 
-        # * pool (sstr/O)
-        def GetPool()
-          log.debug "GetPool called on node #{self.inspect}"
-          # Return value
-          return self.pool
-        end
-        
-        expose :GetPool do |args|
-          args.declare :pool, :sstr, :out, {}
-        end
-        
-        # SetPool 
-        # * pool (sstr/I)
-        def SetPool(pool)
-          # Print values of input parameters
-          log.debug "SetPool: pool => #{pool.inspect}"
-          self.pool = pool
-        end
-        
-        expose :SetPool do |args|
-          args.declare :pool, :sstr, :in, {}
-        end
         
         [:MakeProvisioned, :MakeUnprovisioned].each do |name|
           define_method name do
@@ -76,9 +54,9 @@ module Mrg
         def GetLastCheckinTime()
           log.debug "GetLastCheckinTime called on node #{self.inspect}"
           # Assign values to output parameters
-          time ||= 0
+          self.last_checkin ||= 0
           # Return value
-          return time
+          return self.last_checkin
         end
         
         expose :GetLastCheckinTime do |args|
