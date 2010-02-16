@@ -247,6 +247,120 @@ module Mrg
         it "should give parameters default values when they are added as mapped to nil or false" do
           pending
         end
+
+        it "should know which features are installed on a given node when those are installed in the default group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+
+          node = @store.AddNode("blah.local.")
+          
+          default = Group.DEFAULT_GROUP
+          
+          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(2).things
+          
+          [0,2].each do |num|
+            ffn.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+        it "should know which features are installed on a given node when those are installed in the node's identity group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+
+          node = @store.AddNode("blah.local.")
+          
+          idgroup = node.idgroup
+          
+          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(2).things
+          
+          [0,2].each do |num|
+            ffn.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+        it "should know which features are installed on a given node when those are installed in the node's identity group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+
+          node = @store.AddNode("blah.local.")
+          
+          idgroup = node.idgroup
+          
+          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(3).things
+          
+          [0,2,3].each do |num|
+            ffn.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+        it "should know which features are installed on a given node when those are installed on a group that that node is a member of" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+
+          node = @store.AddNode("blah.local.")
+          group = @store.AddExplicitGroup("Pony Users")
+          
+          group.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(0).things
+          
+          node.ModifyMemberships("ADD", FakeList[group.name])
+
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(3).things
+          
+          [0,2,3].each do |num|
+            ffn.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+
+        it "should know which features are installed on a given node when those are included in another feature installed on that node" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+
+          node = @store.AddNode("blah.local.")
+          
+          idgroup = node.idgroup
+          
+          dep_dests[2].ModifyFeatures("ADD", FakeList[dep_dests[3].name])
+          
+          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          
+          ffn = Feature.features_for_node(node)
+          
+          ffn.should have(3).things
+          
+          [0,2,3].each do |num|
+            ffn.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
         
         it "should be able to detect inclusion cycles" do
           dep_dests = []

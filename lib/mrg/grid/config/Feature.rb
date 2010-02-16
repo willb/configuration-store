@@ -312,7 +312,7 @@ module Mrg
         
         def x_includes(xtra = nil)
           xtra ||= []
-          (includes | xtra).inject(Set.new) do |acc,feat|
+          (includes | xtra).inject([]) do |acc,feat|
             acc << feat
             acc |= Feature.find_first_by_name(feat).x_includes
             acc
@@ -321,12 +321,32 @@ module Mrg
         
         def x_depends(xtra = nil)
           xtra ||= []
-          (depends | xtra).inject(Set.new) do |acc,feat|
+          (depends | xtra).inject([]) do |acc,feat|
             acc << feat
             acc |= Feature.find_first_by_name(feat).x_depends
             acc
           end
         end
+        
+        def Feature.features_for_node(n)
+          fs = _features_for_node(n)
+          fs.inject(fs) do |acc,feature|
+            included_features = feature.x_includes.map {|fn| Feature.find_first_by_name(fn)}
+            acc |= included_features
+            acc
+          end
+        end
+        
+        def Feature.dependencies_for_node(n)
+          features_for_node(n).map {|f| f.x_depends}.uniq.map {|fn| Feature.find_first_by_name(fn)}
+        end
+        
+        declare_custom_query :_features_for_node, <<-QUERY
+        SELECT * FROM __TABLE__ WHERE row_id IN (
+          SELECT groupfeatures.feature AS f FROM groupfeatures, nodemembership WHERE nodemembership.grp = groupfeatures.grp AND nodemembership.node = ? UNION
+          SELECT groupfeatures.feature AS f from groupfeatures, nodegroup WHERE nodegroup.name = "+++DEFAULT" AND groupfeatures.grp = nodegroup.row_id
+        )
+        QUERY
         
         private
         include ArcUtils
