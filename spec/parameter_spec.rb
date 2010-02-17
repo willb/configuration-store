@@ -118,6 +118,155 @@ module Mrg
 
         end
 
+        it "should not identify any parameters as applied to a node by default" do
+          node = @store.AddNode("frotz")
+          Parameter.s_for_node(node).size.should == 0
+        end
+
+        it "should not identify any parameter dependencies as applied to a node by default" do
+          node = @store.AddNode("frotz")
+          Parameter.dependencies_for_node(node).size.should == 0
+        end
+
+        it "should detect when parameters are added to a node's identity group" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          node = @store.AddNode("frotz")
+          
+          node.idgroup.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          
+          pfn = Parameter.s_for_node(node)
+          
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+        end
+
+        it "should detect when parameters are added to the default group" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          node = @store.AddNode("frotz")
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          
+          pfn = Parameter.s_for_node(node)
+          
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+        end
+
+        it "should detect when parameters are added to an explicit group" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          node = @store.AddNode("frotz")
+          group = @store.AddExplicitGroup("argh")
+          
+          group.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+
+          pfn = Parameter.s_for_node(node)
+          pfn.size.should == 0
+          
+          node.ModifyMemberships("ADD", FakeList[group.name])
+          
+          pfn = Parameter.s_for_node(node)
+          
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+        end
+        
+        it "should detect when parameters are added to a feature" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          node = @store.AddNode("frotz")
+          feature = @store.AddFeature("Pony Accelerator")
+          
+          feature.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+
+          pfn = Parameter.s_for_node(node)
+          pfn.size.should == 0
+          
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name])
+          
+          pfn = Parameter.s_for_node(node)
+          
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+        end
+
+        it "should detect when parameters are added to a feature included by another feature" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          node = @store.AddNode("frotz")
+          feature = @store.AddFeature("Pony")
+          feature1 = @store.AddFeature("Pony Accelerator")
+          
+          feature1.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+
+          feature.ModifyFeatures("ADD", FakeList[feature1.name])
+
+          pfn = Parameter.s_for_node(node)
+          pfn.size.should == 0
+          
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name])
+          
+          pfn = Parameter.s_for_node(node)
+          
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+        end
+
+        it "should identify immediate parameter dependencies for a node" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          dep_param_names = ("YAA".."YAF").to_a
+          dep_params = dep_param_names.map {|p| @store.AddParam(p) }
+          
+          params[0].ModifyDepends("ADD", FakeSet[*dep_param_names], {})
+          
+          node = @store.AddNode("frotz")
+          
+          node.idgroup.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          
+          pfn = Parameter.s_for_node(node)
+          pfn.size.should == param_names.size
+          
+          param_names.each do |prm|
+            pfn.should include(prm)
+          end
+
+          dfn = Parameter.dependencies_for_node(node)
+          dfn.size.should == dep_param_names.size
+          
+          dep_param_names.each do |dprm|
+            dfn.should include(dprm)
+          end
+        end
+
+        it "should identify transitive parameter dependencies for a node" do
+          pending
+        end
+
+      
         it "adds dependencies idempotently" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
