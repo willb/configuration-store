@@ -190,7 +190,9 @@ module Mrg
           my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
           orphaned_deps = Feature.dependencies_for_node(self) - Feature.features_for_node(self)
           unset_params = my_unset_params(my_config)
-          orphaned_params = []
+          my_params = Parameter.s_for_node(self)
+          my_param_deps = Parameter.dependencies_for_node(self, my_params)
+          orphaned_params = my_param_deps - my_params
           
           return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
           
