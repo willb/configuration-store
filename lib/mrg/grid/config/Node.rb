@@ -169,27 +169,6 @@ module Mrg
         expose :GetMemberships do |args|
           args.declare :groups, :map, :out, {}
         end
-
-        def GetMembershipsAsString()
-          log.debug "GetMembershipsAsString called on node #{self.inspect}"
-          ls = memberships.map{|g| g.name}
-          ls << idgroupname
-          ls.inspect
-        end
-        
-        expose :GetMembershipsAsString do |args|
-          args.declare :groups, :lstr, :out, {}
-        end
-        
-        def GetConfigAsString
-          log.debug "GetConfigAsString called on node #{self.inspect}"
-          hash = self.GetConfig
-          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
-        end
-        
-        expose :GetConfigAsString do |args|
-          args.declare :config_hash, :lstr, :out, {}
-        end
         
         # Validate ensures the following for a given node N:
         #  1.  if N enables some feature F that depends on F', N must also include F', 
