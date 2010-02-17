@@ -251,6 +251,13 @@ module Mrg
           args.declare :options, :map, :in, {}
         end
         
+        def Parameter.s_that_must_change
+          self.find_by(:must_change=>true).inject({}) do |acc, param|
+            acc[param.name] = param.default_val
+            acc
+          end
+        end
+        
         private
         
         include ArcUtils
