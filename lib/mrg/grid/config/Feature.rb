@@ -84,7 +84,7 @@ module Mrg
           fl = FakeList.normalize(features).to_a
           
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
-          DirtyElement.dirty_feature(self);
+          mark_dirty
         end
         
         expose :ModifyFeatures do |args|
@@ -140,7 +140,7 @@ module Mrg
         def ClearParams
           log.debug "ClearParams called on feature #{self.inspect}"
           FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
-          DirtyElement.dirty_feature(self);
+          mark_dirty
           0
         end
         
@@ -192,7 +192,7 @@ module Mrg
             self.ModifyParams("ADD",pvmap,options)
           else raise ArgumentError.new("invalid command #{command}")
           end
-          DirtyElement.dirty_feature(self);
+          mark_dirty
         end
         
         expose :ModifyParams do |args|
@@ -224,7 +224,7 @@ module Mrg
           log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           
           modify_arcs(command,conflicts.keys,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
-          DirtyElement.dirty_feature(self);
+          mark_dirty
         end
         
         expose :ModifyConflicts do |args|
@@ -258,7 +258,7 @@ module Mrg
           
           depends = FakeList.normalize(depends).to_a
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
-          DirtyElement.dirty_feature(self);
+          mark_dirty
         end
         
         expose :ModifyDepends do |args|
@@ -290,7 +290,7 @@ module Mrg
           log.debug "ModifySubsys: subsys => #{subsys.inspect}"
 
           modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
-          DirtyElement.dirty_feature(self);
+          mark_dirty
         end
         
         expose :ModifySubsys do |args|
@@ -348,8 +348,22 @@ module Mrg
         )
         QUERY
         
+        declare_custom_query :immed_edge_to, <<-QUERY
+        SELECT * FROM __TABLE__ WHERE row_id IN (SELECT source FROM featurearc WHERE dest = :dest and label = :label)
+        QUERY
+        
         private
         include ArcUtils
+        
+        # convenience method to mark this dirty as well as any feature that includes this
+        def mark_dirty
+          DirtyElement.dirty_feature(self)
+          included_by.each {|feature| feature.send(:mark_dirty)}
+        end
+        
+        def included_by
+          Feature.immed_edge_to(:dest=>self, :label=>ArcLabel.inclusion('feature'))
+        end
         
         def depends
           find_arcs(FeatureArc,ArcLabel.depends_on('feature')) {|a| a.dest.name }
