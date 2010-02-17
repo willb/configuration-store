@@ -196,10 +196,23 @@ module Mrg
         #        enable F', or enable some feature F'' that includes F'
         #  2.  if N enables some feature F that depends on some param P being set,
         #        N must provide a value for P
-        #  
-        #  Other consistency properties are ensured by other parts of the database (e.g. that a group)
+        #    
+        #  Other consistency properties are ensured by other parts of the store (e.g.
+        #  that a group does not enable conflicting features).  Returns true if the
+        #  configuration is valid, or an explanation if it is not.
+        
+        
         def validate
+          orphaned_deps = Feature.dependencies_for_node(self) - Feature.features_for_node(self)
+          orphaned_params = [] # FIXME
           
+          return true if orphaned_deps == [] && orphaned_params == []
+          
+          result = {}
+          result["Unsatisfied feature dependencies"] = orphaned_deps if orphaned_deps != []
+          result["Unsatisfied parameter dependencies"] = orphaned_params if orphaned_params != []
+          
+          [self.name, result]
         end
         
         declare_custom_query :get_dirty_nodes, <<-QUERY
