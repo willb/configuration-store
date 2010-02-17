@@ -84,7 +84,7 @@ module Mrg
           fl = FakeList.normalize(features).to_a
           
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
-          mark_dirty
+          self_to_dirty_list
         end
         
         expose :ModifyFeatures do |args|
@@ -140,7 +140,7 @@ module Mrg
         def ClearParams
           log.debug "ClearParams called on feature #{self.inspect}"
           FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
-          mark_dirty
+          self_to_dirty_list
           0
         end
         
@@ -192,7 +192,7 @@ module Mrg
             self.ModifyParams("ADD",pvmap,options)
           else raise ArgumentError.new("invalid command #{command}")
           end
-          mark_dirty
+          self_to_dirty_list
         end
         
         expose :ModifyParams do |args|
@@ -224,7 +224,7 @@ module Mrg
           log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           
           modify_arcs(command,conflicts.keys,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
-          mark_dirty
+          self_to_dirty_list
         end
         
         expose :ModifyConflicts do |args|
@@ -258,7 +258,7 @@ module Mrg
           
           depends = FakeList.normalize(depends).to_a
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
-          mark_dirty
+          self_to_dirty_list
         end
         
         expose :ModifyDepends do |args|
@@ -290,7 +290,7 @@ module Mrg
           log.debug "ModifySubsys: subsys => #{subsys.inspect}"
 
           modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
-          mark_dirty
+          self_to_dirty_list
         end
         
         expose :ModifySubsys do |args|
@@ -356,9 +356,9 @@ module Mrg
         include ArcUtils
         
         # convenience method to mark this dirty as well as any feature that includes this
-        def mark_dirty
+        def self_to_dirty_list
           DirtyElement.dirty_feature(self)
-          included_by.each {|feature| feature.send(:mark_dirty)}
+          included_by.each {|feature| feature.send(:self_to_dirty_list)}
         end
         
         def included_by
