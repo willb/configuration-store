@@ -36,10 +36,13 @@ module Mrg
         
         declare_column :provisioned, :boolean, :default, :true
         declare_column :last_checkin, :integer
+        declare_column :last_updated_version, :integer
         
         qmf_property :name, :sstr, :index=>true
         qmf_property :provisioned, :bool
         qmf_property :last_checkin, :uint64
+        qmf_property :last_updated_version, :uint64
+        
         ### Schema method declarations
         
         [:MakeProvisioned, :MakeUnprovisioned].each do |name|
