@@ -15,6 +15,9 @@ module Mrg
       class Store
       end
       
+      class DirtyElement
+      end
+      
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
@@ -175,6 +178,8 @@ module Mrg
         #        enable F', or enable some feature F'' that includes F'
         #  2.  if N enables some feature F that depends on some param P being set,
         #        N must provide a value for P
+        #  3.  if N sets some param P that depends on some other param P',
+        #        N must also set P'
         #    
         #  Other consistency properties are ensured by other parts of the store (e.g.
         #  that a group does not enable conflicting features).  Returns true if the
@@ -182,19 +187,27 @@ module Mrg
         
         
         def validate
+          my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
           orphaned_deps = Feature.dependencies_for_node(self) - Feature.features_for_node(self)
-          orphaned_params = [] # FIXME
+          unset_params = my_unset_params(my_config)
+          orphaned_params = []
           
-          return true if orphaned_deps == [] && orphaned_params == []
+          return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
           
           result = {}
           result["Unsatisfied feature dependencies"] = orphaned_deps if orphaned_deps != []
+          result["Unset necessary parameters"] = unset_params if unset_params != []
           result["Unsatisfied parameter dependencies"] = orphaned_params if orphaned_params != []
           
           [self.name, result]
         end
         
-        declare_custom_query :get_dirty_nodes, <<-QUERY
+        def Node.get_dirty_nodes
+          return Node.find_all() if DirtyElement.find_first_by_kind(DirtyElement.const_get("KIND_EVERYTHING"))
+          Node._get_dirty_nodes
+        end
+        
+        declare_custom_query :_get_dirty_nodes, <<-QUERY
 SELECT * FROM __TABLE__ WHERE row_id IN (
   SELECT nodemembership.node AS node FROM dirtyelement JOIN nodemembership WHERE dirtyelement.grp = nodemembership.grp UNION 
   SELECT node FROM dirtyelement UNION
@@ -205,6 +218,17 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         QUERY
 
         private
+        
+        def my_unset_params(my_config = nil)
+          my_config ||= self.GetConfig
+          mc_params = Parameter.s_that_must_change
+          (my_config.keys & mc_params.keys).inject([]) do |acc,param|
+            dv = Parameter.find_first_by_name(param).default_val
+            acc << param if my_config[param] = dv
+            acc
+          end
+        end
+          
         def my_features
           my_groups.inject([]) do |acc, grp|
             current_features = grp.features
