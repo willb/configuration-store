@@ -209,7 +209,7 @@ module Mrg
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command.inspect}"
           log.debug "ModifyDepends: depends => #{deps.inspect}"
-          modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon")
+          modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
         end
         
@@ -254,6 +254,15 @@ module Mrg
         def Parameter.s_that_must_change
           self.find_by(:must_change=>true).inject({}) do |acc, param|
             acc[param.name] = param.default_val
+            acc
+          end
+        end
+        
+        def x_depends(xtra = nil)
+          xtra ||= []
+          (depends | xtra).inject([]) do |acc,prm|
+            acc << prm
+            acc |= Parameter.find_first_by_name(prm).x_depends
             acc
           end
         end

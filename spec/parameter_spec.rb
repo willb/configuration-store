@@ -102,6 +102,21 @@ module Mrg
           deps.keys.size.should == added_deps.size
           added_deps.keys.each {|dep| deps.keys.should include(dep) }
         end
+        
+        it "rejects dependency cycles" do
+          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          params = param_names.map {|p| @store.AddParam(p) }
+          
+          params.each_cons(2) do |source, dest|
+            source.ModifyDepends("ADD", FakeSet[*dest.name], {})
+            deps = source.GetDepends
+            deps.keys.size.should == 1
+            deps.keys.should include(dest.name)
+          end
+          
+          lambda { params[-1].ModifyDepends("ADD", FakeSet[*params[0].name], {}) }.should raise_error
+
+        end
 
         it "adds dependencies idempotently" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
