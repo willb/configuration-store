@@ -388,14 +388,13 @@ module Mrg
           args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
         end
 
-        # <method name="LoadSnapshot">
-        #    <arg name="name" dir="I" type="sstr"/>
-        # </method>
-        # 
-        # <method name="RemoveSnapshot">
-        #    <arg name="name" dir="I" type="sstr"/>
-        # </method>
+        def GetMustChangeParams
+          Parameter.s_that_must_change
+        end
         
+        expose :GetMustChangeParams do |args|
+          args.declare :params, :map, :out, :desc=>"Parameters that must change; a map from names to default values"
+        end
         
         private
         def clear_db
