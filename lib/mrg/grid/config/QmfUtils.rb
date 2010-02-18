@@ -27,9 +27,7 @@ module Mrg
         end
         
         def to_h
-          result = {}
-          result.merge(self)
-          result
+          {}.merge(self)
         end
       end
       
