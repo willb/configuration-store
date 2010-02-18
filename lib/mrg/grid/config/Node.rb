@@ -55,6 +55,14 @@ module Mrg
           expose name do |args| ; end
         end
         
+        def checkin()
+          log.debug "node #{self.inspect} checking in"
+          self.last_checkin = ::Rhubarb::Util::timestamp
+        end
+        
+        expose :checkin do |args|
+        end
+        
         # GetLastCheckinTime 
         # * time (uint32/O)
         def GetLastCheckinTime()
