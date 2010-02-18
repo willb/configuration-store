@@ -94,6 +94,9 @@ module Mrg
 
           config = config.merge(idgroup.GetConfig)
           
+          # XXX: this will change once we have configuration versioning
+          config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
+          
           config
         end
         
