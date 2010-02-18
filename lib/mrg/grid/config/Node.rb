@@ -95,7 +95,7 @@ module Mrg
             end
           end
 
-          config = idgroup.GetConfig.inject(config) do |acc, (k,v)|
+          config = self.GetIdentityGroup.GetConfig.inject(config) do |acc, (k,v)|
             acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
             acc
           end
@@ -268,7 +268,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         end
 
         def my_groups
-          [Group.DEFAULT_GROUP] + memberships + [idgroup]
+          [Group.DEFAULT_GROUP] + memberships + [self.GetIdentityGroup]
         end
         
         def idgroupname
