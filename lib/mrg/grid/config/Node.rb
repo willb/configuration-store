@@ -202,7 +202,15 @@ module Mrg
         
         def validate
           my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
-          orphaned_deps = (Feature.dependencies_for_node(self) - Feature.features_for_node(self)).map {|f| f.name}
+          log.debug "in Node#validate for #{self.name}..."
+          
+          dfn = Feature.dependencies_for_node(self)
+          log.debug "dependencies for node is #{dfn}"
+          
+          ffn = Feature.features_for_node(self)
+          log.debug "features for node is #{ffn}"
+          
+          orphaned_deps = (dfn - ffn).reject {|f| f == nil }.map {|f| f.name}
           unset_params = my_unset_params(my_config)
           my_params = Parameter.s_for_node(self)
           my_param_deps = Parameter.dependencies_for_node(self, my_params)
