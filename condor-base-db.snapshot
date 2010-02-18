@@ -484,7 +484,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FULL_HOSTNAME)
+  default_val: ""
   depends: []
 
   description: The list of Central Managers in the pool
@@ -508,7 +508,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FULL_HOSTNAME)
+  default_val: ""
   depends: []
 
   description: The hostname(s) of the machine(s) running the Scheduler
@@ -532,7 +532,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FULL_HOSTNAME)
+  default_val: ""
   depends: []
 
   description: Hosts with administrator access
@@ -544,7 +544,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: MASTER
+  default_val: ""
   depends: []
 
   description: The daemons the condor_master will start and monitor
@@ -700,7 +700,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: DedicatedScheduler@$(FULL_HOSTNAME)
+  default_val: ""
   depends: []
 
   description: The dedicated scheduler managing a dedicated resource
@@ -808,7 +808,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "1000000"
+  default_val: ""
   depends: []
 
   description: Multiplier used to create a high RANK value
@@ -1024,7 +1024,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FULL_HOSTNAME)
+  default_val: ""
   depends: []
 
   description: The machines with Negotiator access
@@ -2117,7 +2117,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FLOCK_TO)
+  default_val: ""
   depends: []
 
   description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
@@ -2201,7 +2201,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(CONDOR_HOST)
+  default_val: ""
   depends: []
 
   description: Allows changing of the port the Collector listens on
@@ -2561,7 +2561,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(FLOCK_TO)
+  default_val: ""
   depends: []
 
   description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
