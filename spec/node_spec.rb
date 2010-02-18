@@ -117,6 +117,59 @@ module Mrg
           n.GetMemberships.should == FakeList[*groupnames]
         end
         
+        it "should not be possible to reproduce Rob's failure case" do
+          node = @store.AddNode("guineapig.local.")
+          group = @store.AddExplicitGroup("FAILNODES")
+          
+          # step 1:  add two mustchange params (and some other params for good measure)
+          %w{FIRST SECOND THIRD FOURTH FIFTH}.each {|nm| @store.AddParam(nm).SetDefaultMustChange(true)}
+          
+          # step 2:  create a feature that has these params enabled
+          feature = @store.AddFeature("Pony Accelerator")
+          feature.ModifyParams("ADD", {"FIRST"=>0, "SECOND"=>0}, {})
+          
+          node.validate.should == true  # we haven't added this node to any groups yet
+          
+          # step 3:  add this feature to a group
+          group.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          node.validate.should == true  # we haven't added this node to any groups yet
+          
+          # step 4:  add this group to a node
+          node.ModifyMemberships("ADD", FakeList[group.name], {})
+          node.validate.should_not == true
+          node.validate[1]["Unset necessary parameters"].should_not == nil
+          node.validate[1]["Unset necessary parameters"].keys.size.should == 2
+          node.validate[1]["Unset necessary parameters"].keys.should include("FIRST")
+          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          
+          # step 5:  add param one to the default group
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"FIRST"=>"fooblitz"}, {})
+          node.GetConfig["FIRST"].should == "fooblitz"
+          node.validate.should_not == true
+          node.validate[1]["Unset necessary parameters"].should_not == nil
+          node.validate[1]["Unset necessary parameters"].keys.size.should == 1
+          node.validate[1]["Unset necessary parameters"].keys.should_not include("FIRST")
+          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          
+          # step 6:  add param two to the group
+          group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
+          node.validate.should == true
+
+          # step 7:  remove param two from the group
+          group.ModifyParams("REMOVE", {"SECOND"=>"blahrific"}, {})
+          node.validate.should_not == true
+          node.validate[1]["Unset necessary parameters"].should_not == nil
+          node.validate[1]["Unset necessary parameters"].keys.size.should == 1
+          node.validate[1]["Unset necessary parameters"].keys.should_not include("FIRST")
+          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          
+          # step 8:  add param two to the group
+          group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
+          node.validate.should == true
+
+          
+        end
 
       end
       

@@ -305,7 +305,7 @@ module Mrg
           end
           
           self.GetParams.each do |k,v|
-            dict[k] = v
+            dict[k] = v unless (dict.has_key?(k) && !v)
           end
           dict
         end

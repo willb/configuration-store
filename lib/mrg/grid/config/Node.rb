@@ -89,10 +89,16 @@ module Mrg
             log.debug("#{self.name} is a member of #{grp.name}")
             log.debug("#{grp.name} has #{grp.features.size} features")
             
-            config = config.merge(grp.GetConfig)
+            config = grp.GetConfig.inject(config) do |acc, (k,v)|
+              acc[k] = v unless (acc.has_key?(k) && !v)
+              acc
+            end
           end
 
-          config = config.merge(idgroup.GetConfig)
+          config = idgroup.GetConfig.inject(config) do |acc, (k,v)|
+            acc[k] = v unless (acc.has_key?(k) && !v)
+            acc
+          end
           
           # XXX: this will change once we have configuration versioning
           config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
