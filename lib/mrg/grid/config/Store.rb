@@ -167,12 +167,26 @@ module Mrg
         
         # ActivateConfiguration 
         # * explain (map/O)
-        #   A map containing an explanation of why the configuration isn't valid, or the single key "OK" if the configuration was successfully pushed out
+        #   A map containing an explanation of why the configuration isn't valid, or
+        #   an empty map if the configuration was successfully pushed out
+        
         def ActivateConfiguration()
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
+          dirty_nodes = Node.get_dirty_nodes
+          this_version = ::Rhubarb::Util::timestamp
+          
+          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten(1)]
+          
+          if results.keys.size > 0
+            return results
+          end
+                    
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
+          
+          DirtyElement.delete_all
+          
+          # XXX:  send events
+          
+          results
         end
         
         expose :ActivateConfiguration do |args|
