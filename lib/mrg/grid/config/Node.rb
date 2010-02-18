@@ -240,7 +240,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
           mc_params = Parameter.s_that_must_change
           (my_config.keys & mc_params.keys).inject([]) do |acc,param|
             dv = Parameter.find_first_by_name(param).default_val
-            acc << param if my_config[param] = dv
+            acc << param if my_config[param] == dv
             acc
           end
         end
