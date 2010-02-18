@@ -423,6 +423,7 @@ module Mrg
           event = Qmf::QmfEvent.new(event_class)
           log.debug "event is #{event.inspect}"
           event.nodelist = map
+          event.nodelist_str = map.keys.join(",")
           log.debug "event.nodelist is #{event.nodelist.inspect}"
           app.agent.raise_event(event)
         end
@@ -441,6 +442,7 @@ module Mrg
         def init_event_class
           event_class = Qmf::SchemaEventClass.new("mrg.grid.config", "NewConfigEvent", Qmf::SEV_ALERT)
           event_class.add_argument(Qmf::SchemaArgument.new("nodelist", Qmf::TYPE_MAP))
+          event_class.add_argument(Qmf::SchemaArgument.new("nodelist_str", Qmf::TYPE_LSTR))
           app.agent.register_class(event_class)
           event_class
         end
