@@ -415,8 +415,8 @@ module Mrg
         end
         
         def new_config_event(nodes, version)
-          log.debug "ENTERING new_config_event; if you don't see a STILL HERE message soon, we're not raising an event"
-          return nil unless (self.respond_to?(:app) && self.app)
+          log.debug "ENTERING new_config_event with app == #{app.inspect}; if you don't see a STILL HERE message soon, we're not raising an event"
+          return nil unless (Store.respond_to?(:app) && app)
           log.debug "STILL HERE in scenic new_config_event"
           
           map = Hash[*nodes.zip([version] * nodes.length).flatten]
@@ -429,7 +429,7 @@ module Mrg
         
         private
         def app
-          self.class.app
+          Store.app rescue nil
         end
         
         def clear_db
