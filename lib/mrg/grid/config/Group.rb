@@ -262,7 +262,7 @@ module Mrg
           # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
           params.each do |k,v|
             log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-            if v.slice!(/^>=/)
+            if (v && v.slice!(/^>=/))
               config[k] = config.has_key?(k) ? "#{config[k]}, #{v.strip}" : v.strip
             else
               config[k] = v
