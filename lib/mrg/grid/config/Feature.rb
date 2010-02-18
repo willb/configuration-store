@@ -338,7 +338,7 @@ module Mrg
         end
         
         def Feature.dependencies_for_node(n)
-          features_for_node(n).map {|f| f.x_depends}.uniq.map {|fn| Feature.find_first_by_name(fn)}
+          features_for_node(n).map {|f| f.x_depends}.flatten.uniq.map {|fn| Feature.find_first_by_name(fn)}
         end
         
         declare_custom_query :_features_for_node, <<-QUERY

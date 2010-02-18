@@ -415,7 +415,7 @@ module Mrg
         end
         
         def new_config_event(nodes, version)
-          return nil unless self.respond_to? :app
+          return nil unless (self.respond_to? :app && self.app)
           
           map = Hash[*nodes.zip([version] * nodes.length).flatten]
           event = Qmf::QmfEvent.new(event_class)
