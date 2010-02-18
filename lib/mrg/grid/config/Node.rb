@@ -74,7 +74,7 @@ module Mrg
         end
         
         expose :GetLastCheckinTime do |args|
-          args.declare :time, :uint32, :out, {}
+          args.declare :time, :uint64, :out, {}
         end
         
         # GetConfig 
