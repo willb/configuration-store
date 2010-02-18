@@ -440,7 +440,7 @@ module Mrg
         
         def init_event_class
           event_class = Qmf::SchemaEventClass.new("mrg.grid.config", "NewConfigEvent", Qmf::SEV_ALERT)
-          event_class.add_argument(Qmf::SchemaArgument.new("nodelist"), Qmf::TYPE_MAP)
+          event_class.add_argument(Qmf::SchemaArgument.new("nodelist", Qmf::TYPE_MAP))
           app.agent.register_class(event_class)
           event_class
         end
