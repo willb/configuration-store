@@ -174,7 +174,7 @@ module Mrg
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
           
-          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten(1)]
+          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]
           
           if results.keys.size > 0
             return results

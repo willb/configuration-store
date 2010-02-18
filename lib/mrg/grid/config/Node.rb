@@ -211,9 +211,9 @@ module Mrg
           return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
           
           result = {}
-          result["Unsatisfied feature dependencies"] = orphaned_deps if orphaned_deps != []
-          result["Unset necessary parameters"] = unset_params if unset_params != []
-          result["Unsatisfied parameter dependencies"] = orphaned_params if orphaned_params != []
+          result["Unsatisfied feature dependencies"] = FakeSet[*orphaned_deps].to_h if orphaned_deps != []
+          result["Unset necessary parameters"] = FakeSet[*unset_params].to_h if unset_params != []
+          result["Unsatisfied parameter dependencies"] = FakeSet[*orphaned_params].to_h if orphaned_params != []
           
           [self.name, result]
         end

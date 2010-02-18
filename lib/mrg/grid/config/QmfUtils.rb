@@ -25,6 +25,12 @@ module Mrg
         def to_a
           self.keys
         end
+        
+        def to_h
+          result = {}
+          result.merge(self)
+          result
+        end
       end
       
       class FakeList < Hash
