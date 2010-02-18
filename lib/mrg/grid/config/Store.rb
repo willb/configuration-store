@@ -184,7 +184,7 @@ module Mrg
           
           DirtyElement.delete_all
           
-          new_config_event(dirty_nodes, this_version)
+          new_config_event(dirty_nodes.map {|dn| dn.name}, this_version)
           
           results
         end
