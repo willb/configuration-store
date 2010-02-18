@@ -416,7 +416,7 @@ module Mrg
         
         def new_config_event(nodes, version)
           log.debug "ENTERING new_config_event; if you don't see a STILL HERE message soon, we're not raising an event"
-          return nil unless (self.respond_to? :app && self.app)
+          return nil unless (self.respond_to?(:app) && self.app)
           log.debug "STILL HERE in scenic new_config_event"
           
           map = Hash[*nodes.zip([version] * nodes.length).flatten]
@@ -428,6 +428,10 @@ module Mrg
         end
         
         private
+        def app
+          self.class.app
+        end
+        
         def clear_db
           MAIN_DB_TABLES.each do |table|
             table.delete_all rescue table.find_all.each {|row| row.delete}
