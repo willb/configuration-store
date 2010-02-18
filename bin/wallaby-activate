@@ -2,17 +2,15 @@
 
 require 'qmf'
 require 'mrg/grid/config-client'
-require 'mrg/grid/config-proxies'
 
 host = "localhost"
 port = 5672
 username = nil
 password = nil
 debug = :warn
-activate = false
 
 op = OptionParser.new do |opts|
-  opts.banner = "Usage wallaby-load [options] file"
+  opts.banner = "Usage wallaby-activate [options]"
 
   opts.on("-h", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
     host = h
@@ -29,11 +27,6 @@ op = OptionParser.new do |opts|
   opts.on("-P", "--password PASS", "qpid password") do |pass|
     password = pass
   end
-
-  opts.on("-a", "--activate", "attempt to activate config after loading") do
-    activate = true
-  end
-
 end
 
 begin
@@ -42,8 +35,6 @@ rescue OptionParser::InvalidOption
   puts op
   exit
 end
-
-input = (ARGV.size > 0 ? open(ARGV[0]) : $stdin)
 
 console = Qmf::Console.new
 
@@ -60,24 +51,17 @@ broker = console.add_connection(connection)
 broker.wait_for_stable
 
 store = console.object(:class=>"Store")
-store.storeinit("resetdb"=>"yes")
 
 store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
-s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(store_client, input.read)
-
-s.load
-
-if activate
-  explain = store_client.ActivateConfig
-  if explain != {}
-    puts "Failed to activate configuration; please correct the following errors."
-    explain.each do |node, node_explain|
-      puts "#{node}:"
-      node_explain.each do |reason, ls|
-        puts "  #{reason}: #{ls.inspect}"
-      end
+explain = store_client.ActivateConfig
+if explain != {}
+  puts "Failed to activate configuration; please correct the following errors."
+  explain.each do |node, node_explain|
+    puts "#{node}:"
+    node_explain.each do |reason, ls|
+      puts "  #{reason}: #{ls.inspect}"
     end
-    exit(1)
   end
+  exit(1)
 end

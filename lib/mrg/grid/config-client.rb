@@ -301,6 +301,17 @@ module Mrg
           @qmfo.RemoveSubsys(name)
           nil
         end
+        
+        def ActivateConfig
+          explain = @qmfo.ActivateConfig.explain
+          explain.inject({}) do |acc, (node, node_explain)|
+            acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|
+              ne_acc[reason] = ls.keys
+              ne_acc
+            end
+            acc
+          end
+        end
 
         private
         include ObjResolver
