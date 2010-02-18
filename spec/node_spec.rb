@@ -167,8 +167,6 @@ module Mrg
           # step 8:  add param two to the group
           group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
           node.validate.should == true
-
-          
         end
 
       end
