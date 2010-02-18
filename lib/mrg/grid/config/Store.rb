@@ -184,7 +184,7 @@ module Mrg
           
           DirtyElement.delete_all
           
-          # XXX:  send events
+          new_config_event(dirty_nodes, this_version)
           
           results
         end
@@ -410,12 +410,33 @@ module Mrg
           args.declare :params, :map, :out, :desc=>"Parameters that must change; a map from names to default values"
         end
         
+        def event_class
+          @event_class ||= init_event_class
+        end
+        
+        def new_config_event(nodes, version)
+          return nil unless self.respond_to? :app
+          
+          map = Hash[*nodes.zip([version] * nodes.length).flatten]
+          event = Qmf::QmfEvent.new(event_class)
+          event.nodelist = map
+          app.agent.raise_event(event)
+        end
+        
         private
         def clear_db
           MAIN_DB_TABLES.each do |table|
             table.delete_all rescue table.find_all.each {|row| row.delete}
           end
         end
+        
+        def init_event_class
+          event_class = Qmf::SchemaEventClass.new("mrg.grid.config", "NewConfigEvent", Qmf::SEV_ALERT)
+          event_class.add_argument(Qmf::SchemaArgument.new("nodelist"), Qmf::TYPE_MAP)
+          app.agent.register_class(event_class)
+          event_class
+        end
+        
       end
     end
   end
