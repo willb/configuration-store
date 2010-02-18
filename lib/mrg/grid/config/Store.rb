@@ -415,11 +415,15 @@ module Mrg
         end
         
         def new_config_event(nodes, version)
+          log.debug "ENTERING new_config_event; if you don't see a STILL HERE message soon, we're not raising an event"
           return nil unless (self.respond_to? :app && self.app)
+          log.debug "STILL HERE in scenic new_config_event"
           
           map = Hash[*nodes.zip([version] * nodes.length).flatten]
           event = Qmf::QmfEvent.new(event_class)
+          log.debug "event is #{event.inspect}"
           event.nodelist = map
+          log.debug "event.nodelist is #{event.nodelist.inspect}"
           app.agent.raise_event(event)
         end
         
