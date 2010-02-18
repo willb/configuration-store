@@ -259,9 +259,15 @@ module Mrg
           end
           
           # apply group-specific param settings
+          # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
           params.each do |k,v|
             log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-            config[k] = v
+            if v.slice!(/^>=/)
+              config[k] = config.has_key?(k) ? "#{config[k]}, #{v.strip}" : v.strip
+            else
+              config[k] = v
+            end
+            
             log.debug("config is #{config.inspect}")
           end
           

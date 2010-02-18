@@ -90,13 +90,23 @@ module Mrg
             log.debug("#{grp.name} has #{grp.features.size} features")
             
             config = grp.GetConfig.inject(config) do |acc, (k,v)|
-              acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
+              if v.slice!(/^>=/)
+                acc[k] = acc.has_key?(k) ? "#{acc[k]}, #{v.strip}" : v.strip
+              else
+                acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
+              end
+              
               acc
             end
           end
 
           config = self.GetIdentityGroup.GetConfig.inject(config) do |acc, (k,v)|
-            acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
+            if v.slice!(/^>=/)
+              acc[k] = acc.has_key?(k) ? "#{acc[k]}, #{v.strip}" : v.strip
+            else
+              acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
+            end
+            
             acc
           end
           

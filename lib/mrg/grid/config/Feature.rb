@@ -305,7 +305,11 @@ module Mrg
           end
           
           self.GetParams.each do |k,v|
-            dict[k] = v unless (dict.has_key?(k) && (!v || v == ""))
+            if v.slice!(/^>=/)
+              dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v.strip}" : v.strip
+            else
+              dict[k] = v unless (dict.has_key?(k) && (!v || v == ""))
+            end
           end
           dict
         end
