@@ -146,18 +146,20 @@ module Mrg
         end
 
         it "should detect when parameters are added to the default group" do
-          param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
+          param_names = ["BIOTECH"] + ("XAA".."XDZ").to_a
           params = param_names.map {|p| @store.AddParam(p) }
+          
+          params_to_add = param_names.sort_by { rand }.slice(0,15)
           
           node = @store.AddNode("frotz")
           
-          Group.DEFAULT_GROUP.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          Group.DEFAULT_GROUP.ModifyParams("ADD", Hash[*params_to_add.map{|p| [p, p.downcase]}.flatten])
           
           pfn = Parameter.s_for_node(node)
           
-          pfn.size.should == param_names.size
+          pfn.size.should == params_to_add.size
           
-          param_names.each do |prm|
+          params_to_add.each do |prm|
             pfn.should include(prm)
           end
         end
