@@ -4,7 +4,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: Credd
@@ -25,7 +25,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: Collector
@@ -49,7 +49,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - Scheduler
   name: DedicatedScheduler
   params: 
     DEDICATED_SCHEDULER_USE_FIFO: "TRUE"
@@ -61,7 +61,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: DynamicProvisioning
   params: 
     SLOT_TYPE_1_PARTITIONABLE: "TRUE"
@@ -76,7 +76,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: EC2
   params: 
     AMAZON_GAHP_LOG: /tmp/AmazonGahpLog.$(USERNAME)
@@ -88,8 +88,8 @@ features:
   conflicts: []
 
   depends: 
-  - 
-  - 
+  - Master
+  - Scheduler
   included: []
 
   name: JobRouter
@@ -110,7 +110,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: Negotiator
@@ -137,8 +137,8 @@ features:
   depends: []
 
   included: 
-  - 
-  - 
+  - Collector
+  - Negotiator
   name: CentralManager
   params: 
     ALLOW_WRITE: ""
@@ -177,7 +177,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - Negotiator
   name: ConcurrencyLimits
   params: 
     CONCURRENCY_LIMIT_DEFAULT: "200"
@@ -189,7 +189,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: DedicatedResource
   params: 
     RANK: SCHEDULER =?= $(DEDICATEDSCHEDULER) * $(RANK_FACTOR)
@@ -211,7 +211,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - CentralManager
   name: HACentralManager
   params: 
     TRANSFERER_LOG: $(LOG)/TransfererLog
@@ -250,7 +250,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - Scheduler
   name: HAScheduler
   params: 
     VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
@@ -269,7 +269,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: LowLatency
   params: 
     LL_DAEMON_PORT: "10000"
@@ -294,7 +294,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: Scheduler
@@ -325,7 +325,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: ExecuteNode
@@ -369,7 +369,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: VMUniverse
   params: 
     VM_TYPE: ""
@@ -387,7 +387,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - JobRouter
   name: EC2Enhanced
   params: 
     NEED_SET_EC2E_ROUTES: "TRUE"
@@ -407,7 +407,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - DedicatedResource
   name: ExecuteNodeDedicatedPreemption
   params: 
     STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
@@ -419,7 +419,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - DedicatedScheduler
   name: SchedulerDedicatedPreemption
   params: 
     SCHEDD_PREEMPTION_RANK: "0"
@@ -430,7 +430,7 @@ features:
   conflicts: []
 
   depends: 
-  - 
+  - Master
   included: []
 
   name: TriggerService
@@ -452,7 +452,7 @@ features:
   depends: []
 
   included: 
-  - 
+  - ExecuteNode
   name: ExecuteNodeTriggerData
   params: 
     TRIGGER_DATA_GETDATA_PERIOD: 5m
