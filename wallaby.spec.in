@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 0.2
+%define rel 1.0
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -55,6 +55,7 @@ mkdir -p %{buildroot}/%{_bindir}
 cp -f bin/wallaby-dump %{buildroot}/%{_bindir}
 cp -f bin/wallaby-load %{buildroot}/%{_bindir}
 cp -f bin/wallaby-inventory %{buildroot}/%{_bindir}
+cp -f bin/wallaby-activate %{buildroot}/%{_bindir}
 cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
@@ -76,6 +77,7 @@ rm -rf %{buildroot}
 %{_bindir}/wallaby-load
 %{_bindir}/wallaby-dump
 %{_bindir}/wallaby-inventory
+%{_bindir}/wallaby-activate
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
@@ -102,5 +104,10 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 
 %changelog
+* Fri Feb 19 2010 willb <willb@redhat> - 0.2.0-0.1
+- Event functionality
+- Configuration activation
+- wallaby-activate tool
+
 * Wed Feb 10 2010 rrati <rrati@redhat> - 0.1.0-0.1
 - Initial package
