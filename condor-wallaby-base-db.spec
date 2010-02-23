@@ -1,4 +1,4 @@
-%define rel 0.2
+%define rel 0.3
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Tue Feb 23 2010 rrati <rrati@redhat> - 1.0-0.3
+- Added UID_DOMAIN and FILESYSTEM_DOMAIN params & features that use them
+
 * Fri Feb 19 2010 rrati <rrati@redhat> - 1.0-0.2
 - Removed default values for parameters that must be set when used
 
