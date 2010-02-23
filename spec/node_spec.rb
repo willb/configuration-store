@@ -232,8 +232,8 @@ module Mrg
           end
         end
 
-        it "should properly append StringSet values to features added from the default group" do
-           node = @store.AddNode("guineapig.local.")
+        it "should properly append StringSet values to features added from the default group and parameters from the identity group" do
+          node = @store.AddNode("guineapig.local.")
           feature1 = @store.AddFeature("FOOFEATURE")
           feature2 = @store.AddFeature("BARFEATURE")
           
@@ -248,6 +248,32 @@ module Mrg
           
           config.should have_key("STRINGSET")
           stringset_values = config["STRINGSET"].split(/, |,| /)
+          stringset_values.size.should == 3
+          %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+          %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
+        end
+
+
+        it "should properly append StringSet values to features added from the default group and features from the identity group" do
+          node = @store.AddNode("guineapig.local.")
+          feature1 = @store.AddFeature("FOOFEATURE")
+          feature2 = @store.AddFeature("BARFEATURE")
+          feature3 = @store.AddFeature("BLAHFEATURE")
+
+          param = @store.AddParam("STRINGSET")
+          
+          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
+          feature3.ModifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
+          
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+          node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature3.name], {})
+          config = node.GetConfig
+          
+          config.should have_key("STRINGSET")
+          stringset_values = config["STRINGSET"].split(/, |,| /)
+          puts "HEY!  STRINGSET is #{config["STRINGSET"]} and stringset_values is #{stringset_values.inspect}"
+
           stringset_values.size.should == 3
           %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
           %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
