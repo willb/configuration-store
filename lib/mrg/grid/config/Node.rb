@@ -95,27 +95,11 @@ module Mrg
             log.debug("#{self.name} is a member of #{grp.name}")
             log.debug("#{grp.name} has #{grp.features.size} features")
             
-            config = grp.GetConfig.inject(config) do |acc, (k,v)|
-              if (v && v.slice!(/^>=/))
-                acc[k] = acc.has_key?(k) ? "#{acc[k]}, #{v.strip}" : v.strip
-              else
-                acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
-              end
-              
-              acc
-            end
+            config = grp.apply_to(config)
           end
 
-          config = self.GetIdentityGroup.GetConfig.inject(config) do |acc, (k,v)|
-            if (v && v.slice!(/^>=/))
-              acc[k] = acc.has_key?(k) ? "#{acc[k]}, #{v.strip}" : v.strip
-            else
-              acc[k] = v unless (acc.has_key?(k) && (!v || v == ""))
-            end
-            
-            acc
-          end
-          
+          config = self.idgroup.apply_to(config)
+
           # XXX: this will change once we have configuration versioning
           config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
           

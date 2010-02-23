@@ -248,10 +248,7 @@ module Mrg
           args.declare :options, :map, :in, {}
         end
         
-        def GetConfig
-          log.debug "GetConfig called for group #{self.inspect}"
-          config = {}
-          
+        def apply_to(config, ss_prepend="")
           features.reverse_each do |feature|
             log.debug("applying config for #{feature.name}")
             config = feature.apply_to(config)
@@ -263,7 +260,8 @@ module Mrg
           params.each do |k,v|
             log.debug("applying config params #{k.inspect} --> #{v.inspect}")
             if (v && v.slice!(/^>=/))
-              config[k] = (config.has_key?(k) && config[k]) ? ">= #{config[k]}, #{v.strip}" : ">= #{v.strip}"
+              while v.slice!(/^>=/) ;  v.strip! ; end
+              config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v.strip}" : "#{ss_prepend}#{v.strip}"
             else
               config[k] = v
             end
@@ -272,6 +270,14 @@ module Mrg
           end
           
           config
+        end
+
+        def GetConfig
+          log.debug "GetConfig called for group #{self.inspect}"
+          
+          # prepend ">= " to stringset-valued params, because 
+          # we're going to print out the config for this group.
+          apply_to({}, ">= ") 
         end
         
         expose :GetConfig do |args|

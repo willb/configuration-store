@@ -272,7 +272,6 @@ module Mrg
           
           config.should have_key("STRINGSET")
           stringset_values = config["STRINGSET"].split(/, |,| /)
-          puts "HEY!  STRINGSET is #{config["STRINGSET"]} and stringset_values is #{stringset_values.inspect}"
 
           stringset_values.size.should == 3
           %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
