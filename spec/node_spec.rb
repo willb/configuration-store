@@ -177,7 +177,7 @@ module Mrg
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
 
             modify_memberships.call(node, group)
             config = node.GetConfig
@@ -192,7 +192,7 @@ module Mrg
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
 
             modify_memberships.call(node, group)
             config = node.GetConfig
@@ -207,7 +207,7 @@ module Mrg
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
 
             modify_memberships.call(node, group)
             config = node.GetConfig
@@ -222,7 +222,7 @@ module Mrg
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
 
             modify_memberships.call(node, group)
             config = node.GetConfig
@@ -231,7 +231,27 @@ module Mrg
             config["STRINGSET"].should_not match(/^>=/)
           end
         end
-        
+
+        it "should properly append StringSet values to features added from the default group" do
+           node = @store.AddNode("guineapig.local.")
+          feature1 = @store.AddFeature("FOOFEATURE")
+          feature2 = @store.AddFeature("BARFEATURE")
+          
+          param = @store.AddParam("STRINGSET")
+          
+          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
+          
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+          node.GetIdentityGroup.ModifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
+          config = node.GetConfig
+          
+          config.should have_key("STRINGSET")
+          stringset_values = config["STRINGSET"].split(/, |,| /)
+          stringset_values.size.should == 3
+          %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+          %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
+        end
 
 
         it "should properly append all StringSet parameter values from a default group and an explicit group" do
@@ -240,8 +260,8 @@ module Mrg
           
           param = @store.AddParam("STRINGSET")
           
-          Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
-          group.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+          group.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
           
           node.ModifyMemberships("ADD", FakeList[group.name], {})
           config = node.GetConfig
@@ -261,8 +281,8 @@ module Mrg
           
           param = @store.AddParam("STRINGSET")
           
-          feature1.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
-          feature2.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
           
           node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
           config = node.GetConfig
@@ -282,8 +302,8 @@ module Mrg
           
           param = @store.AddParam("STRINGSET")
           
-          group1.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
-          group2.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          group1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+          group2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
           
           node.ModifyMemberships("ADD", FakeList[group2.name, group1.name], {})
           config = node.GetConfig
