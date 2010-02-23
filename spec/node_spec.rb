@@ -168,10 +168,133 @@ module Mrg
           group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
           node.validate.should == true
         end
-
-      end
       
+        [["an explicit group", Proc.new {|store| store.AddExplicitGroup("SETNODES")}, Proc.new {|node, group| node.ModifyMemberships("ADD", FakeList[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
 
+          it "should include StringSet parameter values from #{from}" do
+            node = @store.AddNode("guineapig.local.")
+            group = group_locator.call(@store)
+
+            param = @store.AddParam("STRINGSET")
+
+            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+
+            modify_memberships.call(node, group)
+            config = node.GetConfig
+
+            config.should have_key("STRINGSET")
+            config["STRINGSET"].should match(/FOO/)
+          end
+
+          it "should not include commas after single StringSet parameter values from #{from}" do
+            node = @store.AddNode("guineapig.local.")
+            group = group_locator.call(@store)
+
+            param = @store.AddParam("STRINGSET")
+
+            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+
+            modify_memberships.call(node, group)
+            config = node.GetConfig
+
+            config.should have_key("STRINGSET")
+            config["STRINGSET"].should_not match(/,/)
+          end
+
+          it "should not include whitespace after single StringSet parameter values from #{from}" do
+            node = @store.AddNode("guineapig.local.")
+            group = group_locator.call(@store)
+
+            param = @store.AddParam("STRINGSET")
+
+            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+
+            modify_memberships.call(node, group)
+            config = node.GetConfig
+
+            config.should have_key("STRINGSET")
+            config["STRINGSET"].should match(/FOO$/)
+          end
+
+          it "should not include StringSet append indicators in parameter values from #{from}" do
+            node = @store.AddNode("guineapig.local.")
+            group = group_locator.call(@store)
+
+            param = @store.AddParam("STRINGSET")
+
+            group.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+
+            modify_memberships.call(node, group)
+            config = node.GetConfig
+
+            config.should have_key("STRINGSET")
+            config["STRINGSET"].should_not match(/^>=/)
+          end
+        end
+        
+
+
+        it "should properly append all StringSet parameter values from a default group and an explicit group" do
+          node = @store.AddNode("guineapig.local.")
+          group = @store.AddExplicitGroup("SETNODES")
+          
+          param = @store.AddParam("STRINGSET")
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+          group.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          
+          node.ModifyMemberships("ADD", FakeList[group.name], {})
+          config = node.GetConfig
+          
+          config.should have_key("STRINGSET")
+          stringset_values = config["STRINGSET"].split(/, |,| /)
+          
+          stringset_values.size.should == 2
+          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+        end
+        
+        it "should properly append all StringSet parameter values from two features" do
+          node = @store.AddNode("guineapig.local.")
+          feature1 = @store.AddFeature("FOOFEATURE")
+          feature2 = @store.AddFeature("BARFEATURE")
+          
+          param = @store.AddParam("STRINGSET")
+          
+          feature1.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+          feature2.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          
+          node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+          config = node.GetConfig
+          
+          config.should have_key("STRINGSET")
+          stringset_values = config["STRINGSET"].split(/, |,| /)
+          stringset_values.size.should == 2
+          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+        end
+        
+        
+        it "should properly append all StringSet parameter values from two explicit groups" do
+          node = @store.AddNode("guineapig.local.")
+          group2 = @store.AddExplicitGroup("FOONODES")
+          group1 = @store.AddExplicitGroup("BARNODES")
+          
+          param = @store.AddParam("STRINGSET")
+          
+          group1.ModifyParams("ADD", {"STRINGSET", ">= FOO"}, {})
+          group2.ModifyParams("ADD", {"STRINGSET", ">= BAR"}, {})
+          
+          node.ModifyMemberships("ADD", FakeList[group2.name, group1.name], {})
+          config = node.GetConfig
+          
+          config.should have_key("STRINGSET")
+          stringset_values = config["STRINGSET"].split(/, |,| /)
+          stringset_values.size.should == 2
+          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+        end
+      end
     end
   end
 end

@@ -83,6 +83,12 @@ module Mrg
         def GetConfig()
           log.debug "GetConfig called on node #{self.inspect}"
           config = Group.DEFAULT_GROUP.GetConfig
+          # strip StringSet markers from default group config
+          config.each do |(k,v)|
+            v.slice!(/^>=/)
+            config[k] = v.strip
+          end
+          
           log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
 
           memberships.reverse_each do |grp|
