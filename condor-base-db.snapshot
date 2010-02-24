@@ -76,7 +76,7 @@ features:
     BENCHMARKTIMER: (CurrentTime - LastBenchmark)
     WANT_VACATE: ( $(ActivationTimer) > 10 * $(MINUTE) || $(IsVanilla) )
     STARTD_ATTRS: "\"$(COLLECTOR_HOST)\", SmallJob, KeyboardNotBusy, IsVanilla, ActivationTimer, MINUTE, StartIdleTime, CPUIdle, KeyboardBusy, ContinueIdleTime, MaxSuspendTime, MaxVacateTime, HOUR, LastCkpt"
-    STARTD.PLUGINS: $(LIB)/MgmtStartdPlugin-plugin.so
+    STARTD.PLUGINS: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
     ALLOW_READ_STARTD: ""
   subsystems: []
 
