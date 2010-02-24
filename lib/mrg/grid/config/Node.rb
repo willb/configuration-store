@@ -21,6 +21,10 @@ module Mrg
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        
+        BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
+        UNSET_MUSTCHANGE_PARAMS = "Unset necessary parameters"
+        BROKEN_PARAM_DEPS = "Unsatisfied parameter dependencies"
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Node'
@@ -238,9 +242,9 @@ module Mrg
           return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
           
           result = {}
-          result["Unsatisfied feature dependencies"] = FakeSet[*orphaned_deps].to_h if orphaned_deps != []
-          result["Unset necessary parameters"] = FakeSet[*unset_params].to_h if unset_params != []
-          result["Unsatisfied parameter dependencies"] = FakeSet[*orphaned_params].to_h if orphaned_params != []
+          result[BROKEN_FEATURE_DEPS] = FakeSet[*orphaned_deps].to_h if orphaned_deps != []
+          result[UNSET_MUSTCHANGE_PARAMS] = FakeSet[*unset_params].to_h if unset_params != []
+          result[BROKEN_PARAM_DEPS] = FakeSet[*orphaned_params].to_h if orphaned_params != []
           
           [self.name, result]
         end
