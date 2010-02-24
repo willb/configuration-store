@@ -105,38 +105,6 @@ module Mrg
           args.declare :params, :map, :out, {}
         end
         
-        def GetParamsAsString
-          log.debug "GetParamsAsString called on feature #{self.inspect}"
-          hash = self.GetParams
-          "{"+hash.map{|pair| "#{pair[0].inspect}:#{pair[1].inspect}"}.join(",")+"}"
-        end
-        
-        expose :GetParamsAsString do |args|
-          args.declare :params, :lstr, :out, {}
-        end
-        
-        def AddParamMapping(param,value)
-          log.debug "AddParam:  param => #{param.inspect}"
-          log.debug "AddParam:  value => #{value.inspect}"
-          
-          self.ModifyParams("ADD", {param=>value})
-        end
-
-        expose :AddParamMapping do |args|
-          args.declare :param, :sstr, :in, {}
-          args.declare :value, :sstr, :in, {}
-        end
-
-        def RemoveParamMapping(param)
-          log.debug "RemoveParam:  param => #{param.inspect}"
-          
-          self.ModifyParams("REMOVE", {param=>true})
-        end
-
-        expose :RemoveParamMapping do |args|
-          args.declare :param, :sstr, :in, {}
-        end
-        
         def ClearParams
           log.debug "ClearParams called on feature #{self.inspect}"
           FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
