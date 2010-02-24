@@ -105,6 +105,9 @@ rm -rf %{buildroot}
 
 %changelog
 
+* Wed Feb 25 2010 willb <willb@redhat> - 0.2.5-1.0
+- Updated to source version 0.2.5
+
 * Wed Feb 25 2010 willb <willb@redhat> - 0.2.4-1.0
 - Updated to source version 0.2.4
 
