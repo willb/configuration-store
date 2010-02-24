@@ -505,6 +505,27 @@ module Mrg
           config["BLAH"].should == "BLARGH"
         end
 
+        it "should report the highest-priority parameter value in configurations that provide values for must-change parameters in multiple places" do
+          params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+          params.each {|param| param.SetDefaultMustChange(true)}
+          
+          features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+          features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+          node.idgroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
+          
+          config = node.GetConfig
+          
+          node.validate.should == true
+          config["FOO"].should == "ARGH"
+          config["BAR"].should == "BARGH"
+          config["BLAH"].should == "blargh"
+        end
 
       end
     end
