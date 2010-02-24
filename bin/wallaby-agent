@@ -5,16 +5,24 @@ require 'spqr/app'
 
 require 'mrg/grid/config'
 
+require 'logger'
+
 dbname = ":memory:"
 snapdb = ":memory:"
 host = "localhost"
 port = 5672
 username = nil
 password = nil
-debug = :warn
+logfile = nil
+debug = Logger::WARN
+logoptions = nil
 
 op = OptionParser.new do |opts|
   opts.banner = "Usage store-agent.rb [options]"
+  
+  opts.on("-l", "--logfile FILE", "file for wallaby-agent log") do |file|
+    logfile = file
+  end
   
   opts.on("-d", "--dbname FILE", "file for persistent storage (will be created if it doesn't exist)") do |db| 
     dbname = db
@@ -40,8 +48,8 @@ op = OptionParser.new do |opts|
     password = pass
   end
   
-  opts.on("-v", "--verbose", "output verbose debugging info") do
-    debug = :debug
+  opts.on("-v", "--verbose", "output verbose debugging info" "  (repeat for more verbosity)") do
+    debug = debug - 1 if debug > 0
   end
 end
 
@@ -80,6 +88,8 @@ end
 
 options = {}
 options[:loglevel] = debug
+options[:logfile] = logfile if logfile
+options[:appname] = "Wallaby configuration agent"
 options[:user] = username if username
 options[:password] = password if password
 options[:host] = host
