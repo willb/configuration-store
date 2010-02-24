@@ -141,6 +141,7 @@ module Mrg
         def GetIdentityGroup
           log.debug "GetIdentityGroup called on node #{self.inspect}"
           self.idgroup ||= id_group_init
+          self.idgroup
         end
 
         expose :GetIdentityGroup do |args|
@@ -293,8 +294,9 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         end
         
         def id_group_init
-          ig = Group.create(:name=>idgroupname, :is_identity_group=>true)
-          NodeMembership.create(:node=>self, :grp=>ig)
+          ig = Group.find_first_by_name(idgroupname)
+          ig = Group.create(:name=>idgroupname, :is_identity_group=>true) unless ig
+          NodeMembership.create(:node=>self, :grp=>ig) unless NodeMembership.find_by(:node=>self, :grp=>ig).size > 0
           ig
         end
         

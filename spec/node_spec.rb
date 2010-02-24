@@ -533,6 +533,10 @@ module Mrg
           end
         end
 
+
+        it "should have only one identity group" do
+          pending
+        end
       end
     end
   end
