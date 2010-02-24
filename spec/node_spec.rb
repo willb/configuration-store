@@ -117,6 +117,34 @@ module Mrg
           n.GetMemberships.should == FakeList[*groupnames]
         end
         
+        it "should be unprovisioned unless explicitly added" do
+          n = @store.GetNode("thather.local.")
+          n.provisioned.should_not == true
+        end
+
+        it "should be provisioned if explicitly added" do
+          n = @store.AddNode("thather.local.")
+          n.provisioned.should == true
+        end
+
+        it "should have no last check-in time by default when unprovisioned" do
+          n = @store.GetNode("thather.local.")
+          n.last_checkin.should == 0
+        end
+
+        it "should have no last check-in time by default when provisioned" do
+          n = @store.AddNode("thather.local.")
+          n.last_checkin.should == 0
+        end
+
+        it "should have a nonzero last check-in time after checkin" do
+          n = @store.AddNode("thather.local.")
+          n.checkin
+          n.last_checkin.should > 0
+        end
+
+        
+
         it "should not be possible to reproduce Rob's failure case" do
           node = @store.AddNode("guineapig.local.")
           group = @store.AddExplicitGroup("FAILNODES")
