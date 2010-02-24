@@ -412,13 +412,100 @@ module Mrg
           Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
           
           node.idgroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+                    
+          config = node.GetConfig
+          
+          node.validate.should == true
+          config["FOO"].should == "ARGH"
+        end
+
+        it "should validate configurations that provide values for must-change parameters to a feature at a higher priority than the bare inclusion" do
+          param = @store.AddParam("FOO")
+          param.SetDefaultMustChange(true)
+          
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+
+          feature2 = @store.AddFeature("LocalFooFeature")
+          feature2.ModifyParams("ADD", {"FOO"=>"BLAH"}, {})
+
+          
+          node = @store.AddNode("blah.local.")
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
+                    
+          config = node.GetConfig
+          
+          node.validate.should == true
+          config["FOO"].should == "BLAH"
+        end
+        
+        it "should validate configurations that provide values for multiple must-change parameters to an identity group at a higher priority than the bare inclusion" do
+          params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+          params.each {|param| param.SetDefaultMustChange(true)}
+          
+          features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+          features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+          
+          node.idgroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+                    
+          config = node.GetConfig
+          
+          node.validate.should == true
+          config["FOO"].should == "ARGH"
+          config["BAR"].should == "BARGH"
+          config["BLAH"].should == "BLARGH"
+        end
+
+        it "should validate configurations that provide values for multiple must-change parameters to a group at a lower priority than the bare inclusion" do
+          params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+          params.each {|param| param.SetDefaultMustChange(true)}
+          
+          features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+          features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+                    
+          config = node.GetConfig
+          
+          node.validate.should == true
+          config["FOO"].should == "ARGH"
+          config["BAR"].should == "BARGH"
+          config["BLAH"].should == "BLARGH"
+        end
+
+        it "should validate configurations that provide values for multiple must-change parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
+          params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+          params.each {|param| param.SetDefaultMustChange(true)}
+          
+          features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+          features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+          node.idgroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
           
           config = node.GetConfig
           
           node.validate.should == true
+          config["FOO"].should == "ARGH"
+          config["BAR"].should == "BARGH"
+          config["BLAH"].should == "BLARGH"
         end
 
-        
+
       end
     end
   end
