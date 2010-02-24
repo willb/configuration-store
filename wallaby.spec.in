@@ -104,6 +104,10 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 
 %changelog
+
+* Wed Feb 25 2010 willb <willb@redhat> - 0.2.4-1.0
+- Updated to source version 0.2.4
+
 * Tue Feb 23 2010 willb <willb@redhat> - 0.2.3-1.0
 - Updated to source version 0.2.3
 
