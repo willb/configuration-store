@@ -546,6 +546,22 @@ module Mrg
           end
         end
 
+        it "should properly handle default values" do
+          param = @store.AddParam("FOO")
+          param.SetDefault("BAR")
+          
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          config = node.GetConfig
+          
+          config.should have_key("FOO")
+          config["FOO"].should == "BAR"
+        end
+        
         
       end
 
