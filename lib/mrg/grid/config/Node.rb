@@ -102,8 +102,8 @@ module Mrg
           config = Group.DEFAULT_GROUP.GetConfig
           # strip StringSet markers from default group config
           config.each do |(k,v)|
-            v.slice!(/^>=/)
-            config[k] = v.strip
+            v.slice!(/^>=/) if v
+            config[k] = v && v.strip
           end
           
           log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
