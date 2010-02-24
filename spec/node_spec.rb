@@ -367,6 +367,58 @@ module Mrg
           %w{FOO BAR}.each {|val| stringset_values.should include(val)}
           %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
         end
+        
+        it "should not validate configurations that do not provide values for must-change parameters" do
+          param = @store.AddParam("FOO")
+          param.SetDefaultMustChange(true)
+          
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          config = node.GetConfig
+          
+          node.validate.should_not == true
+          node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+        end
+
+        it "should validate configurations that provide values for must-change parameters at a lower priority than the bare inclusion" do
+          param = @store.AddParam("FOO")
+          param.SetDefaultMustChange(true)
+          
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+          
+          config = node.GetConfig
+          
+          node.validate.should == true
+        end
+
+        it "should validate configurations that provide values for must-change parameters at a higher priority than the bare inclusion" do
+          param = @store.AddParam("FOO")
+          param.SetDefaultMustChange(true)
+          
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          
+          node = @store.AddNode("blah.local.")
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+          
+          node.idgroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+          
+          config = node.GetConfig
+          
+          node.validate.should == true
+        end
+
+        
       end
     end
   end

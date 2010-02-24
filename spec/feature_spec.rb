@@ -558,6 +558,8 @@ module Mrg
           
           config = node.GetConfig
           
+          node.validate.should == true
+          
           config.should have_key("FOO")
           config["FOO"].should == "BAR"
         end
