@@ -1,4 +1,4 @@
-%define rel 0.3
+%define rel 0.4
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Wed Feb 24 2010 rrati <rrati@redhat> - 1.0-0.4
+- Fixed location of StartdPlugin for ExecuteNode
+
 * Tue Feb 23 2010 rrati <rrati@redhat> - 1.0-0.3
 - Added UID_DOMAIN and FILESYSTEM_DOMAIN params & features that use them
 
