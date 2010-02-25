@@ -368,6 +368,35 @@ module Mrg
           %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
         end
         
+        it "should not validate configurations that do not provide features depended upon by enabled features (in the default group)" do
+          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+          
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
+          
+          node = @store.AddNode("blah.local.")
+          config = node.GetConfig
+          node.validate.should_not == true
+          node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+          
+          explain = @store.ActivateConfiguration
+          explain.should_not == {}
+          explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+        end
+        
+        it "should not validate configurations that do not provide features depended upon by enabled features (in the idgroup)" do
+          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+                    
+          node = @store.AddNode("blah.local.")
+          
+          node.idgroup.ModifyFeatures("ADD", FakeList[features[0].name], {})
+          
+          config = node.GetConfig
+          node.validate.should_not == true
+          node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+        end
+        
         it "should not validate configurations that do not provide values for must-change parameters" do
           param = @store.AddParam("FOO")
           param.SetDefaultMustChange(true)
