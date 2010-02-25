@@ -115,7 +115,7 @@ module Mrg
             config = grp.apply_to(config)
           end
 
-          config = self.idgroup.apply_to(config)
+          config = self.idgroup.apply_to(config) if self.idgroup
 
           # XXX: this will change once we have configuration versioning
           config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
