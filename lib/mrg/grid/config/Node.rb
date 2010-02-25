@@ -252,6 +252,7 @@ module Mrg
         
         def Node.get_dirty_nodes
           return Node.find_all() if DirtyElement.find_first_by_kind(DirtyElement.const_get("KIND_EVERYTHING"))
+          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_GROUP"), :grp=>Group.DEFAULT_GROUP)
           Node._get_dirty_nodes
         end
         
