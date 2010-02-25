@@ -303,7 +303,7 @@ module Mrg
         end
         
         def ActivateConfig
-          explain = @qmfo.ActivateConfig.explain
+          explain = @qmfo.ActivateConfiguration.explain
           explain.inject({}) do |acc, (node, node_explain)|
             acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|
               ne_acc[reason] = ls.keys
