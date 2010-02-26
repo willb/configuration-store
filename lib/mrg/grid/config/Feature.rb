@@ -134,11 +134,16 @@ module Mrg
           
           pvmap ||= {}
           
+          # XXX: would be nice to use Parameter.select_invalid, but we don't want to look up each param twice
+          invalid_params = []
+          
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
-            raise "invalid parameter #{pn}" unless prow
+            invalid_params << pn unless prow
             prow
           end
+
+          raise "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}" if invalid_params != []
           
           command = command.upcase
           
