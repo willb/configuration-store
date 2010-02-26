@@ -3,6 +3,7 @@ require 'rhubarb/rhubarb'
 
 require 'mrg/grid/config/Group'
 require 'mrg/grid/config/QmfUtils'
+require 'mrg/grid/config/DataValidating'
 
 module Mrg
   module Grid
@@ -21,6 +22,7 @@ module Mrg
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include DataValidating
         
         BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
         UNSET_MUSTCHANGE_PARAMS = "Unset necessary parameters"
@@ -160,11 +162,15 @@ module Mrg
           log.debug "ModifyMemberships: groups => #{groups.inspect}"
           log.debug "ModifyMemberships: options => #{options.inspect}"
           
+          invalid_groups = []
+          
           groups = FakeList.normalize(groups).to_a.map do |gn|
             group = Group.find_first_by_name(gn)
-            raise "Invalid group #{gn.inspect}" unless group
+            invalid_groups << gn unless group
             group
           end
+
+          raise "Invalid groups for node #{self.name}: #{gn.inspect}" if invalid_groups != []
 
           command = command.upcase
 
