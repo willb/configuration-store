@@ -4,6 +4,8 @@ require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/QmfUtils'
+require 'mrg/grid/config/DataValidating'
+
 require 'digest/md5'
 
 module Mrg
@@ -16,6 +18,7 @@ module Mrg
       class Group
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include DataValidating
 
         declare_table_name('nodegroup') # this line is necessary because you can't have a SQL table named "group"
         qmf_package_name 'mrg.grid.config'
@@ -127,11 +130,15 @@ module Mrg
           log.debug "ModifyFeatures: command => #{command.inspect}"
           log.debug "ModifyFeatures: features => #{fs.inspect}"
           
+          invalid_features = []
+          
           feats = FakeList.normalize(fs).to_a.map do |fn|
             frow = Feature.find_first_by_name(fn)
-            raise "invalid feature #{fn}" unless frow
+            invalid_features << fn unless frow
             frow
           end
+
+          raise "Invalid features applied to group #{self.name}:  #{invalid_features.inspect}" if invalid_features != []
 
           command = command.upcase
 
@@ -209,11 +216,15 @@ module Mrg
           log.debug "ModifyParams: command => #{command.inspect}"
           log.debug "ModifyParams: params => #{pvmap.inspect}"
 
+          invalid_params = []
+
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
-            raise "invalid parameter #{pn}" unless prow
+            invalid_params << pn unless prow
             prow
           end
+          
+          raise "Invalid parameters for group #{self.name}:  #{invalid_params.inspect}" if invalid_params != []
 
           command = command.upcase
 
