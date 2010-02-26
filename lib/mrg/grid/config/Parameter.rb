@@ -261,7 +261,7 @@ module Mrg
         def Parameter.s_for_node(node)
           feature_params = Feature.features_for_node(node).map {|feat| feat.GetParams.keys}.flatten.sort.uniq
           default_group_params = Group.DEFAULT_GROUP.GetParams.keys.sort.uniq
-          id_group_params = node.idgroup.GetParams.keys.sort.uniq
+          id_group_params = node.idgroup ? node.idgroup.GetParams.keys.sort.uniq : []
           explicit_group_params = node.send(:memberships).map {|grp| grp.GetParams.keys}.flatten.sort.uniq
           
           feature_params | default_group_params | id_group_params | explicit_group_params
