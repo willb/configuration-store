@@ -11,6 +11,7 @@ module Mrg
       class Parameter
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include DataValidating
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Parameter'
@@ -205,11 +206,16 @@ module Mrg
         # * depends (map/I)
         #   A set of parameter names that this one depends on
         def ModifyDepends(command,deps,options)
-          deps ||= {}
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command.inspect}"
           log.debug "ModifyDepends: depends => #{deps.inspect}"
-          modify_arcs(command,deps,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
+          
+          depends = deps.keys
+          
+          invalid_depends = Parameter.select_invalid(depends)
+          raise "Invalid parameter names for dependency:  #{invalid_depends.inspect}" if invalid_depends != []
+          
+          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
         end
         
@@ -236,11 +242,15 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of parameter names that conflict with this one
-        def ModifyConflicts(command,conflicts,options)
-          conflicts ||= {}
+        def ModifyConflicts(command,confs,options)
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
+          
+          conflicts = confs.keys
+          invalid_conflicts = Parameter.select_invalid(conflicts)
+          raise "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}" if invalid_conflicts != []
+          
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
         end
