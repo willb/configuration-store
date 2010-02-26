@@ -8,7 +8,6 @@ require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
 
 require 'mrg/grid/config/ArcLabel'
-require 'mrg/grid/config/Store'
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Configuration'
 require 'mrg/grid/config/Feature'
@@ -18,6 +17,7 @@ require 'mrg/grid/config/NodeMembership'
 require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/Snapshot'
 require 'mrg/grid/config/DirtyElement'
+require 'mrg/grid/config/Store'
 
 module Mrg
   module Grid

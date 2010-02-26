@@ -415,6 +415,20 @@ module Mrg
           args.declare :params, :map, :out, :desc=>"Parameters that must change; a map from names to default values"
         end
         
+        [Feature, Group, Node, Parameter, Subsystem].each do |klass|
+          define_method "check#{klass.name}Validity".to_sym do |fakeset|
+            log.debug "check#{klass.name}Validity called:  set is #{fakeset}"
+            entities = fakeset.keys.sort.uniq
+            FakeSet[*klass.select_invalid(entities)]
+          end
+          
+          expose "check#{klass.name}Validity".to_sym do |args|
+            args.declare :set, :map, :in, :desc=>"A set of #{klass.name} names to check for validity"
+            args.declare "invalid#{klass.name}s".to_sym, :map, :out, :desc=>"A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
+          end
+        end
+        
+        
         def event_class
           @event_class ||= init_event_class
         end
