@@ -88,6 +88,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Configuration.rb
 %{ruby_sitelib}/mrg/grid/config/DirtyElement.rb
+%{ruby_sitelib}/mrg/grid/config/DataValidating.rb
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
 %{ruby_sitelib}/mrg/grid/config/Group.rb
 %{ruby_sitelib}/mrg/grid/config/Node.rb
@@ -104,6 +105,9 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 
 %changelog
+
+* Fri Feb 27 2010 willb <willb@redhat> - 0.2.7-1.0
+- Updated to source version 0.2.7
 
 * Thu Feb 26 2010 willb <willb@redhat> - 0.2.6-1.0
 - Updated to source version 0.2.6
