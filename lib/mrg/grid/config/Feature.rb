@@ -84,6 +84,10 @@ module Mrg
           log.debug "ModifyFeatures: features => #{features.inspect}"
           log.debug "ModifyFeatures: options => #{options.inspect}"
           fl = FakeList.normalize(features).to_a
+                    
+          invalid_fl = Feature.select_invalid(fl)
+          
+          raise "Invalid features supplied for inclusion:  #{invalid_fl.inspect}" if invalid_fl != []
           
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
@@ -188,12 +192,19 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of other feature names that conflict with the feature
-        def ModifyConflicts(command,conflicts,options={})
+        def ModifyConflicts(command,confs,options={})
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
+          log.debug "ModifyConflicts: options => #{options.inspect}"
           
-          modify_arcs(command,conflicts.keys,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
+          conflicts = confs.keys
+          
+          invalid_conflicts = Feature.select_invalid(conflicts)
+          
+          raise "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}" if invalid_conflicts != []
+          
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
         end
         
@@ -227,6 +238,11 @@ module Mrg
           log.debug "ModifyDepends: options => #{options.inspect}"
           
           depends = FakeList.normalize(depends).to_a
+
+          invalid_deps = Feature.select_invalid(depends)
+          
+          raise "Invalid features supplied for dependency:  #{invalid_deps.inspect}" if invalid_deps != []
+          
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list
         end
