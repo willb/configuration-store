@@ -243,8 +243,12 @@ module Mrg
           log.debug "RemoveNode: name => #{name.inspect}"
 
           # Actually remove the node
-          Node.find_first_by_name(name).idgroup.delete
-          Node.find_first_by_name(name).delete
+          node = Node.find_first_by_name(name)
+          
+          if node
+            node.idgroup.delete if node.idgroup
+            node.delete
+          end
         end
         
         expose :RemoveNode do |args|
