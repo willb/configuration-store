@@ -5,6 +5,7 @@ require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/QmfUtils'
+require 'mrg/grid/config/DataValidating'
 
 require 'set'
 
@@ -14,6 +15,7 @@ module Mrg
       class Feature
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include DataValidating
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Feature'

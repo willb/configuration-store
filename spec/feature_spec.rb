@@ -564,7 +564,33 @@ module Mrg
           config["FOO"].should == "BAR"
         end
         
-        
+        it "should identify invalid features" do
+          feature_list = ("cat".."eel").to_a.sort_by {rand}
+          bogus_names = feature_list.slice!(0, feature_list.index("dog"))
+          
+          feature_list.each {|feature| @store.AddFeature(feature)}
+          Feature.select_invalid(bogus_names).should == bogus_names
+        end
+
+        it "should not identify valid features as invalid" do
+          feature_list = ("cat".."eel").to_a.sort_by {rand}
+          bogus_names = feature_list.slice!(0, feature_list.index("dog"))
+          
+          feature_list.each {|feature| @store.AddFeature(feature)}
+          Feature.select_invalid(feature_list).should == []
+        end
+
+        it "should pick out the invalid feature names from a list of valid and invalid features" do
+          feature_list = ("cat".."eel").to_a.sort_by {rand}
+          bogus_names = feature_list.slice!(0, feature_list.index("dog"))
+          
+          feature_list.each {|feature| @store.AddFeature(feature)}
+          invalids = Set[*Feature.select_invalid(feature_list + bogus_names)]
+          
+          Set[*bogus_names].should == invalids
+          (Set[*feature_list] & invalids).size.should == 0
+        end
+
       end
 
     end
