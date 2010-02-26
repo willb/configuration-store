@@ -7,7 +7,7 @@
 * Default last_updated_version to 0
 * Events
 * ValidateConfig
-* Remove Pool methods
+* report all lookup failures at once
 * Implied subsystems on Feature
 * Empty parameter to Node::CheckConfigVersion should produce an event for the
   node to check in for it's configuration
