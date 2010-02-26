@@ -41,7 +41,11 @@ module Mrg
           log.debug "ModifyParams: params => #{params.inspect}"
           log.debug "ModifyParams: options => #{options.inspect}"
           
-          modify_arcs(command,params.keys,options,:params,:params=,:explain=>"observe the param")
+          params = params.keys
+          invalid_params = Parameter.select_invalid(params)
+          raise "Invalid parameters for observation by subsystem #{self.name}:  #{invalid_params.inspect}" if invalid_params != []
+          
+          modify_arcs(command,params,options,:params,:params=,:explain=>"observe the param")
           DirtyElement.dirty_subsystem(self)
         end
         
