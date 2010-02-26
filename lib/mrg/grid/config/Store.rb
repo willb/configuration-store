@@ -1,5 +1,5 @@
 require 'spqr/spqr'
-
+require 'rhubarb/rhubarb'
 require 'mrg/grid/config-proxies'
 
 module Mrg

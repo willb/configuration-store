@@ -3,8 +3,8 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'rubygems' rescue nil
 
+require 'rhubarb/rhubarb'
 require 'mrg/grid/config'
-
 require 'enumerator'
 
 require 'spec'
