@@ -2,6 +2,7 @@ require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
+require 'mrg/grid/config/DataValidating'
 
 require 'set'
 
