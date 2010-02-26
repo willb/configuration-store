@@ -6,6 +6,7 @@ module Mrg
       class Subsystem
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include DataValidating
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Subsystem'
