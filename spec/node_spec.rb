@@ -197,371 +197,370 @@ module Mrg
           node.validate.should == true
         end
       
-        [["an explicit group", Proc.new {|store| store.AddExplicitGroup("SETNODES")}, Proc.new {|node, group| node.ModifyMemberships("ADD", FakeList[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
+        {"provisioned"=>:AddNode, "unprovisioned"=>:GetNode}.each do |nodekind, node_find_msg|
+          [["an explicit group", Proc.new {|store| store.AddExplicitGroup("SETNODES")}, Proc.new {|node, group| node.ModifyMemberships("ADD", FakeList[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
 
-          it "should include StringSet parameter values from #{from}" do
-            node = @store.AddNode("guineapig.local.")
-            group = group_locator.call(@store)
+            it "should, if it is #{nodekind}, include StringSet parameter values from #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+
+              param = @store.AddParam("STRINGSET")
+
+              group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+
+              modify_memberships.call(node, group)
+              config = node.GetConfig
+
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should match(/FOO/)
+            end
+
+            it "should, if it is #{nodekind}, not include commas after single StringSet parameter values from #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+
+              param = @store.AddParam("STRINGSET")
+
+              group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+
+              modify_memberships.call(node, group)
+              config = node.GetConfig
+
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should_not match(/,/)
+            end
+
+            it "should, if it is #{nodekind}, not include whitespace after single StringSet parameter values from #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+
+              param = @store.AddParam("STRINGSET")
+
+              group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+
+              modify_memberships.call(node, group)
+              config = node.GetConfig
+
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should match(/FOO$/)
+            end
+
+            it "should, if it is #{nodekind}, not include StringSet append indicators in parameter values from #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+
+              param = @store.AddParam("STRINGSET")
+
+              group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+
+              modify_memberships.call(node, group)
+              config = node.GetConfig
+
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should_not match(/^>=/)
+            end
+          end
+
+          it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and parameters from the identity group" do
+            node = @store.send(node_find_msg, "guineapig.local.")
+            feature1 = @store.AddFeature("FOOFEATURE")
+            feature2 = @store.AddFeature("BARFEATURE")
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            modify_memberships.call(node, group)
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+            node.GetIdentityGroup.ModifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
-            config["STRINGSET"].should match(/FOO/)
+            stringset_values = config["STRINGSET"].split(/, |,| /)
+            stringset_values.size.should == 3
+            %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+            %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
           end
 
-          it "should not include commas after single StringSet parameter values from #{from}" do
-            node = @store.AddNode("guineapig.local.")
-            group = group_locator.call(@store)
+          it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and features from the identity group" do
+            node = @store.send(node_find_msg, "guineapig.local.")
+            feature1 = @store.AddFeature("FOOFEATURE")
+            feature2 = @store.AddFeature("BARFEATURE")
+            feature3 = @store.AddFeature("BLAHFEATURE")
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
+            feature3.ModifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
 
-            modify_memberships.call(node, group)
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature3.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
-            config["STRINGSET"].should_not match(/,/)
+            stringset_values = config["STRINGSET"].split(/, |,| /)
+
+            stringset_values.size.should == 3
+            %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+            %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
           end
 
-          it "should not include whitespace after single StringSet parameter values from #{from}" do
-            node = @store.AddNode("guineapig.local.")
-            group = group_locator.call(@store)
+          it "should, if it is #{nodekind}, properly append all StringSet parameter values from a default group and an explicit group" do
+            node = @store.send(node_find_msg, "guineapig.local.")
+            group = @store.AddExplicitGroup("SETNODES")
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            group.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            modify_memberships.call(node, group)
+            node.ModifyMemberships("ADD", FakeList[group.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
-            config["STRINGSET"].should match(/FOO$/)
+            stringset_values = config["STRINGSET"].split(/, |,| /)
+
+            stringset_values.size.should == 2
+            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
           end
 
-          it "should not include StringSet append indicators in parameter values from #{from}" do
-            node = @store.AddNode("guineapig.local.")
-            group = group_locator.call(@store)
+          it "should, if it is #{nodekind}, properly append all StringSet parameter values from two features" do
+            node = @store.send(node_find_msg, "guineapig.local.")
+            feature1 = @store.AddFeature("FOOFEATURE")
+            feature2 = @store.AddFeature("BARFEATURE")
 
             param = @store.AddParam("STRINGSET")
 
-            group.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            modify_memberships.call(node, group)
+            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
-            config["STRINGSET"].should_not match(/^>=/)
+            stringset_values = config["STRINGSET"].split(/, |,| /)
+            stringset_values.size.should == 2
+            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
           end
-        end
-
-        it "should properly append StringSet values to features added from the default group and parameters from the identity group" do
-          node = @store.AddNode("guineapig.local.")
-          feature1 = @store.AddFeature("FOOFEATURE")
-          feature2 = @store.AddFeature("BARFEATURE")
-          
-          param = @store.AddParam("STRINGSET")
-          
-          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-          
-          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
-          node.GetIdentityGroup.ModifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
-          config = node.GetConfig
-          
-          config.should have_key("STRINGSET")
-          stringset_values = config["STRINGSET"].split(/, |,| /)
-          stringset_values.size.should == 3
-          %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
-          %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
-        end
 
 
-        it "should properly append StringSet values to features added from the default group and features from the identity group" do
-          node = @store.AddNode("guineapig.local.")
-          feature1 = @store.AddFeature("FOOFEATURE")
-          feature2 = @store.AddFeature("BARFEATURE")
-          feature3 = @store.AddFeature("BLAHFEATURE")
+          it "should, if it is #{nodekind}, properly append all StringSet parameter values from two explicit groups" do
+            node = @store.send(node_find_msg, "guineapig.local.")
+            group2 = @store.AddExplicitGroup("FOONODES")
+            group1 = @store.AddExplicitGroup("BARNODES")
 
-          param = @store.AddParam("STRINGSET")
-          
-          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-          feature3.ModifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
-          
-          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
-          node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature3.name], {})
-          config = node.GetConfig
-          
-          config.should have_key("STRINGSET")
-          stringset_values = config["STRINGSET"].split(/, |,| /)
+            param = @store.AddParam("STRINGSET")
 
-          stringset_values.size.should == 3
-          %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
-          %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
-        end
+            group1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
+            group2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
+            node.ModifyMemberships("ADD", FakeList[group2.name, group1.name], {})
+            config = node.GetConfig
 
-        it "should properly append all StringSet parameter values from a default group and an explicit group" do
-          node = @store.AddNode("guineapig.local.")
-          group = @store.AddExplicitGroup("SETNODES")
-          
-          param = @store.AddParam("STRINGSET")
-          
-          Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-          group.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-          
-          node.ModifyMemberships("ADD", FakeList[group.name], {})
-          config = node.GetConfig
-          
-          config.should have_key("STRINGSET")
-          stringset_values = config["STRINGSET"].split(/, |,| /)
-          
-          stringset_values.size.should == 2
-          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-        end
-        
-        it "should properly append all StringSet parameter values from two features" do
-          node = @store.AddNode("guineapig.local.")
-          feature1 = @store.AddFeature("FOOFEATURE")
-          feature2 = @store.AddFeature("BARFEATURE")
-          
-          param = @store.AddParam("STRINGSET")
-          
-          feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-          feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-          
-          node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
-          config = node.GetConfig
-          
-          config.should have_key("STRINGSET")
-          stringset_values = config["STRINGSET"].split(/, |,| /)
-          stringset_values.size.should == 2
-          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-        end
-        
-        
-        it "should properly append all StringSet parameter values from two explicit groups" do
-          node = @store.AddNode("guineapig.local.")
-          group2 = @store.AddExplicitGroup("FOONODES")
-          group1 = @store.AddExplicitGroup("BARNODES")
-          
-          param = @store.AddParam("STRINGSET")
-          
-          group1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-          group2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-          
-          node.ModifyMemberships("ADD", FakeList[group2.name, group1.name], {})
-          config = node.GetConfig
-          
-          config.should have_key("STRINGSET")
-          stringset_values = config["STRINGSET"].split(/, |,| /)
-          stringset_values.size.should == 2
-          %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-          %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-        end
-        
-        it "should not validate configurations that do not provide features depended upon by enabled features (in the default group)" do
-          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
-          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
-          
-          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
-          
-          node = @store.AddNode("blah.local.")
-          config = node.GetConfig
-          node.validate.should_not == true
-          node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-          
-          explain = @store.ActivateConfiguration
-          explain.should_not == {}
-          explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-        end
-        
-        it "should not validate configurations that do not provide features depended upon by enabled features (in the idgroup)" do
-          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
-          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
-                    
-          node = @store.AddNode("blah.local.")
-          
-          node.idgroup.ModifyFeatures("ADD", FakeList[features[0].name], {})
-          
-          config = node.GetConfig
-          node.validate.should_not == true
-          node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-        end
-        
-        it "should not validate configurations that do not provide values for must-change parameters" do
-          param = @store.AddParam("FOO")
-          param.SetDefaultMustChange(true)
-          
-          feature = @store.AddFeature("FooFeature")
-          feature.ModifyParams("ADD", {"FOO"=>0}, {})
-          
-          node = @store.AddNode("blah.local.")
-          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
-          
-          config = node.GetConfig
-          
-          node.validate.should_not == true
-          node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
-        end
+            config.should have_key("STRINGSET")
+            stringset_values = config["STRINGSET"].split(/, |,| /)
+            stringset_values.size.should == 2
+            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+          end
 
-        [true, false].each do |mustchange|
+          it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the default group)" do
+            features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
+            features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
 
-          mustchangestr = mustchange ? "must-change" : "defaultable"
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
 
-          it "should validate configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
+            node = @store.send(node_find_msg, "blah.local.")
+            config = node.GetConfig
+            node.validate.should_not == true
+            node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+
+            explain = @store.ActivateConfiguration
+            explain.should_not == {}
+            explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+          end
+
+          it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the idgroup)" do
+            features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
+            features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+
+            node = @store.send(node_find_msg, "blah.local.")
+
+            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features[0].name], {})
+
+            config = node.GetConfig
+            node.validate.should_not == true
+            node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+          end
+
+          it "should, if it is #{nodekind}, not validate configurations that do not provide values for must-change parameters" do
             param = @store.AddParam("FOO")
-            param.SetDefaultMustChange(mustchange)
+            param.SetDefaultMustChange(true)
 
             feature = @store.AddFeature("FooFeature")
             feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
-            node = @store.AddNode("blah.local.")
-            node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
-
-            Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+            node = @store.send(node_find_msg, "blah.local.")
+            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
 
             config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
+            node.validate.should_not == true
+            node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
           end
 
-          it "should validate configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
-            param = @store.AddParam("FOO")
-            param.SetDefaultMustChange(mustchange)
+          [true, false].each do |mustchange|
 
-            feature = @store.AddFeature("FooFeature")
-            feature.ModifyParams("ADD", {"FOO"=>0}, {})
+            mustchangestr = mustchange ? "must-change" : "defaultable"
 
-            node = @store.AddNode("blah.local.")
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
+              param = @store.AddParam("FOO")
+              param.SetDefaultMustChange(mustchange)
 
-            node.idgroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+              feature = @store.AddFeature("FooFeature")
+              feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
-            config = node.GetConfig
+              node = @store.send(node_find_msg, "blah.local.")
+              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
-          end
+              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
-          it "should validate configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
-            param = @store.AddParam("FOO")
-            param.SetDefaultMustChange(mustchange)
+              config = node.GetConfig
 
-            feature = @store.AddFeature("FooFeature")
-            feature.ModifyParams("ADD", {"FOO"=>0}, {})
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+            end
 
-            feature2 = @store.AddFeature("LocalFooFeature")
-            feature2.ModifyParams("ADD", {"FOO"=>"BLAH"}, {})
+            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
+              param = @store.AddParam("FOO")
+              param.SetDefaultMustChange(mustchange)
+
+              feature = @store.AddFeature("FooFeature")
+              feature.ModifyParams("ADD", {"FOO"=>0}, {})
+
+              node = @store.send(node_find_msg, "blah.local.")
+              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+
+              node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+
+              config = node.GetConfig
+
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+            end
+
+            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
+              param = @store.AddParam("FOO")
+              param.SetDefaultMustChange(mustchange)
+
+              feature = @store.AddFeature("FooFeature")
+              feature.ModifyParams("ADD", {"FOO"=>0}, {})
+
+              feature2 = @store.AddFeature("LocalFooFeature")
+              feature2.ModifyParams("ADD", {"FOO"=>"BLAH"}, {})
 
 
-            node = @store.AddNode("blah.local.")
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+              node = @store.send(node_find_msg, "blah.local.")
+              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
 
-            node.idgroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
+              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
 
-            config = node.GetConfig
+              config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "BLAH"
-          end
+              node.validate.should == true
+              config["FOO"].should == "BLAH"
+            end
 
-          it "should validate configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
-            params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-            params.each {|param| param.SetDefaultMustChange(mustchange)}
+            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
+              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+              params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-            features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-            features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-            node = @store.AddNode("blah.local.")
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+              node = @store.send(node_find_msg, "blah.local.")
+              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-            node.idgroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+              node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
-            config = node.GetConfig
+              config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
-            config["BAR"].should == "BARGH"
-            config["BLAH"].should == "BLARGH"
-          end
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+              config["BAR"].should == "BARGH"
+              config["BLAH"].should == "BLARGH"
+            end
 
-          it "should validate configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
-            params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-            params.each {|param| param.SetDefaultMustChange(mustchange)}
+            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
+              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+              params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-            features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-            features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-            node = @store.AddNode("blah.local.")
-            node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+              node = @store.send(node_find_msg, "blah.local.")
+              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-            Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
-            config = node.GetConfig
+              config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
-            config["BAR"].should == "BARGH"
-            config["BLAH"].should == "BLARGH"
-          end
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+              config["BAR"].should == "BARGH"
+              config["BLAH"].should == "BLARGH"
+            end
 
-          it "should validate configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
-            params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-            params.each {|param| param.SetDefaultMustChange(mustchange)}
+            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
+              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+              params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-            features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-            features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-            node = @store.AddNode("blah.local.")
-            node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+              node = @store.send(node_find_msg, "blah.local.")
+              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-            Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-            node.idgroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
+              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+              node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
 
-            config = node.GetConfig
+              config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
-            config["BAR"].should == "BARGH"
-            config["BLAH"].should == "BLARGH"
-          end
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+              config["BAR"].should == "BARGH"
+              config["BLAH"].should == "BLARGH"
+            end
 
-          it "should report the highest-priority parameter value in configurations that provide values for #{mustchangestr} parameters in multiple places" do
-            params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-            params.each {|param| param.SetDefaultMustChange(mustchange)}
+            it "should, if it is #{nodekind}, report the highest-priority parameter value in configurations that provide values for #{mustchangestr} parameters in multiple places" do
+              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+              params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-            features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-            features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-            node = @store.AddNode("blah.local.")
-            node.idgroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+              node = @store.send(node_find_msg, "blah.local.")
+              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-            Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-            node.idgroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
+              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+              node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
 
-            config = node.GetConfig
+              config = node.GetConfig
 
-            node.validate.should == true
-            config["FOO"].should == "ARGH"
-            config["BAR"].should == "BARGH"
-            config["BLAH"].should == "blargh"
+              node.validate.should == true
+              config["FOO"].should == "ARGH"
+              config["BAR"].should == "BARGH"
+              config["BLAH"].should == "blargh"
+            end
           end
         end
-
 
         it "should have only one identity group" do
           pending
