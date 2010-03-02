@@ -186,15 +186,15 @@ module Mrg
         
         def create_nodes
           @nodes.each do |name, old_node|
-            log.debug("creating node '#{name}'")
+            log.info("Creating node '#{name}'")
             node = @store.AddNode(name)
             node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
-            log.debug("node #{name} has the following memberships:  #{memberships.inspect}")
             if memberships.size > 0
               flmemberships = listify(memberships)
               @callbacks << lambda do
-                log.debug("calling ModifyMemberships for node #{name} with argument #{flmemberships.inspect}")
+                log.info("Setting memberships for node #{name}")
+                log.debug("Node #{name} has memberships #{flmemberships.inspect}")
                 node.ModifyMemberships("ADD", flmemberships, {})
               end
             end
@@ -202,30 +202,30 @@ module Mrg
         end
         
         def create_groups
-          @groups.each do |name, old_group|
-            log.debug("creating group '#{name}'")
-            
+          @groups.each do |name, old_group|            
             group = nil
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
+              log.info("Finding special group '#{name}'")
               group = @store.GetGroup("NAME"=>name)
             else
+              log.info("Creating group '#{name}'")
               group = @store.AddExplicitGroup(name)
             end
             
             if old_group.features.size > 0
-              log.debug("scheduling features #{old_group.features.inspect} for addition to group '#{name}'")
               flfeatures = listify(old_group.features)
               @callbacks << lambda do
-                log.debug("calling ModifyFeatures for group #{name} with argument #{flfeatures.inspect}")
+                log.info("Setting features for group #{name}")
+                log.debug("Group #{name} has features #{flfeatures.inspect}")
                 group.ModifyFeatures("ADD", flfeatures, {})
               end
             end
             
             if old_group.params.size > 0
-              log.debug("scheduling params #{old_group.params.inspect} for addition to group '#{name}'")
               @callbacks << lambda do
-                log.debug("calling ModifyParams for group #{name} with argument #{old_group.params.inspect}")
+                log.info("Setting params for group #{name}")
+                log.debug("Group #{name} has params #{old_group.params.inspect}")
                 group.ModifyParams("ADD", old_group.params, {})
               end
             end
@@ -234,8 +234,7 @@ module Mrg
         
         def create_params
           @params.each do |name, old_param|
-            log.debug "#{name} --> #{name.inspect}"
-            log.debug "#{old_param} --> #{old_param.inspect}"
+            log.info "Creating parameter '#{name}'"
             
             param = @store.AddParam(name)
             param.SetType(old_param.kind)
@@ -248,6 +247,8 @@ module Mrg
             {:conflicts=>:ModifyConflicts,:depends=>:ModifyDepends}.each do |get,set|
               if old_param.send(get).size > 0
                 @callbacks << lambda do
+                  log.info "Setting #{get} for parameter #{name}"
+                  log.debug "#{get.to_s.capitalize} for parameter #{name} are #{old_param.send(get).inspect}"
                   param.send(set, "ADD", setify(old_param.send(get)), {})
                 end
               end
@@ -257,10 +258,13 @@ module Mrg
         
         def create_features
           @features.each do |name, old_feature|
+            log.info "Creating feature '#{name}'"
             feature = @store.AddFeature(name)
-            [[:params, :ModifyParams, :skk],[:included, :ModifyFeatures, :listify],[:conflicts, :ModifyConflicts, :setify],[:depends, :ModifyDepends, :listify],[:subsystems, :ModifySubsys, :setify]].each do |get,set,xform|
+            [[:params, :ModifyParams, :skk, "parameters"],[:included, :ModifyFeatures, :listify, "included features"],[:conflicts, :ModifyConflicts, :setify, "conflicting features"],[:depends, :ModifyDepends, :listify, "feature dependencies"],[:subsystems, :ModifySubsys, :setify, "implicated subsystems"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
+                  log.info "Setting #{desc} for #{name}"
+                  log.debug "#{desc.capitalize} for #{name} are #{old_feature.send(get).inspect}"
                   feature.send(set, "ADD", self.send(xform, old_feature.send(get)), {})
                 end
               end              
@@ -270,9 +274,12 @@ module Mrg
         
         def create_subsystems
           @subsystems.each do |name, old_ss|
+            log.info "Creating subsystem '#{name}'"
             subsys = @store.AddSubsys(name)
             if old_ss.params.size > 0
               @callbacks << lambda do
+                log.info "Setting parameters for subsystem #{name}"
+                log.debug "Subsystem #{name} has parameters #{old_ss.params.inspect}"
                 subsys.ModifyParams("ADD", setify(old_ss.params), {})
               end
             end
@@ -280,6 +287,7 @@ module Mrg
         end
         
         def create_relationships
+          log.info("Creating relationships between store entities")
           @callbacks.each {|cb| cb.call}
           @callbacks = []
         end

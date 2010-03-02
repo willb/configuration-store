@@ -4,12 +4,29 @@ require 'qmf'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 
+class SimpleLog
+  def initialize(*ms)
+    @accepted_messages = ms.map {|msg| msg.to_s}.uniq
+  end
+
+  def method_missing(m, *args)
+    puts args.map {|arg| arg.class == String ? arg : arg.inspect}.join(" ") if accepts?(m)
+  end
+
+  private
+  def accepts?(msg)
+    @accepted_messages.include? msg.to_s
+  end
+end
+
 host = "localhost"
 port = 5672
 username = nil
 password = nil
 debug = :warn
 activate = false
+Mrg::Grid::SerializedConfigs::ConfigLoader.log = SimpleLog.new(:info)
+verbosity = nil
 
 op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-load [options] file"
@@ -33,7 +50,24 @@ op = OptionParser.new do |opts|
   opts.on("-a", "--activate", "attempt to activate config after loading") do
     activate = true
   end
+  
+  opts.on("-q", "--quiet", "do not provide progress on load feedback") do
+    if verbosity && verbosity != :quiet
+      puts "Error:  --quiet and --verbose are mutually exclusive options"
+      raise OptionParser::InvalidOption.new("Error:  --quiet and --verbose are incompatible options")
+    end
+    verbosity = :quiet
+    Mrg::Grid::SerializedConfigs::ConfigLoader.log = nil
+  end
 
+  opts.on("-v", "--verbose", "provide more progress on load feedback") do
+    if verbosity && verbosity != :verbose
+      puts "Error:  --quiet and --verbose are mutually exclusive options"
+      raise OptionParser::InvalidOption.new("Error:  --quiet and --verbose are incompatible options")
+    end
+    verbosity = :verbose
+    Mrg::Grid::SerializedConfigs::ConfigLoader.log = SimpleLog.new(:info, :debug)
+  end
 end
 
 begin
