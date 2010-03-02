@@ -26,10 +26,10 @@ def format_time(t)
   Time.at(t/1000000,t%1000000).to_s
 end
 
-host = "localhost"
-port = 5672
-username = nil
-password = nil
+host = ENV['WALLABY_BROKER_HOST'] || "localhost"
+port = ENV['WALLABY_BROKER_PORT'].to_i || 5672
+username = ENV['WALLABY_BROKER_USER']
+password = ENV['WALLABY_BROKER_PASSWORD']
 outfile = nil
 debug = :warn
 sortby = 'name'

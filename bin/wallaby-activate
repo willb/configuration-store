@@ -19,10 +19,10 @@
 require 'qmf'
 require 'mrg/grid/config-client'
 
-host = "localhost"
-port = 5672
-username = nil
-password = nil
+host = ENV['WALLABY_BROKER_HOST'] || "localhost"
+port = ENV['WALLABY_BROKER_PORT'].to_i || 5672
+username = ENV['WALLABY_BROKER_USER']
+password = ENV['WALLABY_BROKER_PASSWORD']
 debug = :warn
 
 op = OptionParser.new do |opts|
