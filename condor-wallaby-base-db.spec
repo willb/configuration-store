@@ -1,4 +1,4 @@
-%define rel 0.1
+%define rel 0.2
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,7 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
-* Wed Mar 04 2010 rrati <rrati@redhat> - 1.1-0.1
+* Thu Mar 04 2010 rrati <rrati@redhat> - 1.1-0.2
+- Fixed revision history dates
+
+* Thu Mar 04 2010 rrati <rrati@redhat> - 1.1-0.1
 - Added feature NodeAccess, and all features affecting DAEMON_LIST depend
   upon it now
 - Changed DynamicProvisioning -> DynamicSlots
