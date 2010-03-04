@@ -49,7 +49,7 @@ def rpm_dirs
 end
 
 def db_pkg_version
-  return '1.0'
+  return '1.1'
 end
 
 def db_pkg_name

@@ -1,8 +1,8 @@
-%define rel 0.4
+%define rel 0.1
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
-Version: 1.0
+Version: 1.1
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
@@ -35,6 +35,16 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Wed Mar 04 2010 rrati <rrati@redhat> - 1.1-0.1
+- Added feature NodeAccess, and all features affecting DAEMON_LIST depend
+  upon it now
+- Changed DynamicProvisioning -> DynamicSlots
+- Added LIBVIRT_XML_SCRIPT param and added it to VMUniverse
+- Set COLLECTOR_NAME = $(CONDOR_HOST)
+- Removed ALLOW_WRITE_DAEMON, ALLOW_READ_STARTD, ALLOW_READ_COLLECTOR,
+  ALLOW_READ_DAEMON, ALLOW_WRITE_COLLECTOR, ALLOW_WRITE_STARTD params
+- FETCHWORKDELAY now requires a daemon restart when changed
+
 * Wed Feb 24 2010 rrati <rrati@redhat> - 1.0-0.4
 - Fixed location of StartdPlugin for ExecuteNode
 
