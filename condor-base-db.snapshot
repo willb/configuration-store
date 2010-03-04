@@ -5,6 +5,19 @@ features:
 
   depends: []
 
+  included: []
+
+  name: NodeAccess
+  params: 
+    ALLOW_WRITE: ""
+    ALLOW_READ: ""
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
   included: 
   - ExecuteNode
   name: ExecuteNodeTriggerData
@@ -43,6 +56,7 @@ features:
 
   depends: 
   - Master
+  - NodeAccess
   included: []
 
   name: ExecuteNode
@@ -64,20 +78,16 @@ features:
     STARTD_DEBUG: ""
     STARTD_ADDRESS_FILE: $(LOG)/.startd_address
     PREEMPT: ( ((Activity == "Suspended") && ($(ActivityTimer) > $(MaxSuspendTime))) || (SUSPEND && (WANT_SUSPEND == False)) )
-    ALLOW_WRITE_DAEMON: ""
     STARTER_LOCAL: $(SBIN)/condor_starter
     PERIODIC_CHECKPOINT: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
-    ALLOW_READ_DAEMON: ""
     WANT_SUSPEND: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
     SUSPEND: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
-    ALLOW_WRITE_STARTD: ""
     STARTD_LOG: $(LOG)/StartLog
     CONTINUE: ( $(CPUIdle) && ($(ActivityTimer) > 10) && (KeyboardIdle > $(ContinueIdleTime)) )
     BENCHMARKTIMER: (CurrentTime - LastBenchmark)
     WANT_VACATE: ( $(ActivationTimer) > 10 * $(MINUTE) || $(IsVanilla) )
     STARTD_ATTRS: "\"$(COLLECTOR_HOST)\", SmallJob, KeyboardNotBusy, IsVanilla, ActivationTimer, MINUTE, StartIdleTime, CPUIdle, KeyboardBusy, ContinueIdleTime, MaxSuspendTime, MaxVacateTime, HOUR, LastCkpt"
     STARTD.PLUGINS: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
-    ALLOW_READ_STARTD: ""
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -87,7 +97,7 @@ features:
 
   included: 
   - ExecuteNode
-  name: DynamicProvisioning
+  name: DynamicSlots
   params: 
     SLOT_TYPE_1_PARTITIONABLE: "TRUE"
     SLOT_TYPE_1: cpus=100%,disk=100%,swap=100%
@@ -129,15 +139,14 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
+  depends:
+  - NodeAccess
 
   included: 
   - Collector
   - Negotiator
   name: CentralManager
-  params: 
-    ALLOW_WRITE: ""
-    ALLOW_READ: ""
+  params: []
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -203,6 +212,7 @@ features:
 
   depends: 
   - Master
+  - NodeAccess
   included: []
 
   name: Scheduler
@@ -215,7 +225,6 @@ features:
     SCHEDD_DEBUG: D_PID
     SCHEDD.PLUGINS: $(LIB)/plugins/MgmtScheddPlugin-plugin.so
     SCHEDD: $(SBIN)/condor_schedd
-    ALLOW_WRITE: ""
     SHADOW_LOCK: $(LOCK)/ShadowLock
     DAEMON_LIST: ">= SCHEDD"
     START_LOCAL_UNIVERSE: "True"
@@ -252,7 +261,8 @@ features:
   name: VMUniverse
   params: 
     VM_TYPE: ""
-    VM_MEMORY: ""
+    LIBVIRT_XML_SCRIPT: ""
+    VM_MEMORY: $(DETECTED_MEMORY)
     VM_NETWORKING: ""
     VM_GAHP_SERVER: $(SBIN)/condor_vm-gahp
     VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
@@ -270,7 +280,7 @@ features:
   name: Master
   params: 
     QMF_BROKER_PORT: "5672"
-    COLLECTOR_NAME: $(FULL_HOSTNAME)
+    COLLECTOR_NAME: $(CONDOR_HOST)
     SEC_DEFAULT_NEGOTIATION: OPTIONAL
     QMF_BROKER_HOST: ""
     DAEMON_LIST: ">= MASTER"
@@ -279,7 +289,7 @@ features:
     SEC_DEFAULT_INTEGRITY: REQUIRED
     SEC_DEFAULT_AUTHENTICATION_METHODS: CLAIMTOBE
     ALLOW_ADMINISTRATOR: $(FULL_HOSTNAME), $(ALLOW_ADMINISTRATOR)
-    CONDOR_HOST: $(FULL_HOSTNAME)
+    CONDOR_HOST: ""
     CONDOR_DEVELOPERS_COLLECTOR: NONE
     CONDOR_DEVELOPERS: NONE
     SEC_DEFAULT_ENCRYPTION: REQUIRED
@@ -291,20 +301,19 @@ features:
 
   depends: 
   - Master
+  - NodeAccess
   included: []
 
   name: Collector
   params: 
     COLLECTOR_LOG: $(LOG)/CollectorLog
     COLLECTOR_DEBUG: ""
-    ALLOW_WRITE_COLLECTOR: $(ALLOW_WRITE), $(FLOCK_FROM)
     QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
     COLLECTOR: $(SBIN)/condor_collector
     DAEMON_LIST: ">= COLLECTOR"
     FLOCK_COLLECTOR_HOSTS: $(FLOCK_TO)
     MAX_COLLECTOR_LOG: "1000000"
     COLLECTOR_HOST: $(CONDOR_HOST)
-    ALLOW_READ_COLLECTOR: $(ALLOW_READ), $(FLOCK_FROM)
     COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
   subsystems: []
 
@@ -546,18 +555,6 @@ params:
   level: 0
   must_change: true
   name: ALLOW_WRITE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A list of machines with write access to daemons
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_WRITE_DAEMON
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -886,18 +883,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
-
-  description: A list of machines with read access to the Startd
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_READ_STARTD
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: $(LIBEXEC)/hooks/hook_job_exit.py
   depends: []
 
@@ -978,7 +963,7 @@ params:
   level: 0
   must_change: false
   name: FETCHWORKDELAY
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1486,6 +1471,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LIBEXEC)/libvirt_simple_script.awk
+  depends: []
+
+  description: A script that produces XML output used to start a libvirt VM
+  kind: String
+  level: 0
+  must_change: false
+  name: LIBVIRT_XML_SCRIPT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1822,18 +1819,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
-
-  description: A list of machines with read access to the Collector
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_READ_COLLECTOR
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: root, condor
   depends: []
 
@@ -1867,18 +1852,6 @@ params:
   must_change: true
   name: DAEMON_LIST
   needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A list of machines with read access to daemons
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_READ_DAEMON
-  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2041,18 +2014,6 @@ params:
   default_val: ""
   depends: []
 
-  description: A list of machines with write access to the Collector
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_WRITE_COLLECTOR
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
   description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
   kind: String
   level: 0
@@ -2095,18 +2056,6 @@ params:
   must_change: false
   name: HAD
   needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A list of machines with write access to the Startd
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_WRITE_STARTD
-  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3066,13 +3015,13 @@ subsystems:
   params: 
   - COLLECTOR_LOG
   - COLLECTOR_DEBUG
-  - ALLOW_WRITE_COLLECTOR
+  - ALLOW_WRITE
   - QMF_IGNORE_UPDATE_STARTD_AD
   - COLLECTOR
   - FLOCK_COLLECTOR_HOSTS
   - MAX_COLLECTOR_LOG
   - COLLECTOR_HOST
-  - ALLOW_READ_COLLECTOR
+  - ALLOW_READ
   - COLLECTOR.PLUGINS
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: negotiator
@@ -3143,17 +3092,16 @@ subsystems:
   - STARTD_DEBUG
   - STARTD_ADDRESS_FILE
   - PREEMPT
-  - ALLOW_WRITE_DAEMON
+  - ALLOW_WRITE
   - TRIGGER_DATA_GETDATA_EXECUTABLE
   - STARTER_LOCAL
   - STARTD_CRON_AUTOPUBLISH
   - PERIODIC_CHECKPOINT
-  - ALLOW_READ_DAEMON
+  - ALLOW_READ
   - WANT_SUSPEND
   - TRIGGER_DATA_JOBLIST
   - TRIGGER_DATA_GETDATA_RECONFIG
   - SUSPEND
-  - ALLOW_WRITE_STARTD
   - STARTD_LOG
   - CONTINUE
   - BENCHMARKTIMER
@@ -3161,7 +3109,6 @@ subsystems:
   - TRIGGER_DATA_GETDATA_PREFIX
   - STARTD_CRON_NAME
   - STARTD_ATTRS
-  - ALLOW_READ_STARTD
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: carod
   params: 
