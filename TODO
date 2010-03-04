@@ -2,7 +2,6 @@
 * Param verification on Feature -- it should be impossible to:
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
-* Dirty lists
 * Handle activate with no nodes
 * Default last_updated_version to 0
 * Events
