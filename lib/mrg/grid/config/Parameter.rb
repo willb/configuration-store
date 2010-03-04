@@ -230,7 +230,7 @@ module Mrg
           depends = deps.keys
           
           invalid_depends = Parameter.select_invalid(depends)
-          raise "Invalid parameter names for dependency:  #{invalid_depends.inspect}" if invalid_depends != []
+          fail(42, "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
@@ -266,7 +266,7 @@ module Mrg
           
           conflicts = confs.keys
           invalid_conflicts = Parameter.select_invalid(conflicts)
-          raise "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}" if invalid_conflicts != []
+          fail(42, "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)

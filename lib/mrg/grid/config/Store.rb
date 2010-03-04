@@ -56,7 +56,7 @@ module Mrg
         # * obj (objId/O)
         def GetGroup(query)
           qentries = query.entries
-          raise ArgumentError.new("Invalid group query #{query.inspect}") if qentries.size != 1
+          fail(7, "Invalid group query #{query.inspect}") if qentries.size != 1
           qkind, qkey = query.entries.pop
           qkind = qkind.upcase
           
@@ -65,7 +65,7 @@ module Mrg
             return Group.find(qkey)
           when "NAME"
             return Group.find_first_by_name(qkey)
-          else raise ArgumentError.new("Invalid group query kind #{qkind}")
+          else fail(7, "Invalid group query kind #{qkind}")
           end
         end
         
@@ -89,8 +89,8 @@ module Mrg
         def AddExplicitGroup(name)
           # Print values of input parameters
           log.debug "AddExplicitGroup: name => #{name.inspect}"
-          raise "Group name #{name} is already taken" if Group.find_first_by_name(name)
-          raise "Group name #{name} is invalid; group names may not start with '+++'" if name.slice(0,3) == "+++"
+          fail(42, "Group name #{name} is already taken") if Group.find_first_by_name(name)
+          fail(42, "Group name #{name} is invalid; group names may not start with '+++'") if name.slice(0,3) == "+++"
           Group.create(:name=>name)
         end
         
@@ -131,7 +131,7 @@ module Mrg
         def AddFeature(name)
           # Print values of input parameters
           log.debug "AddFeature: name => #{name.inspect}"
-          raise "Feature name #{name} is already taken" if Feature.find_first_by_name(name)
+          fail(42, "Feature name #{name} is already taken") if Feature.find_first_by_name(name)
           return Feature.create(:name=>name)
         end
         
@@ -294,7 +294,7 @@ module Mrg
         def AddParam(name)
           # Print values of input parameters
           log.debug "AddParam: name => #{name.inspect}"
-           raise "Parameter name #{name} is already taken" if Parameter.find_first_by_name(name)
+           fail(42, "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
           # Return value
           return Parameter.create(:name => name)
         end
@@ -327,7 +327,7 @@ module Mrg
         def AddSubsys(name)
           # Print values of input parameters
           log.debug "AddSubsys: name => #{name.inspect}"
-           raise "Subsystem name #{name} is already taken" if Subsystem.find_first_by_name(name)
+           fail(42, "Subsystem name #{name} is already taken") if Subsystem.find_first_by_name(name)
           # Return value
           return Subsystem.create(:name => name)
         end
@@ -385,7 +385,7 @@ module Mrg
         def MakeSnapshot(name)
           tm = Time.now.utc
           name = "Automatically generated snapshot at #{tm} -- #{((tm.tv_sec * 1000000) + tm.tv_usec).to_s(16)}" if name.size == 0
-          raise "Snapshot name #{name} already taken" if Snapshot.find_first_by_name(name)
+          fail(42, "Snapshot name #{name} already taken") if Snapshot.find_first_by_name(name)
           result = Snapshot.create(:name=>name)
           snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
           result.snaptext = snaptext
@@ -398,7 +398,7 @@ module Mrg
         def LoadSnapshot(name)
           snap = Snapshot.find_first_by_name(name)
           
-          raise "Invalid snapshot name #{name}" unless snap
+          fail(31, "Invalid snapshot name #{name}") unless snap
           snaptext = snap.snaptext
           
           storeinit("RESETDB"=>true)

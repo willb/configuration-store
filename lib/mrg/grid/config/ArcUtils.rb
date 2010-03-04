@@ -44,18 +44,18 @@ module Mrg
           command = command.upcase
           
           if xcmsg and %w{ADD UNION REPLACE}.include? command then
-            raise "Including #{what}s #{dests.inspect} in #{self.send(keymsg)} would introduce a cycle" if self.send(xcmsg, dests).include? self.send(keymsg)
+            fail(42, "Including #{what}s #{dests.inspect} in #{self.send(keymsg)} would introduce a cycle") if self.send(xcmsg, dests).include? self.send(keymsg)
           end
           
           case command
           when "ADD", "UNION" then 
             old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
             new_dests = preserve_order ? dests : Set[*dests]
-            raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
+            fail(7, "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, (old_dests + new_dests).to_a.uniq) # the uniq is important so this can work either as a list or set
           when "REPLACE" then 
             new_dests = preserve_order ? dests : Set[*dests]
-            raise ArgumentError.new("#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
+            fail(7, "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, new_dests.to_a)
           when "REMOVE" then
             old_dests = self.send(getmsg)
@@ -63,8 +63,8 @@ module Mrg
             new_dests = old_dests - removed_dests
             self.send(setmsg, new_dests)
           when "INTERSECT", "DIFF" then
-            raise RuntimeError.new("#{command} not implemented")
-          else raise ArgumentError.new("invalid command #{command}")
+            fail(15, "#{command} not implemented")
+          else fail(7, "invalid command #{command}")
           end
         end
         
@@ -86,7 +86,7 @@ module Mrg
           
           target_params = dests.map do |key|
             dest = klass.send(keyfindmsg, key)
-            raise ArgumentError.new("#{key} is not a valid #{what} key") unless dest
+            fail(7, "#{key} is not a valid #{what} key") unless dest
             dest
           end
           
