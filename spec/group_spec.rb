@@ -33,7 +33,7 @@ module Mrg
           thing = @store.send(@add_msg, @gskey)
           @store.RemoveGroup(thing.row_id)
           
-          @store.send(@find_msg, @gskey).should == nil
+          lambda { @store.send(@find_msg, @gskey) }.should raise_error
         end
         
         

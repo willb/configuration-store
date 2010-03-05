@@ -62,9 +62,13 @@ module Mrg
           
           case qkind
           when "ID"
-            return Group.find(qkey)
+            grp = Group.find(qkey)
+            fail(7, "Group ID #{qkey} not found") unless grp
+            return grp
           when "NAME"
-            return Group.find_first_by_name(qkey)
+            grp = Group.find_first_by_name(qkey)
+            fail(7, "Group named #{qkey} not found") unless grp
+            return grp
           else fail(7, "Invalid group query kind #{qkind}")
           end
         end
