@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1.0
+%define rel 1
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -105,6 +105,9 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 
 %changelog
+
+* Fri Mar 5 2010 willb <willb@redhat> - 0.2.9-1
+- Updated to source version 0.2.9
 
 * Thu Mar 4 2010 willb <willb@redhat> - 0.2.8-1.0
 - Updated to source version 0.2.8
