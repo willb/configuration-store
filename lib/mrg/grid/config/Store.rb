@@ -160,35 +160,6 @@ module Mrg
           args.declare :uid, :uint32, :in, {}
         end
         
-        # GetConfiguration 
-        # * query (map/I)
-        #   A query that defines the configuration desired. Valid values for the key are 'ID' or 'Name'. 'ID' keys should contain a specific ConfigurationId as its value, whereas 'Name' keys should contain a Configuration Name as its value
-        # * obj (objId/O)
-        def GetConfiguration(query)
-          # Print values of input parameters
-          log.debug "GetConfiguration: query => #{query.inspect}"
-          # Assign values to output parameters
-          obj ||= nil
-          # Return value
-          return obj
-        end
-        
-        expose :GetConfiguration do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :query, :map, :in, {}
-        end
-        
-        # ChangeConfiguration 
-        # * uid (uint32/I)
-        def ChangeConfiguration(uid)
-          # Print values of input parameters
-          log.debug "ChangeConfiguration: uid => #{uid.inspect}"
-        end
-        
-        expose :ChangeConfiguration do |args|
-          args.declare :uid, :uint32, :in, {}
-        end
-        
         # ActivateConfiguration 
         # * explain (map/O)
         #   A map containing an explanation of why the configuration isn't valid, or
