@@ -202,7 +202,7 @@ module Mrg
             n.provisioned = true
           else
             # Return a newly-created node 
-            n = Node.create(:name => name, :last_checkin => 0)
+            n = Node.create(:name => name, :last_checkin => 0, :last_updated_version=>0)
           end
           
           # Return the appropriate node after ensuring that its identity group is initialized
@@ -223,7 +223,7 @@ module Mrg
           log.debug "GetNode: name => #{name.inspect}"
 
           # Return the node with the given name
-          return (Node.find_first_by_name(name) || Node.create(:name=>name, :provisioned=>false, :last_checkin=>0))
+          return (Node.find_first_by_name(name) || Node.create(:name=>name, :provisioned=>false, :last_checkin=>0, :last_updated_version=>0))
         end
         
         expose :GetNode do |args|
