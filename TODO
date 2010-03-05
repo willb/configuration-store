@@ -8,8 +8,6 @@
 * Implied subsystems on Feature
 * Empty parameter to Node::CheckConfigVersion should produce an event for the
   node to check in for it's configuration
-* StringSet Param type.  Allows concatenating different values for a param
-  into a single value (needed for DAEMON_LIST)
 
 someday/maybe:
 
