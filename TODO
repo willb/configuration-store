@@ -3,10 +3,8 @@
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
 * Handle activate with no nodes
-* Default last_updated_version to 0
 * Events
 * ValidateConfig
-* report all lookup failures at once
 * Implied subsystems on Feature
 * Empty parameter to Node::CheckConfigVersion should produce an event for the
   node to check in for it's configuration
