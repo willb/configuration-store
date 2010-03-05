@@ -150,14 +150,18 @@ module Mrg
         
         # RemoveFeature 
         # * uid (uint32/I)
-        def RemoveFeature(uid)
+        def RemoveFeature(name)
           # Print values of input parameters
-          log.debug "RemoveFeature: uid => #{uid.inspect}"
-          Feature.find(uid).delete
+          log.debug "RemoveFeature: name => #{name.inspect}"
+          feature = Feature.find_first_by_name(name)
+          
+          fail(7, "Feature named #{name} does not exist") unless feature
+          
+          feature.delete
         end
         
         expose :RemoveFeature do |args|
-          args.declare :uid, :uint32, :in, {}
+          args.declare :name, :sstr, :in, {}
         end
         
         # ActivateConfiguration 

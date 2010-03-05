@@ -26,8 +26,9 @@ module Mrg
 
         it "should not persist after deletion" do
           feature = @store.AddFeature(@gskey)
-          @store.RemoveFeature(feature.row_id)
+          @store.RemoveFeature(@gskey)
           lambda {@store.GetFeature(@gskey)}.should raise_error
+          lambda {@store.RemoveFeature(@gskey)}.should raise_error
         end
         
         it "should allow setting a feature's name" do
