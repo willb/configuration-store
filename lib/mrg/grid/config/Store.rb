@@ -121,7 +121,11 @@ module Mrg
         def GetFeature(name)
           # Print values of input parameters
           log.debug "GetFeature: name => #{name.inspect}"
-          Feature.find_first_by_name(name)
+          
+          feature = Feature.find_first_by_name(name)
+          fail(7, "Feature named #{name} not found") unless feature
+          return feature
+
         end
         
         expose :GetFeature do |args|
