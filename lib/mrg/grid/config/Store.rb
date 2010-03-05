@@ -243,6 +243,8 @@ module Mrg
           if node
             node.idgroup.delete if node.idgroup
             node.delete
+          else
+            fail(7, "Failed to remove nonexistent node #{name}")
           end
         end
         
