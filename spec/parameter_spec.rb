@@ -40,7 +40,7 @@ module Mrg
           param = @store.AddParam("BIOTECH")
           @store.RemoveParam("BIOTECH")
           
-          @store.GetParam("BIOTECH").should == nil
+          lambda {@store.GetParam("BIOTECH")}.should raise_error
         end
 
         it "should delete all traces of a deleted parameter" do

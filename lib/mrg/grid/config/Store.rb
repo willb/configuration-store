@@ -258,7 +258,10 @@ module Mrg
           # Print values of input parameters
           log.debug "GetParam: name => #{name.inspect}"
 
-          return Parameter.find_first_by_name(name)
+          param = Parameter.find_first_by_name(name)
+          fail(7, "Parameter named #{name} not found") unless param
+
+          return param
         end
         
         expose :GetParam do |args|
@@ -322,7 +325,11 @@ module Mrg
         def RemoveParam(name)
           # Print values of input parameters
           log.debug "RemoveParam: name => #{name.inspect}"
-          Parameter.find_first_by_name(name).delete
+          
+          param = Parameter.find_first_by_name(name)
+          fail(7, "Parameter named #{name} not found") unless param
+
+          param.delete
         end
         
         expose :RemoveParam do |args|
