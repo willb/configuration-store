@@ -31,9 +31,10 @@ module Mrg
 
         it "should no longer exist after it is deleted" do
           thing = @store.send(@add_msg, @gskey)
-          @store.RemoveGroup(thing.row_id)
+          @store.RemoveGroup(@gskey)
           
           lambda { @store.send(@find_msg, @gskey) }.should raise_error
+          lambda { @store.RemoveGroup(@gskey) }.should raise_error
         end
         
         

@@ -105,14 +105,16 @@ module Mrg
         
         # RemoveGroup 
         # * uid (uint32/I)
-        def RemoveGroup(uid)
+        def RemoveGroup(name)
           # Print values of input parameters
-          log.debug "RemoveGroup: uid => #{uid.inspect}"
-          Group.find(uid).delete
+          log.debug "RemoveGroup: name => #{name.inspect}"
+          group = Group.find_first_by_name(name)
+          fail(7, "Group named #{name} not found") unless group
+          group.delete
         end
         
         expose :RemoveGroup do |args|
-          args.declare :uid, :uint32, :in, {}
+          args.declare :name, :sstr, :in, {}
         end
         
         # GetFeature 
