@@ -61,6 +61,8 @@ module Mrg
         alias orig_provisioned provisioned
         alias orig_last_checkin last_checkin
 
+        alias orig_last_updated_version last_updated_version
+
         def provisioned
           log.debug "provisioned called for #{self}; its value is #{orig_provisioned.inspect}"
           orig_provisioned
@@ -69,6 +71,11 @@ module Mrg
         def last_checkin
           log.debug "last_checkin called for #{self}; its value is #{orig_last_checkin.inspect}"
           orig_last_checkin || 0
+        end
+
+        def last_updated_version
+          log.debug "last_updated_version called for #{self}; its value is #{orig_last_checkin.inspect}"
+          orig_last_updated_version || 0
         end
 
         qmf_property :name, :sstr, :index=>true

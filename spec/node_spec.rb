@@ -51,6 +51,15 @@ module Mrg
           group.should_not == nil
           group.name.should == expected_group_name
         end
+        
+        {"provisioned"=>:AddNode, "unprovisioned"=>:GetNode}.each do |prov_status, node_find_msg|
+          {:provisioned=>node_find_msg==:AddNode, :last_checkin=>0, :last_updated_version=>0}.each do |prop_msg, default|
+            it "should give #{prov_status} nodes proper default values for the #{prop_msg} property" do
+              n = @store.send(node_find_msg, prop_msg)
+              n.send(prop_msg).should == default
+            end
+          end
+        end
 
         ["add","ADD"].each do |p_cmd|
           it "should be possible to #{p_cmd} params on the identity group" do
