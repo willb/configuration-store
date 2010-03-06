@@ -20,7 +20,7 @@ require 'qmf'
 require 'mrg/grid/config-client'
 
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
-port = ENV['WALLABY_BROKER_PORT'].to_i || 5672
+port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
 username = ENV['WALLABY_BROKER_USER']
 password = ENV['WALLABY_BROKER_PASSWORD']
 debug = :warn
