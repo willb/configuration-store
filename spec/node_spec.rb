@@ -152,7 +152,22 @@ module Mrg
           n.last_checkin.should > 0
         end
 
-        
+        it "should set parameters from an enabled feature F and all features that F includes" do
+          node = @store.AddNode("blather.local.")
+          group = node.GetIdentityGroup
+          
+          param_map = Hash[*%w{FredFeature BarneyFeature WilmaFeature BettyFeature}.map {|fn| [fn, fn.sub("Feature", "").upcase]}.flatten]
+          
+          param_map.values.each {|param| @store.AddParam(param)}
+          features = %w{FredFeature BarneyFeature WilmaFeature BettyFeature}.map {|fn| f = @store.AddFeature(fn); f.ModifyParams("ADD", {param_map[fn]=>fn}); f}
+          features[0].ModifyFeatures("ADD", FakeList[*features[1..-1].map{|f| f.name}])
+          
+          group.ModifyFeatures("ADD", FakeList[features[0].name])
+          
+          config = node.GetConfig
+          
+          param_map.each {|v,k| config[k].should == v}
+        end
 
         it "should not be possible to reproduce Rob's failure case" do
           node = @store.AddNode("guineapig.local.")
