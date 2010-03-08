@@ -300,6 +300,20 @@ module Mrg
             Parameter.find_first_by_name(param).x_depends
           end.flatten.sort.uniq
         end
+
+        def Parameter.s_for_group(grp)
+          feature_params = Feature.features_for_group(grp).map {|feat| feat.GetParams.keys}.flatten.sort.uniq
+          explicit_group_params = grp.GetParams.keys
+          
+          feature_params | explicit_group_params
+        end
+        
+        def Parameter.dependencies_for_group(grp, params_for_group=nil)
+          params_for_group ||= Parameter.s_for_group(grp)
+          params_for_group.map do |param| 
+            Parameter.find_first_by_name(param).x_depends
+          end.flatten.sort.uniq
+        end
         
         def x_depends(xtra = nil)
           xtra ||= []
