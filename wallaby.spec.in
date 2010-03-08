@@ -87,6 +87,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/ArcLabel.rb
 %{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Configuration.rb
+%{ruby_sitelib}/mrg/grid/config/ConfigValidating.rb
 %{ruby_sitelib}/mrg/grid/config/DirtyElement.rb
 %{ruby_sitelib}/mrg/grid/config/DataValidating.rb
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
