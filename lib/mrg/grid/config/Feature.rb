@@ -341,7 +341,26 @@ module Mrg
         end
         
         def Feature.features_for_node(n)
-          fs = _features_for_node(n)
+          expand_includes(_features_for_node(n))
+        end
+        
+        def Feature.dependencies_for_node(n)
+          expand_deps(features_for_node(n))
+        end
+        
+        def Feature.features_for_group(g)
+          expand_includes(_features_for_group(g))
+        end
+        
+        def Feature.dependencies_for_group(g)
+          expand_deps(features_for_group(g))
+        end
+
+        def Feature.expand_deps(fs)
+          fs.map {|f| f.x_depends}.flatten.uniq.map {|fn| Feature.find_first_by_name(fn)}
+        end
+
+        def Feature.expand_includes(fs)
           fs.inject(fs) do |acc,feature|
             included_features = feature.x_includes.map {|fn| Feature.find_first_by_name(fn)}
             acc |= included_features
@@ -349,9 +368,11 @@ module Mrg
           end
         end
         
-        def Feature.dependencies_for_node(n)
-          features_for_node(n).map {|f| f.x_depends}.flatten.uniq.map {|fn| Feature.find_first_by_name(fn)}
-        end
+        declare_custom_query :_features_for_group, <<-QUERY
+        SELECT * from __TABLE__ WHERE row_id IN (
+          SELECT feature from groupfeatures WHERE grp = ?
+        )
+        QUERY
         
         declare_custom_query :_features_for_node, <<-QUERY
         SELECT * FROM __TABLE__ WHERE row_id IN (

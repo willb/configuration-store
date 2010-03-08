@@ -270,6 +270,65 @@ module Mrg
           end
         end
 
+        it "should know which features are installed on the default group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+          
+          default = Group.DEFAULT_GROUP
+          
+          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          
+          ffg = Feature.features_for_group(default)
+          
+          ffg.should have(2).things
+          
+          [0,2].each do |num|
+            ffg.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+        it "should know which features are included in those installed on the default group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+          
+          default = Group.DEFAULT_GROUP
+          
+          dep_dests[0].ModifyFeatures("ADD", FakeList[dep_dests[2].name])
+          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          
+          ffg = Feature.features_for_group(default)
+          
+          ffg.should have(2).things
+          
+          [0,2].each do |num|
+            ffg.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
+        it "should know which features are depended upon by those installed on the default group" do
+          dep_dests = []
+          ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+            dep_dests << @store.AddFeature(fn)
+          end
+          
+          default = Group.DEFAULT_GROUP
+          
+          dep_dests[0].ModifyDepends("ADD", FakeList[dep_dests[2].name, dep_dests[4].name])
+          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          
+          dfg = Feature.dependencies_for_group(default)
+          
+          dfg.should have(2).things
+          
+          [2,4].each do |num|
+            dfg.map {|x| x.name}.should include(dep_dests[num].name)
+          end
+        end
+
         it "should know which features are installed on a given node when those are installed in the node's identity group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
