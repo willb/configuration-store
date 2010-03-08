@@ -18,6 +18,7 @@ require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Group'
 require 'mrg/grid/config/QmfUtils'
 require 'mrg/grid/config/DataValidating'
+require 'mrg/grid/config/ConfigValidating'
 
 module Mrg
   module Grid
@@ -37,10 +38,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         include DataValidating
-        
-        BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
-        UNSET_MUSTCHANGE_PARAMS = "Unset necessary parameters"
-        BROKEN_PARAM_DEPS = "Unsatisfied parameter dependencies"
+        include ConfigValidating
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Node'
@@ -236,45 +234,6 @@ module Mrg
         
         expose :GetMemberships do |args|
           args.declare :groups, :map, :out, {}
-        end
-        
-        # Validate ensures the following for a given node N:
-        #  1.  if N enables some feature F that depends on F', N must also include F', 
-        #        enable F', or enable some feature F'' that includes F'
-        #  2.  if N enables some feature F that depends on some param P being set,
-        #        N must provide a value for P
-        #  3.  if N sets some param P that depends on some other param P',
-        #        N must also set P'
-        #    
-        #  Other consistency properties are ensured by other parts of the store (e.g.
-        #  that a group does not enable conflicting features).  Returns true if the
-        #  configuration is valid, or an explanation if it is not.
-        
-        
-        def validate
-          my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
-          log.debug "in Node#validate for #{self.name}..."
-          
-          dfn = Feature.dependencies_for_node(self).map {|f| f.name}
-          log.debug "dependencies for node is #{dfn}"
-          
-          ffn = Feature.features_for_node(self).map {|f| f.name}
-          log.debug "features for node is #{ffn}"
-          
-          orphaned_deps = (dfn - ffn).reject {|f| f == nil }
-          unset_params = my_unset_params(my_config)
-          my_params = Parameter.s_for_node(self)
-          my_param_deps = Parameter.dependencies_for_node(self, my_params)
-          orphaned_params = my_param_deps - my_params
-          
-          return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
-          
-          result = {}
-          result[BROKEN_FEATURE_DEPS] = FakeSet[*orphaned_deps].to_h if orphaned_deps != []
-          result[UNSET_MUSTCHANGE_PARAMS] = FakeSet[*unset_params].to_h if unset_params != []
-          result[BROKEN_PARAM_DEPS] = FakeSet[*orphaned_params].to_h if orphaned_params != []
-          
-          [self.name, result]
         end
         
         def Node.get_dirty_nodes
