@@ -414,7 +414,13 @@ module Mrg
             feature = get_object(f)
             out = Feature.new
             out.name = feature.GetName
-            out.params = feature.GetParams
+            params = feature.GetParams
+            
+            # Ensure that params that should get the default values are serialized
+            default_params = feature.GetParamMeta.select {|k,v| v["uses_default"] == true}.map {|pair| pair[0]}
+            default_params.each {|dp_key| params[dp_key] = 0}
+            
+            out.params = params
             out.included = fl_normalize(feature.GetFeatures)
             out.conflicts = fs_normalize(feature.GetConflicts)
             out.depends = fl_normalize(feature.GetDepends)

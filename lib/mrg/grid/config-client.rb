@@ -168,6 +168,10 @@ module Mrg
           @qmfo.GetParams.params
         end
         
+        def GetParamMeta()
+          @qmfo.GetParamMeta.param_info
+        end
+        
         def ModifyParams(command,pvmap,options={})
           @qmfo.ModifyParams(command,pvmap,options)
         end

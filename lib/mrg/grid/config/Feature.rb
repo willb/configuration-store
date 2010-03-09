@@ -126,6 +126,18 @@ module Mrg
         expose :GetParams do |args|
           args.declare :params, :map, :out, {}
         end
+
+        # GetParams 
+        # * param_info (map/O)
+        #   A map(paramName, map) of parameters to maps of metainformation
+        def GetParamMeta()
+          log.debug "GetParamMeta called on feature #{self.inspect}"
+          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, {"uses_default"=>fp.uses_default, "given_value"=>fp.given_value}]}.flatten]
+        end
+        
+        expose :GetParamMeta do |args|
+          args.declare :param_info, :map, :out, {}
+        end
         
         def ClearParams
           log.debug "ClearParams called on feature #{self.inspect}"
