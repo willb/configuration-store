@@ -1,0 +1,114 @@
+#!/usr/bin/env ruby
+
+# wallaby-load:  bulk load utility for the wallaby store
+# Copyright (c) 2009--2010 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+require 'qmf'
+require 'mrg/grid/config-client'
+require 'mrg/grid/config-proxies'
+
+# cartoon characters
+nodenames = %w{astro atom-ant aunt-sis avenger bamm-bamm bandit barney betty biff big-gruesome billy bingo birdboy birdgirl birdman blammo-the-clown bloo blossom blubber-bear blue-falcon boid boo-boo-bear boogey-man boskov breezly brenda bubbles bubi-bear bunny-bravo buttercup captain-caveman captain-tough carl chief-winchley china-cat-spot chip chopper chuck cindy-bear clamhead cod-commando coil-man cosmo cousin-tex crocodile-harley dad daphne-blake dd dead-toadblatt dee-dee destructicus-con-carne dexter dick-dastardly ding-a-ling-wolf dino dixie dotty dr-benton-quest dracula droop-a-long drooper dynomutt elroy enrique ensign-slaughter eris estroy eustace-p-peevly falcon-7 fat-cats fibber-fox fishtail fleegle flick flim-flam fluid-man fred fuzzy-lumpkins general-skarr george gladys godfrey gravel-slag gravity-girl great-gazoo grim-reaper gruesomes hair-bear hard-luck-duck harold hector-con-carne hi-riser hokey-wolf hong-kong-phooey hoppy hoss-delgado huckleberry-hound ignoramoose im-weasel ir-baboon irwin jabberjaw jane jeff-the-spider jet-screamer joe-rockhead jof johnny-bravo johnny-the-worm jonny-quest judge-roy-spleen judy kablamity-jane kaboobie klunk koos-a-la-goop-a-goop larry lil-rock lionel-j-botch little-gruesome lord-moldybutt luke magilla-gorilla major-dr-ghastly major-glory malcolm mandark mandy melvin meteor-man mightor mindy mitch moby-dick mojo-jojo mom monkey mordechai morocco-mole mr-hackensack mr-jinks mr-peebles mrs-butterbean mrs-keane multi-man mushmouse muttley nancy nergal nergal-junior nigel-planter ogee ork pebbles penelope-pitstop pepper peter-perfect peter-potamus pfish pixie pizza-boy pondo pops precious-pupp princess-morebucks principal-goodvibes private-meekly professor-pat-pending professor-utonium pudn punkin-puss race-bannon ranger-smith red-max revs ricochet-rabbit rock rosemary rosie rota-ree rufus-ruffcut sally sara-bellum sawtooth scooby scooby-dee scooby-dum scrambles scrappy-doo scully secret-squirrel sedusa sergeant-blast shaggy shake shazzan sheera shelly sheriff-bagley simon sledgehammer-opossum snagglepuss sneezly snoot-the-flea snorky soso sperg square-bear squiddly-diddly superintendent suzy taffy tanya the-chief the-gangreen-gang the-infraggable-krunk the-mayor the-sarge tumbleweed-tex valhallen vapor-man velma-dinkley vincent-van-ghoul wally-gator wheelie wilma wimper winsome-witch woofer worm yabba-doo yahooey yakky-doodle yankee-doodle-pigeon yappee yippee yogi-bear yoink-of-the-yukon yuckie-duck zeek zilly zoonatiks}
+
+# Rossini operas
+featurenames = ["Adelaide di Borgogna", "Adina", "Armida", "Aureliano in Palmira", "Il Barberiere di Siviglia", "Bianca e Falliero", "La cambiale di matrimonio", "La Cenerentola", "Ciro in Babilonia", "Le comte Ory", "Demetrio e Polibio", "La donna del lago", "Eduardo e Cristina", "Elisabetta, regina d'Inghilterra", "L'equivoco stravagante", "Ermione", "La gazza ladra", "La gazzetta", "L'inganno felice", "L'italiana in Algeri", "Ivanhoé", "Maometto II", "Matilde di Shabran", "Mosè in Egitto", "L'occasione fa il ladro", "Otello", "La pietra del paragone", "Ricciardo e Zoraide", "La scala di seta", "Semiramide", "Le siège de Corinthe", "Sigismondo", "Il signor Bruschino", "Tancredi", "Torvaldo e Dorliska", "Il turco in Italia", "Il viaggio a Reims", "William Tell", "Zelmira"]
+
+# rock groups signed to DC-based Dischord records
+groupnames = ["Antelope", "The Aquarium", "Artificial Peace", "Autoclave", "Beauty Pill", "Beefeater", "Black Eyes", "Bluetip", "Branch Manager", "Capitol City Dusters", "Channels", "Circus Lupus", "The Crownhate Ruin", "Dag Nasty", "Deadline", "Double-O ", "Egg Hunt", "El Guapo", "Embrace", "The Evens", "The Faith ", "Faraquet", "Fidelity Jones", "Fire Party", "French Toast", "Fugazi", "Government Issue", "Gray Matter", "Happy Go Licky", "High Back Chairs", "Holy Rollers", "Hoover", "Ignition", "Iron Cross", "Jawbox ", "Joe Lally", "Lungfish", "The Make-Up", "Marginal Man", "Medications", "Minor Threat", "Nation of Ulysses", "One Last Wish", "The Pupils", "Q and Not U", "Red C", "Rites of Spring", "Scream", "Severin", "Shudder to Think", "Skewbald", "Slant 6", "Smart Went Crazy", "Soulside", "State of Alert ", "Teen Idles", "Three", "Trusty", "Untouchables", "Void", "The Warmers", "DC Youth Brigade"]
+
+# anatomical systems
+subsysnames = ["Circulatory", "Digestive", "Endocrine", "Integumentary", "Lymphatic", "Muscular", "Nervous", "Reproductive", "Respiratory", "Skeletal", "Urinary"]
+
+
+host = ENV['WALLABY_BROKER_HOST'] || "localhost"
+port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
+username = ENV['WALLABY_BROKER_USER']
+password = ENV['WALLABY_BROKER_PASSWORD']
+debug = :warn
+activate = false
+Mrg::Grid::SerializedConfigs::ConfigLoader.log = SimpleLog.new(:info)
+verbosity = nil
+
+op = OptionParser.new do |opts|
+  opts.banner = "Usage wallaby-stresstest [options]"
+
+  opts.on("-h", "--help", "shows this message") do
+    raise OptionParser::InvalidOption
+  end
+
+  opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
+    host = h
+  end
+
+  opts.on("-p", "--port NUM", "qpid broker port (default 5672)") do |num|
+    port = num.to_i
+  end
+
+  opts.on("-U", "--user NAME", "qpid username") do |name|
+    username = name
+  end
+
+  opts.on("-P", "--password PASS", "qpid password") do |pass|
+    password = pass
+  end
+
+  opts.on("-a", "--activate", "attempt to activate config after loading") do
+    activate = true
+  end
+end
+
+begin
+  op.parse!
+rescue OptionParser::InvalidOption
+  puts op
+  exit
+end
+
+input = (ARGV.size > 0 ? open(ARGV[0]) : $stdin)
+
+console = Qmf::Console.new
+
+settings = Qmf::ConnectionSettings.new
+settings.username = username if username
+settings.password = password if password
+settings.host = host
+settings.port = port
+
+connection = Qmf::Connection.new(settings)
+
+broker = console.add_connection(connection)
+
+broker.wait_for_stable
+
+store = console.object(:class=>"Store")
+store.storeinit("resetdb"=>"yes")
+
+store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
+
+# XXX:  do stress testing here
+
+if activate
+  explain = store_client.ActivateConfig
+  if explain != {}
+    puts "Failed to activate configuration; please correct the following errors."
+    explain.each do |node, node_explain|
+      puts "#{node}:"
+      node_explain.each do |reason, ls|
+        puts "  #{reason}: #{ls.inspect}"
+      end
+    end
+    exit(1)
+  end
+end
