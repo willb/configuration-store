@@ -89,7 +89,7 @@ Rhubarb::Persistence::open(dbname)
 Rhubarb::Persistence::open(snapdb,:snapshot)
 
 Mrg::Grid::Config::MAIN_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:default] }
-Mrg::Grid::Config::Snapshot.db = Rhubarb::Persistence::dbs[:snapshot]
+Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
 
 if DO_CREATE
   classes = Mrg::Grid::Config::MAIN_DB_TABLES
@@ -102,8 +102,8 @@ if DO_CREATE
 end
 
 if DO_SNAPCREATE
-  puts "creating snapshot table"
-  Mrg::Grid::Config::Snapshot.create_table(:snapshot)
+  puts "creating snapshot tables"
+  Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
 end
 
 options = {}
