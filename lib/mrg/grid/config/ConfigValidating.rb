@@ -66,6 +66,22 @@ module Mrg
           
           [self.name, result]
         end
+
+        def my_unset_params(my_config = nil)
+          my_config ||= self.GetConfig
+          mc_params = Parameter.s_that_must_change
+          (my_config.keys & mc_params.keys).inject([]) do |acc,param|
+            dv = Parameter.find_first_by_name(param).default_val
+            acc << param if my_config[param] == dv
+            acc
+          end
+        end
+        
+        def self.included(base)
+          base.instance_eval do
+            private :my_unset_params
+          end
+        end
       end
     end
   end

@@ -254,16 +254,6 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
 
         private
         
-        def my_unset_params(my_config = nil)
-          my_config ||= self.GetConfig
-          mc_params = Parameter.s_that_must_change
-          (my_config.keys & mc_params.keys).inject([]) do |acc,param|
-            dv = Parameter.find_first_by_name(param).default_val
-            acc << param if my_config[param] == dv
-            acc
-          end
-        end
-          
         def my_features
           my_groups.inject([]) do |acc, grp|
             current_features = grp.features
