@@ -402,11 +402,13 @@ module Mrg
             node.validate.should_not == true
             node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
 
-            explain, warnings = @store.ActivateConfiguration
-            explain.should_not == {}
-            explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-            
-            warnings.should == {}
+            [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+              
+              warnings.should == {}
+            end
             
           end
 
@@ -422,11 +424,12 @@ module Mrg
             node.validate.should_not == true
             node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
 
-            explain, warnings = @store.ActivateConfiguration
-            explain.should_not == {}
-            explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-            
-            warnings.should == {}
+            [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+              warnings.should == {}
+            end
             
           end
 
@@ -445,196 +448,213 @@ module Mrg
             node.validate.should_not == true
             node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
             
-            explain, warnings = @store.ActivateConfiguration
-            explain.should_not == {}
-            explain["blah.local."][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+            [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+
+              warnings.should == {}
+            end
             
-            warnings.should == {}
             
           end
+          
+          [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
+            [true, false].each do |mustchange|
 
-          [true, false].each do |mustchange|
+              mustchangestr = mustchange ? "must-change" : "defaultable"
+              action = va_msg == :ValidateConfiguration ? "validate" : "activate"
 
-            mustchangestr = mustchange ? "must-change" : "defaultable"
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
+                param = @store.AddParam("FOO")
+                param.SetDefaultMustChange(mustchange)
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
-              param = @store.AddParam("FOO")
-              param.SetDefaultMustChange(mustchange)
+                feature = @store.AddFeature("FooFeature")
+                feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
-              feature = @store.AddFeature("FooFeature")
-              feature.ModifyParams("ADD", {"FOO"=>0}, {})
+                node = @store.send(node_find_msg, "blah.local.")
+                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
 
-              node = @store.send(node_find_msg, "blah.local.")
-              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+                Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
-              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+                config = node.GetConfig
 
-              config = node.GetConfig
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-            end
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
-              param = @store.AddParam("FOO")
-              param.SetDefaultMustChange(mustchange)
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+              end
 
-              feature = @store.AddFeature("FooFeature")
-              feature.ModifyParams("ADD", {"FOO"=>0}, {})
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
+                param = @store.AddParam("FOO")
+                param.SetDefaultMustChange(mustchange)
 
-              node = @store.send(node_find_msg, "blah.local.")
-              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+                feature = @store.AddFeature("FooFeature")
+                feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
-              node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
+                node = @store.send(node_find_msg, "blah.local.")
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
 
-              config = node.GetConfig
+                node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
-            end
+                config = node.GetConfig
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
-              param = @store.AddParam("FOO")
-              param.SetDefaultMustChange(mustchange)
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
 
-              feature = @store.AddFeature("FooFeature")
-              feature.ModifyParams("ADD", {"FOO"=>0}, {})
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
 
-              feature2 = @store.AddFeature("LocalFooFeature")
-              feature2.ModifyParams("ADD", {"FOO"=>"BLAH"}, {})
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+
+              end
+
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
+                param = @store.AddParam("FOO")
+                param.SetDefaultMustChange(mustchange)
+
+                feature = @store.AddFeature("FooFeature")
+                feature.ModifyParams("ADD", {"FOO"=>0}, {})
+
+                feature2 = @store.AddFeature("LocalFooFeature")
+                feature2.ModifyParams("ADD", {"FOO"=>"BLAH"}, {})
 
 
-              node = @store.send(node_find_msg, "blah.local.")
-              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+                node = @store.send(node_find_msg, "blah.local.")
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
 
-              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
 
-              config = node.GetConfig
+                config = node.GetConfig
 
-              node.validate.should == true
-              config["FOO"].should == "BLAH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
-            end
+                node.validate.should == true
+                config["FOO"].should == "BLAH"
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
-              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-              params.each {|param| param.SetDefaultMustChange(mustchange)}
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
 
-              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
 
-              node = @store.send(node_find_msg, "blah.local.")
-              Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+              end
 
-              node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
+                params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+                params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-              config = node.GetConfig
+                features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+                features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+                features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              config["BAR"].should == "BARGH"
-              config["BLAH"].should == "BLARGH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
-            end
+                node = @store.send(node_find_msg, "blah.local.")
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
-              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-              params.each {|param| param.SetDefaultMustChange(mustchange)}
+                node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
-              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+                config = node.GetConfig
 
-              node = @store.send(node_find_msg, "blah.local.")
-              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
+                config["BAR"].should == "BARGH"
+                config["BLAH"].should == "BLARGH"
 
-              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
 
-              config = node.GetConfig
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+              end
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              config["BAR"].should == "BARGH"
-              config["BLAH"].should == "BLARGH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
-            end
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
+                params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+                params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-            it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
-              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-              params.each {|param| param.SetDefaultMustChange(mustchange)}
+                features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+                features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+                features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+                node = @store.send(node_find_msg, "blah.local.")
+                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-              node = @store.send(node_find_msg, "blah.local.")
-              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
-              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-              node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
+                config = node.GetConfig
 
-              config = node.GetConfig
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
+                config["BAR"].should == "BARGH"
+                config["BLAH"].should == "BLARGH"
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              config["BAR"].should == "BARGH"
-              config["BLAH"].should == "BLARGH"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
-            end
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
 
-            it "should, if it is #{nodekind}, report the highest-priority parameter value in configurations that provide values for #{mustchangestr} parameters in multiple places" do
-              params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
-              params.each {|param| param.SetDefaultMustChange(mustchange)}
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+              end
 
-              features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
-              features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
-              features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+              it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
+                params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+                params.each {|param| param.SetDefaultMustChange(mustchange)}
 
-              node = @store.send(node_find_msg, "blah.local.")
-              node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+                features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+                features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
-              Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-              node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
+                node = @store.send(node_find_msg, "blah.local.")
+                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
 
-              config = node.GetConfig
+                Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+                node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
 
-              node.validate.should == true
-              config["FOO"].should == "ARGH"
-              config["BAR"].should == "BARGH"
-              config["BLAH"].should == "blargh"
-              
-              explain, warnings = @store.ActivateConfiguration
-              explain.should == {}
-              warnings.should == {}
-              
+                config = node.GetConfig
+
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
+                config["BAR"].should == "BARGH"
+                config["BLAH"].should == "BLARGH"
+
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
+
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+              end
+
+              it "should, if it is #{nodekind}, report the highest-priority parameter value in #{action}d configurations that provide values for #{mustchangestr} parameters in multiple places" do
+                params = %w{FOO BAR BLAH}.map {|pname| @store.AddParam(pname)}
+                params.each {|param| param.SetDefaultMustChange(mustchange)}
+
+                features = %w{FooBarFeature BlahFeature}.map {|fname| @store.AddFeature(fname)}
+                features[0].ModifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
+                features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
+
+                node = @store.send(node_find_msg, "blah.local.")
+                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+
+                Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
+                node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
+
+                config = node.GetConfig
+
+                node.validate.should == true
+                config["FOO"].should == "ARGH"
+                config["BAR"].should == "BARGH"
+                config["BLAH"].should == "blargh"
+
+                explain, warnings = @store.send(va_msg)
+                explain.should == {}
+                warnings.should == {}
+
+                node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
+              end
             end
           end
+
         end
 
         it "should have only one identity group" do

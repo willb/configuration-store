@@ -174,33 +174,19 @@ module Mrg
         #   A map whose keys represent a set of warnings encountered in configuration activation
         
         def ActivateConfiguration()
-          dirty_nodes = Node.get_dirty_nodes
-          this_version = ::Rhubarb::Util::timestamp
-          default_group_only = (dirty_nodes.size == 0)
-          warnings = {}
-          
-          if default_group_only
-            log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
-            dirty_nodes << Group.DEFAULT_GROUP
-            warnings["No nodes in configuration; only tested default group"] = 1
-          end
-          
-          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]
-          
-          if results.keys.size > 0 || default_group_only
-            return [results, warnings]
-          end
-                    
-          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
-          
-          DirtyElement.delete_all
-          
-          new_config_event(dirty_nodes.map {|dn| dn.name}, this_version)
-          
-          [results, warnings]
+          validate_and_activate
         end
         
         expose :ActivateConfiguration do |args|
+          args.declare :explain, :map, :out, {}
+          args.declare :warnings, :map, :out, {}
+        end
+        
+        def ValidateConfiguration
+          validate_and_activate(true)
+        end
+        
+        expose :ValidateConfiguration do |args|
           args.declare :explain, :map, :out, {}
           args.declare :warnings, :map, :out, {}
         end
@@ -496,6 +482,33 @@ module Mrg
           event_class.add_argument(Qmf::SchemaArgument.new("nodelist_str", Qmf::TYPE_LSTR))
           app.agent.register_class(event_class)
           event_class
+        end
+        
+        def validate_and_activate(validate_only=false)
+          dirty_nodes = Node.get_dirty_nodes
+          this_version = ::Rhubarb::Util::timestamp
+          default_group_only = (dirty_nodes.size == 0)
+          warnings = {}
+          
+          if default_group_only
+            log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
+            dirty_nodes << Group.DEFAULT_GROUP
+            warnings["No nodes in configuration; only tested default group"] = 1
+          end
+          
+          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]
+          
+          if validate_only || default_group_only || results.keys.size > 0
+            return [results, warnings]
+          end
+                    
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
+          
+          DirtyElement.delete_all
+          
+          new_config_event(dirty_nodes.map {|dn| dn.name}, this_version)
+          
+          [results, warnings]
         end
         
       end
