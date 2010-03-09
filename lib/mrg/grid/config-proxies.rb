@@ -224,7 +224,7 @@ module Mrg
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
               log.info("Finding special group '#{name}'")
-              group = @store.GetGroup("NAME"=>name)
+              group = @store.GetGroup({"NAME"=>name})
             else
               log.info("Creating group '#{name}'")
               group = @store.AddExplicitGroup(name)
