@@ -170,15 +170,25 @@ module Mrg
         # * explain (map/O)
         #   A map containing an explanation of why the configuration isn't valid, or
         #   an empty map if the configuration was successfully pushed out
+        # * warnings (map/O)
+        #   A map whose keys represent a set of warnings encountered in configuration activation
         
         def ActivateConfiguration()
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
+          default_group_only = (dirty_nodes.size == 0)
+          warnings = {}
+          
+          if default_group_only
+            log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
+            dirty_nodes << Group.DEFAULT_GROUP
+            warnings["No nodes in configuration; only tested default group"] = 1
+          end
           
           results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]
           
-          if results.keys.size > 0
-            return results
+          if results.keys.size > 0 || default_group_only
+            return [results, warnings]
           end
                     
           dirty_nodes.each {|dn| dn.last_updated_version = this_version }
@@ -187,11 +197,12 @@ module Mrg
           
           new_config_event(dirty_nodes.map {|dn| dn.name}, this_version)
           
-          results
+          [results, warnings]
         end
         
         expose :ActivateConfiguration do |args|
           args.declare :explain, :map, :out, {}
+          args.declare :warnings, :map, :out, {}
         end
         
         # AddNode 

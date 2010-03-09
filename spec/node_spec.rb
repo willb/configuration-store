@@ -402,9 +402,12 @@ module Mrg
             node.validate.should_not == true
             node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
 
-            explain = @store.ActivateConfiguration
+            explain, warnings = @store.ActivateConfiguration
             explain.should_not == {}
             explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+            
+            warnings.should == {}
+            
           end
 
           it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the idgroup)" do
@@ -418,6 +421,13 @@ module Mrg
             config = node.GetConfig
             node.validate.should_not == true
             node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+
+            explain, warnings = @store.ActivateConfiguration
+            explain.should_not == {}
+            explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+            
+            warnings.should == {}
+            
           end
 
           it "should, if it is #{nodekind}, not validate configurations that do not provide values for must-change parameters" do
@@ -434,6 +444,13 @@ module Mrg
 
             node.validate.should_not == true
             node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+            
+            explain, warnings = @store.ActivateConfiguration
+            explain.should_not == {}
+            explain["blah.local."][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+            
+            warnings.should == {}
+            
           end
 
           [true, false].each do |mustchange|
@@ -456,6 +473,10 @@ module Mrg
 
               node.validate.should == true
               config["FOO"].should == "ARGH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
             end
 
             it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
@@ -474,6 +495,11 @@ module Mrg
 
               node.validate.should == true
               config["FOO"].should == "ARGH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
 
             it "should, if it is #{nodekind}, validate configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
@@ -496,6 +522,11 @@ module Mrg
 
               node.validate.should == true
               config["FOO"].should == "BLAH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
 
             it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
@@ -517,6 +548,11 @@ module Mrg
               config["FOO"].should == "ARGH"
               config["BAR"].should == "BARGH"
               config["BLAH"].should == "BLARGH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
 
             it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
@@ -538,6 +574,11 @@ module Mrg
               config["FOO"].should == "ARGH"
               config["BAR"].should == "BARGH"
               config["BLAH"].should == "BLARGH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
 
             it "should, if it is #{nodekind}, validate configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
@@ -560,6 +601,11 @@ module Mrg
               config["FOO"].should == "ARGH"
               config["BAR"].should == "BARGH"
               config["BLAH"].should == "BLARGH"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
 
             it "should, if it is #{nodekind}, report the highest-priority parameter value in configurations that provide values for #{mustchangestr} parameters in multiple places" do
@@ -582,6 +628,11 @@ module Mrg
               config["FOO"].should == "ARGH"
               config["BAR"].should == "BARGH"
               config["BLAH"].should == "blargh"
+              
+              explain, warnings = @store.ActivateConfiguration
+              explain.should == {}
+              warnings.should == {}
+              
             end
           end
         end
@@ -589,6 +640,7 @@ module Mrg
         it "should have only one identity group" do
           pending
         end
+        
       end
     end
   end

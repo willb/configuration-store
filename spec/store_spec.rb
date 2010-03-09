@@ -14,6 +14,41 @@ module Mrg
           @entity_list = []
           teardown_rhubarb
         end
+
+        it "should validate empty configurations" do
+          explain, warnings = @store.ActivateConfiguration
+          explain.should == {}
+          warnings.keys.grep(/No nodes in configuration/).should_not == []
+        end
+
+        
+        it "should not validate nodeless configurations that do not provide features depended upon by enabled features (in the default group)" do
+          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
+          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
+
+          explain, warnings = @store.ActivateConfiguration
+          explain.should_not == {}
+          explain["+++DEFAULT"][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+          warnings.keys.grep(/No nodes in configuration/).should_not == []
+        end
+
+        it "should not validate nodeless configurations that do not provide values for must-change parameters" do
+          param = @store.AddParam("FOO")
+          param.SetDefaultMustChange(true)
+
+          feature = @store.AddFeature("FooFeature")
+          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+
+          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+
+          explain, warnings = @store.ActivateConfiguration
+          explain.should_not == {}
+          explain["+++DEFAULT"][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+          warnings.keys.grep(/No nodes in configuration/).should_not == []
+        end
+        
         
         # XXX:  the internal versions of these should probably go in a module to be mixed in to the respective spec files
         {Feature=>:AddFeature, Group=>:AddExplicitGroup, Node=>:AddNode, Parameter=>:AddParam, Subsystem=>:AddSubsys}.each do |klass, instantiate_klass_msg|
