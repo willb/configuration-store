@@ -107,6 +107,9 @@ rm -rf %{buildroot}
 
 %changelog
 
+* Tue Mar 9 2010 willb <willb@redhat> - 0.2.10-1
+- Updated to source version 0.2.10
+
 * Fri Mar 5 2010 willb <willb@redhat> - 0.2.9-1
 - Updated to source version 0.2.9
 
