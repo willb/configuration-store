@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# wallaby-load:  bulk load utility for the wallaby store
+# wallaby-st-fixture:  stress test and test fixture utility for the wallaby store
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +18,6 @@
 require 'qmf'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
-
-# cartoon characters
-nodenames = %w{astro atom-ant aunt-sis avenger bamm-bamm bandit barney betty biff big-gruesome billy bingo birdboy birdgirl birdman blammo-the-clown bloo blossom blubber-bear blue-falcon boid boo-boo-bear boogey-man boskov breezly brenda bubbles bubi-bear bunny-bravo buttercup captain-caveman captain-tough carl chief-winchley china-cat-spot chip chopper chuck cindy-bear clamhead cod-commando coil-man cosmo cousin-tex crocodile-harley dad daphne-blake dd dead-toadblatt dee-dee destructicus-con-carne dexter dick-dastardly ding-a-ling-wolf dino dixie dotty dr-benton-quest dracula droop-a-long drooper dynomutt elroy enrique ensign-slaughter eris estroy eustace-p-peevly falcon-7 fat-cats fibber-fox fishtail fleegle flick flim-flam fluid-man fred fuzzy-lumpkins general-skarr george gladys godfrey gravel-slag gravity-girl great-gazoo grim-reaper gruesomes hair-bear hard-luck-duck harold hector-con-carne hi-riser hokey-wolf hong-kong-phooey hoppy hoss-delgado huckleberry-hound ignoramoose im-weasel ir-baboon irwin jabberjaw jane jeff-the-spider jet-screamer joe-rockhead jof johnny-bravo johnny-the-worm jonny-quest judge-roy-spleen judy kablamity-jane kaboobie klunk koos-a-la-goop-a-goop larry lil-rock lionel-j-botch little-gruesome lord-moldybutt luke magilla-gorilla major-dr-ghastly major-glory malcolm mandark mandy melvin meteor-man mightor mindy mitch moby-dick mojo-jojo mom monkey mordechai morocco-mole mr-hackensack mr-jinks mr-peebles mrs-butterbean mrs-keane multi-man mushmouse muttley nancy nergal nergal-junior nigel-planter ogee ork pebbles penelope-pitstop pepper peter-perfect peter-potamus pfish pixie pizza-boy pondo pops precious-pupp princess-morebucks principal-goodvibes private-meekly professor-pat-pending professor-utonium pudn punkin-puss race-bannon ranger-smith red-max revs ricochet-rabbit rock rosemary rosie rota-ree rufus-ruffcut sally sara-bellum sawtooth scooby scooby-dee scooby-dum scrambles scrappy-doo scully secret-squirrel sedusa sergeant-blast shaggy shake shazzan sheera shelly sheriff-bagley simon sledgehammer-opossum snagglepuss sneezly snoot-the-flea snorky soso sperg square-bear squiddly-diddly superintendent suzy taffy tanya the-chief the-gangreen-gang the-infraggable-krunk the-mayor the-sarge tumbleweed-tex valhallen vapor-man velma-dinkley vincent-van-ghoul wally-gator wheelie wilma wimper winsome-witch woofer worm yabba-doo yahooey yakky-doodle yankee-doodle-pigeon yappee yippee yogi-bear yoink-of-the-yukon yuckie-duck zeek zilly zoonatiks}
-
-# Rossini operas
-featurenames = ["Adelaide di Borgogna", "Adina", "Armida", "Aureliano in Palmira", "Il Barberiere di Siviglia", "Bianca e Falliero", "La cambiale di matrimonio", "La Cenerentola", "Ciro in Babilonia", "Le comte Ory", "Demetrio e Polibio", "La donna del lago", "Eduardo e Cristina", "Elisabetta, regina d'Inghilterra", "L'equivoco stravagante", "Ermione", "La gazza ladra", "La gazzetta", "L'inganno felice", "L'italiana in Algeri", "Ivanhoé", "Maometto II", "Matilde di Shabran", "Mosè in Egitto", "L'occasione fa il ladro", "Otello", "La pietra del paragone", "Ricciardo e Zoraide", "La scala di seta", "Semiramide", "Le siège de Corinthe", "Sigismondo", "Il signor Bruschino", "Tancredi", "Torvaldo e Dorliska", "Il turco in Italia", "Il viaggio a Reims", "William Tell", "Zelmira"]
-
-# rock groups signed to DC-based Dischord records
-groupnames = ["Antelope", "The Aquarium", "Artificial Peace", "Autoclave", "Beauty Pill", "Beefeater", "Black Eyes", "Bluetip", "Branch Manager", "Capitol City Dusters", "Channels", "Circus Lupus", "The Crownhate Ruin", "Dag Nasty", "Deadline", "Double-O ", "Egg Hunt", "El Guapo", "Embrace", "The Evens", "The Faith ", "Faraquet", "Fidelity Jones", "Fire Party", "French Toast", "Fugazi", "Government Issue", "Gray Matter", "Happy Go Licky", "High Back Chairs", "Holy Rollers", "Hoover", "Ignition", "Iron Cross", "Jawbox ", "Joe Lally", "Lungfish", "The Make-Up", "Marginal Man", "Medications", "Minor Threat", "Nation of Ulysses", "One Last Wish", "The Pupils", "Q and Not U", "Red C", "Rites of Spring", "Scream", "Severin", "Shudder to Think", "Skewbald", "Slant 6", "Smart Went Crazy", "Soulside", "State of Alert ", "Teen Idles", "Three", "Trusty", "Untouchables", "Void", "The Warmers", "DC Youth Brigade"]
-
-# anatomical systems
-subsysnames = ["Circulatory", "Digestive", "Endocrine", "Integumentary", "Lymphatic", "Muscular", "Nervous", "Reproductive", "Respiratory", "Skeletal", "Urinary"]
-
 
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
 port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
