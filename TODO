@@ -1,4 +1,3 @@
-* failed getters should raise (descriptive) exceptions
 * Param verification on Feature -- it should be impossible to:
   ** modify a feature's param mappings so that they include two conflicting params
   ** install two features on a group if so doing would result in two conflicting parameters would be enabled in the group's configuration
