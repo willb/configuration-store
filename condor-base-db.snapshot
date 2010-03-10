@@ -3,14 +3,21 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - Master
   included: []
 
-  name: NodeAccess
+  name: TriggerService
   params: 
-    ALLOW_WRITE: ""
-    ALLOW_READ: ""
+    QMF_BROKER_PORT: "5672"
+    TRIGGERD: $(SBIN)/condor_triggerd
+    MAX_TRIGGERD_LOG: "1000000"
+    QMF_BROKER_HOST: ""
+    DAEMON_LIST: ">= TRIGGERD"
+    TRIGGERD.QMF_STOREFILE: $(DATA)/.triggerd_storefile
+    TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
+    TRIGGERD_LOG: $(LOG)/TriggerLog
+    DATA: $(SPOOL)
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -34,21 +41,13 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: 
-  - Master
-  included: []
+  depends: []
 
-  name: TriggerService
+  included: 
+  - Scheduler
+  name: DedicatedScheduler
   params: 
-    QMF_BROKER_PORT: "5672"
-    TRIGGERD: $(SBIN)/condor_triggerd
-    MAX_TRIGGERD_LOG: "1000000"
-    QMF_BROKER_HOST: ""
-    DAEMON_LIST: ">= TRIGGERD"
-    TRIGGERD.QMF_STOREFILE: $(DATA)/.triggerd_storefile
-    TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
-    TRIGGERD_LOG: $(LOG)/TriggerLog
-    DATA: $(SPOOL)
+    DEDICATED_SCHEDULER_USE_FIFO: "TRUE"
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -95,26 +94,24 @@ features:
 
   depends: []
 
-  included: 
-  - ExecuteNode
-  name: DynamicSlots
+  included: []
+
+  name: CommonUIDDomain
   params: 
-    SLOT_TYPE_1_PARTITIONABLE: "TRUE"
-    SLOT_TYPE_1: cpus=100%,disk=100%,swap=100%
-    NUM_SLOTS: "1"
-    NUM_SLOTS_TYPE_1: "1"
+    UID_DOMAIN: ""
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - NodeAccess
   included: 
-  - Scheduler
-  name: DedicatedScheduler
-  params: 
-    DEDICATED_SCHEDULER_USE_FIFO: "TRUE"
+  - Collector
+  - Negotiator
+  name: CentralManager
+  params: {}
+
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -134,19 +131,6 @@ features:
     SPOOL: ""
     HA_POLL_PERIOD: "60"
     HA_LOCK_HOLD_TIME: "300"
-  subsystems: []
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends:
-  - NodeAccess
-
-  included: 
-  - Collector
-  - Negotiator
-  name: CentralManager
-  params: []
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -177,18 +161,6 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
-  included: 
-  - Negotiator
-  name: ConcurrencyLimits
-  params: 
-    CONCURRENCY_LIMIT_DEFAULT: "200"
-  subsystems: []
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
   depends: 
   - Master
   included: []
@@ -205,6 +177,45 @@ features:
     CREDD_LOG: $(LOG)/CredLog
     CREDD_ADDRESS_FILE: $(LOG)/.credd_address
     CREDD_ARGS: -p $(CREDD_PORT) -f
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - Negotiator
+  name: ConcurrencyLimits
+  params: 
+    CONCURRENCY_LIMIT_DEFAULT: "200"
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - ExecuteNode
+  name: DynamicSlots
+  params: 
+    SLOT_TYPE_1_PARTITIONABLE: "TRUE"
+    SLOT_TYPE_1: cpus=100%,disk=100%,swap=100%
+    NUM_SLOTS: "1"
+    NUM_SLOTS_TYPE_1: "1"
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: SharedFileSystem
+  params: 
+    FILESYSTEM_DOMAIN: ""
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -241,33 +252,22 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
+  depends: 
+  - Master
+  - NodeAccess
+  included: []
 
-  included: 
-  - DedicatedScheduler
-  name: SchedulerDedicatedPreemption
+  name: Collector
   params: 
-    SCHEDD_PREEMPTION_RANK: "0"
-    SCHEDD_PREEMPTION_REQUIREMENTS: ""
-  subsystems: []
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: []
-
-  included: 
-  - ExecuteNode
-  name: VMUniverse
-  params: 
-    VM_TYPE: ""
-    LIBVIRT_XML_SCRIPT: ""
-    VM_MEMORY: $(DETECTED_MEMORY)
-    VM_NETWORKING: ""
-    VM_GAHP_SERVER: $(SBIN)/condor_vm-gahp
-    VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
-    VM_GAHP_LOG: $(LOG)/VMGahpLog
-    MAX_VM_GAHP_LOG: "1000000"
+    COLLECTOR_LOG: $(LOG)/CollectorLog
+    COLLECTOR_DEBUG: ""
+    QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
+    COLLECTOR: $(SBIN)/condor_collector
+    DAEMON_LIST: ">= COLLECTOR"
+    FLOCK_COLLECTOR_HOSTS: $(FLOCK_TO)
+    MAX_COLLECTOR_LOG: "1000000"
+    COLLECTOR_HOST: $(CONDOR_HOST)
+    COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -299,22 +299,33 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: 
-  - Master
-  - NodeAccess
-  included: []
+  depends: []
 
-  name: Collector
+  included: 
+  - ExecuteNode
+  name: VMUniverse
   params: 
-    COLLECTOR_LOG: $(LOG)/CollectorLog
-    COLLECTOR_DEBUG: ""
-    QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
-    COLLECTOR: $(SBIN)/condor_collector
-    DAEMON_LIST: ">= COLLECTOR"
-    FLOCK_COLLECTOR_HOSTS: $(FLOCK_TO)
-    MAX_COLLECTOR_LOG: "1000000"
-    COLLECTOR_HOST: $(CONDOR_HOST)
-    COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
+    VM_TYPE: ""
+    VM_MEMORY: $(DETECTED_MEMORY)
+    VM_NETWORKING: ""
+    VM_GAHP_SERVER: $(SBIN)/condor_vm-gahp
+    LIBVIRT_XML_SCRIPT: ""
+    VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
+    VM_GAHP_LOG: $(LOG)/VMGahpLog
+    MAX_VM_GAHP_LOG: "1000000"
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - DedicatedScheduler
+  name: SchedulerDedicatedPreemption
+  params: 
+    SCHEDD_PREEMPTION_RANK: "0"
+    SCHEDD_PREEMPTION_REQUIREMENTS: ""
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -356,60 +367,23 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
+  depends: 
+  - Master
+  - Scheduler
+  included: []
 
-  included: 
-  - DedicatedResource
-  name: ExecuteNodeDedicatedPreemption
+  name: JobRouter
   params: 
-    STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
-  subsystems: []
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: []
-
-  included: 
-  - JobRouter
-  name: EC2Enhanced
-  params: 
-    NEED_SET_EC2E_ROUTES: "TRUE"
-    JOB_ROUTER_HOOK_KEYWORD: EC2E
-    EC2E_HOOK_TRANSLATE_JOB: $(LIBEXEC)/hooks/hook_translate.py
-    JOB_ROUTER_DEFAULTS: $(JOB_ROUTER_DEFAULTS) [ MaxIdleJobs = 10; MaxJobs = 200; set_PeriodicRemove = (JobStatus == 5 && HoldReason =!= "Spooling input data files") || (JobStatus == 1 && (CurrentTime - QDate) > 3600*6); set_requirements = true; set_WantAWS = false; ]
-    EC2E_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_retrieve_status.py
-    EC2E_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_finalize.py
-    EC2E_ATTRS_TO_COPY: EC2RunAttempts, EC2JobSuccessful
-    EC2E_HOOK_JOB_CLEANUP: $(LIBEXEC)/hooks/hook_cleanup.py
-    JOB_ROUTER_ENTRIES: ""
-  subsystems: []
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: []
-
-  included: 
-  - ExecuteNode
-  name: LowLatency
-  params: 
-    LL_DAEMON_PORT: "10000"
-    LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
-    JOB_HOOKS_PORT: $(LL_DAEMON_PORT)
-    LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
-    JOB_HOOKS_IP: 127.0.0.1
-    FETCHWORKDELAY: 10 * (Activity == "Idle")
-    LOW_LATENCY_JOB_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_exit.py
-    LOW_LATENCY_HOOK_REPLY_FETCH: $(LIBEXEC)/hooks/hook_reply_fetch.py
-    LL_DAEMON_LEASE_TIME: "35"
-    LL_DAEMON_IP: 127.0.0.1
-    DAEMON_LIST: ">= LL_DAEMON"
-    STARTER_UPDATE_INTERVAL: "30"
-    STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
-    LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
-    LL_DAEMON_QUEUED_CONNECTIONS: "5"
-    LOW_LATENCY_HOOK_FETCH_WORK: $(LIBEXEC)/hooks/hook_fetch_work.py
+    MAX_JOB_ROUTER_LOG: "1000000"
+    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    JOB_ROUTER_DEBUG: ""
+    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    DAEMON_LIST: ">= JOB_ROUTER"
+    MAX_HISTORY_ROTATIONS: "20"
+    JOB_ROUTER: $(LIBEXEC)/condor_job_router
+    JOB_ROUTER_LOG: $(LOG)/JobRouterLog
+    JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
+    JOB_ROUTER_POLLING_PERIOD: "10"
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -455,22 +429,59 @@ features:
   conflicts: []
 
   depends: 
-  - Master
-  - Scheduler
-  included: []
-
-  name: JobRouter
+  - JobHooks
+  included: 
+  - ExecuteNode
+  name: LowLatency
   params: 
-    MAX_JOB_ROUTER_LOG: "1000000"
-    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
-    JOB_ROUTER_DEBUG: ""
-    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
-    DAEMON_LIST: ">= JOB_ROUTER"
-    MAX_HISTORY_ROTATIONS: "20"
-    JOB_ROUTER: $(LIBEXEC)/condor_job_router
-    JOB_ROUTER_LOG: $(LOG)/JobRouterLog
-    JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
-    JOB_ROUTER_POLLING_PERIOD: "10"
+    LL_DAEMON_PORT: "10000"
+    LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
+    JOB_HOOKS_PORT: $(LL_DAEMON_PORT)
+    LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
+    FETCHWORKDELAY: 10 * (Activity == "Idle")
+    LOW_LATENCY_JOB_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_exit.py
+    LOW_LATENCY_HOOK_REPLY_FETCH: $(LIBEXEC)/hooks/hook_reply_fetch.py
+    LL_DAEMON_LEASE_TIME: "35"
+    LL_DAEMON_IP: 127.0.0.1
+    LL_DAEMON: $(SBIN)/carod
+    DAEMON_LIST: ">= LL_DAEMON"
+    STARTER_UPDATE_INTERVAL: "30"
+    STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
+    LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
+    LL_DAEMON_QUEUED_CONNECTIONS: "5"
+    LOW_LATENCY_HOOK_FETCH_WORK: $(LIBEXEC)/hooks/hook_fetch_work.py
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - JobRouter
+  name: EC2Enhanced
+  params: 
+    NEED_SET_EC2E_ROUTES: "TRUE"
+    JOB_ROUTER_HOOK_KEYWORD: EC2E
+    EC2E_HOOK_TRANSLATE_JOB: $(LIBEXEC)/hooks/hook_translate.py
+    JOB_ROUTER_DEFAULTS: $(JOB_ROUTER_DEFAULTS) [ MaxIdleJobs = 10; MaxJobs = 200; set_PeriodicRemove = (JobStatus == 5 && HoldReason =!= "Spooling input data files") || (JobStatus == 1 && (CurrentTime - QDate) > 3600*6); set_requirements = true; set_WantAWS = false; ]
+    EC2E_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_retrieve_status.py
+    EC2E_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_finalize.py
+    EC2E_ATTRS_TO_COPY: EC2RunAttempts, EC2JobSuccessful
+    EC2E_HOOK_JOB_CLEANUP: $(LIBEXEC)/hooks/hook_cleanup.py
+    JOB_ROUTER_ENTRIES: ""
+  subsystems: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - DedicatedResource
+  name: ExecuteNodeDedicatedPreemption
+  params: 
+    STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -480,9 +491,10 @@ features:
 
   included: []
 
-  name: SharedFileSystem
+  name: NodeAccess
   params: 
-    FILESYSTEM_DOMAIN: ""
+    ALLOW_WRITE: ""
+    ALLOW_READ: ""
   subsystems: []
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -492,16 +504,17 @@ features:
 
   included: []
 
-  name: CommonUIDDomain
+  name: JobHooks
   params: 
-    UID_DOMAIN: ""
+    JOB_HOOKS_PORT: "10000"
+    JOB_HOOKS_IP: 127.0.0.1
   subsystems: []
 
 groups: 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
   features: []
 
-  is_identity_group: true
+  is_identity_group: false
   name: +++DEFAULT
   params: {}
 
@@ -511,26 +524,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: -p $(CREDD_PORT) -f
-  depends: 
-  - CREDD_PORT
-  description: The arguments to pass to the Credd daemon
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_ARGS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "9620"
+  default_val: ""
   depends: []
 
-  description: The port the Credd will listen on for connections
-  kind: Integer
+  description: A string that is used to decide if two machines (a submitting machine and an execute machine) share a file system
+  kind: String
   level: 0
-  must_change: false
-  name: CREDD_PORT
+  must_change: true
+  name: FILESYSTEM_DOMAIN
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -547,6 +548,30 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "9620"
+  depends: []
+
+  description: The port the Credd will listen on for connections
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CREDD_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: -p $(CREDD_PORT) -f
+  depends: 
+  - CREDD_PORT
+  description: The arguments to pass to the Credd daemon
+  kind: String
+  level: 0
+  must_change: false
+  name: CREDD_ARGS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -559,14 +584,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LOG)/CredLog
+  default_val: ""
   depends: []
 
-  description: The location of the Credd's log file
+  description: A list of hostnames and ports for machines running the Replication daemon
   kind: String
   level: 0
-  must_change: false
-  name: CREDD_LOG
+  must_change: true
+  name: REPLICATION_LIST
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -579,18 +604,6 @@ params:
   level: 0
   must_change: false
   name: STARTER_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A list of hostnames and ports for machines running the Replication daemon
-  kind: String
-  level: 0
-  must_change: true
-  name: REPLICATION_LIST
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -619,6 +632,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/CredLog
+  depends: []
+
+  description: The location of the Credd's log file
+  kind: String
+  level: 0
+  must_change: false
+  name: CREDD_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: $(LOG)/ShadowLog
   depends: []
 
@@ -627,18 +652,6 @@ params:
   level: 0
   must_change: false
   name: SHADOW_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "1000000"
-  depends: []
-
-  description: The maximum size of the Collector log
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_COLLECTOR_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -667,6 +680,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Collector log
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_COLLECTOR_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: D_NODATE
   depends: []
 
@@ -691,18 +716,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SBIN)/condor_vm-gahp
-  depends: []
-
-  description: The location of the VM Gahp binary
-  kind: String
-  level: 0
-  must_change: false
-  name: VM_GAHP_SERVER
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: "300"
   depends: []
 
@@ -712,6 +725,18 @@ params:
   must_change: false
   name: MAX_TRANSFERER_LIFETIME
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_vm-gahp
+  depends: []
+
+  description: The location of the VM Gahp binary
+  kind: String
+  level: 0
+  must_change: false
+  name: VM_GAHP_SERVER
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -763,18 +788,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LOG)/ReplicationLog
-  depends: []
-
-  description: The file that holds the Replication daemon's log
-  kind: String
-  level: 0
-  must_change: false
-  name: REPLICATION_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: D_PID
   depends: []
 
@@ -783,6 +796,18 @@ params:
   level: 0
   must_change: false
   name: SCHEDD_DEBUG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/ReplicationLog
+  depends: []
+
+  description: The file that holds the Replication daemon's log
+  kind: String
+  level: 0
+  must_change: false
+  name: REPLICATION_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -811,30 +836,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so
-  depends: []
-
-  description: A list of plugins that the Negotiator will load
-  kind: String
-  level: 0
-  must_change: false
-  name: NEGOTIATOR.PLUGINS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "TRUE"
-  depends: []
-
-  description: Determines if parallel universe jobs will be scheduled in a first-in, first-out manner
-  kind: Boolean
-  level: 0
-  must_change: false
-  name: DEDICATED_SCHEDULER_USE_FIFO
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: "200"
   depends: []
 
@@ -859,6 +860,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "TRUE"
+  depends: []
+
+  description: Determines if parallel universe jobs will be scheduled in a first-in, first-out manner
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: DEDICATED_SCHEDULER_USE_FIFO
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "300"
   depends: []
 
@@ -867,6 +880,18 @@ params:
   level: 0
   must_change: false
   name: HAD_UPDATE_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so
+  depends: []
+
+  description: A list of plugins that the Negotiator will load
+  kind: String
+  level: 0
+  must_change: false
+  name: NEGOTIATOR.PLUGINS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -970,11 +995,11 @@ params:
   default_val: ""
   depends: []
 
-  description: A string that is used in related configuration paramters
-  kind: String
+  description: The number of slots that are $(SLOT_TYPE_1)
+  kind: Integer
   level: 0
   must_change: true
-  name: STARTD_CRON_NAME
+  name: NUM_SLOTS_TYPE_1
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -991,18 +1016,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
-
-  description: The number of slots that are $(SLOT_TYPE_1)
-  kind: Integer
-  level: 0
-  must_change: true
-  name: NUM_SLOTS_TYPE_1
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: (CurrentTime - LastBenchmark)
   depends: []
 
@@ -1015,14 +1028,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LOG)/.startd_address
+  default_val: ""
   depends: []
 
-  description: The file where the Startd will place its address information
-  kind: STring
+  description: A string that is used in related configuration paramters
+  kind: String
   level: 0
-  must_change: false
-  name: STARTD_ADDRESS_FILE
+  must_change: true
+  name: STARTD_CRON_NAME
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1051,26 +1064,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: $(LOG)/.startd_address
   depends: []
 
-  description: Determines if a machine allocated by a dedicated scheduler is a candidate for job preemption
-  kind: String
-  level: 0
-  must_change: true
-  name: SCHEDD_PREEMPTION_REQUIREMENTS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: /usr/bin/pygrub
-  depends: []
-
-  description: The bootloader for Xen domainU
-  kind: String
+  description: The file where the Startd will place its address information
+  kind: STring
   level: 0
   must_change: false
-  name: XEN_BOOTLOADER
+  name: STARTD_ADDRESS_FILE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1095,6 +1096,18 @@ params:
   level: 0
   must_change: false
   name: TRANSFERER_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Determines if a machine allocated by a dedicated scheduler is a candidate for job preemption
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD_PREEMPTION_REQUIREMENTS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1147,26 +1160,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: /usr/bin/pygrub
   depends: []
 
-  description: Hosts with read access
+  description: The bootloader for Xen domainU
   kind: String
   level: 0
-  must_change: true
-  name: ALLOW_READ
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "0"
-  depends: []
-
-  description: Determines a machine's preference for running a job
-  kind: Double
-  level: 0
   must_change: false
-  name: SCHEDD_PREEMPTION_RANK
+  name: XEN_BOOTLOADER
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1195,14 +1196,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "FALSE"
+  default_val: "0"
   depends: []
 
-  description: Determines if the ExecuteNode should send a SIGHUP when the condor_startd daemon is reconfigured
-  kind: Boolean
+  description: Determines a machine's preference for running a job
+  kind: Double
   level: 0
   must_change: false
-  name: TRIGGER_DATA_GETDATA_RECONFIG
+  name: SCHEDD_PREEMPTION_RANK
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Hosts with read access
+  kind: String
+  level: 0
+  must_change: true
+  name: ALLOW_READ
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1219,74 +1232,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "10"
+  default_val: "FALSE"
   depends: []
 
-  description: How often the TriggerService will update the AMQP broker
-  kind: Interger
+  description: Determines if the ExecuteNode should send a SIGHUP when the condor_startd daemon is reconfigured
+  kind: Boolean
   level: 0
   must_change: false
-  name: TRIGGERD.QMF_UPDATE_INTERVAL
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_negotiator
-  depends: []
-
-  description: The location of the Negotiator binary file
-  kind: String
-  level: 0
-  must_change: false
-  name: NEGOTIATOR
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/MatchLog
-  depends: []
-
-  description: The location of the Negotiator's match log file
-  kind: String
-  level: 0
-  must_change: false
-  name: NEGOTIATOR_MATCH_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/.credd_address
-  depends: []
-
-  description: The file where the Credd will store its address information
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_ADDRESS_FILE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "0"
-  depends: []
-
-  description: The maximum time to wait for a job to finish before kicking it off the machine due to preemption, priority, or Startd graceful shutdown
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAXJOBRETIREMENTTIME
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
-  depends: []
-
-  description: Determines how often to checkpoint
-  kind: String
-  level: 0
-  must_change: false
-  name: PERIODIC_CHECKPOINT
+  name: TRIGGER_DATA_GETDATA_RECONFIG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1315,6 +1268,54 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/.credd_address
+  depends: []
+
+  description: The file where the Credd will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: CREDD_ADDRESS_FILE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/MatchLog
+  depends: []
+
+  description: The location of the Negotiator's match log file
+  kind: String
+  level: 0
+  must_change: false
+  name: NEGOTIATOR_MATCH_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "0"
+  depends: []
+
+  description: The maximum time to wait for a job to finish before kicking it off the machine due to preemption, priority, or Startd graceful shutdown
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAXJOBRETIREMENTTIME
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "10"
+  depends: []
+
+  description: How often the TriggerService will update the AMQP broker
+  kind: Interger
+  level: 0
+  must_change: false
+  name: TRIGGERD.QMF_UPDATE_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: $(LOG)/HADLog
   depends: []
 
@@ -1339,27 +1340,27 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SBIN)/condor_credd
+  default_val: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
   depends: []
 
-  description: The location of the Credd binary
+  description: Determines how often to checkpoint
   kind: String
   level: 0
   must_change: false
-  name: CREDD
-  needs_restart: true
+  name: PERIODIC_CHECKPOINT
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: $(SBIN)/condor_negotiator
   depends: []
 
-  description: Default VM networking type
+  description: The location of the Negotiator binary file
   kind: String
   level: 0
-  must_change: true
-  name: VM_NETWORKING_DEFAULT_TYPE
-  needs_restart: false
+  must_change: false
+  name: NEGOTIATOR
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1383,6 +1384,54 @@ params:
   level: 0
   must_change: false
   name: LL_BROKER_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Default VM networking type
+  kind: String
+  level: 0
+  must_change: true
+  name: VM_NETWORKING_DEFAULT_TYPE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_credd
+  depends: []
+
+  description: The location of the Credd binary
+  kind: String
+  level: 0
+  must_change: false
+  name: CREDD
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The hostname(s) of the machine(s) running the Scheduler
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD_HOST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: NONE
+  depends: []
+
+  description: The hostname of a machine to send periodic updates to with basic information about the status of the pool
+  kind: String
+  level: 1
+  must_change: false
+  name: CONDOR_DEVELOPERS_COLLECTOR
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1414,47 +1463,11 @@ params:
   default_val: ""
   depends: []
 
-  description: The hostname(s) of the machine(s) running the Scheduler
-  kind: String
-  level: 0
-  must_change: true
-  name: SCHEDD_HOST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: NONE
-  depends: []
-
-  description: The hostname of a machine to send periodic updates to with basic information about the status of the pool
-  kind: String
-  level: 1
-  must_change: false
-  name: CONDOR_DEVELOPERS_COLLECTOR
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
   description: Provides default values for all routes in the Job Router's routing table
   kind: String
   level: 0
   must_change: false
   name: JOB_ROUTER_DEFAULTS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/amazon_gahp
-  depends: []
-
-  description: The location of the Amazon Gahp binary
-  kind: String
-  level: 0
-  must_change: false
-  name: AMAZON_GAHP
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1471,14 +1484,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIBEXEC)/libvirt_simple_script.awk
+  default_val: ""
   depends: []
 
-  description: A script that produces XML output used to start a libvirt VM
+  description: Hosts with administrator access
+  kind: String
+  level: 0
+  must_change: true
+  name: ALLOW_ADMINISTRATOR
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/amazon_gahp
+  depends: []
+
+  description: The location of the Amazon Gahp binary
   kind: String
   level: 0
   must_change: false
-  name: LIBVIRT_XML_SCRIPT
+  name: AMAZON_GAHP
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1491,18 +1516,6 @@ params:
   level: 0
   must_change: true
   name: VM_MEMORY
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Hosts with administrator access
-  kind: String
-  level: 0
-  must_change: true
-  name: ALLOW_ADMINISTRATOR
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1543,26 +1556,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIBEXEC)/condor_job_router
+  default_val: ""
   depends: []
 
-  description: The location of the Job Router binary
+  description: The kind of virtual machine program that will be used for VM universe jobs
   kind: String
   level: 0
-  must_change: false
-  name: JOB_ROUTER
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "FALSE"
-  depends: []
-
-  description: Determines if $(SLOT_TYPE_1) is a partitionable slot
-  kind: Boolean
-  level: 0
-  must_change: false
-  name: SLOT_TYPE_1_PARTITIONABLE
+  must_change: true
+  name: VM_TYPE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1579,27 +1580,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: $(LIBEXEC)/condor_job_router
   depends: []
 
-  description: The machine running the Credd daemon
+  description: The location of the Job Router binary
   kind: String
   level: 0
-  must_change: true
-  name: CREDD_HOST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The kind of virtual machine program that will be used for VM universe jobs
-  kind: String
-  level: 0
-  must_change: true
-  name: VM_TYPE
-  needs_restart: false
+  must_change: false
+  name: JOB_ROUTER
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1615,14 +1604,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "TRUE"
+  default_val: ""
   depends: []
 
-  description: Determines whether to publish slot information from the Collector
+  description: The machine running the Credd daemon
+  kind: String
+  level: 0
+  must_change: true
+  name: CREDD_HOST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "FALSE"
+  depends: []
+
+  description: Determines if $(SLOT_TYPE_1) is a partitionable slot
   kind: Boolean
   level: 0
   must_change: false
-  name: QMF_IGNORE_UPDATE_STARTD_AD
+  name: SLOT_TYPE_1_PARTITIONABLE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1639,18 +1640,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "300"
-  depends: []
-
-  description: The number of seconds between status update requests to EC2
-  kind: Integer
-  level: 0
-  must_change: false
-  name: GRIDMANAGER_JOB_PROBE_INTERVAL
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: ""
   depends: []
 
@@ -1659,6 +1648,30 @@ params:
   level: 0
   must_change: true
   name: COLLECTOR_HOST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "TRUE"
+  depends: []
+
+  description: Determines whether to publish slot information from the Collector
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: QMF_IGNORE_UPDATE_STARTD_AD
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "300"
+  depends: []
+
+  description: The number of seconds between status update requests to EC2
+  kind: Integer
+  level: 0
+  must_change: false
+  name: GRIDMANAGER_JOB_PROBE_INTERVAL
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1684,30 +1697,6 @@ params:
   must_change: false
   name: RUNBENCHMARKS
   needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "10"
-  depends: []
-
-  description: The default interval for evaluating triggers by the TriggerService
-  kind: Integer
-  level: 0
-  must_change: false
-  name: TRIGGERD_DEFAULT_EVAL_PERIOD
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_collector
-  depends: []
-
-  description: The location of the Collector binary
-  kind: String
-  level: 0
-  must_change: false
-  name: COLLECTOR
-  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1747,6 +1736,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(SBIN)/condor_collector
+  depends: []
+
+  description: The location of the Collector binary
+  kind: String
+  level: 0
+  must_change: false
+  name: COLLECTOR
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1767,6 +1768,18 @@ params:
   level: 0
   must_change: false
   name: LL_DAEMON_IP
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "10"
+  depends: []
+
+  description: The default interval for evaluating triggers by the TriggerService
+  kind: Integer
+  level: 0
+  must_change: false
+  name: TRIGGERD_DEFAULT_EVAL_PERIOD
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1795,30 +1808,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "1000000"
-  depends: []
-
-  description: The maximum size of the Negotiator's match log file
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_NEGOTIATOR_MATCH_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "1000000"
-  depends: []
-
-  description: The maximum size of the Credd's log file
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_CREDD_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: root, condor
   depends: []
 
@@ -1843,6 +1832,30 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Credd's log file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_CREDD_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Negotiator's match log file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_NEGOTIATOR_MATCH_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1852,6 +1865,18 @@ params:
   must_change: true
   name: DAEMON_LIST
   needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LIBEXEC)/hooks/hook_reply_fetch.py
+  depends: []
+
+  description: The reply fetch hook the Startd will use when processing low-latency jobs
+  kind: String
+  level: 0
+  must_change: false
+  name: LOW_LATENCY_HOOK_REPLY_FETCH
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1879,50 +1904,14 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIBEXEC)/hooks/hook_reply_fetch.py
+  default_val: $(LIBEXEC)/hooks/hook_prepare_job.py
   depends: []
 
-  description: The reply fetch hook the Startd will use when processing low-latency jobs
+  description: The prepare job hook the Starter will use when processing low-latency jobs
   kind: String
   level: 0
   must_change: false
-  name: LOW_LATENCY_HOOK_REPLY_FETCH
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ( $(StateTimer) > (1 * $(HOUR)) && RemoteUserPrio > SubmittorPrio * 1.2 ) || (MY.NiceUser == True)
-  depends: []
-
-  description: Determines if a running job will be preempted
-  kind: String
-  level: 0
-  must_change: false
-  name: PREEMPTION_REQUIREMENTS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The debugging output the Collector will produce in its log
-  kind: String
-  level: 0
-  must_change: false
-  name: COLLECTOR_DEBUG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_startd
-  depends: []
-
-  description: The Startd binary
-  kind: String
-  level: 0
-  must_change: false
-  name: STARTD
+  name: LOW_LATENCY_JOB_HOOK_PREPARE_JOB
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1939,26 +1928,38 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIBEXEC)/hooks/hook_prepare_job.py
+  default_val: $(SBIN)/condor_startd
   depends: []
 
-  description: The prepare job hook the Starter will use when processing low-latency jobs
+  description: The Startd binary
   kind: String
   level: 0
   must_change: false
-  name: LOW_LATENCY_JOB_HOOK_PREPARE_JOB
+  name: STARTD
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "1000000"
+  default_val: ""
   depends: []
 
-  description: The maximum size of the VM Ghap log file
-  kind: Integer
+  description: The debugging output the Collector will produce in its log
+  kind: String
   level: 0
   must_change: false
-  name: MAX_VM_GAHP_LOG
+  name: COLLECTOR_DEBUG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ( $(StateTimer) > (1 * $(HOUR)) && RemoteUserPrio > SubmittorPrio * 1.2 ) || (MY.NiceUser == True)
+  depends: []
+
+  description: Determines if a running job will be preempted
+  kind: String
+  level: 0
+  must_change: false
+  name: PREEMPTION_REQUIREMENTS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1975,50 +1976,38 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: TRIGGERD
+  default_val: "1000000"
   depends: []
 
-  description: A string which is prepended to all attributes generated by the $(TRIGGER_DATA_GETDATA_EXECUTABLE)
-  kind: String
+  description: The maximum size of the VM Ghap log file
+  kind: Integer
   level: 0
   must_change: false
-  name: TRIGGER_DATA_GETDATA_PREFIX
+  name: MAX_VM_GAHP_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: GETDATA
+  default_val: $(SBIN)/condor_had
   depends: []
 
-  description: The cron modules to run to provide data for the TriggerService
+  description: The location of the HAD daemon
   kind: String
   level: 0
   must_change: false
-  name: TRIGGER_DATA_JOBLIST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: (RemoteUserPrio * 1000000) - TARGET.ImageSize
-  depends: []
-
-  description: The last sorting rank used when breaking ties when determining jobs for preemption
-  kind: String
-  level: 0
-  must_change: false
-  name: PREEMPTION_RANK
-  needs_restart: false
+  name: HAD
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
   default_val: ""
   depends: []
 
-  description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
+  description: The definition of the job routing table
   kind: String
   level: 0
   must_change: true
-  name: FLOCK_COLLECTOR_HOSTS
+  name: JOB_ROUTER_ENTRIES
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2038,47 +2027,83 @@ params:
   default_val: ""
   depends: []
 
-  description: The definition of the job routing table
+  description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
   kind: String
   level: 0
   must_change: true
-  name: JOB_ROUTER_ENTRIES
+  name: FLOCK_COLLECTOR_HOSTS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SBIN)/condor_had
+  default_val: (RemoteUserPrio * 1000000) - TARGET.ImageSize
   depends: []
 
-  description: The location of the HAD daemon
+  description: The last sorting rank used when breaking ties when determining jobs for preemption
   kind: String
   level: 0
   must_change: false
-  name: HAD
+  name: PREEMPTION_RANK
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: GETDATA
+  depends: []
+
+  description: The cron modules to run to provide data for the TriggerService
+  kind: String
+  level: 0
+  must_change: false
+  name: TRIGGER_DATA_JOBLIST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: TRIGGERD
+  depends: []
+
+  description: A string which is prepended to all attributes generated by the $(TRIGGER_DATA_GETDATA_EXECUTABLE)
+  kind: String
+  level: 0
+  must_change: false
+  name: TRIGGER_DATA_GETDATA_PREFIX
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: HAD
+  depends: []
+
+  description: Which controlling daemon will control the Negotiator
+  kind: String
+  level: 0
+  must_change: false
+  name: MASTER_NEGOTIATOR_CONTROLLER
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/carod
+  depends: []
+
+  description: The location of the carod daemon
+  kind: String
+  level: 0
+  must_change: false
+  name: LL_DAEMON
   needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_triggerd
-  depends: []
-
-  description: The location of the Triggerd binary
-  kind: String
-  level: 0
-  must_change: false
-  name: TRIGGERD
-  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
   default_val: ""
   depends: []
 
-  description: The default authentication methods used by the Job Router
+  description: The IP address where an AMQP broker is running
   kind: String
   level: 0
   must_change: true
-  name: JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
+  name: LL_BROKER_IP
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2098,83 +2123,23 @@ params:
   default_val: ""
   depends: []
 
-  description: The IP address where an AMQP broker is running
+  description: The default authentication methods used by the Job Router
   kind: String
   level: 0
   must_change: true
-  name: LL_BROKER_IP
+  name: JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SBIN)/carod
+  default_val: $(SBIN)/condor_triggerd
   depends: []
 
-  description: The location of the carod daemon
+  description: The location of the Triggerd binary
   kind: String
   level: 0
   must_change: false
-  name: LL_DAEMON
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: HAD
-  depends: []
-
-  description: Which controlling daemon will control the Negotiator
-  kind: String
-  level: 0
-  must_change: false
-  name: MASTER_NEGOTIATOR_CONTROLLER
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "2"
-  depends: []
-
-  description: How many backup files are preserved when history file rotation is turned on
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_HISTORY_ROTATIONS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: 127.0.0.1
-  depends: []
-
-  description: The IP Address the job hooks should use to contact the translation daemon
-  kind: String
-  level: 0
-  must_change: false
-  name: JOB_HOOKS_IP
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LIBEXEC)/hooks/hook_cleanup.py
-  depends: []
-
-  description: The cleanup hook used by the Job Router for EC2 Enhanced
-  kind: String
-  level: 0
-  must_change: false
-  name: EC2E_HOOK_JOB_CLEANUP
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The default hook prefix for the Job Router
-  kind: String
-  level: 0
-  must_change: true
-  name: JOB_ROUTER_HOOK_KEYWORD
+  name: TRIGGERD
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2191,122 +2156,50 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "TRUE"
-  depends: []
-
-  description: Determines if the Job Router's routing table needs to be prompted for
-  kind: Boolean
-  level: 0
-  must_change: false
-  name: NEED_SET_EC2E_ROUTES
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/JobRouterLog
-  depends: []
-
-  description: The location of the Job Router log file
-  kind: String
-  level: 0
-  must_change: false
-  name: JOB_ROUTER_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_vm_xen.sh
-  depends: []
-
-  description: The location of the VM Universe control program
-  kind: String
-  level: 0
-  must_change: false
-  name: VM_SCRIPT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "False"
-  depends: []
-
-  description: Controls the replication feature of the HAD daemon
-  kind: Boolean
-  level: 0
-  must_change: false
-  name: HAD_USE_REPLICATION
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/.schedd_address
-  depends: []
-
-  description: The file where the Scheduler will write its address information
-  kind: String
-  level: 0
-  must_change: false
-  name: SCHEDD_ADDRESS_FILE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_shadow
-  depends: []
-
-  description: The location of the Shadow binary
-  kind: String
-  level: 0
-  must_change: false
-  name: SHADOW
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SPOOL)/.schedd_storefile
-  depends: 
-  - SPOOL
-  description: The path and filename for the persistent id information for a Scheduler running a QMF agent
-  kind: String
-  level: 0
-  must_change: false
-  name: SCHEDD.QMF_STOREFILE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: ""
   depends: []
 
-  description: The machines with Negotiator access
+  description: The default hook prefix for the Job Router
   kind: String
   level: 0
   must_change: true
-  name: ALLOW_NEGOTIATOR
+  name: JOB_ROUTER_HOOK_KEYWORD
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
+  default_val: $(LIBEXEC)/hooks/hook_cleanup.py
   depends: []
 
-  description: Describes when a machine should consider SUSPEND instead of PREEMPT
+  description: The cleanup hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
   must_change: false
-  name: WANT_SUSPEND
+  name: EC2E_HOOK_JOB_CLEANUP
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "TRUE"
+  default_val: 127.0.0.1
   depends: []
 
-  description: Determines if the first entry in HAD_LIST is a primary Central Manager
-  kind: Boolean
+  description: The IP Address the job hooks should use to contact the translation daemon
+  kind: String
   level: 0
   must_change: false
-  name: HAD_USE_PRIMARY
+  name: JOB_HOOKS_IP
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "2"
+  depends: []
+
+  description: How many backup files are preserved when history file rotation is turned on
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_HISTORY_ROTATIONS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2323,14 +2216,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "1000000"
+  default_val: "TRUE"
   depends: []
 
-  description: The maximum size of the Negotiator log file
-  kind: Integer
+  description: Determines if the first entry in HAD_LIST is a primary Central Manager
+  kind: Boolean
   level: 0
   must_change: false
-  name: MAX_NEGOTIATOR_LOG
+  name: HAD_USE_PRIMARY
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
+  depends: []
+
+  description: Describes when a machine should consider SUSPEND instead of PREEMPT
+  kind: String
+  level: 0
+  must_change: false
+  name: WANT_SUSPEND
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2338,47 +2243,95 @@ params:
   default_val: ""
   depends: []
 
-  description: Defines a slot type
+  description: The machines with Negotiator access
   kind: String
   level: 0
   must_change: true
-  name: SLOT_TYPE_1
+  name: ALLOW_NEGOTIATOR
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ( ((Activity == "Suspended") && ($(ActivityTimer) > $(MaxSuspendTime))) || (SUSPEND && (WANT_SUSPEND == False)) )
-  depends: []
-
-  description: Describes when a machine will nicely stop a job
+  default_val: $(SPOOL)/.schedd_storefile
+  depends: 
+  - SPOOL
+  description: The path and filename for the persistent id information for a Scheduler running a QMF agent
   kind: String
   level: 0
   must_change: false
-  name: PREEMPT
+  name: SCHEDD.QMF_STOREFILE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: -p $(REPLICATION_PORT)
+  default_val: $(SBIN)/condor_shadow
   depends: []
 
-  description: The port on which the Replication daemon will listen
+  description: The location of the Shadow binary
   kind: String
   level: 0
   must_change: false
-  name: REPLICATION_ARGS
+  name: SHADOW
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/.schedd_address
+  depends: []
+
+  description: The file where the Scheduler will write its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: SCHEDD_ADDRESS_FILE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "300"
+  default_val: "False"
   depends: []
 
-  description: How often the Replication daemon initiates replicating the $(STATE_FILE)
-  kind: Integer
+  description: Controls the replication feature of the HAD daemon
+  kind: Boolean
   level: 0
   must_change: false
-  name: REPLICATION_INTERVAL
+  name: HAD_USE_REPLICATION
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_vm_xen.sh
+  depends: []
+
+  description: The location of the VM Universe control program
+  kind: String
+  level: 0
+  must_change: false
+  name: VM_SCRIPT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/JobRouterLog
+  depends: []
+
+  description: The location of the Job Router log file
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_ROUTER_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "TRUE"
+  depends: []
+
+  description: Determines if the Job Router's routing table needs to be prompted for
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: NEED_SET_EC2E_ROUTES
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2386,11 +2339,11 @@ params:
   default_val: ""
   depends: []
 
-  description: The debugging output the Shadow will produce in its log
+  description: The URL that the Master daemon uses to synchronize the High Availability service
   kind: String
   level: 0
-  must_change: false
-  name: SHADOW_DEBUG
+  must_change: true
+  name: HA_LOCK_URL
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2410,23 +2363,47 @@ params:
   default_val: ""
   depends: []
 
-  description: The URL that the Master daemon uses to synchronize the High Availability service
+  description: The debugging output the Shadow will produce in its log
   kind: String
   level: 0
-  must_change: true
-  name: HA_LOCK_URL
+  must_change: false
+  name: SHADOW_DEBUG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LOG)/NegotiatorLog
+  default_val: "300"
   depends: []
 
-  description: The location of the Negotiator's log file
+  description: How often the Replication daemon initiates replicating the $(STATE_FILE)
+  kind: Integer
+  level: 0
+  must_change: false
+  name: REPLICATION_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: -p $(REPLICATION_PORT)
+  depends: []
+
+  description: The port on which the Replication daemon will listen
   kind: String
   level: 0
   must_change: false
-  name: NEGOTIATOR_LOG
+  name: REPLICATION_ARGS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ( ((Activity == "Suspended") && ($(ActivityTimer) > $(MaxSuspendTime))) || (SUSPEND && (WANT_SUSPEND == False)) )
+  depends: []
+
+  description: Describes when a machine will nicely stop a job
+  kind: String
+  level: 0
+  must_change: false
+  name: PREEMPT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2434,11 +2411,95 @@ params:
   default_val: ""
   depends: []
 
-  description: The default authentication methods used by the Master
+  description: Defines a slot type
   kind: String
   level: 0
   must_change: true
-  name: MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
+  name: SLOT_TYPE_1
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Negotiator log file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_NEGOTIATOR_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "5672"
+  depends: []
+
+  description: The port on QMF_BROKER_HOST that the QMF broker is listening on
+  kind: String
+  level: 0
+  must_change: false
+  name: QMF_BROKER_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A list of files that condor_preen considers valid files to find in the $(SPOOL) directory
+  kind: String
+  level: 0
+  must_change: true
+  name: VALID_SPOOL_FILES
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: 3DES
+  depends: []
+
+  description: The list of default acceptable encryption methods
+  kind: String
+  level: 1
+  must_change: false
+  name: SEC_DEFAULT_CRYPTO_METHODS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the HAD log
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_HAD_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_starter
+  depends: []
+
+  description: The Starter binary
+  kind: String
+  level: 0
+  must_change: false
+  name: STARTER
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Determines if VM universe will allow networking
+  kind: Boolean
+  level: 0
+  must_change: true
+  name: VM_NETWORKING
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2458,95 +2519,23 @@ params:
   default_val: ""
   depends: []
 
-  description: Determines if VM universe will allow networking
-  kind: Boolean
-  level: 0
-  must_change: true
-  name: VM_NETWORKING
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_starter
-  depends: []
-
-  description: The Starter binary
-  kind: String
-  level: 0
-  must_change: false
-  name: STARTER
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "1000000"
-  depends: []
-
-  description: The maximum size of the HAD log
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_HAD_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: 3DES
-  depends: []
-
-  description: The list of default acceptable encryption methods
-  kind: String
-  level: 1
-  must_change: false
-  name: SEC_DEFAULT_CRYPTO_METHODS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A list of files that condor_preen considers valid files to find in the $(SPOOL) directory
+  description: The default authentication methods used by the Master
   kind: String
   level: 0
   must_change: true
-  name: VALID_SPOOL_FILES
+  name: MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "5672"
+  default_val: $(LOG)/NegotiatorLog
   depends: []
 
-  description: The port on QMF_BROKER_HOST that the QMF broker is listening on
+  description: The location of the Negotiator's log file
   kind: String
   level: 0
   must_change: false
-  name: QMF_BROKER_PORT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
-  depends: []
-
-  description: The plugins to load for the ExecuteNode
-  kind: String
-  level: 0
-  must_change: false
-  name: STARTD.PLUGINS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Where files used by the condor_triggerd are stored
-  kind: String
-  level: 0
-  must_change: true
-  name: DATA
+  name: NEGOTIATOR_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2566,23 +2555,59 @@ params:
   default_val: ""
   depends: []
 
-  description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
+  description: Where files used by the condor_triggerd are stored
   kind: String
   level: 0
   must_change: true
-  name: FLOCK_NEGOTIATOR_HOSTS
+  name: DATA
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "1000000"
+  default_val: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
   depends: []
 
-  description: The maximum size of the Job Router log file
+  description: The plugins to load for the ExecuteNode
+  kind: String
+  level: 0
+  must_change: false
+  name: STARTD.PLUGINS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: REQUIRED
+  depends: []
+
+  description: The level of encryption in Condor
+  kind: String
+  level: 1
+  must_change: false
+  name: SEC_DEFAULT_ENCRYPTION
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_schedd
+  depends: []
+
+  description: The location of the Scheduler binary
+  kind: String
+  level: 0
+  must_change: false
+  name: SCHEDD
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "30"
+  depends: []
+
+  description: How often the Starter will envoke the update job info hook after the first automated invokation
   kind: Integer
   level: 0
   must_change: false
-  name: MAX_JOB_ROUTER_LOG
+  name: STARTER_UPDATE_INTERVAL
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2600,98 +2625,50 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "30"
-  depends: []
-
-  description: How often the Starter will envoke the update job info hook after the first automated invokation
-  kind: Integer
-  level: 0
-  must_change: false
-  name: STARTER_UPDATE_INTERVAL
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/condor_schedd
-  depends: []
-
-  description: The location of the Scheduler binary
-  kind: String
-  level: 0
-  must_change: false
-  name: SCHEDD
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: REQUIRED
-  depends: []
-
-  description: The level of encryption in Condor
-  kind: String
-  level: 1
-  must_change: false
-  name: SEC_DEFAULT_ENCRYPTION
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: CLAIMTOBE
-  depends: []
-
-  description: The list of acceptable authentication methods
-  kind: String
-  level: 1
-  must_change: false
-  name: SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
-  depends: []
-
-  description: Describes when a machine will suspend a job
-  kind: String
-  level: 0
-  must_change: false
-  name: SUSPEND
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: "1000000"
   depends: []
 
-  description: The maximum size of the Startd log
+  description: The maximum size of the Job Router log file
   kind: Integer
   level: 0
   must_change: false
-  name: MAX_STARTD_LOG
+  name: MAX_JOB_ROUTER_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "10000"
+  default_val: ""
   depends: []
 
-  description: The port the carod daemon is using to listen for connections
-  kind: Integer
+  description: A list of Collectors for pools that the Scheduler attempt to use to run jobs
+  kind: String
   level: 0
-  must_change: false
-  name: LL_DAEMON_PORT
+  must_change: true
+  name: FLOCK_NEGOTIATOR_HOSTS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ( (KeyboardIdle > $(StartIdleTime)) && ( $(CPUIdle) || (State != "Unclaimed" && State != "Owner")) )
+  default_val: $(LIBEXEC)/libvirt_simple_script.awk
   depends: []
 
-  description: Describes when a machine is willing to start a job
+  description: A script that produces XML output used to start a libvirt VM
   kind: String
   level: 0
   must_change: false
-  name: START
+  name: LIBVIRT_XML_SCRIPT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A string that is used to decide under which user to run jobs. If the $(UID_DOMAIN) on the submitting machine is different then the $(UID_DOMAIN) on the machine that runs a job, then condor runs the job as the user nobody
+  kind: String
+  level: 0
+  must_change: true
+  name: UID_DOMAIN
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2708,38 +2685,62 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: ( (KeyboardIdle > $(StartIdleTime)) && ( $(CPUIdle) || (State != "Unclaimed" && State != "Owner")) )
   depends: []
 
-  description: The query collector the TriggerService will query for trigger information.  If unset, all collectors in the pool will be used
+  description: Describes when a machine is willing to start a job
   kind: String
   level: 0
   must_change: false
-  name: TRIGGERD_QUERY_COLLECTOR
+  name: START
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
+  default_val: "10000"
   depends: []
 
-  description: A list of plugins that the Collector will load
-  kind: String
+  description: The port the carod daemon is using to listen for connections
+  kind: Integer
   level: 0
   must_change: false
-  name: COLLECTOR.PLUGINS
+  name: LL_DAEMON_PORT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: /etc/xen/scripts/network-bridge start bridge=xenbr0
+  default_val: "1000000"
   depends: []
 
-  description: The command to run to setup a bridging network interface for VM universe jobs
+  description: The maximum size of the Startd log
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_STARTD_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
+  depends: []
+
+  description: Describes when a machine will suspend a job
   kind: String
   level: 0
   must_change: false
-  name: VM_BRIDGE_SCRIPT
+  name: SUSPEND
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: CLAIMTOBE
+  depends: []
+
+  description: The list of acceptable authentication methods
+  kind: String
+  level: 1
+  must_change: false
+  name: SEC_DEFAULT_AUTHENTICATION_METHODS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2756,26 +2757,38 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(LOG)/TriggerLog
+  default_val: /etc/xen/scripts/network-bridge start bridge=xenbr0
   depends: []
 
-  description: The location of the Triggerd log file
+  description: The command to run to setup a bridging network interface for VM universe jobs
   kind: String
   level: 0
   must_change: false
-  name: TRIGGERD_LOG
+  name: VM_BRIDGE_SCRIPT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: D_MATCH
+  default_val: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
   depends: []
 
-  description: The debugging output the Negotiator will produce in its log file
+  description: A list of plugins that the Collector will load
   kind: String
   level: 0
   must_change: false
-  name: NEGOTIATOR_DEBUG
+  name: COLLECTOR.PLUGINS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The query collector the TriggerService will query for trigger information.  If unset, all collectors in the pool will be used
+  kind: String
+  level: 0
+  must_change: false
+  name: TRIGGERD_QUERY_COLLECTOR
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2792,110 +2805,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: If_Changed
+  default_val: D_MATCH
   depends: []
 
-  description: Determines if the ExecuteNode should automatically publish a new update to the Collector after the cron modules produce output
+  description: The debugging output the Negotiator will produce in its log file
   kind: String
   level: 0
   must_change: false
-  name: STARTD_CRON_AUTOPUBLISH
+  name: NEGOTIATOR_DEBUG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ImageSize, ExecutableSize, JobUniverse, NiceUser
+  default_val: $(LOG)/TriggerLog
   depends: []
 
-  description: Attributes of the running job that the Startd will advertise
+  description: The location of the Triggerd log file
   kind: String
   level: 0
   must_change: false
-  name: STARTD_JOB_EXPRS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: mouse, console
-  depends: []
-
-  description: List of devices that should be considered the console
-  kind: String
-  level: 0
-  must_change: false
-  name: CONSOLE_DEVICES
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SPOOL)/Accountantnew.log
-  depends: []
-
-  description: The name of the file that will be replicated
-  kind: String
-  level: 0
-  must_change: false
-  name: STATE_FILE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LIBEXEC)/hooks/hook_retrieve_status.py
-  depends: []
-
-  description: The update hook used by the Job Router for EC2 Enhanced
-  kind: String
-  level: 0
-  must_change: false
-  name: EC2E_HOOK_UPDATE_JOB_INFO
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The list of Central Managers in the pool
-  kind: String
-  level: 0
-  must_change: true
-  name: CONDOR_HOST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The list of daemons that will be run in High Availabilty mode
-  kind: String
-  level: 0
-  must_change: true
-  name: MASTER_HA_LIST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "360"
-  depends: []
-
-  description: How long to wait before restarting the HAD daemon
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MASTER_HAD_BACKOFF_CONSTANT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "41450"
-  depends: []
-
-  description: The port on which the Replication daemon will listen
-  kind: Integer
-  level: 0
-  must_change: false
-  name: REPLICATION_PORT
+  name: TRIGGERD_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2912,14 +2841,26 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "41450"
   depends: []
 
-  description: A string that is used to decide if two machines (a submitting machine and an execute machine) share a file system
-  kind: String
+  description: The port on which the Replication daemon will listen
+  kind: Integer
   level: 0
-  must_change: true
-  name: FILESYSTEM_DOMAIN
+  must_change: false
+  name: REPLICATION_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "360"
+  depends: []
+
+  description: How long to wait before restarting the HAD daemon
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MASTER_HAD_BACKOFF_CONSTANT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2927,13 +2868,97 @@ params:
   default_val: ""
   depends: []
 
-  description: A string that is used to decide under which user to run jobs. If the $(UID_DOMAIN) on the submitting machine is different then the $(UID_DOMAIN) on the machine that runs a job, then condor runs the job as the user nobody
+  description: The list of daemons that will be run in High Availabilty mode
   kind: String
   level: 0
   must_change: true
-  name: UID_DOMAIN
+  name: MASTER_HA_LIST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The list of Central Managers in the pool
+  kind: String
+  level: 0
+  must_change: true
+  name: CONDOR_HOST
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LIBEXEC)/hooks/hook_retrieve_status.py
+  depends: []
+
+  description: The update hook used by the Job Router for EC2 Enhanced
+  kind: String
+  level: 0
+  must_change: false
+  name: EC2E_HOOK_UPDATE_JOB_INFO
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SPOOL)/Accountantnew.log
+  depends: []
+
+  description: The name of the file that will be replicated
+  kind: String
+  level: 0
+  must_change: false
+  name: STATE_FILE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: mouse, console
+  depends: []
+
+  description: List of devices that should be considered the console
+  kind: String
+  level: 0
+  must_change: false
+  name: CONSOLE_DEVICES
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ImageSize, ExecutableSize, JobUniverse, NiceUser
+  depends: []
+
+  description: Attributes of the running job that the Startd will advertise
+  kind: String
+  level: 0
+  must_change: false
+  name: STARTD_JOB_EXPRS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: If_Changed
+  depends: []
+
+  description: Determines if the ExecuteNode should automatically publish a new update to the Collector after the cron modules produce output
+  kind: String
+  level: 0
+  must_change: false
+  name: STARTD_CRON_AUTOPUBLISH
   needs_restart: false
 subsystems: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: credd
+  params: 
+  - MAX_CREDD_LOG
+  - CRED_STORE_DIR
+  - CREDD_PORT
+  - CREDD_DEBUG
+  - CREDD
+  - CREDD_HOST
+  - CREDD_LOG
+  - CREDD_ADDRESS_FILE
+  - CREDD_ARGS
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: had
   params: 
@@ -2948,18 +2973,6 @@ subsystems:
   - MAX_HAD_LOG
   - HAD_PORT
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: credd
-  params: 
-  - MAX_CREDD_LOG
-  - CRED_STORE_DIR
-  - CREDD_PORT
-  - CREDD_DEBUG
-  - CREDD
-  - CREDD_HOST
-  - CREDD_LOG
-  - CREDD_ADDRESS_FILE
-  - CREDD_ARGS
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: replication
   params: 
   - MAX_REPLICATION_LOG
@@ -2970,6 +2983,37 @@ subsystems:
   - REPLICATION_LOG
   - REPLICATION_LIST
   - REPLICATION_INTERVAL
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: collector
+  params: 
+  - COLLECTOR_LOG
+  - COLLECTOR_DEBUG
+  - QMF_IGNORE_UPDATE_STARTD_AD
+  - COLLECTOR
+  - ALLOW_WRITE
+  - FLOCK_COLLECTOR_HOSTS
+  - MAX_COLLECTOR_LOG
+  - ALLOW_READ
+  - COLLECTOR_HOST
+  - COLLECTOR.PLUGINS
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: master
+  params: 
+  - QMF_BROKER_PORT
+  - COLLECTOR_NAME
+  - SEC_DEFAULT_NEGOTIATION
+  - QMF_BROKER_HOST
+  - DAEMON_LIST
+  - SEC_DEFAULT_CRYPTO_METHODS
+  - SEC_DEFAULT_AUTHENTICATION
+  - SEC_DEFAULT_INTEGRITY
+  - SEC_DEFAULT_AUTHENTICATION_METHODS
+  - ALLOW_ADMINISTRATOR
+  - CONDOR_HOST
+  - CONDOR_DEVELOPERS_COLLECTOR
+  - CONDOR_DEVELOPERS
+  - SEC_DEFAULT_ENCRYPTION
+  - MASTER.PLUGINS
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: schedd
   params: 
@@ -2992,37 +3036,6 @@ subsystems:
   - SHADOW_LOG
   - SHADOW_DEBUG
   - START_SCHEDULER_UNIVERSE
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: master
-  params: 
-  - QMF_BROKER_PORT
-  - COLLECTOR_NAME
-  - SEC_DEFAULT_NEGOTIATION
-  - QMF_BROKER_HOST
-  - DAEMON_LIST
-  - SEC_DEFAULT_CRYPTO_METHODS
-  - SEC_DEFAULT_AUTHENTICATION
-  - SEC_DEFAULT_INTEGRITY
-  - SEC_DEFAULT_AUTHENTICATION_METHODS
-  - ALLOW_ADMINISTRATOR
-  - CONDOR_HOST
-  - CONDOR_DEVELOPERS_COLLECTOR
-  - CONDOR_DEVELOPERS
-  - SEC_DEFAULT_ENCRYPTION
-  - MASTER.PLUGINS
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: collector
-  params: 
-  - COLLECTOR_LOG
-  - COLLECTOR_DEBUG
-  - ALLOW_WRITE
-  - QMF_IGNORE_UPDATE_STARTD_AD
-  - COLLECTOR
-  - FLOCK_COLLECTOR_HOSTS
-  - MAX_COLLECTOR_LOG
-  - COLLECTOR_HOST
-  - ALLOW_READ
-  - COLLECTOR.PLUGINS
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: negotiator
   params: 
@@ -3068,11 +3081,6 @@ subsystems:
   - TRIGGERD.QMF_UPDATE_INTERVAL
   - DATA
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: transferer
-  params: 
-  - TRANSFERER_LOG
-  - MAX_TRANSFERER_LIFETIME
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: startd
   params: 
   - RUNBENCHMARKS
@@ -3083,6 +3091,7 @@ subsystems:
   - START
   - MAX_STARTD_LOG
   - MAXJOBRETIREMENTTIME
+  - ALLOW_WRITE
   - TRIGGER_DATA_GETDATA_PERIOD
   - STARTER_LIST
   - STARTER_DEBUG
@@ -3092,7 +3101,6 @@ subsystems:
   - STARTD_DEBUG
   - STARTD_ADDRESS_FILE
   - PREEMPT
-  - ALLOW_WRITE
   - TRIGGER_DATA_GETDATA_EXECUTABLE
   - STARTER_LOCAL
   - STARTD_CRON_AUTOPUBLISH
@@ -3109,6 +3117,11 @@ subsystems:
   - TRIGGER_DATA_GETDATA_PREFIX
   - STARTD_CRON_NAME
   - STARTD_ATTRS
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: transferer
+  params: 
+  - TRANSFERER_LOG
+  - MAX_TRANSFERER_LIFETIME
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: carod
   params: 
