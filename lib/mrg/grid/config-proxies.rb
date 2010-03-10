@@ -417,7 +417,7 @@ module Mrg
             params = feature.GetParams
             
             # Ensure that params that should get the default values are serialized
-            default_params = feature.GetParamMeta.select {|k,v| v["uses_default"] == true}.map {|pair| pair[0]}
+            default_params = feature.GetParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
             default_params.each {|dp_key| params[dp_key] = 0}
             
             out.params = params
