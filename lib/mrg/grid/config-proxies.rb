@@ -224,7 +224,7 @@ module Mrg
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
               log.info("Finding special group '#{name}'")
-              group = @store.GetGroup("NAME"=>name)
+              group = @store.GetGroup({"NAME"=>name})
             else
               log.info("Creating group '#{name}'")
               group = @store.AddExplicitGroup(name)
@@ -414,7 +414,13 @@ module Mrg
             feature = get_object(f)
             out = Feature.new
             out.name = feature.GetName
-            out.params = feature.GetParams
+            params = feature.GetParams
+            
+            # Ensure that params that should get the default values are serialized
+            default_params = feature.GetParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+            default_params.each {|dp_key| params[dp_key] = 0}
+            
+            out.params = params
             out.included = fl_normalize(feature.GetFeatures)
             out.conflicts = fs_normalize(feature.GetConflicts)
             out.depends = fl_normalize(feature.GetDepends)
