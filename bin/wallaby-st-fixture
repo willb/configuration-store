@@ -18,6 +18,7 @@
 require 'qmf'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
+require 'mrg/grid/config/misc/bogusdata'
 
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
 port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
@@ -25,7 +26,6 @@ username = ENV['WALLABY_BROKER_USER']
 password = ENV['WALLABY_BROKER_PASSWORD']
 debug = :warn
 activate = false
-Mrg::Grid::SerializedConfigs::ConfigLoader.log = SimpleLog.new(:info)
 verbosity = nil
 
 op = OptionParser.new do |opts|
