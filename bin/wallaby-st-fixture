@@ -20,6 +20,13 @@ require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 require 'mrg/grid/config/misc/bogusdata'
 
+begin
+  require 'rubygems'
+  require 'capricious'
+rescue LoadError
+  puts "wallaby-st-fixture requires rubygems and capricious"
+end
+
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
 port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
 username = ENV['WALLABY_BROKER_USER']
@@ -27,6 +34,27 @@ password = ENV['WALLABY_BROKER_PASSWORD']
 debug = :warn
 activate = false
 verbosity = nil
+
+nodecount = 1000
+paramcount = 500
+featurecount = 50
+groupcount = 50
+subsystemcount = 10
+
+groups_per_node = Capricious::Poisson.new(3)
+features_per_group = Capricious::Poisson.new(3)
+params_per_group = Capricious::Poisson.new(7)
+params_per_feature = Capricious::Poisson.new(5)
+features_per_idgroup = Capricious::Poisson.new(2)
+params_per_idgroup = Capricious::Poisson.new(2)
+default_features = Capricious::Poisson.new(1)
+default_params = Capricious::Poisson.new(6)
+
+# not configurable yet
+features_per_feature = Capricious::Poisson.new(1)
+
+# not used yet
+deps_per_feature = Capricious::Poisson.new(1)
 
 op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-stresstest [options]"
@@ -54,6 +82,46 @@ op = OptionParser.new do |opts|
   opts.on("-a", "--activate", "attempt to activate config after loading") do
     activate = true
   end
+  
+  {"nodecount"=>nodecount, "paramcount"=>paramcount, "featurecount"=>featurecount, "groupcount"=>groupcount, "subsystemcount"=>subsystemcount}.each do |paramname, count|
+  
+    opts.on("--#{paramname} COUNT", "number of #{paramname.sub("count", "s")} to create (default #{count})") do |ct|
+      eval "#{paramname} = #{ct.to_i}"
+    end
+  end
+  
+  opts.on("--groups-per-node COUNT", "mean number of explicit groups that each node is a member of") do |ct|
+    groups_per_node = Capricious::Poisson.new ct.to_i
+  end
+
+  opts.on("--features-per-group COUNT", "mean number of features installed on each explicit group") do |ct|
+    features_per_group = Capricious::Poisson.new ct.to_i
+  end
+  
+  opts.on("--params-per-group COUNT", "mean number of params installed on each explicit group") do |ct|
+    params_per_group = Capricious::Poisson.new ct.to_i
+  end
+  
+  opts.on("--params-per-feature COUNT", "mean number of params installed on each feature") do |ct|
+    params_per_feature = Capricious::Poisson.new ct.to_i
+  end
+  
+  opts.on("--features-per-idgroup COUNT", "mean number of features installed on each idgroup") do |ct|
+    features_per_idgroup = Capricious::Poisson.new ct.to_i
+  end
+
+  opts.on("--params-per-idgroup COUNT", "mean number of params installed on each idgroup") do |ct|
+    params_per_idgroup = Capricious::Poisson.new ct.to_i
+  end
+  
+  opts.on("--default-feature-count COUNT", "mean number of features installed on the default group") do |ct|
+    default_features = Capricious::Poisson.new ct.to_i
+  end
+
+  opts.on("--default-param-count COUNT", "mean number of params installed on the default group") do |ct|
+    default_params = Capricious::Poisson.new ct.to_i
+  end
+  
 end
 
 begin
@@ -84,7 +152,66 @@ store.storeinit("resetdb"=>"yes")
 
 store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
-# XXX:  do stress testing here
+def make_names(count, collection, suffix="", num=0)
+  snum = format("%05x", num)
+  if count < collection.size
+    return collection.sort_by {rand}.slice(0, count).map{|name| "#{name}#{snum}#{suffix}"}
+  end
+  
+  coll = collection.sort_by{rand}.map{|name| "#{name}#{snum}#{suffix}"}
+  coll | make_names(count - coll.size, collection, suffix, num + 1)
+end
+
+node_names = make_names(nodecount, Mrg::Grid::Config::Misc::BogusData::NODES, ".local.")
+param_names = make_names(paramcount, Mrg::Grid::Config::Misc::BogusData::PARAMETERS)
+feature_names = make_names(featurecount, Mrg::Grid::Config::Misc::BogusData::FEATURES)
+group_names = make_names(groupcount, Mrg::Grid::Config::Misc::BogusData::GROUPS)
+subsystem_names = make_names(subsystemcount, Mrg::Grid::Config::Misc::BogusData::SUBSYSTEMS)
+
+# make entities
+
+[[node_names, "node", :AddNode], [param_names, "parameter", :AddParam], [feature_names, "feature", :AddFeature], [group_names, "group", :AddExplicitGroup], [subsystem_names, "subsystem", :AddSubsys]].each do |collection, kind, store_msg|
+  collection.each do |name|
+    puts "creating #{kind} #{name}"
+    store_client.send(store_msg, name)
+  end
+end
+
+# make relationships
+
+node_names.each do |node_name|
+  node = store_client.GetNode(node_name)
+  groups = group_names.sort_by{rand}.slice(0, groups_per_node.next)
+  puts "setting groups for #{node_name} to #{groups.inspect}"
+  node.ModifyMemberships("ADD", groups)
+end
+
+features_to_include = feature_names.sort_by {rand}
+
+while features_to_include.size > 0
+  feature = store_client.GetFeature(features_to_include.pop)
+  puts "adding feature dependencies for #{feature.GetName}"
+  ifcount = features_per_feature.next.to_i
+  break if ifcount > features_to_include.size
+  
+  included_features = features_to_include.slice(0, features_per_feature.next.to_i)
+  included_features.each do |fn|
+    begin
+      feature.ModifyFeatures("ADD", [fn], {})
+    rescue Object => ex
+      puts "warning:  #{ex.inspect}"
+    end
+  end
+end
+
+feature_names.each do |feat|
+  # set up params
+end
+
+group_names.each do |grp|
+  # set up params
+end
+
 
 if activate
   explain = store_client.ActivateConfig

@@ -70,7 +70,7 @@ module Mrg
           "Circus Lupus", "DC Youth Brigade", "Dag Nasty", "Deadline", "Double-O ", "Egg Hunt",
           "El Guapo", "Embrace", "Faraquet", "Fidelity Jones", "Fire Party", "French Toast",
           "Fugazi", "Government Issue", "Gray Matter", "Happy Go Licky", "High Back Chairs",
-          "Holy Rollers", "Hoover", "Ignition", "Iron Cross", "Jawbox ", "Joe Lally", "Lungfish",
+          "Holy Rollers", "Hoover", "Ignition", "Jawbox ", "Joe Lally", "Lungfish",
           "Marginal Man", "Medications", "Minor Threat", "Nation of Ulysses", "One Last Wish",
           "Q and Not U", "Red C", "Rites of Spring", "Scream", "Severin", "Shudder to Think",
           "Skewbald", "Slant 6", "Smart Went Crazy", "Soulside", "State of Alert ", "Teen Idles",
