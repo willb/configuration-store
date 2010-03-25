@@ -55,6 +55,7 @@ mkdir -p %{buildroot}/%{_bindir}
 cp -f bin/wallaby-dump %{buildroot}/%{_bindir}
 cp -f bin/wallaby-load %{buildroot}/%{_bindir}
 cp -f bin/wallaby-inventory %{buildroot}/%{_bindir}
+cp -f bin/wallaby-feature-import %{buildroot}/%{_bindir}
 cp -f bin/wallaby-activate %{buildroot}/%{_bindir}
 cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
@@ -106,6 +107,9 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 
 %changelog
+
+* Thu Mar 25 2010 willb <willb@redhat> - 0.2.11-1
+- Updated to source version 0.2.11
 
 * Tue Mar 9 2010 willb <willb@redhat> - 0.2.10-1
 - Updated to source version 0.2.10
