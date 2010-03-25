@@ -1,0 +1,139 @@
+#!/usr/bin/env ruby
+
+# wallaby-feature-import:  translates a file of PARAM=VALUE pairs to a new 
+# feature definition, creating parameters in the store as necessary.
+#
+# Copyright (c) 2009--2010 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+require 'qmf'
+require 'ostruct'
+
+require 'mrg/grid/config-client'
+require 'mrg/grid/config-proxies'
+
+def parse_config_file(fn)
+  results = {:name=>"", :includes=>[], :depends=>[], :params=>{}}
+  lines = open(fn) {|f| f.readlines }
+  lines.each do |line|
+    case line.strip
+    when /^#includes\s+(.*)$/ then results[:includes] << $1.strip
+    when /^#dependson\s+(.*)$/ then results[:depends] << $1.strip
+    when /^#name\s+(.*)$/ then results[:name] = $1.strip
+    when /^([^=]*)=(.*)$/ then results[:params][$1] = $2
+    else puts "warning:  unrecognized config file line #{line}"
+    end
+  end
+  
+  results
+end
+
+host = ENV['WALLABY_BROKER_HOST'] || "localhost"
+port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
+username = ENV['WALLABY_BROKER_USER']
+password = ENV['WALLABY_BROKER_PASSWORD']
+debug = :warn
+name = nil
+
+op = OptionParser.new do |opts|
+  opts.banner = "Usage wallaby-feature-import [options] feature-file"
+
+  opts.on("-h", "--help", "shows this message") do
+    raise OptionParser::InvalidOption
+  end
+
+  opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
+    host = h
+  end
+  
+  opts.on("-p", "--port NUM", "qpid broker port","   (default 5672)") do |num|
+    port = num.to_i
+  end
+
+  opts.on("-U", "--user NAME", "qpid username") do |name|
+    username = name
+  end
+
+  opts.on("-P", "--password PASS", "qpid password") do |pass|
+    password = pass
+  end
+  
+  opts.on("-n", "--name NAME", "name for given feature (overrides one specified in the file)") do |nm|
+    name = nm
+  end
+
+  opts.on("-a", "--all", "show all nodes (default)") do
+    allnodes = true
+  end
+end
+
+begin
+  op.parse!
+rescue OptionParser::InvalidOption
+  puts op
+  exit
+rescue OptionParser::InvalidArgument => ia
+  puts ia
+  puts op
+  exit
+end
+
+feature = parse_config_file(ARGV[0])
+feature[:name] = name if name
+
+console = Qmf::Console.new
+
+settings = Qmf::ConnectionSettings.new
+settings.username = username if username
+settings.password = password if password
+settings.host = host
+settings.port = port
+
+connection = Qmf::Connection.new(settings)
+
+broker = console.add_connection(connection)
+
+broker.wait_for_stable
+
+store = console.object(:class=>"Store")
+store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
+
+puts "Creating feature #{feature[:name]}..."
+
+params = FakeSet[*feature[:params].keys]
+invalid_params = store.checkParameterValidity(params).invalidParameters
+
+unless invalid_params == {}
+  puts "Creating necessary parameters..."
+  invalid_params.keys.each {|param| puts "Creating parameter #{param}" ; store_client.AddParam(param)}
+end
+
+f = store_client.AddFeature(feature[:name])
+
+unless feature[:includes] == []
+  puts "Setting included features to #{feature[:includes].inspect}"
+  f.ModifyFeatures("ADD", FakeList[*feature[:includes]], {})
+end
+
+unless feature[:depends] == []
+  puts "Setting feature dependencies to #{feature[:depends].inspect}"
+  f.ModifyDepends("ADD", FakeList[*feature[:depends]], {})
+end
+
+unless feature[:params] == {}
+  puts "Setting feature parameters to #{feature[:params].inspect}"
+  f.ModifyParams("ADD", feature[:params], {})
+end
+
+puts "#{feature[:name]} created"
