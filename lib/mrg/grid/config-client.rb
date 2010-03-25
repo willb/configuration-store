@@ -255,6 +255,10 @@ module Mrg
           get_object(@qmfo.GetGroup(query).obj, Group)
         end
 
+        def GetExplicitGroup(name)
+          get_object(@qmfo.GetGroup({"NAME"=>name}).obj, Group)
+        end
+
         def AddExplicitGroup(name)
           get_object(@qmfo.AddExplicitGroup(name).obj, Group)
         end

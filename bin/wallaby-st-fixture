@@ -152,20 +152,20 @@ store.storeinit("resetdb"=>"yes")
 
 store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
-def make_names(count, collection, suffix="", num=0)
+def make_names(count, collection, sep="-", suffix="", num=0)
   snum = format("%05x", num)
   if count < collection.size
-    return collection.sort_by {rand}.slice(0, count).map{|name| "#{name}#{snum}#{suffix}"}
+    return collection.sort_by {rand}.slice(0, count).map{|name| "#{name}#{sep}#{snum}#{suffix}"}
   end
   
-  coll = collection.sort_by{rand}.map{|name| "#{name}#{snum}#{suffix}"}
-  coll | make_names(count - coll.size, collection, suffix, num + 1)
+  coll = collection.sort_by{rand}.map{|name| "#{name}#{sep}#{snum}#{suffix}"}
+  coll | make_names(count - coll.size, collection, sep, suffix, num + 1)
 end
 
-node_names = make_names(nodecount, Mrg::Grid::Config::Misc::BogusData::NODES, ".local.")
+node_names = make_names(nodecount, Mrg::Grid::Config::Misc::BogusData::NODES, "-", ".local.")
 param_names = make_names(paramcount, Mrg::Grid::Config::Misc::BogusData::PARAMETERS)
 feature_names = make_names(featurecount, Mrg::Grid::Config::Misc::BogusData::FEATURES)
-group_names = make_names(groupcount, Mrg::Grid::Config::Misc::BogusData::GROUPS)
+group_names = make_names(groupcount, Mrg::Grid::Config::Misc::BogusData::GROUPS, " ")
 subsystem_names = make_names(subsystemcount, Mrg::Grid::Config::Misc::BogusData::SUBSYSTEMS)
 
 # make entities
@@ -181,9 +181,9 @@ end
 
 node_names.each do |node_name|
   node = store_client.GetNode(node_name)
-  groups = group_names.sort_by{rand}.slice(0, groups_per_node.next)
+  groups = group_names.sort_by{rand}.slice(0, groups_per_node.next.to_i)
   puts "setting groups for #{node_name} to #{groups.inspect}"
-  node.ModifyMemberships("ADD", groups)
+  node.ModifyMemberships("ADD", groups, {})
 end
 
 features_to_include = feature_names.sort_by {rand}
@@ -204,14 +204,25 @@ while features_to_include.size > 0
   end
 end
 
-feature_names.each do |feat|
-  # set up params
+def param_value(param, owner="")
+  "#{param.downcase}_#{owner.downcase.sub(" ", "_")}"
 end
 
-group_names.each do |grp|
-  # set up params
+{feature_names=>:GetFeature, group_names=>:GetExplicitGroup}.each do |collection, get_msg|
+  collection.each do |th|
+    thing = store_client.send(get_msg, th)
+    puts "adding params for #{th}"
+    paramcount = get_msg == :GetFeature ? params_per_feature.next.to_i : params_per_group.next.to_i
+    rands = []
+    while rands.size < paramcount
+      (paramcount - rands.size).times do
+        rands |= [param_names[rand(param_names.size)]]
+      end
+    end
+    
+    thing.ModifyParams("ADD", Hash[*rands.zip(rands.map{|r| param_value(r, th)}).flatten], {})
+  end
 end
-
 
 if activate
   explain = store_client.ActivateConfig
