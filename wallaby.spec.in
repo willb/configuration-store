@@ -79,6 +79,7 @@ rm -rf %{buildroot}
 %{_bindir}/wallaby-dump
 %{_bindir}/wallaby-inventory
 %{_bindir}/wallaby-activate
+%{_bindir}/wallaby-feature-import
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
