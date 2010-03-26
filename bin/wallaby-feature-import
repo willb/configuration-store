@@ -30,8 +30,9 @@ def parse_config_file(fn)
     case line.strip
     when /^#includes\s+(.*)$/ then results[:includes] << $1.strip
     when /^#dependson\s+(.*)$/ then results[:depends] << $1.strip
+    when /^#default\s+(.*)$/ then results[:params][$1.strip] = 0
     when /^#name\s+(.*)$/ then results[:name] = $1.strip
-    when /^([^=]*)=(.*)$/ then results[:params][$1] = $2
+    when /^([^=]*)=(.*)$/ then results[:params][$1] = ($2.strip.size > 0 ? $2.strip : 0)
     else puts "warning:  unrecognized config file line #{line}"
     end
   end
@@ -91,6 +92,12 @@ end
 
 feature = parse_config_file(ARGV[0])
 feature[:name] = name if name
+
+unless feature[:name]
+  puts "Error: No feature name supplied.  You must provide one, either\nwith a '--name' parameter on the command-line, or with\na '#name' directive in the feature file."
+  puts op
+  exit
+end
 
 console = Qmf::Console.new
 
