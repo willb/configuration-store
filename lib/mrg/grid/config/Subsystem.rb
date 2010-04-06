@@ -39,11 +39,11 @@ module Mrg
         # * params (map/O)
         #   A set of parameter names that the subsystem is interested in
         def GetParams()
-          return FakeSet[*params]
+          params
         end
         
         expose :GetParams do |args|
-          args.declare :params, :map, :out, {}
+          args.declare :params, :list, :out, {}
         end
         
         # ModifyParams 
@@ -57,7 +57,6 @@ module Mrg
           log.debug "ModifyParams: params => #{params.inspect}"
           log.debug "ModifyParams: options => #{options.inspect}"
           
-          params = params.keys
           invalid_params = Parameter.select_invalid(params)
           fail(42, "Invalid parameters for observation by subsystem #{self.name}:  #{invalid_params.inspect}") if invalid_params != []
           
@@ -67,7 +66,7 @@ module Mrg
         
         expose :ModifyParams do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :params, :map, :in, {}
+          args.declare :params, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         

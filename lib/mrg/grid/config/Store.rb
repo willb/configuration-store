@@ -179,7 +179,7 @@ module Mrg
         
         expose :ActivateConfiguration do |args|
           args.declare :explain, :map, :out, {}
-          args.declare :warnings, :map, :out, {}
+          args.declare :warnings, :list, :out, {}
         end
         
         def ValidateConfiguration
@@ -188,7 +188,7 @@ module Mrg
         
         expose :ValidateConfiguration do |args|
           args.declare :explain, :map, :out, {}
-          args.declare :warnings, :map, :out, {}
+          args.declare :warnings, :list, :out, {}
         end
         
         # AddNode 
@@ -434,15 +434,15 @@ module Mrg
         end
         
         [Feature, Group, Node, Parameter, Subsystem].each do |klass|
-          define_method "check#{klass.name.split("::").pop}Validity".to_sym do |fakeset|
-            log.debug "check#{klass.name.split("::").pop}Validity called:  set is #{fakeset}"
-            entities = fakeset.keys.sort.uniq
-            FakeSet[*klass.select_invalid(entities)]
+          define_method "check#{klass.name.split("::").pop}Validity".to_sym do |fset|
+            log.debug "check#{klass.name.split("::").pop}Validity called:  set is #{fset}"
+            entities = fset.sort.uniq
+            klass.select_invalid(entities)
           end
           
           expose "check#{klass.name.split("::").pop}Validity".to_sym do |args|
-            args.declare :set, :map, :in, :desc=>"A set of #{klass.name} names to check for validity"
-            args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :map, :out, :desc=>"A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
+            args.declare :set, :list, :in, :desc=>"A set of #{klass.name} names to check for validity"
+            args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :list, :out, :desc=>"A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
           end
         end
         
@@ -488,12 +488,12 @@ module Mrg
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
           default_group_only = (dirty_nodes.size == 0)
-          warnings = {}
+          warnings = []
           
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
-            warnings["No nodes in configuration; only tested default group"] = 1
+            warnings << "No nodes in configuration; only tested default group"
           end
           
           results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]

@@ -172,7 +172,7 @@ module Mrg
         # ModifyMemberships
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-        # * groups (map/I)
+        # * groups (list/I)
         #   A list of groups, in inverse priority order (most important first)
         # * options (map/I)
         def ModifyMemberships(command,groups,options={})
@@ -183,7 +183,7 @@ module Mrg
           
           invalid_groups = []
           
-          groups = FakeList.normalize(groups).to_a.map do |gn|
+          groups = groups.map do |gn|
             group = Group.find_first_by_name(gn)
             invalid_groups << gn unless group
             group
@@ -220,7 +220,7 @@ module Mrg
         
         expose :ModifyMemberships do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :groups, :map, :in, {}
+          args.declare :groups, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
@@ -229,11 +229,11 @@ module Mrg
         #   A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group
         def GetMemberships()
           log.debug "GetMemberships called on node #{self.inspect}"
-          FakeList[*memberships.map{|g| g.name}]
+          memberships.map {|g| g.name}
         end
         
         expose :GetMemberships do |args|
-          args.declare :groups, :map, :out, {}
+          args.declare :groups, :list, :out, {}
         end
         
         def Node.get_dirty_nodes

@@ -210,11 +210,11 @@ module Mrg
         #   A set of parameter names that this one depends on
         def GetDepends()
           log.debug "GetDepends called on param #{self.inspect}"
-          return FakeSet[*depends]
+          depends
         end
         
         expose :GetDepends do |args|
-          args.declare :depends, :map, :out, {}
+          args.declare :depends, :list, :out, {}
         end
         
         # ModifyDepends 
@@ -222,12 +222,10 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * depends (map/I)
         #   A set of parameter names that this one depends on
-        def ModifyDepends(command,deps,options)
+        def ModifyDepends(command,depends,options)
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command.inspect}"
           log.debug "ModifyDepends: depends => #{deps.inspect}"
-          
-          depends = deps.keys
           
           invalid_depends = Parameter.select_invalid(depends)
           fail(42, "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
@@ -238,7 +236,7 @@ module Mrg
         
         expose :ModifyDepends do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :depends, :map, :in, {}
+          args.declare :depends, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
@@ -247,11 +245,11 @@ module Mrg
         #   A set of parameter names that conflict with the parameter
         def GetConflicts()
           log.debug "GetConflicts called on param #{self.inspect}"
-          return FakeSet[*conflicts]
+          conflicts
         end
         
         expose :GetConflicts do |args|
-          args.declare :conflicts, :map, :out, {}
+          args.declare :conflicts, :list, :out, {}
         end
         
         # ModifyConflicts 
@@ -259,12 +257,11 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of parameter names that conflict with this one
-        def ModifyConflicts(command,confs,options)
+        def ModifyConflicts(command,conflicts,options)
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
           log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
           
-          conflicts = confs.keys
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(42, "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
@@ -274,7 +271,7 @@ module Mrg
         
         expose :ModifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :conflicts, :map, :in, {}
+          args.declare :conflicts, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         

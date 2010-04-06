@@ -82,11 +82,11 @@ module Mrg
         #   list of other feature names a feature includes
         def GetFeatures()
           log.debug "GetFeatures called on feature #{self.inspect}"
-          return FakeList[*includes]
+          includes
         end
         
         expose :GetFeatures do |args|
-          args.declare :features, :map, :out, {}
+          args.declare :features, :list, :out, {}
         end
         
         # ModifyFeatures 
@@ -99,7 +99,7 @@ module Mrg
           log.debug "ModifyFeatures: command => #{command.inspect}"
           log.debug "ModifyFeatures: features => #{features.inspect}"
           log.debug "ModifyFeatures: options => #{options.inspect}"
-          fl = FakeList.normalize(features).to_a
+          fl = features
                     
           invalid_fl = Feature.select_invalid(fl)
           
@@ -111,7 +111,7 @@ module Mrg
         
         expose :ModifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :features, :map, :in, {}
+          args.declare :features, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
@@ -213,11 +213,11 @@ module Mrg
         #   A set of other features that this feature conflicts with
         def GetConflicts()
           log.debug "GetConflicts called on feature #{self.inspect}"
-          return FakeSet[*conflicts]
+          conflicts
         end
         
         expose :GetConflicts do |args|
-          args.declare :conflicts, :map, :out, {}
+          args.declare :conflicts, :list, :out, {}
         end
         
         # ModifyConflicts 
@@ -225,13 +225,11 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of other feature names that conflict with the feature
-        def ModifyConflicts(command,confs,options={})
+        def ModifyConflicts(command,conflicts,options={})
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
           log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
           log.debug "ModifyConflicts: options => #{options.inspect}"
-          
-          conflicts = confs.keys
           
           invalid_conflicts = Feature.select_invalid(conflicts)
           
@@ -243,7 +241,7 @@ module Mrg
         
         expose :ModifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :conflicts, :map, :in, {}
+          args.declare :conflicts, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
@@ -252,11 +250,11 @@ module Mrg
         #   A list of other features that this feature depends on for proper operation, in priority order.
         def GetDepends()
           log.debug "GetDepends called on feature #{self.inspect}"
-          return FakeList[*depends]
+          depends
         end
         
         expose :GetDepends do |args|
-          args.declare :depends, :map, :out, {}
+          args.declare :depends, :list, :out, {}
         end
         
         # ModifyDepends 
@@ -270,8 +268,6 @@ module Mrg
           log.debug "ModifyDepends: depends => #{depends.inspect}"
           log.debug "ModifyDepends: options => #{options.inspect}"
           
-          depends = FakeList.normalize(depends).to_a
-
           invalid_deps = Feature.select_invalid(depends)
           
           fail(42, "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
@@ -282,7 +278,7 @@ module Mrg
         
         expose :ModifyDepends do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :depends, :map, :in, {}
+          args.declare :depends, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
@@ -291,11 +287,11 @@ module Mrg
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
         def GetSubsys()
           log.debug "GetSubsys called on feature #{self.inspect}"
-          return FakeSet[*subsystems]
+          subsystems
         end
         
         expose :GetSubsys do |args|
-          args.declare :subsystems, :map, :out, {}
+          args.declare :subsystems, :list, :out, {}
         end
         
         # ModifySubsys 
@@ -308,13 +304,13 @@ module Mrg
           log.debug "ModifySubsys: command => #{command.inspect}"
           log.debug "ModifySubsys: subsys => #{subsys.inspect}"
 
-          modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
+          modify_arcs(command,subsys.uniq,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
           self_to_dirty_list
         end
         
         expose :ModifySubsys do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :subsys, :map, :in, {}
+          args.declare :subsys, :list, :in, {}
         end
         
         def apply_to(dict)

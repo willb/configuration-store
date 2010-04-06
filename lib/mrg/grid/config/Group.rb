@@ -67,11 +67,11 @@ module Mrg
         #   A list of the nodes associated with this group
         def GetMembership()
           log.debug "GetMembership called on group #{self.inspect}"
-          FakeList[*NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}]
+          NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}
         end
         
         expose :GetMembership do |args|
-          args.declare :nodes, :map, :out, {}
+          args.declare :nodes, :list, :out, {}
         end
         
         # GetName 
@@ -106,11 +106,11 @@ module Mrg
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
         def GetFeatures()
           log.debug "GetFeatures called on group #{self.inspect}"
-          return FakeList[*features.map{|f| f.name}]
+          features.map{|f| f.name}
         end
         
         expose :GetFeatures do |args|
-          args.declare :features, :map, :out, {}
+          args.declare :features, :list, :out, {}
         end
         
         def ClearParams
@@ -147,7 +147,7 @@ module Mrg
           
           invalid_features = []
           
-          feats = FakeList.normalize(fs).to_a.map do |fn|
+          feats = feats.map do |fn|
             frow = Feature.find_first_by_name(fn)
             invalid_features << fn unless frow
             frow
@@ -186,19 +186,19 @@ module Mrg
         
         expose :ModifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :features, :map, :in, {}
+          args.declare :features, :list, :in, {}
           args.declare :options, :map, :in, {}
           args.declare :params, :map, :out, {}
         end
         
         def AddFeature(f)
           log.debug("In AddFeature, with f == #{f.inspect}")
-          self.ModifyFeatures("ADD", FakeList[f])
+          self.ModifyFeatures("ADD", [f])
         end
         
         def RemoveFeature(f)
           log.debug("In RemoveFeature, with f == #{f.inspect}")
-          self.ModifyFeatures("REMOVE", FakeList[f])
+          self.ModifyFeatures("REMOVE", [f])
         end
         
         expose :AddFeature do |args|
