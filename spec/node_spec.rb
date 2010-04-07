@@ -191,7 +191,7 @@ module Mrg
           node.ModifyMemberships("ADD", Array[group.name], {})
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
-          node.validate[1]["Unset necessary parameters"].keys.size.should == 2
+          node.validate[1]["Unset necessary parameters"].size.should == 2
           node.validate[1]["Unset necessary parameters"].should include("FIRST")
           node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
@@ -200,7 +200,7 @@ module Mrg
           node.GetConfig["FIRST"].should == "fooblitz"
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
-          node.validate[1]["Unset necessary parameters"].keys.size.should == 1
+          node.validate[1]["Unset necessary parameters"].size.should == 1
           node.validate[1]["Unset necessary parameters"].should_not include("FIRST")
           node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
@@ -212,7 +212,7 @@ module Mrg
           group.ModifyParams("REMOVE", {"SECOND"=>"blahrific"}, {})
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
-          node.validate[1]["Unset necessary parameters"].keys.size.should == 1
+          node.validate[1]["Unset necessary parameters"].size.should == 1
           node.validate[1]["Unset necessary parameters"].should_not include("FIRST")
           node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
