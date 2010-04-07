@@ -18,7 +18,7 @@
 
 # FIXME:  most of this file could/should be dynamically generated, via, inter
 # alia, a much smarter method_missing that introspected over qmf method
-# results and converted input sets and lists to FakeSet/FakeList
+# results
 
 require 'mrg/grid/config'
 
@@ -47,7 +47,7 @@ module Mrg
 
       class Group < ClientObj
         def GetMembership
-          FakeList.normalize(@qmfo.GetMembership.nodes).to_a
+          @qmfo.GetMembership.nodes
         end
         
         def GetName
@@ -55,11 +55,11 @@ module Mrg
         end
         
         def GetFeatures
-          FakeList.normalize(@qmfo.GetFeatures.features).to_a
+          @qmfo.GetFeatures.features
         end
         
         def ModifyFeatures(c,fs,o)
-          @qmfo.ModifyFeatures(c,FakeList[*fs],o)
+          @qmfo.ModifyFeatures(c,fs,o)
         end
         
         def GetParams
@@ -132,7 +132,7 @@ module Mrg
         end
 
         def ModifyDepends(c,d,o)
-          @qmfo.ModifyDepends(c,FakeSet[*d],o)
+          @qmfo.ModifyDepends(c,d.uniq,o)
         end
 
         def GetConflicts
@@ -140,7 +140,7 @@ module Mrg
         end
 
         def ModifyConflicts(c,co,o)
-          @qmfo.ModifyConflicts(c,FakeSet[*co],o)
+          @qmfo.ModifyConflicts(c,co.uniq,o)
         end
 
         private
@@ -157,11 +157,11 @@ module Mrg
         end
         
         def GetFeatures()
-          FakeList.normalize(@qmfo.GetFeatures.features).to_a
+          @qmfo.GetFeatures.features
         end
         
         def ModifyFeatures(command, features, options={})
-          @qmfo.ModifyFeatures(command, FakeList[*features], options)
+          @qmfo.ModifyFeatures(command, features, options)
         end
         
         def GetParams()
@@ -177,15 +177,15 @@ module Mrg
         end
         
         def ModifyDepends(command, depends, options={})
-          @qmfo.ModifyDepends(command, FakeList[*depends], options)
+          @qmfo.ModifyDepends(command, depends, options)
         end
         
         def ModifyConflicts(command, conflicts, options={})
-          @qmfo.ModifyConflicts(command, FakeSet[*conflicts], options)
+          @qmfo.ModifyConflicts(command, conflicts.uniq, options)
         end
         
         def ModifySubsys(command, subsys, options={})
-          @qmfo.ModifySubsys(command, FakeSet[*subsys], options)
+          @qmfo.ModifySubsys(command, subsys.uniq, options)
         end
         
         def GetConflicts
@@ -197,7 +197,7 @@ module Mrg
         end
 
         def GetDepends
-          FakeList.normalize(@qmfo.GetDepends.depends).to_a
+          @qmfo.GetDepends.depends
         end
         
         private
@@ -214,7 +214,7 @@ module Mrg
         end
         
         def ModifyParams(command, params, options)
-          @qmfo.ModifyParams(command, FakeSet[*params], options)
+          @qmfo.ModifyParams(command, params.uniq, options)
         end
         
         private
@@ -239,11 +239,11 @@ module Mrg
         end
 
         def ModifyMemberships(command, groups, options)
-          @qmfo.ModifyMemberships(command, FakeList[*groups], options)
+          @qmfo.ModifyMemberships(command, groups, options)
         end
 
         def GetMemberships
-          FakeList.normalize(@qmfo.GetMemberships.groups).to_a
+          @qmfo.GetMemberships.groups
         end
 
         def GetConfig
