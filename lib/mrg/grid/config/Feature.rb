@@ -228,7 +228,7 @@ module Mrg
         def ModifyConflicts(command,conflicts,options={})
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           log.debug "ModifyConflicts: options => #{options.inspect}"
           
           invalid_conflicts = Feature.select_invalid(conflicts)

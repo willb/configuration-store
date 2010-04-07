@@ -140,10 +140,10 @@ module Mrg
         #   A list of features to apply to this group dependency priority
         # * params (map/O)
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
-        def ModifyFeatures(command,fs,options={})
+        def ModifyFeatures(command,feats,options={})
           # Print values of input parameters
           log.debug "ModifyFeatures: command => #{command.inspect}"
-          log.debug "ModifyFeatures: features => #{fs.inspect}"
+          log.debug "ModifyFeatures: features => #{feats.inspect}"
           
           invalid_features = []
           

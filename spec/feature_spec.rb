@@ -259,7 +259,7 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          default.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -278,7 +278,7 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          default.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffg = Feature.features_for_group(default)
           
@@ -297,8 +297,8 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].ModifyFeatures("ADD", FakeList[dep_dests[2].name])
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          dep_dests[0].ModifyFeatures("ADD", [dep_dests[2].name])
+          default.ModifyFeatures("ADD", [dep_dests[0].name])
           
           ffg = Feature.features_for_group(default)
           
@@ -317,8 +317,8 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].ModifyDepends("ADD", FakeList[dep_dests[2].name, dep_dests[4].name])
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          dep_dests[0].ModifyDepends("ADD", [dep_dests[2].name, dep_dests[4].name])
+          default.ModifyFeatures("ADD", [dep_dests[0].name])
           
           dfg = Feature.dependencies_for_group(default)
           
@@ -339,7 +339,7 @@ module Mrg
           
           idgroup = node.idgroup
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          idgroup.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -360,7 +360,7 @@ module Mrg
           
           idgroup = node.idgroup
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          idgroup.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -380,13 +380,13 @@ module Mrg
           node = @store.AddNode("blah.local.")
           group = @store.AddExplicitGroup("Pony Users")
           
-          group.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          group.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
           
           ffn = Feature.features_for_node(node)
           
           ffn.should have(0).things
           
-          node.ModifyMemberships("ADD", FakeList[group.name])
+          node.ModifyMemberships("ADD", [group.name])
 
           ffn = Feature.features_for_node(node)
           
@@ -408,9 +408,9 @@ module Mrg
           
           idgroup = node.idgroup
           
-          dep_dests[2].ModifyFeatures("ADD", FakeList[dep_dests[3].name])
+          dep_dests[2].ModifyFeatures("ADD", [dep_dests[3].name])
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          idgroup.ModifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -429,11 +429,11 @@ module Mrg
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.ModifyFeatures("ADD", FakeList[dependent.name])
+            feature.ModifyFeatures("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+            dep_dests[-1].ModifyFeatures("ADD", [dep_dests[0].name])
           }.should raise_error
         end
 
@@ -445,17 +445,17 @@ module Mrg
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.ModifyDepends("ADD", FakeList[dependent.name])
+            feature.ModifyDepends("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].ModifyDepends("ADD", FakeList[dep_dests[0].name])
+            dep_dests[-1].ModifyDepends("ADD", [dep_dests[0].name])
           }.should raise_error
         end
         
         [["include", "inclusion", :GetFeatures, :ModifyFeatures, true, :AddFeature], ["depend on", "dependence", :GetDepends, :ModifyDepends, true, :AddFeature], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false, :AddFeature], ["affect", "implication", :GetSubsys, :ModifySubsys, false, :AddSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
-          fake_collection = order_preserving ? FakeList : FakeSet
+          fake_collection = Array
           nouns = create_dest_msg == :AddFeature ? "features" : "subsystems"
 
           it "should #{verb} no other #{nouns} by default" do
@@ -496,12 +496,12 @@ module Mrg
             feature = @store.AddFeature("Pony Accelerator")
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
             dep_dests.each do |ef| 
               observed_dests.should include(ef.name)
             end
@@ -518,9 +518,9 @@ module Mrg
             supplied_dests = (dep_dests+dep_dests+dep_dests+dep_dests).sort_by {rand}
 
             feature.send(modify_msg, "ADD", fake_collection[*supplied_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
 
             supplied_dests.uniq.each do |ef| 
               observed_dests.should include(ef.name)
@@ -539,7 +539,7 @@ module Mrg
 
             feature.send(modify_msg, "REMOVE", fake_collection[*dep_dests.pop.name])
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
             dep_dests.each do |ef| 
               observed_dests.should include(ef.name)
             end
@@ -556,7 +556,7 @@ module Mrg
 
               feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -572,7 +572,7 @@ module Mrg
 
               feature.send(modify_msg, "REPLACE", fake_collection[*dep_dests.map {|f| f.name}])
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -588,17 +588,17 @@ module Mrg
 
               feature.send(modify_msg, "ADD", fake_collection[*dep_dests.slice(0,2).map {|f| f.name}])
 
-              feature.send(inspect_msg).keys.size.should == dep_dests.slice(0,2).size
+              feature.send(inspect_msg).size.should == dep_dests.slice(0,2).size
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests.slice(0,2)).each do |of,ef| 
                 ef.name.should == of
               end
 
               feature.send(modify_msg, "ADD", fake_collection[dep_dests[-1].name])
-              feature.send(inspect_msg).keys.size.should == dep_dests.size
+              feature.send(inspect_msg).size.should == dep_dests.size
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -614,7 +614,7 @@ module Mrg
           feature.ModifyParams("ADD", {"FOO"=>0}, {})
           
           node = @store.AddNode("blah.local.")
-          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+          node.idgroup.ModifyFeatures("ADD", [feature.name], {})
           
           config = node.GetConfig
           

@@ -87,7 +87,7 @@ module Mrg
   
             f1.ModifyParams(p_cmd, {"BIOTECH"=>"ichi"})
             f1.ModifyParams(p_cmd, {"UKULELE"=>"gcae"})
-            group.ModifyFeatures(p_cmd, FakeList["BLAH1"])
+            group.ModifyFeatures(p_cmd, Array["BLAH1"])
   
             conf = n.GetConfig
             conf.keys.should include("BIOTECH")
@@ -95,7 +95,7 @@ module Mrg
             conf["UKULELE"].should == "gcae"
   
             f2.ModifyParams(p_cmd, {"BIOTECH"=>"ni"})
-            group.ModifyFeatures("REPLACE", FakeList["BLAH2", "BLAH1"])
+            group.ModifyFeatures("REPLACE", Array["BLAH2", "BLAH1"])
   
             conf = n.GetConfig
             conf.keys.should include("BIOTECH")
@@ -120,10 +120,10 @@ module Mrg
           n = @store.AddNode("blather.local.")
           groupnames = %w{ExecuteNodes HASchedulers DesktopMachines}
           groups = groupnames.map {|g| @store.AddExplicitGroup(g)}
-          n.ModifyMemberships("ADD", FakeList[*groupnames])
+          n.ModifyMemberships("ADD", Array[*groupnames])
           
           n.GetMemberships.size.should == groupnames.size
-          n.GetMemberships.should == FakeList[*groupnames]
+          n.GetMemberships.should == Array[*groupnames]
         end
         
         it "should be unprovisioned unless explicitly added" do
@@ -160,9 +160,9 @@ module Mrg
           
           param_map.values.each {|param| @store.AddParam(param)}
           features = %w{FredFeature BarneyFeature WilmaFeature BettyFeature}.map {|fn| f = @store.AddFeature(fn); f.ModifyParams("ADD", {param_map[fn]=>fn}); f}
-          features[0].ModifyFeatures("ADD", FakeList[*features[1..-1].map{|f| f.name}])
+          features[0].ModifyFeatures("ADD", Array[*features[1..-1].map{|f| f.name}])
           
-          group.ModifyFeatures("ADD", FakeList[features[0].name])
+          group.ModifyFeatures("ADD", Array[features[0].name])
           
           config = node.GetConfig
           
@@ -183,17 +183,17 @@ module Mrg
           node.validate.should == true  # we haven't added this node to any groups yet
           
           # step 3:  add this feature to a group
-          group.ModifyFeatures("ADD", FakeList[feature.name], {})
+          group.ModifyFeatures("ADD", Array[feature.name], {})
           
           node.validate.should == true  # we haven't added this node to any groups yet
           
           # step 4:  add this group to a node
-          node.ModifyMemberships("ADD", FakeList[group.name], {})
+          node.ModifyMemberships("ADD", Array[group.name], {})
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
           node.validate[1]["Unset necessary parameters"].keys.size.should == 2
-          node.validate[1]["Unset necessary parameters"].keys.should include("FIRST")
-          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          node.validate[1]["Unset necessary parameters"].should include("FIRST")
+          node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
           # step 5:  add param one to the default group
           Group.DEFAULT_GROUP.ModifyParams("ADD", {"FIRST"=>"fooblitz"}, {})
@@ -201,8 +201,8 @@ module Mrg
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
           node.validate[1]["Unset necessary parameters"].keys.size.should == 1
-          node.validate[1]["Unset necessary parameters"].keys.should_not include("FIRST")
-          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          node.validate[1]["Unset necessary parameters"].should_not include("FIRST")
+          node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
           # step 6:  add param two to the group
           group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
@@ -213,8 +213,8 @@ module Mrg
           node.validate.should_not == true
           node.validate[1]["Unset necessary parameters"].should_not == nil
           node.validate[1]["Unset necessary parameters"].keys.size.should == 1
-          node.validate[1]["Unset necessary parameters"].keys.should_not include("FIRST")
-          node.validate[1]["Unset necessary parameters"].keys.should include("SECOND")
+          node.validate[1]["Unset necessary parameters"].should_not include("FIRST")
+          node.validate[1]["Unset necessary parameters"].should include("SECOND")
           
           # step 8:  add param two to the group
           group.ModifyParams("ADD", {"SECOND"=>"blahrific"}, {})
@@ -222,7 +222,7 @@ module Mrg
         end
       
         {"provisioned"=>:AddNode, "unprovisioned"=>:GetNode}.each do |nodekind, node_find_msg|
-          [["an explicit group", Proc.new {|store| store.AddExplicitGroup("SETNODES")}, Proc.new {|node, group| node.ModifyMemberships("ADD", FakeList[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
+          [["an explicit group", Proc.new {|store| store.AddExplicitGroup("SETNODES")}, Proc.new {|node, group| node.ModifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
 
             it "should, if it is #{nodekind}, include StringSet parameter values from #{from}" do
               node = @store.send(node_find_msg, "guineapig.local.")
@@ -295,7 +295,7 @@ module Mrg
             feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
             feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[feature2.name, feature1.name], {})
             node.GetIdentityGroup.ModifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
             config = node.GetConfig
 
@@ -318,8 +318,8 @@ module Mrg
             feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
             feature3.ModifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
 
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
-            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature3.name], {})
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[feature2.name, feature1.name], {})
+            node.GetIdentityGroup.ModifyFeatures("ADD", Array[feature3.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
@@ -339,7 +339,7 @@ module Mrg
             Group.DEFAULT_GROUP.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
             group.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            node.ModifyMemberships("ADD", FakeList[group.name], {})
+            node.ModifyMemberships("ADD", Array[group.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
@@ -360,7 +360,7 @@ module Mrg
             feature1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
             feature2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name, feature1.name], {})
+            node.GetIdentityGroup.ModifyFeatures("ADD", Array[feature2.name, feature1.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
@@ -381,7 +381,7 @@ module Mrg
             group1.ModifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
             group2.ModifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            node.ModifyMemberships("ADD", FakeList[group2.name, group1.name], {})
+            node.ModifyMemberships("ADD", Array[group2.name, group1.name], {})
             config = node.GetConfig
 
             config.should have_key("STRINGSET")
@@ -393,42 +393,42 @@ module Mrg
 
           it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the default group)" do
             features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+            features[0].ModifyDepends("ADD", Array[features[1].name], {})
 
-            Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
+            Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[features[0].name], {})
 
             node = @store.send(node_find_msg, "blah.local.")
             config = node.GetConfig
             node.validate.should_not == true
-            node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+            node.validate[1][Node::BROKEN_FEATURE_DEPS].should include("BarFeature")
 
             [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
               explain, warnings = @store.send(va_msg)
               explain.should_not == {}
-              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].should include("BarFeature")
               
-              warnings.should == {}
+              warnings.should == []
             end
             
           end
 
           it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the idgroup)" do
             features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
-            features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+            features[0].ModifyDepends("ADD", Array[features[1].name], {})
 
             node = @store.send(node_find_msg, "blah.local.")
 
-            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features[0].name], {})
+            node.GetIdentityGroup.ModifyFeatures("ADD", Array[features[0].name], {})
 
             config = node.GetConfig
             node.validate.should_not == true
-            node.validate[1][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
+            node.validate[1][Node::BROKEN_FEATURE_DEPS].should include("BarFeature")
 
             [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
               explain, warnings = @store.send(va_msg)
               explain.should_not == {}
-              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-              warnings.should == {}
+              explain["blah.local."][Node::BROKEN_FEATURE_DEPS].should include("BarFeature")
+              warnings.should == []
             end
             
           end
@@ -441,19 +441,19 @@ module Mrg
             feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
             node = @store.send(node_find_msg, "blah.local.")
-            node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+            node.GetIdentityGroup.ModifyFeatures("ADD", Array[feature.name], {})
 
             config = node.GetConfig
 
             node.validate.should_not == true
-            node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+            node.validate[1][Node::UNSET_MUSTCHANGE_PARAMS].should include("FOO")
             
             [:ValidateConfiguration, :ActivateConfiguration].each do |va_msg|
               explain, warnings = @store.send(va_msg)
               explain.should_not == {}
-              explain["blah.local."][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
+              explain["blah.local."][Node::UNSET_MUSTCHANGE_PARAMS].should include("FOO")
 
-              warnings.should == {}
+              warnings.should == []
             end
             
             
@@ -473,7 +473,7 @@ module Mrg
                 feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", Array[feature.name], {})
 
                 Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
@@ -484,7 +484,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
               end
@@ -497,7 +497,7 @@ module Mrg
                 feature.ModifyParams("ADD", {"FOO"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[feature.name], {})
 
                 node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
@@ -508,7 +508,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
 
@@ -526,9 +526,9 @@ module Mrg
 
 
                 node = @store.send(node_find_msg, "blah.local.")
-                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[feature.name], {})
 
-                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[feature2.name], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", Array[feature2.name], {})
 
                 config = node.GetConfig
 
@@ -537,7 +537,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
 
@@ -552,7 +552,7 @@ module Mrg
                 features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                Group.DEFAULT_GROUP.ModifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 node.GetIdentityGroup.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
@@ -565,7 +565,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
               end
@@ -579,7 +579,7 @@ module Mrg
                 features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
@@ -592,7 +592,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
               end
@@ -606,7 +606,7 @@ module Mrg
                 features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
                 node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH"}, {})
@@ -620,7 +620,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
               end
@@ -634,7 +634,7 @@ module Mrg
                 features[1].ModifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.GetIdentityGroup.ModifyFeatures("ADD", FakeList[features.map{|f| f.name}], {})
+                node.GetIdentityGroup.ModifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.ModifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
                 node.GetIdentityGroup.ModifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
@@ -648,7 +648,7 @@ module Mrg
 
                 explain, warnings = @store.send(va_msg)
                 explain.should == {}
-                warnings.should == {}
+                warnings.should == []
 
                 node.last_updated_version.send((va_msg == :ValidateConfiguration ? :should : :should_not), equal(0))
               end

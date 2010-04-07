@@ -43,10 +43,10 @@ module Mrg
           old_size = 0
           
           param_names.each do |k|
-            ss.ModifyParams("ADD", {k=>true})
+            ss.ModifyParams("ADD", [k])
             mappings = ss.GetParams
             mappings.size.should == old_size + 1
-            mappings.keys.should include(k)
+            mappings.should include(k)
             
             old_size = mappings.size
           end
@@ -61,14 +61,14 @@ module Mrg
           params = param_names.map {|pn| @store.AddParam(pn)}
 
           ss = @store.AddSubsys(@gskey)
-          ss.ModifyParams("ADD", pvmap)
+          ss.ModifyParams("ADD", pvmap.keys)
           
           mappings = ss.GetParams
           
           mappings.size.should == pvmap.size
           
           param_names.each do |k|
-            mappings.keys.should include(k)
+            mappings.should include(k)
           end
         end
         

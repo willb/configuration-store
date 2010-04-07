@@ -85,8 +85,8 @@ module Mrg
 
         it "has no dependencies or conflicts by default" do
           param = @store.AddParam("BIOTECH")
-          param.GetDepends.should == {}
-          param.GetConflicts.should == {}
+          param.GetDepends.should == []
+          param.GetConflicts.should == []
         end
         
         it "accepts added dependencies" do
@@ -94,13 +94,13 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
           
           param = params[param_names.shift]
-          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          deps.keys.size.should == added_deps.size
-          added_deps.keys.each {|dep| deps.keys.should include(dep) }
+          deps.size.should == added_deps.size
+          added_deps.each {|dep| deps.should include(dep) }
         end
         
         it "rejects dependency cycles" do
@@ -108,13 +108,13 @@ module Mrg
           params = param_names.map {|p| @store.AddParam(p) }
           
           params.each_cons(2) do |source, dest|
-            source.ModifyDepends("ADD", FakeSet[*dest.name], {})
+            source.ModifyDepends("ADD", [dest.name], {})
             deps = source.GetDepends
-            deps.keys.size.should == 1
-            deps.keys.should include(dest.name)
+            deps.size.should == 1
+            deps.should include(dest.name)
           end
           
-          lambda { params[-1].ModifyDepends("ADD", FakeSet[*params[0].name], {}) }.should raise_error
+          lambda { params[-1].ModifyDepends("ADD", params[0].name, {}) }.should raise_error
 
         end
 
@@ -176,7 +176,7 @@ module Mrg
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.ModifyMemberships("ADD", FakeList[group.name])
+          node.ModifyMemberships("ADD", [group.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -199,7 +199,7 @@ module Mrg
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name])
+          node.idgroup.ModifyFeatures("ADD", [feature.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -220,12 +220,12 @@ module Mrg
           
           feature1.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
 
-          feature.ModifyFeatures("ADD", FakeList[feature1.name])
+          feature.ModifyFeatures("ADD", [feature1.name])
 
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name])
+          node.idgroup.ModifyFeatures("ADD", [feature.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -243,7 +243,7 @@ module Mrg
           dep_param_names = ("YAA".."YAF").to_a
           dep_params = dep_param_names.map {|p| @store.AddParam(p) }
           
-          params[0].ModifyDepends("ADD", FakeSet[*dep_param_names], {})
+          params[0].ModifyDepends("ADD", dep_param_names, {})
           
           node = @store.AddNode("frotz")
           
@@ -274,17 +274,17 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
           
           param = params[param_names.shift]
-          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          pre_size = deps.keys.size
+          pre_size = deps.size
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          deps.keys.size.should == pre_size
+          deps.size.should == pre_size
         end
 
         it "does not remove preexisting dependencies when adding new ones" do
@@ -294,27 +294,27 @@ module Mrg
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
 
-          first_added_dep = FakeSet[*[first_added]]
-          added_deps = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          first_added_dep = [first_added]
+          added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.ModifyDepends("ADD", first_added_dep, {})
           deps = param.GetDepends
           
-          pre_size = deps.keys.size
+          pre_size = deps.size
           
           param.ModifyDepends("ADD", added_deps, {})
           deps = param.GetDepends
           
-          deps.keys.size.should == pre_size + added_deps.size
+          deps.size.should == pre_size + added_deps.size
           
-          added_deps.keys.each {|dep| deps.keys.should include(dep) }
-          deps.keys.should include(first_added)
+          added_deps.each {|dep| deps.should include(dep) }
+          deps.should include(first_added)
         end
 
         it "does not allow params to introduce a dependency on themselves" do
           param = @store.AddParam("BIOTECH")
           ["ADD", "REPLACE"].each do |cmd|
-            lambda { param.ModifyDepends(cmd, {"BIOTECH"=>true}, {}) }.should raise_error
+            lambda { param.ModifyDepends(cmd, ["BIOTECH"], {}) }.should raise_error
           end
         end
 
@@ -331,13 +331,13 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
 
-          cnfs.keys.size.should == added_cnfs.size
-          added_cnfs.keys.each {|dep| cnfs.keys.should include(dep) }
+          cnfs.size.should == added_cnfs.size
+          added_cnfs.each {|dep| cnfs.should include(dep) }
         end
 
         it "adds conflicts idempotently" do
@@ -345,17 +345,17 @@ module Mrg
           params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
 
           param = params[param_names.shift]
-          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
 
-          pre_size = cnfs.keys.size
+          pre_size = cnfs.size
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
 
-          cnfs.keys.size.should == pre_size
+          cnfs.size.should == pre_size
         end
 
         it "does not remove preexisting conflicts when adding new ones" do
@@ -365,27 +365,27 @@ module Mrg
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
 
-          first_added_dep = FakeSet[*[first_added]]
-          added_cnfs = FakeSet[*param_names.sort_by{ rand }.slice(0..5)]
+          first_added_dep = [first_added]
+          added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.ModifyConflicts("ADD", first_added_dep, {})
           cnfs = param.GetConflicts
 
-          pre_size = cnfs.keys.size
+          pre_size = cnfs.size
 
           param.ModifyConflicts("ADD", added_cnfs, {})
           cnfs = param.GetConflicts
 
-          cnfs.keys.size.should == pre_size + added_cnfs.size
+          cnfs.size.should == pre_size + added_cnfs.size
 
-          added_cnfs.keys.each {|dep| cnfs.keys.should include(dep) }
-          cnfs.keys.should include(first_added)
+          added_cnfs.each {|dep| cnfs.should include(dep) }
+          cnfs.should include(first_added)
         end
 
         it "does not allow params to introduce a conflict with themselves" do
           param = @store.AddParam("BIOTECH")
           ["ADD", "REPLACE"].each do |cmd|
-            lambda { param.ModifyConflicts(cmd, {"BIOTECH"=>true}, {}) }.should raise_error
+            lambda { param.ModifyConflicts(cmd, ["BIOTECH"], {}) }.should raise_error
           end
         end
         

@@ -225,7 +225,7 @@ module Mrg
         def ModifyDepends(command,depends,options)
           # Print values of input parameters
           log.debug "ModifyDepends: command => #{command.inspect}"
-          log.debug "ModifyDepends: depends => #{deps.inspect}"
+          log.debug "ModifyDepends: depends => #{depends.inspect}"
           
           invalid_depends = Parameter.select_invalid(depends)
           fail(42, "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
@@ -260,7 +260,7 @@ module Mrg
         def ModifyConflicts(command,conflicts,options)
           # Print values of input parameters
           log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
+          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
           
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(42, "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
