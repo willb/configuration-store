@@ -14,13 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-require 'mrg/grid/config/QmfUtils'
 require 'set'
 require 'yaml'
-
-FakeList = Mrg::Grid::Config::FakeList
-FakeSet = Mrg::Grid::Config::FakeSet
 
 module Mrg
   module Grid
@@ -129,11 +124,11 @@ module Mrg
       class ConfigLoader
         module InternalHelpers
           def listify(ls)
-            FakeList[*ls]
+            ls
           end
           
           def setify(s)
-            FakeSet[*s]
+            s.uniq
           end
         end
         
@@ -440,13 +435,11 @@ module Mrg
         end
         
         def fs_normalize(fs)
-          return fs if fs.is_a? Array
-          fs.keys
+          fs
         end
         
         def fl_normalize(fl)
-          return fl if fl.is_a? Array
-          FakeList.normalize(fl).to_a
+          fl
         end
       end
     end
