@@ -7,8 +7,8 @@ module Mrg
         before(:each) do
           setup_rhubarb
           @store = Store.new
-          @add_msg = :AddParam
-          @find_msg = :GetParam
+          @add_msg = :addParam
+          @find_msg = :getParam
           @gskey = "BIOTECH"
         end
         
@@ -19,85 +19,85 @@ module Mrg
         include DescribeGetterAndSetter
 
         it "enables creating a parameter" do
-          param = @store.AddParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
           param.name.should == "BIOTECH"
         end
 
         it "disallows creating a parameter with a name already in use" do
-          param = @store.AddParam("BIOTECH")
-          lambda { @store.AddParam("BIOTECH") }.should raise_error
+          param = @store.addParam("BIOTECH")
+          lambda { @store.addParam("BIOTECH") }.should raise_error
         end
 
 
         it "enables finding a created parameter" do
-          param = @store.AddParam("BIOTECH")
-          param = @store.GetParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
+          param = @store.getParam("BIOTECH")
           
           param.name.should == "BIOTECH"
         end
         
         it "should be possible to delete a parameter" do
-          param = @store.AddParam("BIOTECH")
-          @store.RemoveParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
+          @store.removeParam("BIOTECH")
           
-          lambda {@store.GetParam("BIOTECH")}.should raise_error
+          lambda {@store.getParam("BIOTECH")}.should raise_error
         end
 
         it "should delete all traces of a deleted parameter" do
           OLD_DEFAULT = "The quick brown fox jumps over the lazy dad"
           OLD_TYPE = "timestamp"
           
-          param = @store.AddParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
           old_id = param.row_id
-          param.SetDefault(OLD_DEFAULT)
-          param.SetType(OLD_TYPE)
-          @store.RemoveParam("BIOTECH")
+          param.setDefault(OLD_DEFAULT)
+          param.setType(OLD_TYPE)
+          @store.removeParam("BIOTECH")
           
-          param = @store.AddParam("BIOTECH")
-          param = @store.GetParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
+          param = @store.getParam("BIOTECH")
           param.should_not == nil
-          param.GetDefault.should_not == OLD_DEFAULT
-          param.GetType.should_not == OLD_TYPE
+          param.getDefault.should_not == OLD_DEFAULT
+          param.getType.should_not == OLD_TYPE
           # param.row_id.should_not == old_id
         end
 
         
         it "enables setting a parameter's type" do
-          describe_getter_and_setter(:SetType, :GetType, ["int", "string", "timestamp", "hostname"])
+          describe_getter_and_setter(:setType, :getType, ["int", "string", "timestamp", "hostname"])
         end
         
         it "enables setting a parameter's default value" do
-          describe_getter_and_setter(:SetDefault, :GetDefault, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
+          describe_getter_and_setter(:setDefault, :getDefault, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
         end
         
         it "enables setting a parameter's description" do
           vals = ["Does anyone know what this does?", "Perhaps not.", "All right, then."]
-          describe_getter_and_setter(:SetDescription, :GetDescription, vals)
+          describe_getter_and_setter(:setDescription, :getDescription, vals)
         end
         
         it "enables setting a parameter's visibility level" do
-          describe_getter_and_setter(:SetVisibilityLevel, :GetVisibilityLevel, (0..12))
+          describe_getter_and_setter(:setVisibilityLevel, :getVisibilityLevel, (0..12))
         end
 
         it "enables setting a parameter's requires-restart property" do
-          describe_getter_and_setter(:SetRequiresRestart, :GetRequiresRestart, [true, false])
+          describe_getter_and_setter(:setRequiresRestart, :getRequiresRestart, [true, false])
         end
 
         it "has no dependencies or conflicts by default" do
-          param = @store.AddParam("BIOTECH")
-          param.GetDepends.should == []
-          param.GetConflicts.should == []
+          param = @store.addParam("BIOTECH")
+          param.getDepends.should == []
+          param.getConflicts.should == []
         end
         
         it "accepts added dependencies" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
           
           param = params[param_names.shift]
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
-          param.ModifyDepends("ADD", added_deps, {})
-          deps = param.GetDepends
+          param.modifyDepends("ADD", added_deps, {})
+          deps = param.getDepends
           
           deps.size.should == added_deps.size
           added_deps.each {|dep| deps.should include(dep) }
@@ -105,36 +105,36 @@ module Mrg
         
         it "rejects dependency cycles" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
           params.each_cons(2) do |source, dest|
-            source.ModifyDepends("ADD", [dest.name], {})
-            deps = source.GetDepends
+            source.modifyDepends("ADD", [dest.name], {})
+            deps = source.getDepends
             deps.size.should == 1
             deps.should include(dest.name)
           end
           
-          lambda { params[-1].ModifyDepends("ADD", params[0].name, {}) }.should raise_error
+          lambda { params[-1].modifyDepends("ADD", params[0].name, {}) }.should raise_error
 
         end
 
         it "should not identify any parameters as applied to a node by default" do
-          node = @store.AddNode("frotz")
+          node = @store.addNode("frotz")
           Parameter.s_for_node(node).size.should == 0
         end
 
         it "should not identify any parameter dependencies as applied to a node by default" do
-          node = @store.AddNode("frotz")
+          node = @store.addNode("frotz")
           Parameter.dependencies_for_node(node).size.should == 0
         end
 
         it "should detect when parameters are added to a node's identity group" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
-          node = @store.AddNode("frotz")
+          node = @store.addNode("frotz")
           
-          node.idgroup.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          node.idgroup.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
           
           pfn = Parameter.s_for_node(node)
           
@@ -147,13 +147,13 @@ module Mrg
 
         it "should detect when parameters are added to the default group" do
           param_names = ["BIOTECH"] + ("XAA".."XDZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
           params_to_add = param_names.sort_by { rand }.slice(0,15)
           
-          node = @store.AddNode("frotz")
+          node = @store.addNode("frotz")
           
-          Group.DEFAULT_GROUP.ModifyParams("ADD", Hash[*params_to_add.map{|p| [p, p.downcase]}.flatten])
+          Group.DEFAULT_GROUP.modifyParams("ADD", Hash[*params_to_add.map{|p| [p, p.downcase]}.flatten])
           
           pfn = Parameter.s_for_node(node)
           
@@ -166,17 +166,17 @@ module Mrg
 
         it "should detect when parameters are added to an explicit group" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
-          node = @store.AddNode("frotz")
-          group = @store.AddExplicitGroup("argh")
+          node = @store.addNode("frotz")
+          group = @store.addExplicitGroup("argh")
           
-          group.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          group.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
 
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.ModifyMemberships("ADD", [group.name])
+          node.modifyMemberships("ADD", [group.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -189,17 +189,17 @@ module Mrg
         
         it "should detect when parameters are added to a feature" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
-          node = @store.AddNode("frotz")
-          feature = @store.AddFeature("Pony Accelerator")
+          node = @store.addNode("frotz")
+          feature = @store.addFeature("Pony Accelerator")
           
-          feature.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          feature.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
 
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.idgroup.ModifyFeatures("ADD", [feature.name])
+          node.idgroup.modifyFeatures("ADD", [feature.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -212,20 +212,20 @@ module Mrg
 
         it "should detect when parameters are added to a feature included by another feature" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
-          node = @store.AddNode("frotz")
-          feature = @store.AddFeature("Pony")
-          feature1 = @store.AddFeature("Pony Accelerator")
+          node = @store.addNode("frotz")
+          feature = @store.addFeature("Pony")
+          feature1 = @store.addFeature("Pony Accelerator")
           
-          feature1.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          feature1.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
 
-          feature.ModifyFeatures("ADD", [feature1.name])
+          feature.modifyFeatures("ADD", [feature1.name])
 
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0
           
-          node.idgroup.ModifyFeatures("ADD", [feature.name])
+          node.idgroup.modifyFeatures("ADD", [feature.name])
           
           pfn = Parameter.s_for_node(node)
           
@@ -238,16 +238,16 @@ module Mrg
 
         it "should identify immediate parameter dependencies for a node" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.map {|p| @store.AddParam(p) }
+          params = param_names.map {|p| @store.addParam(p) }
           
           dep_param_names = ("YAA".."YAF").to_a
-          dep_params = dep_param_names.map {|p| @store.AddParam(p) }
+          dep_params = dep_param_names.map {|p| @store.addParam(p) }
           
-          params[0].ModifyDepends("ADD", dep_param_names, {})
+          params[0].modifyDepends("ADD", dep_param_names, {})
           
-          node = @store.AddNode("frotz")
+          node = @store.addNode("frotz")
           
-          node.idgroup.ModifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
+          node.idgroup.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
           
           pfn = Parameter.s_for_node(node)
           pfn.size.should == param_names.size
@@ -271,25 +271,25 @@ module Mrg
       
         it "adds dependencies idempotently" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
           
           param = params[param_names.shift]
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
-          param.ModifyDepends("ADD", added_deps, {})
-          deps = param.GetDepends
+          param.modifyDepends("ADD", added_deps, {})
+          deps = param.getDepends
           
           pre_size = deps.size
           
-          param.ModifyDepends("ADD", added_deps, {})
-          deps = param.GetDepends
+          param.modifyDepends("ADD", added_deps, {})
+          deps = param.getDepends
           
           deps.size.should == pre_size
         end
 
         it "does not remove preexisting dependencies when adding new ones" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
           
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
@@ -297,13 +297,13 @@ module Mrg
           first_added_dep = [first_added]
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
-          param.ModifyDepends("ADD", first_added_dep, {})
-          deps = param.GetDepends
+          param.modifyDepends("ADD", first_added_dep, {})
+          deps = param.getDepends
           
           pre_size = deps.size
           
-          param.ModifyDepends("ADD", added_deps, {})
-          deps = param.GetDepends
+          param.modifyDepends("ADD", added_deps, {})
+          deps = param.getDepends
           
           deps.size.should == pre_size + added_deps.size
           
@@ -312,9 +312,9 @@ module Mrg
         end
 
         it "does not allow params to introduce a dependency on themselves" do
-          param = @store.AddParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
           ["ADD", "REPLACE"].each do |cmd|
-            lambda { param.ModifyDepends(cmd, ["BIOTECH"], {}) }.should raise_error
+            lambda { param.modifyDepends(cmd, ["BIOTECH"], {}) }.should raise_error
           end
         end
 
@@ -328,13 +328,13 @@ module Mrg
 
         it "accepts added conflicts" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
 
           param = params[param_names.shift]
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
-          param.ModifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.GetConflicts
+          param.modifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.getConflicts
 
           cnfs.size.should == added_cnfs.size
           added_cnfs.each {|dep| cnfs.should include(dep) }
@@ -342,25 +342,25 @@ module Mrg
 
         it "adds conflicts idempotently" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
 
           param = params[param_names.shift]
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
-          param.ModifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.GetConflicts
+          param.modifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.getConflicts
 
           pre_size = cnfs.size
 
-          param.ModifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.GetConflicts
+          param.modifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.getConflicts
 
           cnfs.size.should == pre_size
         end
 
         it "does not remove preexisting conflicts when adding new ones" do
           param_names = ["BIOTECH"] + ("XAA".."XBZ").to_a
-          params = param_names.inject({}) {|acc,p| acc[p] = @store.AddParam(p) ; acc}
+          params = param_names.inject({}) {|acc,p| acc[p] = @store.addParam(p) ; acc}
 
           param = params[param_names.shift]
           first_added = params[param_names.shift].name
@@ -368,13 +368,13 @@ module Mrg
           first_added_dep = [first_added]
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
-          param.ModifyConflicts("ADD", first_added_dep, {})
-          cnfs = param.GetConflicts
+          param.modifyConflicts("ADD", first_added_dep, {})
+          cnfs = param.getConflicts
 
           pre_size = cnfs.size
 
-          param.ModifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.GetConflicts
+          param.modifyConflicts("ADD", added_cnfs, {})
+          cnfs = param.getConflicts
 
           cnfs.size.should == pre_size + added_cnfs.size
 
@@ -383,9 +383,9 @@ module Mrg
         end
 
         it "does not allow params to introduce a conflict with themselves" do
-          param = @store.AddParam("BIOTECH")
+          param = @store.addParam("BIOTECH")
           ["ADD", "REPLACE"].each do |cmd|
-            lambda { param.ModifyConflicts(cmd, ["BIOTECH"], {}) }.should raise_error
+            lambda { param.modifyConflicts(cmd, ["BIOTECH"], {}) }.should raise_error
           end
         end
         

@@ -37,7 +37,7 @@ module Mrg
         #  configuration is valid, or an explanation if it is not.
         
         def validate
-          my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
+          my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           classname = self.class.name.split("::")[-1]
           log.debug "in #{classname}#validate for #{self.name}..."
           
@@ -68,7 +68,7 @@ module Mrg
         end
 
         def my_unset_params(my_config = nil)
-          my_config ||= self.GetConfig
+          my_config ||= self.getConfig
           mc_params = Parameter.s_that_must_change
           (my_config.keys & mc_params.keys).inject([]) do |acc,param|
             dv = Parameter.find_first_by_name(param).default_val

@@ -48,184 +48,184 @@ module Mrg
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
-        # GetType 
+        # getType 
         # * type (uint8/O)
-        def GetType()
-          log.debug "GetType called on param #{self.inspect}"
+        def getType()
+          log.debug "getType called on param #{self.inspect}"
           # Assign values to output parameters
           return kind
         end
         
-        expose :GetType do |args|
+        expose :getType do |args|
           args.declare :type, :sstr, :out, {}
         end
         
-        # SetType 
+        # setType 
         # * ty (uint8/I)
-        def SetType(type)
+        def setType(type)
           # Print values of input parameters
-          log.debug "SetType: type => #{type.inspect}"
+          log.debug "setType: type => #{type.inspect}"
           self.kind = type
         end
         
-        expose :SetType do |args|
+        expose :setType do |args|
           args.declare :type, :sstr, :in, {}
         end
         
-        # GetDefault 
+        # getDefault 
         # * default (lstr/O)
-        def GetDefault()
-          log.debug "GetDefault called on param #{self.inspect}"
+        def getDefault()
+          log.debug "getDefault called on param #{self.inspect}"
           # Assign values to output parameters
           self.default_val ||= ""
           # Return value
           return self.default_val
         end
         
-        expose :GetDefault do |args|
+        expose :getDefault do |args|
           args.declare :default, :lstr, :out, {}
         end
         
-        # SetDefault 
+        # setDefault 
         # * default (lstr/I)
-        def SetDefault(default)
+        def setDefault(default)
           # Print values of input parameters
-          log.debug "SetDefault: default => #{default.inspect}"
+          log.debug "setDefault: default => #{default.inspect}"
           DirtyElement.dirty_parameter(self)
           self.default_val = default
         end
         
-        expose :SetDefault do |args|
+        expose :setDefault do |args|
           args.declare :default, :lstr, :in, {}
         end
         
-        # GetDescription 
+        # getDescription 
         # * description (lstr/O)
-        def GetDescription()
-          log.debug "GetDescription called on param #{self.inspect}"
+        def getDescription()
+          log.debug "getDescription called on param #{self.inspect}"
           # Assign values to output parameters
           self.description ||= ""
           # Return value
           return self.description
         end
         
-        expose :GetDescription do |args|
+        expose :getDescription do |args|
           args.declare :description, :lstr, :out, {}
         end
         
-        # SetDescription 
+        # setDescription 
         # * description (lstr/I)
-        def SetDescription(description)
+        def setDescription(description)
           # Print values of input parameters
-          log.debug "SetDescription: description => #{description.inspect}"
+          log.debug "setDescription: description => #{description.inspect}"
           # XXX:  is this necessary?
           # DirtyElement.dirty_parameter(self)
           self.description = description
         end
         
-        expose :SetDescription do |args|
+        expose :setDescription do |args|
           args.declare :description, :lstr, :in, {}
         end
         
-        # GetDefaultMustChange 
+        # getDefaultMustChange 
         # * mustChange (bool/O)
-        def GetDefaultMustChange()
-          log.debug "GetDefaultMustChange called on param #{self.inspect}"
+        def getDefaultMustChange()
+          log.debug "getDefaultMustChange called on param #{self.inspect}"
           return self.must_change
         end
         
-        expose :GetDefaultMustChange do |args|
+        expose :getDefaultMustChange do |args|
           args.declare :mustChange, :bool, :out, {}
         end
         
-        # SetDefaultMustChange 
+        # setDefaultMustChange 
         # * mustChange (bool/I)
-        def SetDefaultMustChange(mustChange)
+        def setDefaultMustChange(mustChange)
           # Print values of input parameters
-          log.debug "SetDefaultMustChange: mustChange => #{mustChange.inspect}"
+          log.debug "setDefaultMustChange: mustChange => #{mustChange.inspect}"
           DirtyElement.dirty_parameter(self)
           self.must_change = mustChange
         end
         
-        expose :SetDefaultMustChange do |args|
+        expose :setDefaultMustChange do |args|
           args.declare :mustChange, :bool, :in, {}
         end
         
-        # GetVisibilityLevel 
+        # getVisibilityLevel 
         # * level (uint8/O)
-        def GetVisibilityLevel()
-          log.debug "GetVisibilityLevel called on param #{self.inspect}"
+        def getVisibilityLevel()
+          log.debug "getVisibilityLevel called on param #{self.inspect}"
           self.level ||= 0
           # Return value
           return self.level
         end
         
-        expose :GetVisibilityLevel do |args|
+        expose :getVisibilityLevel do |args|
           args.declare :level, :uint8, :out, {}
         end
         
-        # SetVisibilityLevel 
+        # setVisibilityLevel 
         # * level (uint8/I)
-        def SetVisibilityLevel(level)
+        def setVisibilityLevel(level)
           # Print values of input parameters
-          log.debug "SetVisibilityLevel: level => #{level.inspect}"
+          log.debug "setVisibilityLevel: level => #{level.inspect}"
           # XXX:  Is this necessary?
           # DirtyElement.dirty_parameter(self)
           self.level = level
         end
         
-        expose :SetVisibilityLevel do |args|
+        expose :setVisibilityLevel do |args|
           args.declare :level, :uint8, :in, {}
         end
         
-        # GetRequiresRestart 
+        # getRequiresRestart 
         # * needsRestart (bool/O)
-        def GetRequiresRestart()
-          log.debug "GetRequiresRestart called on param #{self.inspect}"
+        def getRequiresRestart()
+          log.debug "getRequiresRestart called on param #{self.inspect}"
           # Assign values to output parameters
           self.needsRestart ||= false
           # Return value
           return self.needsRestart
         end
         
-        expose :GetRequiresRestart do |args|
+        expose :getRequiresRestart do |args|
           args.declare :needsRestart, :bool, :out, {}
         end
         
-        # SetRequiresRestart 
+        # setRequiresRestart 
         # * needsRestart (bool/I)
-        def SetRequiresRestart(needsRestart)
+        def setRequiresRestart(needsRestart)
           # Print values of input parameters
-          log.debug "SetRequiresRestart: needsRestart => #{needsRestart.inspect}"
+          log.debug "setRequiresRestart: needsRestart => #{needsRestart.inspect}"
           DirtyElement.dirty_parameter(self)
           self.needsRestart = needsRestart
         end
         
-        expose :SetRequiresRestart do |args|
+        expose :setRequiresRestart do |args|
           args.declare :needsRestart, :bool, :in, {}
         end
         
-        # GetDepends 
+        # getDepends 
         # * depends (map/O)
         #   A set of parameter names that this one depends on
-        def GetDepends()
-          log.debug "GetDepends called on param #{self.inspect}"
+        def getDepends()
+          log.debug "getDepends called on param #{self.inspect}"
           depends
         end
         
-        expose :GetDepends do |args|
+        expose :getDepends do |args|
           args.declare :depends, :list, :out, {}
         end
         
-        # ModifyDepends 
+        # modifyDepends 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * depends (map/I)
         #   A set of parameter names that this one depends on
-        def ModifyDepends(command,depends,options)
+        def modifyDepends(command,depends,options)
           # Print values of input parameters
-          log.debug "ModifyDepends: command => #{command.inspect}"
-          log.debug "ModifyDepends: depends => #{depends.inspect}"
+          log.debug "modifyDepends: command => #{command.inspect}"
+          log.debug "modifyDepends: depends => #{depends.inspect}"
           
           invalid_depends = Parameter.select_invalid(depends)
           fail(42, "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
@@ -234,33 +234,33 @@ module Mrg
           DirtyElement.dirty_parameter(self)
         end
         
-        expose :ModifyDepends do |args|
+        expose :modifyDepends do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :depends, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetConflicts 
+        # getConflicts 
         # * conflicts (map/O)
         #   A set of parameter names that conflict with the parameter
-        def GetConflicts()
-          log.debug "GetConflicts called on param #{self.inspect}"
+        def getConflicts()
+          log.debug "getConflicts called on param #{self.inspect}"
           conflicts
         end
         
-        expose :GetConflicts do |args|
+        expose :getConflicts do |args|
           args.declare :conflicts, :list, :out, {}
         end
         
-        # ModifyConflicts 
+        # modifyConflicts 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of parameter names that conflict with this one
-        def ModifyConflicts(command,conflicts,options)
+        def modifyConflicts(command,conflicts,options)
           # Print values of input parameters
-          log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{conflicts.inspect}"
+          log.debug "modifyConflicts: command => #{command.inspect}"
+          log.debug "modifyConflicts: conflicts => #{conflicts.inspect}"
           
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(42, "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
@@ -269,7 +269,7 @@ module Mrg
           DirtyElement.dirty_parameter(self)
         end
         
-        expose :ModifyConflicts do |args|
+        expose :modifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :conflicts, :list, :in, {}
           args.declare :options, :map, :in, {}
@@ -283,10 +283,10 @@ module Mrg
         end
         
         def Parameter.s_for_node(node)
-          feature_params = Feature.features_for_node(node).map {|feat| feat.GetParams.keys}.flatten.sort.uniq
-          default_group_params = Group.DEFAULT_GROUP.GetParams.keys.sort.uniq
-          id_group_params = node.idgroup ? node.idgroup.GetParams.keys.sort.uniq : []
-          explicit_group_params = node.send(:memberships).map {|grp| grp.GetParams.keys}.flatten.sort.uniq
+          feature_params = Feature.features_for_node(node).map {|feat| feat.getParams.keys}.flatten.sort.uniq
+          default_group_params = Group.DEFAULT_GROUP.getParams.keys.sort.uniq
+          id_group_params = node.idgroup ? node.idgroup.getParams.keys.sort.uniq : []
+          explicit_group_params = node.send(:memberships).map {|grp| grp.getParams.keys}.flatten.sort.uniq
           
           feature_params | default_group_params | id_group_params | explicit_group_params
         end
@@ -299,8 +299,8 @@ module Mrg
         end
 
         def Parameter.s_for_group(grp)
-          feature_params = Feature.features_for_group(grp).map {|feat| feat.GetParams.keys}.flatten.sort.uniq
-          explicit_group_params = grp.GetParams.keys
+          feature_params = Feature.features_for_group(grp).map {|feat| feat.getParams.keys}.flatten.sort.uniq
+          explicit_group_params = grp.getParams.keys
           
           feature_params | explicit_group_params
         end

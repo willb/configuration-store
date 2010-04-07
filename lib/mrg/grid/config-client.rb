@@ -46,28 +46,28 @@ module Mrg
       end
 
       class Group < ClientObj
-        def GetMembership
-          @qmfo.GetMembership.nodes
+        def getMembership
+          @qmfo.getMembership.nodes
         end
         
-        def GetName
-          @qmfo.GetName.name
+        def getName
+          @qmfo.getName.name
         end
         
-        def GetFeatures
-          @qmfo.GetFeatures.features
+        def getFeatures
+          @qmfo.getFeatures.features
         end
         
-        def ModifyFeatures(c,fs,o)
-          @qmfo.ModifyFeatures(c,fs,o)
+        def modifyFeatures(c,fs,o)
+          @qmfo.modifyFeatures(c,fs,o)
         end
         
-        def GetParams
-          @qmfo.GetParams.params
+        def getParams
+          @qmfo.getParams.params
         end
         
-        def ModifyParams(c,p,o={})
-          @qmfo.ModifyParams(c,p,o)
+        def modifyParams(c,p,o={})
+          @qmfo.modifyParams(c,p,o)
         end
         
         private
@@ -79,68 +79,68 @@ module Mrg
           @qmfo.name
         end
         
-        def GetType
-          @qmfo.GetType.args["type"]
+        def getType
+          @qmfo.getType.args["type"]
         end
 
-        def SetType(t)
-          @qmfo.SetType(t)
+        def setType(t)
+          @qmfo.setType(t)
         end
         
-        def GetDefault
-          @qmfo.GetDefault.default
+        def getDefault
+          @qmfo.getDefault.default
         end
 
-        def SetDefault(v)
-          @qmfo.SetDefault(v)
+        def setDefault(v)
+          @qmfo.setDefault(v)
         end
         
-        def GetDescription
-          @qmfo.GetDescription.description
+        def getDescription
+          @qmfo.getDescription.description
         end
 
-        def SetDescription(d)
-          @qmfo.SetDescription(d)
+        def setDescription(d)
+          @qmfo.setDescription(d)
         end
         
-        def GetVisibilityLevel
-          @qmfo.GetVisibilityLevel.level
+        def getVisibilityLevel
+          @qmfo.getVisibilityLevel.level
         end
 
-        def SetVisibilityLevel(level)
-          @qmfo.SetVisibilityLevel(level)
+        def setVisibilityLevel(level)
+          @qmfo.setVisibilityLevel(level)
         end
 
-        def GetRequiresRestart
-          @qmfo.GetRequiresRestart.needsRestart
+        def getRequiresRestart
+          @qmfo.getRequiresRestart.needsRestart
         end
 
-        def SetRequiresRestart(needsRestart)
-          @qmfo.SetRequiresRestart(needsRestart)
+        def setRequiresRestart(needsRestart)
+          @qmfo.setRequiresRestart(needsRestart)
         end
 
-        def GetDefaultMustChange
-          @qmfo.GetDefaultMustChange.mustChange
+        def getDefaultMustChange
+          @qmfo.getDefaultMustChange.mustChange
         end
         
-        def SetDefaultMustChange(mustChange)
-          @qmfo.SetDefaultMustChange(mustChange)
+        def setDefaultMustChange(mustChange)
+          @qmfo.setDefaultMustChange(mustChange)
         end
 
-        def GetDepends
-          @qmfo.GetDepends.depends
+        def getDepends
+          @qmfo.getDepends.depends
         end
 
-        def ModifyDepends(c,d,o)
-          @qmfo.ModifyDepends(c,d.uniq,o)
+        def modifyDepends(c,d,o)
+          @qmfo.modifyDepends(c,d.uniq,o)
         end
 
-        def GetConflicts
-          @qmfo.GetConflicts.conflicts
+        def getConflicts
+          @qmfo.getConflicts.conflicts
         end
 
-        def ModifyConflicts(c,co,o)
-          @qmfo.ModifyConflicts(c,co.uniq,o)
+        def modifyConflicts(c,co,o)
+          @qmfo.modifyConflicts(c,co.uniq,o)
         end
 
         private
@@ -148,56 +148,56 @@ module Mrg
       end
 
       class Feature < ClientObj
-        def GetName
-          @qmfo.GetName.name
+        def getName
+          @qmfo.getName.name
         end
         
-        def SetName(name)
-          @qmfo.SetName(name)
+        def setName(name)
+          @qmfo.setName(name)
         end
         
-        def GetFeatures()
-          @qmfo.GetFeatures.features
+        def getFeatures()
+          @qmfo.getFeatures.features
         end
         
-        def ModifyFeatures(command, features, options={})
-          @qmfo.ModifyFeatures(command, features, options)
+        def modifyFeatures(command, features, options={})
+          @qmfo.modifyFeatures(command, features, options)
         end
         
-        def GetParams()
-          @qmfo.GetParams.params
+        def getParams()
+          @qmfo.getParams.params
         end
         
-        def GetParamMeta()
-          @qmfo.GetParamMeta.param_info
+        def getParamMeta()
+          @qmfo.getParamMeta.param_info
         end
         
-        def ModifyParams(command,pvmap,options={})
-          @qmfo.ModifyParams(command,pvmap,options)
+        def modifyParams(command,pvmap,options={})
+          @qmfo.modifyParams(command,pvmap,options)
         end
         
-        def ModifyDepends(command, depends, options={})
-          @qmfo.ModifyDepends(command, depends, options)
+        def modifyDepends(command, depends, options={})
+          @qmfo.modifyDepends(command, depends, options)
         end
         
-        def ModifyConflicts(command, conflicts, options={})
-          @qmfo.ModifyConflicts(command, conflicts.uniq, options)
+        def modifyConflicts(command, conflicts, options={})
+          @qmfo.modifyConflicts(command, conflicts.uniq, options)
         end
         
-        def ModifySubsys(command, subsys, options={})
-          @qmfo.ModifySubsys(command, subsys.uniq, options)
+        def modifySubsys(command, subsys, options={})
+          @qmfo.modifySubsys(command, subsys.uniq, options)
         end
         
-        def GetConflicts
-          @qmfo.GetConflicts.conflicts.keys
+        def getConflicts
+          @qmfo.getConflicts.conflicts.keys
         end
 
-        def GetSubsys
-          @qmfo.GetSubsys.subsystems.keys
+        def getSubsys
+          @qmfo.getSubsys.subsystems.keys
         end
 
-        def GetDepends
-          @qmfo.GetDepends.depends
+        def getDepends
+          @qmfo.getDepends.depends
         end
         
         private
@@ -209,12 +209,12 @@ module Mrg
           @qmfo.name
         end
         
-        def GetParams
-          @qmfo.GetParams.params.keys
+        def getParams
+          @qmfo.getParams.params.keys
         end
         
-        def ModifyParams(command, params, options)
-          @qmfo.ModifyParams(command, params.uniq, options)
+        def modifyParams(command, params, options)
+          @qmfo.modifyParams(command, params.uniq, options)
         end
         
         private
@@ -234,20 +234,20 @@ module Mrg
           @qmfo.last_checkin
         end
 
-        def GetIdentityGroup
-          get_object(@qmfo.GetIdentityGroup.group, Group)
+        def getIdentityGroup
+          get_object(@qmfo.getIdentityGroup.group, Group)
         end
 
-        def ModifyMemberships(command, groups, options)
-          @qmfo.ModifyMemberships(command, groups, options)
+        def modifyMemberships(command, groups, options)
+          @qmfo.modifyMemberships(command, groups, options)
         end
 
-        def GetMemberships
-          @qmfo.GetMemberships.groups
+        def getMemberships
+          @qmfo.getMemberships.groups
         end
 
-        def GetConfig
-          @qmfo.GetConfig.config
+        def getConfig
+          @qmfo.getConfig.config
         end
 
         private
@@ -255,73 +255,73 @@ module Mrg
       end
 
       class Store < ClientObj
-        def GetGroup(query)
-          get_object(@qmfo.GetGroup(query).obj, Group)
+        def getGroup(query)
+          get_object(@qmfo.getGroup(query).obj, Group)
         end
 
-        def AddExplicitGroup(name)
-          get_object(@qmfo.AddExplicitGroup(name).obj, Group)
+        def addExplicitGroup(name)
+          get_object(@qmfo.addExplicitGroup(name).obj, Group)
         end
 
-        def RemoveGroup(uid)
-          @qmfo.RemoveGroup(uid)
+        def removeGroup(uid)
+          @qmfo.removeGroup(uid)
           nil
         end
 
-        def GetFeature(name)
-          get_object(@qmfo.GetFeature(name).obj, Feature)
+        def getFeature(name)
+          get_object(@qmfo.getFeature(name).obj, Feature)
         end
 
-        def AddFeature(name)
-          get_object(@qmfo.AddFeature(name).obj, Feature)
+        def addFeature(name)
+          get_object(@qmfo.addFeature(name).obj, Feature)
         end
 
-        def RemoveFeature(name)
-          @qmfo.RemoveFeature(name)
+        def removeFeature(name)
+          @qmfo.removeFeature(name)
           nil
         end
 
-        def AddNode(name)
-          get_object(@qmfo.AddNode(name).obj, Node)
+        def addNode(name)
+          get_object(@qmfo.addNode(name).obj, Node)
         end
 
-        def GetNode(name)
-          get_object(@qmfo.GetNode(name).obj, Node)
+        def getNode(name)
+          get_object(@qmfo.getNode(name).obj, Node)
         end
 
-        def RemoveNode(name)
-          @qmfo.RemoveNode(name)
+        def removeNode(name)
+          @qmfo.removeNode(name)
           nil
         end
 
-        def AddParam(name)
-          get_object(@qmfo.AddParam(name).obj, Parameter)
+        def addParam(name)
+          get_object(@qmfo.addParam(name).obj, Parameter)
         end
 
-        def GetParam(name)
-          get_object(@qmfo.GetParam(name).obj, Parameter)
+        def getParam(name)
+          get_object(@qmfo.getParam(name).obj, Parameter)
         end
 
-        def RemoveParam(name)
-          @qmfo.RemoveParam(name)
+        def removeParam(name)
+          @qmfo.removeParam(name)
           nil
         end
 
-        def AddSubsys(name)
-          get_object(@qmfo.AddSubsys(name).obj, Subsystem)
+        def addSubsys(name)
+          get_object(@qmfo.addSubsys(name).obj, Subsystem)
         end
 
-        def GetSubsys(name)
-          get_object(@qmfo.GetSubsys(name).obj, Subsystem)
+        def getSubsys(name)
+          get_object(@qmfo.getSubsys(name).obj, Subsystem)
         end
 
-        def RemoveSubsys(name)
-          @qmfo.RemoveSubsys(name)
+        def removeSubsys(name)
+          @qmfo.removeSubsys(name)
           nil
         end
         
         def ActivateConfig
-          explain = @qmfo.ActivateConfiguration.explain
+          explain = @qmfo.activateConfiguration.explain
           explain.inject({}) do |acc, (node, node_explain)|
             acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|
               ne_acc[reason] = ls.keys

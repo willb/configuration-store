@@ -35,27 +35,27 @@ module Mrg
         qmf_property :name, :sstr, :index=>true
         ### Schema method declarations
         
-        # GetParams 
+        # getParams 
         # * params (map/O)
         #   A set of parameter names that the subsystem is interested in
-        def GetParams()
+        def getParams()
           params
         end
         
-        expose :GetParams do |args|
+        expose :getParams do |args|
           args.declare :params, :list, :out, {}
         end
         
-        # ModifyParams 
+        # modifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * params (map/I)
         #   A set of parameter names
-        def ModifyParams(command,params,options={})
+        def modifyParams(command,params,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command.inspect}"
-          log.debug "ModifyParams: params => #{params.inspect}"
-          log.debug "ModifyParams: options => #{options.inspect}"
+          log.debug "modifyParams: command => #{command.inspect}"
+          log.debug "modifyParams: params => #{params.inspect}"
+          log.debug "modifyParams: options => #{options.inspect}"
           
           invalid_params = Parameter.select_invalid(params)
           fail(42, "Invalid parameters for observation by subsystem #{self.name}:  #{invalid_params.inspect}") if invalid_params != []
@@ -64,7 +64,7 @@ module Mrg
           DirtyElement.dirty_subsystem(self)
         end
         
-        expose :ModifyParams do |args|
+        expose :modifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :list, :in, {}
           args.declare :options, :map, :in, {}

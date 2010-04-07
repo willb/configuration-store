@@ -123,24 +123,24 @@ invalid_params = store.checkParameterValidity(params).invalidParameters
 
 unless invalid_params == {}
   puts "Creating necessary parameters..."
-  invalid_params.keys.each {|param| puts "Creating parameter #{param}" ; store_client.AddParam(param)}
+  invalid_params.keys.each {|param| puts "Creating parameter #{param}" ; store_client.addParam(param)}
 end
 
-f = store_client.AddFeature(feature[:name])
+f = store_client.addFeature(feature[:name])
 
 unless feature[:includes] == []
   puts "Setting included features to #{feature[:includes].inspect}"
-  f.ModifyFeatures("ADD", feature[:includes], {})
+  f.modifyFeatures("ADD", feature[:includes], {})
 end
 
 unless feature[:depends] == []
   puts "Setting feature dependencies to #{feature[:depends].inspect}"
-  f.ModifyDepends("ADD", feature[:depends], {})
+  f.modifyDepends("ADD", feature[:depends], {})
 end
 
 unless feature[:params] == {}
   puts "Setting feature parameters to #{feature[:params].inspect}"
-  f.ModifyParams("ADD", feature[:params], {})
+  f.modifyParams("ADD", feature[:params], {})
 end
 
 puts "#{feature[:name]} created"

@@ -42,19 +42,19 @@ module Mrg
         qmf_property :apiVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
         ### Schema method declarations
         
-        def GetDefaultGroup
+        def getDefaultGroup
           return Group.DEFAULT_GROUP
         end
         
-        expose :GetDefaultGroup do |args|
+        expose :getDefaultGroup do |args|
           args.declare :obj, :objId, :out, {}
         end
         
-        # GetGroup 
+        # getGroup 
         # * query (map/I)
         #   A map(queryType, value) that defines the group desired. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID defined in value. 'Name' queryTypes will search for a group with the name defined in value.
         # * obj (objId/O)
-        def GetGroup(query)
+        def getGroup(query)
           qentries = query.entries
           fail(7, "Invalid group query #{query.inspect}") if qentries.size != 1
           qkind, qkey = query.entries.pop
@@ -73,56 +73,56 @@ module Mrg
           end
         end
         
-        expose :GetGroup do |args|
+        expose :getGroup do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :query, :map, :in, {}
         end
 
-        def GetGroupByName(name)
-          GetGroup({"NAME"=>name})
+        def getGroupByName(name)
+          getGroup({"NAME"=>name})
         end
         
-        expose :GetGroupByName do |args|
+        expose :getGroupByName do |args|
           args.declare :name, :sstr, :in, {}
           args.declare :obj, :objId, :out, {}
         end
         
-        # AddExplicitGroup 
+        # addExplicitGroup 
         # * name (sstr/I)
         # * obj (objId/O)
-        def AddExplicitGroup(name)
+        def addExplicitGroup(name)
           # Print values of input parameters
-          log.debug "AddExplicitGroup: name => #{name.inspect}"
+          log.debug "addExplicitGroup: name => #{name.inspect}"
           fail(42, "Group name #{name} is already taken") if Group.find_first_by_name(name)
           fail(42, "Group name #{name} is invalid; group names may not start with '+++'") if name.slice(0,3) == "+++"
           Group.create(:name=>name)
         end
         
-        expose :AddExplicitGroup do |args|
+        expose :addExplicitGroup do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # RemoveGroup 
+        # removeGroup 
         # * uid (uint32/I)
-        def RemoveGroup(name)
+        def removeGroup(name)
           # Print values of input parameters
-          log.debug "RemoveGroup: name => #{name.inspect}"
+          log.debug "removeGroup: name => #{name.inspect}"
           group = Group.find_first_by_name(name)
           fail(7, "Group named #{name} not found") unless group
           group.delete
         end
         
-        expose :RemoveGroup do |args|
+        expose :removeGroup do |args|
           args.declare :name, :sstr, :in, {}
         end
         
-        # GetFeature 
+        # getFeature 
         # * name (sstr/I)
         # * obj (objId/O)
-        def GetFeature(name)
+        def getFeature(name)
           # Print values of input parameters
-          log.debug "GetFeature: name => #{name.inspect}"
+          log.debug "getFeature: name => #{name.inspect}"
           
           feature = Feature.find_first_by_name(name)
           fail(7, "Feature named #{name} not found") unless feature
@@ -130,31 +130,31 @@ module Mrg
 
         end
         
-        expose :GetFeature do |args|
+        expose :getFeature do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # AddFeature 
+        # addFeature 
         # * name (sstr/I)
         # * obj (objId/O)
-        def AddFeature(name)
+        def addFeature(name)
           # Print values of input parameters
-          log.debug "AddFeature: name => #{name.inspect}"
+          log.debug "addFeature: name => #{name.inspect}"
           fail(42, "Feature name #{name} is already taken") if Feature.find_first_by_name(name)
           return Feature.create(:name=>name)
         end
         
-        expose :AddFeature do |args|
+        expose :addFeature do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # RemoveFeature 
+        # removeFeature 
         # * uid (uint32/I)
-        def RemoveFeature(name)
+        def removeFeature(name)
           # Print values of input parameters
-          log.debug "RemoveFeature: name => #{name.inspect}"
+          log.debug "removeFeature: name => #{name.inspect}"
           feature = Feature.find_first_by_name(name)
           
           fail(7, "Feature named #{name} does not exist") unless feature
@@ -162,41 +162,41 @@ module Mrg
           feature.delete
         end
         
-        expose :RemoveFeature do |args|
+        expose :removeFeature do |args|
           args.declare :name, :sstr, :in, {}
         end
         
-        # ActivateConfiguration 
+        # activateConfiguration 
         # * explain (map/O)
         #   A map containing an explanation of why the configuration isn't valid, or
         #   an empty map if the configuration was successfully pushed out
         # * warnings (map/O)
         #   A map whose keys represent a set of warnings encountered in configuration activation
         
-        def ActivateConfiguration()
+        def activateConfiguration()
           validate_and_activate
         end
         
-        expose :ActivateConfiguration do |args|
+        expose :activateConfiguration do |args|
           args.declare :explain, :map, :out, {}
           args.declare :warnings, :list, :out, {}
         end
         
-        def ValidateConfiguration
+        def validateConfiguration
           validate_and_activate(true)
         end
         
-        expose :ValidateConfiguration do |args|
+        expose :validateConfiguration do |args|
           args.declare :explain, :map, :out, {}
           args.declare :warnings, :list, :out, {}
         end
         
-        # AddNode 
+        # addNode 
         # * name (sstr/I)
         # * obj (objId/O)
-        def AddNode(name)
+        def addNode(name)
           # Print values of input parameters
-          log.debug "AddNode: name => #{name.inspect}"
+          log.debug "addNode: name => #{name.inspect}"
 
           n = Node.find_first_by_name(name)
           
@@ -212,21 +212,21 @@ module Mrg
           DirtyElement.dirty_node(n)
           
           # Return the appropriate node after ensuring that its identity group is initialized
-          n.GetIdentityGroup
+          n.getIdentityGroup
           n
         end
         
-        expose :AddNode do |args|
+        expose :addNode do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
 
-        # GetNode 
+        # getNode 
         # * name (sstr/I)
         # * obj (objId/O)
-        def GetNode(name)
+        def getNode(name)
           # Print values of input parameters
-          log.debug "GetNode: name => #{name.inspect}"
+          log.debug "getNode: name => #{name.inspect}"
 
           # Return the node with the given name
           n = Node.find_first_by_name(name) 
@@ -240,16 +240,16 @@ module Mrg
           n
         end
         
-        expose :GetNode do |args|
+        expose :getNode do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # RemoveNode 
+        # removeNode 
         # * name (sstr/I)
-        def RemoveNode(name)
+        def removeNode(name)
           # Print values of input parameters
-          log.debug "RemoveNode: name => #{name.inspect}"
+          log.debug "removeNode: name => #{name.inspect}"
 
           # Actually remove the node
           node = Node.find_first_by_name(name)
@@ -262,17 +262,17 @@ module Mrg
           end
         end
         
-        expose :RemoveNode do |args|
+        expose :removeNode do |args|
           args.declare :name, :sstr, :in, {}
         end
         
-        # GetParam 
+        # getParam 
         # * name (sstr/I)
         # * obj (objId/O)
         #   A reference to the parameter object that matches the name supplied
-        def GetParam(name)
+        def getParam(name)
           # Print values of input parameters
-          log.debug "GetParam: name => #{name.inspect}"
+          log.debug "getParam: name => #{name.inspect}"
 
           param = Parameter.find_first_by_name(name)
           fail(7, "Parameter named #{name} not found") unless param
@@ -280,67 +280,67 @@ module Mrg
           return param
         end
         
-        expose :GetParam do |args|
+        expose :getParam do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # AddParam 
+        # addParam 
         # * name (sstr/I)
         # * obj (objId/O)
         #   A reference to the newly added parameter object
-        def AddParam(name)
+        def addParam(name)
           # Print values of input parameters
-          log.debug "AddParam: name => #{name.inspect}"
+          log.debug "addParam: name => #{name.inspect}"
            fail(42, "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
           # Return value
           return Parameter.create(:name => name)
         end
         
-        expose :AddParam do |args|
+        expose :addParam do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
-        # GetSubsys 
+        # getSubsys 
         # * name (sstr/I)
         # * obj (objId/O)
         #   A reference to the subsystem object that matches the name supplied
-        def GetSubsys(name)
+        def getSubsys(name)
           # Print values of input parameters
-          log.debug "GetSubsys: name => #{name.inspect}"
+          log.debug "getSubsys: name => #{name.inspect}"
 
           return Subsystem.find_first_by_name(name)
         end
 
-        expose :GetSubsys do |args|
+        expose :getSubsys do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
 
-        # AddSubsys 
+        # addSubsys 
         # * name (sstr/I)
         # * obj (objId/O)
         #   A reference to the newly added subsystem object
-        def AddSubsys(name)
+        def addSubsys(name)
           # Print values of input parameters
-          log.debug "AddSubsys: name => #{name.inspect}"
+          log.debug "addSubsys: name => #{name.inspect}"
            fail(42, "Subsystem name #{name} is already taken") if Subsystem.find_first_by_name(name)
           # Return value
           return Subsystem.create(:name => name)
         end
 
-        expose :AddSubsys do |args|
+        expose :addSubsys do |args|
           args.declare :obj, :objId, :out, {}
           args.declare :name, :sstr, :in, {}
         end
         
         
-        # RemoveParam 
+        # removeParam 
         # * name (sstr/I)
-        def RemoveParam(name)
+        def removeParam(name)
           # Print values of input parameters
-          log.debug "RemoveParam: name => #{name.inspect}"
+          log.debug "removeParam: name => #{name.inspect}"
           
           param = Parameter.find_first_by_name(name)
           fail(7, "Parameter named #{name} not found") unless param
@@ -348,19 +348,19 @@ module Mrg
           param.delete
         end
         
-        expose :RemoveParam do |args|
+        expose :removeParam do |args|
           args.declare :name, :sstr, :in, {}
         end
 
-        # RemoveSubsys 
+        # removeSubsys 
         # * name (sstr/I)
-        def RemoveSubsys(name)
+        def removeSubsys(name)
           # Print values of input parameters
-          log.debug "RemoveSubsys: name => #{name.inspect}"
+          log.debug "removeSubsys: name => #{name.inspect}"
           Subsystem.find_first_by_name(name).delete
         end
 
-        expose :RemoveSubsys do |args|
+        expose :removeSubsys do |args|
           args.declare :name, :sstr, :in, {}
         end
         
@@ -378,13 +378,13 @@ module Mrg
           args.declare :options, :map, :in, {}
         end
         
-        # <method name="MakeSnapshot">
+        # <method name="makeSnapshot">
         #    <arg name="name" dir="I" type="sstr"
         #         desc="A name for this configuration.  A blank name will result
         #               in the store creating a name"/>
         # </method>
         
-        def MakeSnapshot(name)
+        def makeSnapshot(name)
           tm = Time.now.utc
           name = "Automatically generated snapshot at #{tm} -- #{((tm.tv_sec * 1000000) + tm.tv_usec).to_s(16)}" if name.size == 0
           fail(42, "Snapshot name #{name} already taken") if Snapshot.find_first_by_name(name)
@@ -393,11 +393,11 @@ module Mrg
           result.snaptext = snaptext
         end
         
-        expose :MakeSnapshot do |args|
+        expose :makeSnapshot do |args|
           args.declare :name, :sstr, :in, :desc=>"A name for this configuration.  A blank name will result in the store creating a name"
         end
         
-        def LoadSnapshot(name)
+        def loadSnapshot(name)
           snap = Snapshot.find_first_by_name(name)
           
           fail(31, "Invalid snapshot name #{name}") unless snap
@@ -413,23 +413,23 @@ module Mrg
           
         end
         
-        expose :LoadSnapshot do |args|
+        expose :loadSnapshot do |args|
           args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
         end
         
-        def RemoveSnapshot(name)
+        def removeSnapshot(name)
           Snapshot.find_first_by_name(name).delete
         end
         
-        expose :RemoveSnapshot do |args|
+        expose :removeSnapshot do |args|
           args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
         end
 
-        def GetMustChangeParams
+        def getMustChangeParams
           Parameter.s_that_must_change
         end
         
-        expose :GetMustChangeParams do |args|
+        expose :getMustChangeParams do |args|
           args.declare :params, :map, :out, :desc=>"Parameters that must change; a map from names to default values"
         end
         

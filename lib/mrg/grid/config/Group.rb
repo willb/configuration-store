@@ -62,88 +62,88 @@ module Mrg
 
         ### Schema method declarations
                 
-        # GetMembership 
+        # getMembership 
         # * nodes (map/O)
         #   A list of the nodes associated with this group
-        def GetMembership()
-          log.debug "GetMembership called on group #{self.inspect}"
+        def getMembership()
+          log.debug "getMembership called on group #{self.inspect}"
           NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}
         end
         
-        expose :GetMembership do |args|
+        expose :getMembership do |args|
           args.declare :nodes, :list, :out, {}
         end
         
-        # GetName 
+        # getName 
         # * name (sstr/O)
-        def GetName()
-          log.debug "GetName called on group #{self.inspect}"
+        def getName()
+          log.debug "getName called on group #{self.inspect}"
           # Assign values to output parameters
           self.name ||= ""
           # Return value
           return self.name
         end
         
-        expose :GetName do |args|
+        expose :getName do |args|
           args.declare :name, :sstr, :out, {}
         end
         
-        # SetName 
+        # setName 
         # * name (sstr/I)
-        def SetName(name)
+        def setName(name)
           # Print values of input parameters
-          log.debug "SetName: name => #{name.inspect}"
+          log.debug "setName: name => #{name.inspect}"
           fail(42, "Group name #{name} is taken") if (self.name != name and Group.find_first_by_name(name))
           self.name = name
         end
         
-        expose :SetName do |args|
+        expose :setName do |args|
           args.declare :name, :sstr, :in, {}
         end
         
-        # GetFeatures 
+        # getFeatures 
         # * features (map/O)
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
-        def GetFeatures()
-          log.debug "GetFeatures called on group #{self.inspect}"
+        def getFeatures()
+          log.debug "getFeatures called on group #{self.inspect}"
           features.map{|f| f.name}
         end
         
-        expose :GetFeatures do |args|
+        expose :getFeatures do |args|
           args.declare :features, :list, :out, {}
         end
         
-        def ClearParams
+        def clearParams
           DirtyElement.dirty_group(self);
-          self.ModifyParams("REPLACE", {})
+          self.modifyParams("REPLACE", {})
           0
         end
         
-        expose :ClearParams do |args|
+        expose :clearParams do |args|
           args.declare :ret, :int, :out, {}
         end
         
-        def ClearFeatures
+        def clearFeatures
           DirtyElement.dirty_group(self);
-          self.ModifyFeatures("REPLACE", {})
+          self.modifyFeatures("REPLACE", {})
           0
         end
         
-        expose :ClearFeatures do |args|
+        expose :clearFeatures do |args|
           args.declare :ret, :int, :out, {}
         end
         
-        # ModifyFeatures 
+        # modifyFeatures 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of features to apply to this group dependency priority
         # * params (map/O)
         #   A map(paramName, reasonString) for parameters that need to be set as a result of the features added before the configuration will be considered valid
-        def ModifyFeatures(command,feats,options={})
+        def modifyFeatures(command,feats,options={})
           # Print values of input parameters
-          log.debug "ModifyFeatures: command => #{command.inspect}"
-          log.debug "ModifyFeatures: features => #{feats.inspect}"
+          log.debug "modifyFeatures: command => #{command.inspect}"
+          log.debug "modifyFeatures: features => #{feats.inspect}"
           
           invalid_features = []
           
@@ -184,52 +184,52 @@ module Mrg
           return params
         end
         
-        expose :ModifyFeatures do |args|
+        expose :modifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :features, :list, :in, {}
           args.declare :options, :map, :in, {}
           args.declare :params, :map, :out, {}
         end
         
-        def AddFeature(f)
-          log.debug("In AddFeature, with f == #{f.inspect}")
-          self.ModifyFeatures("ADD", [f])
+        def addFeature(f)
+          log.debug("In addFeature, with f == #{f.inspect}")
+          self.modifyFeatures("ADD", [f])
         end
         
-        def RemoveFeature(f)
-          log.debug("In RemoveFeature, with f == #{f.inspect}")
-          self.ModifyFeatures("REMOVE", [f])
+        def removeFeature(f)
+          log.debug("In removeFeature, with f == #{f.inspect}")
+          self.modifyFeatures("REMOVE", [f])
         end
         
-        expose :AddFeature do |args|
+        expose :addFeature do |args|
           args.declare :feature, :lstr, :in
         end
 
-        expose :RemoveFeature do |args|
+        expose :removeFeature do |args|
           args.declare :feature, :lstr, :in
         end
         
-        # GetParams 
+        # getParams 
         # * params (map/O)
         #   A map(paramName, value) of parameters and their values that are specific to the group
-        def GetParams()
-          log.debug "GetParams called on group #{self.inspect}"
+        def getParams()
+          log.debug "getParams called on group #{self.inspect}"
           Hash[*GroupParams.find_by(:grp=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
-        expose :GetParams do |args|
+        expose :getParams do |args|
           args.declare :params, :map, :out, {}
         end
         
-        # ModifyParams 
+        # modifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(featureName, priority) of parameter/value mappings
-        def ModifyParams(command,pvmap,options={})
+        def modifyParams(command,pvmap,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command.inspect}"
-          log.debug "ModifyParams: params => #{pvmap.inspect}"
+          log.debug "modifyParams: command => #{command.inspect}"
+          log.debug "modifyParams: params => #{pvmap.inspect}"
 
           invalid_params = []
 
@@ -268,7 +268,7 @@ module Mrg
           DirtyElement.dirty_group(self);
         end
         
-        expose :ModifyParams do |args|
+        expose :modifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
           args.declare :options, :map, :in, {}
@@ -298,15 +298,15 @@ module Mrg
           config
         end
 
-        def GetConfig
-          log.debug "GetConfig called for group #{self.inspect}"
+        def getConfig
+          log.debug "getConfig called for group #{self.inspect}"
           
           # prepend ">= " to stringset-valued params, because 
           # we're going to print out the config for this group.
           apply_to({}, ">= ") 
         end
         
-        expose :GetConfig do |args|
+        expose :getConfig do |args|
           args.declare :config, :map, :out, {}
         end
         
