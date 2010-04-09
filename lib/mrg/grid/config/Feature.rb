@@ -52,113 +52,113 @@ module Mrg
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
         
-        # GetName 
+        # getName 
         # * name (sstr/O)
-        def GetName()
-          log.debug "GetName called on feature #{self.inspect}"
+        def getName()
+          log.debug "getName called on feature #{self.inspect}"
           # Assign values to output parameters
           return self.name
         end
         
-        expose :GetName do |args|
+        expose :getName do |args|
           args.declare :name, :sstr, :out, {}
         end
         
-        # SetName 
+        # setName 
         # * name (sstr/I)
-        def SetName(name)
+        def setName(name)
           # Print values of input parameters
-          log.debug "SetName: name => #{name.inspect}"
-          fail(42, "Feature name #{name} is taken") if (self.name != name and Feature.find_first_by_name(name))
+          log.debug "setName: name => #{name.inspect}"
+          fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::FEATURE), "Feature name #{name} is taken") if (self.name != name and Feature.find_first_by_name(name))
           self.name = name
         end
         
-        expose :SetName do |args|
+        expose :setName do |args|
           args.declare :name, :sstr, :in, {}
         end
         
-        # GetFeatures 
+        # getFeatures 
         # * features (map/O)
         #   list of other feature names a feature includes
-        def GetFeatures()
-          log.debug "GetFeatures called on feature #{self.inspect}"
-          return FakeList[*includes]
+        def getFeatures()
+          log.debug "getFeatures called on feature #{self.inspect}"
+          includes
         end
         
-        expose :GetFeatures do |args|
-          args.declare :features, :map, :out, {}
+        expose :getFeatures do |args|
+          args.declare :features, :list, :out, {}
         end
         
-        # ModifyFeatures 
+        # modifyFeatures 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other feature names a feature includes
-        def ModifyFeatures(command,features,options={})
+        def modifyFeatures(command,features,options={})
           # Print values of input parameters
-          log.debug "ModifyFeatures: command => #{command.inspect}"
-          log.debug "ModifyFeatures: features => #{features.inspect}"
-          log.debug "ModifyFeatures: options => #{options.inspect}"
-          fl = FakeList.normalize(features).to_a
+          log.debug "modifyFeatures: command => #{command.inspect}"
+          log.debug "modifyFeatures: features => #{features.inspect}"
+          log.debug "modifyFeatures: options => #{options.inspect}"
+          fl = features
                     
           invalid_fl = Feature.select_invalid(fl)
           
-          fail(42, "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
           
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
         end
         
-        expose :ModifyFeatures do |args|
+        expose :modifyFeatures do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :features, :map, :in, {}
+          args.declare :features, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetParams 
+        # getParams 
         # * params (map/O)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def GetParams()
-          log.debug "GetParams called on feature #{self.inspect}"
+        def getParams()
+          log.debug "getParams called on feature #{self.inspect}"
           Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
         end
         
-        expose :GetParams do |args|
+        expose :getParams do |args|
           args.declare :params, :map, :out, {}
         end
 
-        # GetParams 
+        # getParams 
         # * param_info (map/O)
         #   A map(paramName, map) of parameters to maps of metainformation
-        def GetParamMeta()
-          log.debug "GetParamMeta called on feature #{self.inspect}"
+        def getParamMeta()
+          log.debug "getParamMeta called on feature #{self.inspect}"
           Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, {"uses_default"=>fp.uses_default, "given_value"=>fp.given_value}]}.flatten]
         end
         
-        expose :GetParamMeta do |args|
+        expose :getParamMeta do |args|
           args.declare :param_info, :map, :out, {}
         end
         
-        def ClearParams
-          log.debug "ClearParams called on feature #{self.inspect}"
+        def clearParams
+          log.debug "clearParams called on feature #{self.inspect}"
           FeatureParams.find_by(:feature=>self).map {|fp| fp.delete}
           self_to_dirty_list
           0
         end
         
-        expose :ClearParams do |args|
+        expose :clearParams do |args|
           args.declare :ret, :int, :out, {}
         end
         
-        # ModifyParams 
+        # modifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def ModifyParams(command,pvmap,options={})
+        def modifyParams(command,pvmap,options={})
           # Print values of input parameters
-          log.debug "ModifyParams: command => #{command.inspect}"
-          log.debug "ModifyParams: params => #{pvmap.inspect}"
+          log.debug "modifyParams: command => #{command.inspect}"
+          log.debug "modifyParams: params => #{pvmap.inspect}"
           
           pvmap ||= {}
           
@@ -171,7 +171,7 @@ module Mrg
             prow
           end
 
-          fail(42, "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}") if invalid_params != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}") if invalid_params != []
           
           command = command.upcase
           
@@ -195,126 +195,122 @@ module Mrg
               FeatureParams.create(attributes) if command == "ADD"
             end
           when "REPLACE"
-            self.ClearParams
-            self.ModifyParams("ADD",pvmap,options)
-          else fail(7, "invalid command #{command}")
+            self.clearParams
+            self.modifyParams("ADD",pvmap,options)
+          else fail(Errors.make(Errors::BAD_COMMAND), "invalid command #{command}")
           end
           self_to_dirty_list
         end
         
-        expose :ModifyParams do |args|
+        expose :modifyParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetConflicts 
+        # getConflicts 
         # * conflicts (map/O)
         #   A set of other features that this feature conflicts with
-        def GetConflicts()
-          log.debug "GetConflicts called on feature #{self.inspect}"
-          return FakeSet[*conflicts]
+        def getConflicts()
+          log.debug "getConflicts called on feature #{self.inspect}"
+          conflicts
         end
         
-        expose :GetConflicts do |args|
-          args.declare :conflicts, :map, :out, {}
+        expose :getConflicts do |args|
+          args.declare :conflicts, :list, :out, {}
         end
         
-        # ModifyConflicts 
+        # modifyConflicts 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of other feature names that conflict with the feature
-        def ModifyConflicts(command,confs,options={})
+        def modifyConflicts(command,conflicts,options={})
           # Print values of input parameters
-          log.debug "ModifyConflicts: command => #{command.inspect}"
-          log.debug "ModifyConflicts: conflicts => #{confs.inspect}"
-          log.debug "ModifyConflicts: options => #{options.inspect}"
-          
-          conflicts = confs.keys
+          log.debug "modifyConflicts: command => #{command.inspect}"
+          log.debug "modifyConflicts: conflicts => #{conflicts.inspect}"
+          log.debug "modifyConflicts: options => #{options.inspect}"
           
           invalid_conflicts = Feature.select_invalid(conflicts)
           
-          fail(42, "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
         end
         
-        expose :ModifyConflicts do |args|
+        expose :modifyConflicts do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :conflicts, :map, :in, {}
+          args.declare :conflicts, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetDepends 
+        # getDepends 
         # * depends (map/O)
         #   A list of other features that this feature depends on for proper operation, in priority order.
-        def GetDepends()
-          log.debug "GetDepends called on feature #{self.inspect}"
-          return FakeList[*depends]
+        def getDepends()
+          log.debug "getDepends called on feature #{self.inspect}"
+          depends
         end
         
-        expose :GetDepends do |args|
-          args.declare :depends, :map, :out, {}
+        expose :getDepends do |args|
+          args.declare :depends, :list, :out, {}
         end
         
-        # ModifyDepends 
+        # modifyDepends 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * depends (map/I)
         #   A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
-        def ModifyDepends(command,depends,options={})
+        def modifyDepends(command,depends,options={})
           # Print values of input parameters
-          log.debug "ModifyDepends: command => #{command.inspect}"
-          log.debug "ModifyDepends: depends => #{depends.inspect}"
-          log.debug "ModifyDepends: options => #{options.inspect}"
+          log.debug "modifyDepends: command => #{command.inspect}"
+          log.debug "modifyDepends: depends => #{depends.inspect}"
+          log.debug "modifyDepends: options => #{options.inspect}"
           
-          depends = FakeList.normalize(depends).to_a
-
           invalid_deps = Feature.select_invalid(depends)
           
-          fail(42, "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list
         end
         
-        expose :ModifyDepends do |args|
+        expose :modifyDepends do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :depends, :map, :in, {}
+          args.declare :depends, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetSubsys 
+        # getSubsys 
         # * subsystems (map/O)
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
-        def GetSubsys()
-          log.debug "GetSubsys called on feature #{self.inspect}"
-          return FakeSet[*subsystems]
+        def getSubsys()
+          log.debug "getSubsys called on feature #{self.inspect}"
+          subsystems
         end
         
-        expose :GetSubsys do |args|
-          args.declare :subsystems, :map, :out, {}
+        expose :getSubsys do |args|
+          args.declare :subsystems, :list, :out, {}
         end
         
-        # ModifySubsys 
+        # modifySubsys 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * subsys (map/I)
         #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
-        def ModifySubsys(command,subsys,options={})
+        def modifySubsys(command,subsys,options={})
           # Print values of input parameters
-          log.debug "ModifySubsys: command => #{command.inspect}"
-          log.debug "ModifySubsys: subsys => #{subsys.inspect}"
+          log.debug "modifySubsys: command => #{command.inspect}"
+          log.debug "modifySubsys: subsys => #{subsys.inspect}"
 
-          modify_arcs(command,subsys.keys,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
+          modify_arcs(command,subsys.uniq,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
           self_to_dirty_list
         end
         
-        expose :ModifySubsys do |args|
+        expose :modifySubsys do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :subsys, :map, :in, {}
+          args.declare :subsys, :list, :in, {}
         end
         
         def apply_to(dict)
@@ -323,7 +319,7 @@ module Mrg
             dict = included_feature.apply_to(dict)
           end
           
-          self.GetParams.each do |k,v|
+          self.getParams.each do |k,v|
             if (v && v.slice(/^>=/))
               while v.slice!(/^>=/) ;  v.strip! ; end
               dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v.strip}" : "#{v.strip}"

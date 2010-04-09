@@ -37,7 +37,7 @@ module Mrg
         #  configuration is valid, or an explanation if it is not.
         
         def validate
-          my_config = self.GetConfig  # FIXME: it would be nice to not calculate this redundantly
+          my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           classname = self.class.name.split("::")[-1]
           log.debug "in #{classname}#validate for #{self.name}..."
           
@@ -60,15 +60,15 @@ module Mrg
           return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
           
           result = {}
-          result[BROKEN_FEATURE_DEPS] = FakeSet[*orphaned_deps].to_h if orphaned_deps != []
-          result[UNSET_MUSTCHANGE_PARAMS] = FakeSet[*unset_params].to_h if unset_params != []
-          result[BROKEN_PARAM_DEPS] = FakeSet[*orphaned_params].to_h if orphaned_params != []
+          result[BROKEN_FEATURE_DEPS] = orphaned_deps.uniq if orphaned_deps != []
+          result[UNSET_MUSTCHANGE_PARAMS] = unset_params.uniq if unset_params != []
+          result[BROKEN_PARAM_DEPS] = orphaned_params.uniq if orphaned_params != []
           
           [self.name, result]
         end
 
         def my_unset_params(my_config = nil)
-          my_config ||= self.GetConfig
+          my_config ||= self.getConfig
           mc_params = Parameter.s_that_must_change
           (my_config.keys & mc_params.keys).inject([]) do |acc,param|
             dv = Parameter.find_first_by_name(param).default_val

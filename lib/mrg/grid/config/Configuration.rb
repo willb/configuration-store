@@ -35,87 +35,87 @@ module Mrg
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
         
-        # GetVersion 
+        # getVersion 
         # * version (uint32/O)
-        def GetVersion()
+        def getVersion()
           # Assign values to output parameters
           version ||= 0
           # Return value
           return version
         end
         
-        expose :GetVersion do |args|
+        expose :getVersion do |args|
           args.declare :version, :uint32, :out, {}
         end
         
-        # GetFeatures 
+        # getFeatures 
         # * list (map/O)
         #   A set of features defined in this configuration
-        def GetFeatures()
+        def getFeatures()
           # Assign values to output parameters
           list ||= {}
           # Return value
           return list
         end
         
-        expose :GetFeatures do |args|
+        expose :getFeatures do |args|
           args.declare :features, :map, :out, {}
         end
         
-        # GetCustomParams 
+        # getCustomParams 
         # * params (map/O)
         #   A map(paramName, value) of parameter/value pairs for a configuration
-        def GetCustomParams()
+        def getCustomParams()
           # Assign values to output parameters
           params ||= {}
           # Return value
           return params
         end
         
-        expose :GetCustomParams do |args|
+        expose :getCustomParams do |args|
           args.declare :params, :map, :out, {}
         end
         
-        # ModifyCustomParams 
+        # modifyCustomParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * params (map/I)
         #   map(groupId, map(param, value))
-        def ModifyCustomParams(command,params)
+        def modifyCustomParams(command,params)
           # Print values of input parameters
-          log.debug "ModifyCustomParams: command => #{command.inspect}"
-          log.debug "ModifyCustomParams: params => #{params.inspect}"
+          log.debug "modifyCustomParams: command => #{command.inspect}"
+          log.debug "modifyCustomParams: params => #{params.inspect}"
         end
         
-        expose :ModifyCustomParams do |args|
+        expose :modifyCustomParams do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :params, :map, :in, {}
         end
         
-        # GetDefaultFeatures 
+        # getDefaultFeatures 
         # * features (map/O)
-        def GetDefaultFeatures()
+        def getDefaultFeatures()
           # Assign values to output parameters
           features ||= {}
           # Return value
           return features
         end
         
-        expose :GetDefaultFeatures do |args|
+        expose :getDefaultFeatures do |args|
           args.declare :features, :map, :out, {}
         end
         
-        # ModifyDefaultFeatures 
+        # modifyDefaultFeatures 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * features (map/I)
-        def ModifyDefaultFeatures(command,features)
+        def modifyDefaultFeatures(command,features)
           # Print values of input parameters
-          log.debug "ModifyDefaultFeatures: command => #{command.inspect}"
-          log.debug "ModifyDefaultFeatures: features => #{features.inspect}"
+          log.debug "modifyDefaultFeatures: command => #{command.inspect}"
+          log.debug "modifyDefaultFeatures: features => #{features.inspect}"
         end
         
-        expose :ModifyDefaultFeatures do |args|
+        expose :modifyDefaultFeatures do |args|
           args.declare :command, :sstr, :in, {}
           args.declare :features, :map, :in, {}
         end

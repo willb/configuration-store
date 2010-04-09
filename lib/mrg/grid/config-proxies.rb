@@ -14,13 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-require 'mrg/grid/config/QmfUtils'
 require 'set'
 require 'yaml'
-
-FakeList = Mrg::Grid::Config::FakeList
-FakeSet = Mrg::Grid::Config::FakeSet
 
 module Mrg
   module Grid
@@ -129,11 +124,11 @@ module Mrg
       class ConfigLoader
         module InternalHelpers
           def listify(ls)
-            FakeList[*ls]
+            ls
           end
           
           def setify(s)
-            FakeSet[*s]
+            s.uniq
           end
         end
         
@@ -204,7 +199,7 @@ module Mrg
         def create_nodes
           @nodes.each do |name, old_node|
             log.info("Creating node '#{name}'")
-            node = @store.AddNode(name)
+            node = @store.addNode(name)
             node.MakeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0
@@ -212,7 +207,7 @@ module Mrg
               @callbacks << lambda do
                 log.info("Setting memberships for node #{name}")
                 log.debug("Node #{name} has memberships #{flmemberships.inspect}")
-                node.ModifyMemberships("ADD", flmemberships, {})
+                node.modifyMemberships("ADD", flmemberships, {})
               end
             end
           end
@@ -224,10 +219,10 @@ module Mrg
             if name.index("+++") == 0
               # this is an identity or default group; don't create it
               log.info("Finding special group '#{name}'")
-              group = @store.GetGroup({"NAME"=>name})
+              group = @store.getGroup({"NAME"=>name})
             else
               log.info("Creating group '#{name}'")
-              group = @store.AddExplicitGroup(name)
+              group = @store.addExplicitGroup(name)
             end
             
             if old_group.features.size > 0
@@ -235,7 +230,7 @@ module Mrg
               @callbacks << lambda do
                 log.info("Setting features for group #{name}")
                 log.debug("Group #{name} has features #{flfeatures.inspect}")
-                group.ModifyFeatures("ADD", flfeatures, {})
+                group.modifyFeatures("ADD", flfeatures, {})
               end
             end
             
@@ -243,7 +238,7 @@ module Mrg
               @callbacks << lambda do
                 log.info("Setting params for group #{name}")
                 log.debug("Group #{name} has params #{old_group.params.inspect}")
-                group.ModifyParams("ADD", old_group.params, {})
+                group.modifyParams("ADD", old_group.params, {})
               end
             end
           end
@@ -253,15 +248,15 @@ module Mrg
           @params.each do |name, old_param|
             log.info "Creating parameter '#{name}'"
             
-            param = @store.AddParam(name)
-            param.SetType(old_param.kind)
-            param.SetDefault(old_param.default_val)
-            param.SetDescription(old_param.description)
-            param.SetDefaultMustChange(old_param.must_change)
-            param.SetVisibilityLevel(old_param.level)
-            param.SetRequiresRestart(old_param.needs_restart)
+            param = @store.addParam(name)
+            param.setType(old_param.kind)
+            param.setDefault(old_param.default_val)
+            param.setDescription(old_param.description)
+            param.setDefaultMustChange(old_param.must_change)
+            param.setVisibilityLevel(old_param.level)
+            param.setRequiresRestart(old_param.needs_restart)
 
-            {:conflicts=>:ModifyConflicts,:depends=>:ModifyDepends}.each do |get,set|
+            {:conflicts=>:modifyConflicts,:depends=>:modifyDepends}.each do |get,set|
               if old_param.send(get).size > 0
                 @callbacks << lambda do
                   log.info "Setting #{get} for parameter #{name}"
@@ -276,8 +271,8 @@ module Mrg
         def create_features
           @features.each do |name, old_feature|
             log.info "Creating feature '#{name}'"
-            feature = @store.AddFeature(name)
-            [[:params, :ModifyParams, :skk, "parameters"],[:included, :ModifyFeatures, :listify, "included features"],[:conflicts, :ModifyConflicts, :setify, "conflicting features"],[:depends, :ModifyDepends, :listify, "feature dependencies"],[:subsystems, :ModifySubsys, :setify, "implicated subsystems"]].each do |get,set,xform,desc|
+            feature = @store.addFeature(name)
+            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"],[:subsystems, :modifySubsys, :setify, "implicated subsystems"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
                   log.info "Setting #{desc} for #{name}"
@@ -292,12 +287,12 @@ module Mrg
         def create_subsystems
           @subsystems.each do |name, old_ss|
             log.info "Creating subsystem '#{name}'"
-            subsys = @store.AddSubsys(name)
+            subsys = @store.addSubsys(name)
             if old_ss.params.size > 0
               @callbacks << lambda do
                 log.info "Setting parameters for subsystem #{name}"
                 log.debug "Subsystem #{name} has parameters #{old_ss.params.inspect}"
-                subsys.ModifyParams("ADD", setify(old_ss.params), {})
+                subsys.modifyParams("ADD", setify(old_ss.params), {})
               end
             end
           end
@@ -310,7 +305,7 @@ module Mrg
         end
         
         def dictify(ls)
-          Hash[*ls.map {|obj| [(obj.name rescue obj.GetName), obj]}.flatten]
+          Hash[*ls.map {|obj| [(obj.name rescue obj.getName), obj]}.flatten]
         end
         
         def skk(x)
@@ -375,7 +370,7 @@ module Mrg
             out = Node.new
             out.name = node.name
             out.provisioned = node.provisioned
-            out.membership = fl_normalize(node.GetMemberships)
+            out.membership = fl_normalize(node.getMemberships)
             out
           end
         end
@@ -384,10 +379,10 @@ module Mrg
           get_instances(:Group).map do |g|
             group = get_object(g)
             out = Group.new
-            out.name = group.GetName
+            out.name = group.getName
             out.is_identity_group = group.is_identity_group
-            out.features = fl_normalize(group.GetFeatures)
-            out.params = group.GetParams
+            out.features = fl_normalize(group.getFeatures)
+            out.params = group.getParams
             out
           end
         end
@@ -397,14 +392,14 @@ module Mrg
             param = get_object(p)
             out = Parameter.new
             out.name = param.name
-            out.kind = param.GetType
-            out.default_val = param.GetDefault.to_s
-            out.description = param.GetDescription
-            out.must_change = param.GetDefaultMustChange
-            out.level = param.GetVisibilityLevel
-            out.needs_restart = param.GetRequiresRestart
-            out.conflicts = fs_normalize(param.GetConflicts)
-            out.depends = fs_normalize(param.GetDepends)
+            out.kind = param.getType
+            out.default_val = param.getDefault.to_s
+            out.description = param.getDescription
+            out.must_change = param.getDefaultMustChange
+            out.level = param.getVisibilityLevel
+            out.needs_restart = param.getRequiresRestart
+            out.conflicts = fs_normalize(param.getConflicts)
+            out.depends = fs_normalize(param.getDepends)
             out
           end
         end
@@ -413,18 +408,18 @@ module Mrg
           get_instances(:Feature).map do |f|
             feature = get_object(f)
             out = Feature.new
-            out.name = feature.GetName
-            params = feature.GetParams
+            out.name = feature.getName
+            params = feature.getParams
             
             # Ensure that params that should get the default values are serialized
-            default_params = feature.GetParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+            default_params = feature.getParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
             default_params.each {|dp_key| params[dp_key] = 0}
             
             out.params = params
-            out.included = fl_normalize(feature.GetFeatures)
-            out.conflicts = fs_normalize(feature.GetConflicts)
-            out.depends = fl_normalize(feature.GetDepends)
-            out.subsystems = fs_normalize(feature.GetSubsys)
+            out.included = fl_normalize(feature.getFeatures)
+            out.conflicts = fs_normalize(feature.getConflicts)
+            out.depends = fl_normalize(feature.getDepends)
+            out.subsystems = fs_normalize(feature.getSubsys)
             out
           end
         end
@@ -434,19 +429,17 @@ module Mrg
             subsys = get_object(s)
             out = Subsystem.new
             out.name = subsys.name
-            out.params = fs_normalize(subsys.GetParams)
+            out.params = fs_normalize(subsys.getParams)
             out
           end
         end
         
         def fs_normalize(fs)
-          return fs if fs.is_a? Array
-          fs.keys
+          fs
         end
         
         def fl_normalize(fl)
-          return fl if fl.is_a? Array
-          FakeList.normalize(fl).to_a
+          fl
         end
       end
     end

@@ -16,61 +16,61 @@ module Mrg
         end
 
         it "should validate empty configurations" do
-          explain, warnings = @store.ActivateConfiguration
+          explain, warnings = @store.activateConfiguration
           explain.should == {}
-          warnings.keys.grep(/No nodes in configuration/).should_not == []
+          warnings.grep(/No nodes in configuration/).should_not == []
         end
 
         
         it "should not validate nodeless configurations that do not provide features depended upon by enabled features (in the default group)" do
-          features = %w{FooFeature BarFeature}.map {|fname| @store.AddFeature(fname)}
-          features[0].ModifyDepends("ADD", FakeList[features[1].name], {})
+          features = %w{FooFeature BarFeature}.map {|fname| @store.addFeature(fname)}
+          features[0].modifyDepends("ADD", Array[features[1].name], {})
 
-          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[features[0].name], {})
+          Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[features[0].name], {})
 
-          explain, warnings = @store.ActivateConfiguration
+          explain, warnings = @store.activateConfiguration
           explain.should_not == {}
-          explain["+++DEFAULT"][Node::BROKEN_FEATURE_DEPS].keys.should include("BarFeature")
-          warnings.keys.grep(/No nodes in configuration/).should_not == []
+          explain["+++DEFAULT"][Node::BROKEN_FEATURE_DEPS].should include("BarFeature")
+          warnings.grep(/No nodes in configuration/).should_not == []
         end
 
         it "should not validate nodeless configurations that do not provide values for must-change parameters" do
-          param = @store.AddParam("FOO")
-          param.SetDefaultMustChange(true)
+          param = @store.addParam("FOO")
+          param.setDefaultMustChange(true)
 
-          feature = @store.AddFeature("FooFeature")
-          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          feature = @store.addFeature("FooFeature")
+          feature.modifyParams("ADD", {"FOO"=>0}, {})
 
-          Group.DEFAULT_GROUP.ModifyFeatures("ADD", FakeList[feature.name], {})
+          Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature.name], {})
 
-          explain, warnings = @store.ActivateConfiguration
+          explain, warnings = @store.activateConfiguration
           explain.should_not == {}
-          explain["+++DEFAULT"][Node::UNSET_MUSTCHANGE_PARAMS].keys.should include("FOO")
-          warnings.keys.grep(/No nodes in configuration/).should_not == []
+          explain["+++DEFAULT"][Node::UNSET_MUSTCHANGE_PARAMS].should include("FOO")
+          warnings.grep(/No nodes in configuration/).should_not == []
         end
         
         
         # XXX:  the internal versions of these should probably go in a module to be mixed in to the respective spec files
-        {Feature=>:AddFeature, Group=>:AddExplicitGroup, Node=>:AddNode, Parameter=>:AddParam, Subsystem=>:AddSubsys}.each do |klass, instantiate_klass_msg|
+        {Feature=>:addFeature, Group=>:addExplicitGroup, Node=>:addNode, Parameter=>:addParam, Subsystem=>:addSubsys}.each do |klass, instantiate_klass_msg|
 
           {"internal"=>Proc.new {|store,namelist| klass.select_invalid(namelist)},
-           "API"=>Proc.new {|store,namelist| store.send("check#{klass.name}Validity", FakeSet[*namelist]).keys}}.each do |kind, callable|
+           "API"=>Proc.new {|store,namelist| store.send("check#{klass.name.split("::").pop}Validity", Array[*namelist])}}.each do |kind, callable|
           
-            it "should identify invalid #{klass.name.downcase}s with #{kind} methods" do
+            it "should identify invalid #{klass.name.split("::").pop.downcase}s with #{kind} methods" do
               bogus_names = @entity_list.slice!(0, @entity_list.size / 3)
   
               @entity_list.each {|feature| @store.send(instantiate_klass_msg, feature)}
               Set[*callable.call(@store, bogus_names)].should == Set[*bogus_names]
             end
   
-            it "should not identify valid #{klass.name.downcase}s as invalid with #{kind} methods" do
+            it "should not identify valid #{klass.name.split("::").pop.downcase}s as invalid with #{kind} methods" do
               bogus_names = @entity_list.slice!(0, @entity_list.size / 3)
   
               @entity_list.each {|feature| @store.send(instantiate_klass_msg, feature)}
               Set[*callable.call(@store, @entity_list)].should == Set[]
             end
   
-            it "should pick out the invalid #{klass.name.downcase} names from a list of valid and invalid #{klass.name.downcase}s with #{kind} methods" do
+            it "should pick out the invalid #{klass.name.split("::").pop.downcase} names from a list of valid and invalid #{klass.name.split("::").pop.downcase}s with #{kind} methods" do
               bogus_names = @entity_list.slice!(0, @entity_list.size / 3)
   
               @entity_list.each {|feature| @store.send(instantiate_klass_msg, feature)}

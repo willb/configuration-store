@@ -8,8 +8,8 @@ module Mrg
         before(:each) do
           setup_rhubarb
           @store = Store.new
-          @add_msg = :AddFeature
-          @find_msg = :GetFeature
+          @add_msg = :addFeature
+          @find_msg = :getFeature
           @gskey = "MORE_PONIES"
         end
 
@@ -20,53 +20,53 @@ module Mrg
         include DescribeGetterAndSetter
         
         it "should be instantiable" do
-          feature = @store.AddFeature(@gskey)
-          @store.GetFeature(@gskey).row_id.should == feature.row_id
+          feature = @store.addFeature(@gskey)
+          @store.getFeature(@gskey).row_id.should == feature.row_id
         end
 
         it "should not persist after deletion" do
-          feature = @store.AddFeature(@gskey)
-          @store.RemoveFeature(@gskey)
-          lambda {@store.GetFeature(@gskey)}.should raise_error
-          lambda {@store.RemoveFeature(@gskey)}.should raise_error
+          feature = @store.addFeature(@gskey)
+          @store.removeFeature(@gskey)
+          lambda {@store.getFeature(@gskey)}.should raise_error
+          lambda {@store.removeFeature(@gskey)}.should raise_error
         end
         
         it "should allow setting a feature's name" do
           vals = ["Fewer ponies", "Some ponies", "No ponies"]
-          feature = @store.AddFeature(@gskey)
+          feature = @store.addFeature(@gskey)
 
           vals.each do |val|
             old_rid = feature.row_id
-            feature.SetName(val)
+            feature.setName(val)
             
-            feature = @store.GetFeature(val)
+            feature = @store.getFeature(val)
             feature.row_id.should == old_rid
           end
         end
         
         it "should not allow creating a feature with a taken name" do
-          feature = @store.AddFeature(@gskey)
-          lambda { feature2 = @store.AddFeature(@gskey) }.should raise_error
+          feature = @store.addFeature(@gskey)
+          lambda { feature2 = @store.addFeature(@gskey) }.should raise_error
           
         end
         
         it "should not allow setting a feature's name to a taken name" do
-          feature = @store.AddFeature(@gskey)
-          feature2 = @store.AddFeature("Fewer ponies")
+          feature = @store.addFeature(@gskey)
+          feature2 = @store.addFeature("Fewer ponies")
           
-          lambda { feature2.SetName(@gskey) }.should raise_error
+          lambda { feature2.setName(@gskey) }.should raise_error
         end
         
         it "should allow adding parameter/value mappings one at a time" do
           param_names = ("XAA".."XAZ").to_a
           param_values = param_names.map {|pn| pn.downcase}
-          params = param_names.map {|pn| @store.AddParam(pn)}
-          feature = @store.AddFeature(@gskey)
+          params = param_names.map {|pn| @store.addParam(pn)}
+          feature = @store.addFeature(@gskey)
           old_size = 0
           
           param_names.zip(param_values).each do |k,v|
-            feature.ModifyParams("ADD", {k=>v})
-            mappings = feature.GetParams
+            feature.modifyParams("ADD", {k=>v})
+            mappings = feature.getParams
             mappings.size.should == old_size + 1
             mappings.keys.should include(k)
             mappings[k].should == v
@@ -81,12 +81,12 @@ module Mrg
           
           pvmap = Hash[*param_names.zip(param_values).flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap.size
           
@@ -105,18 +105,18 @@ module Mrg
           pvmap1 = Hash[*nvps.slice(0,5).flatten]
           pvmap2 = Hash[*nvps.slice(5,nvps.size).flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap1)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap1)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap1.size
           
-          feature.ModifyParams("REPLACE", pvmap2)
+          feature.modifyParams("REPLACE", pvmap2)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap2.size
           
@@ -135,18 +135,18 @@ module Mrg
           pvmap1 = Hash[*nvps.slice(0,5).flatten]
           pvmap2 = Hash[*nvps.slice(5,nvps.size).flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap1)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap1)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap1.size
           
-          feature.ModifyParams("ADD", pvmap2)
+          feature.modifyParams("ADD", pvmap2)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == param_names.size
           
@@ -164,12 +164,12 @@ module Mrg
           
           pvmap = Hash[*nvps.flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap.size
           
@@ -181,9 +181,9 @@ module Mrg
             expected_pvmap[pn] = pn.downcase.reverse
           end
           
-          feature.ModifyParams("ADD", pvmap)
+          feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == param_names.size
           
@@ -199,23 +199,23 @@ module Mrg
           
           pvmap = Hash[*param_names.zip(param_values).flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == pvmap.size
 
-          feature.ModifyParams("REMOVE", pvmap)
+          feature.modifyParams("REMOVE", pvmap)
           
-          mappings = feature.GetParams
+          mappings = feature.getParams
           
           mappings.size.should == 0
           
           param_names.zip(param_values).each do |k,v|
-            mappings = feature.GetParams
+            mappings = feature.getParams
             mappings.keys.should_not include(k)
             mappings[k].should_not == v
           end
@@ -227,17 +227,17 @@ module Mrg
           
           pvmap = Hash[*param_names.zip(param_values).flatten]
 
-          params = param_names.map {|pn| @store.AddParam(pn)}
+          params = param_names.map {|pn| @store.addParam(pn)}
 
-          feature = @store.AddFeature(@gskey)
-          feature.ModifyParams("ADD", pvmap)
+          feature = @store.addFeature(@gskey)
+          feature.modifyParams("ADD", pvmap)
 
-          mappings = feature.GetParams
+          mappings = feature.getParams
           old_size = mappings.size
           
           param_names.zip(param_values).each do |k,v|
-            feature.ModifyParams("REMOVE", {k=>v})
-            mappings = feature.GetParams
+            feature.modifyParams("REMOVE", {k=>v})
+            mappings = feature.getParams
             mappings.size.should == old_size - 1
             mappings.keys.should_not include(k)
             
@@ -252,14 +252,14 @@ module Mrg
         it "should know which features are installed on a given node when those are installed in the default group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
 
-          node = @store.AddNode("blah.local.")
+          node = @store.addNode("blah.local.")
           
           default = Group.DEFAULT_GROUP
           
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          default.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -273,12 +273,12 @@ module Mrg
         it "should know which features are installed on the default group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
           
           default = Group.DEFAULT_GROUP
           
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          default.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffg = Feature.features_for_group(default)
           
@@ -292,13 +292,13 @@ module Mrg
         it "should know which features are included in those installed on the default group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].ModifyFeatures("ADD", FakeList[dep_dests[2].name])
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          dep_dests[0].modifyFeatures("ADD", [dep_dests[2].name])
+          default.modifyFeatures("ADD", [dep_dests[0].name])
           
           ffg = Feature.features_for_group(default)
           
@@ -312,13 +312,13 @@ module Mrg
         it "should know which features are depended upon by those installed on the default group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].ModifyDepends("ADD", FakeList[dep_dests[2].name, dep_dests[4].name])
-          default.ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+          dep_dests[0].modifyDepends("ADD", [dep_dests[2].name, dep_dests[4].name])
+          default.modifyFeatures("ADD", [dep_dests[0].name])
           
           dfg = Feature.dependencies_for_group(default)
           
@@ -332,14 +332,14 @@ module Mrg
         it "should know which features are installed on a given node when those are installed in the node's identity group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
 
-          node = @store.AddNode("blah.local.")
+          node = @store.addNode("blah.local.")
           
           idgroup = node.idgroup
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          idgroup.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -353,14 +353,14 @@ module Mrg
         it "should know which features are installed on a given node when those are installed in the node's identity group" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
 
-          node = @store.AddNode("blah.local.")
+          node = @store.addNode("blah.local.")
           
           idgroup = node.idgroup
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          idgroup.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -374,19 +374,19 @@ module Mrg
         it "should know which features are installed on a given node when those are installed on a group that that node is a member of" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
 
-          node = @store.AddNode("blah.local.")
-          group = @store.AddExplicitGroup("Pony Users")
+          node = @store.addNode("blah.local.")
+          group = @store.addExplicitGroup("Pony Users")
           
-          group.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
+          group.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name, dep_dests[3].name])
           
           ffn = Feature.features_for_node(node)
           
           ffn.should have(0).things
           
-          node.ModifyMemberships("ADD", FakeList[group.name])
+          node.modifyMemberships("ADD", [group.name])
 
           ffn = Feature.features_for_node(node)
           
@@ -401,16 +401,16 @@ module Mrg
         it "should know which features are installed on a given node when those are included in another feature installed on that node" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
 
-          node = @store.AddNode("blah.local.")
+          node = @store.addNode("blah.local.")
           
           idgroup = node.idgroup
           
-          dep_dests[2].ModifyFeatures("ADD", FakeList[dep_dests[3].name])
+          dep_dests[2].modifyFeatures("ADD", [dep_dests[3].name])
           
-          idgroup.ModifyFeatures("ADD", FakeList[dep_dests[0].name, dep_dests[2].name])
+          idgroup.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
           ffn = Feature.features_for_node(node)
           
@@ -425,15 +425,15 @@ module Mrg
         it "should be able to detect inclusion cycles" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.ModifyFeatures("ADD", FakeList[dependent.name])
+            feature.modifyFeatures("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].ModifyFeatures("ADD", FakeList[dep_dests[0].name])
+            dep_dests[-1].modifyFeatures("ADD", [dep_dests[0].name])
           }.should raise_error
         end
 
@@ -441,25 +441,25 @@ module Mrg
         it "should be able to detect dependence cycles" do
           dep_dests = []
           ["Oat Clustering", "Pony Accelerator", "High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
-            dep_dests << @store.AddFeature(fn)
+            dep_dests << @store.addFeature(fn)
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.ModifyDepends("ADD", FakeList[dependent.name])
+            feature.modifyDepends("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].ModifyDepends("ADD", FakeList[dep_dests[0].name])
+            dep_dests[-1].modifyDepends("ADD", [dep_dests[0].name])
           }.should raise_error
         end
         
-        [["include", "inclusion", :GetFeatures, :ModifyFeatures, true, :AddFeature], ["depend on", "dependence", :GetDepends, :ModifyDepends, true, :AddFeature], ["conflict with", "conflict", :GetConflicts, :ModifyConflicts, false, :AddFeature], ["affect", "implication", :GetSubsys, :ModifySubsys, false, :AddSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        [["include", "inclusion", :getFeatures, :modifyFeatures, true, :addFeature], ["depend on", "dependence", :getDepends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :getConflicts, :modifyConflicts, false, :addFeature], ["affect", "implication", :getSubsys, :modifySubsys, false, :addSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
-          fake_collection = order_preserving ? FakeList : FakeSet
-          nouns = create_dest_msg == :AddFeature ? "features" : "subsystems"
+          fake_collection = Array
+          nouns = create_dest_msg == :addFeature ? "features" : "subsystems"
 
           it "should #{verb} no other #{nouns} by default" do
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             feature.send(inspect_msg).size.should == 0
           end
@@ -470,7 +470,7 @@ module Mrg
               dep_dests << @store.send(create_dest_msg, fn)
             end
 
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
@@ -480,7 +480,7 @@ module Mrg
           it "should be able to #{verb} the empty set of other #{nouns}" do
             dep_dests = []
 
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests])
 
@@ -493,15 +493,15 @@ module Mrg
               dep_dests << @store.send(create_dest_msg, fn)
             end
 
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
             dep_dests.each do |ef| 
               observed_dests.should include(ef.name)
             end
@@ -513,14 +513,14 @@ module Mrg
               dep_dests << @store.send(create_dest_msg, fn)
             end
 
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             supplied_dests = (dep_dests+dep_dests+dep_dests+dep_dests).sort_by {rand}
 
             feature.send(modify_msg, "ADD", fake_collection[*supplied_dests.map {|f| f.name}])
-            feature.send(inspect_msg).keys.size.should == dep_dests.size
+            feature.send(inspect_msg).size.should == dep_dests.size
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
 
             supplied_dests.uniq.each do |ef| 
               observed_dests.should include(ef.name)
@@ -533,13 +533,13 @@ module Mrg
               dep_dests << @store.send(create_dest_msg, fn)
             end
 
-            feature = @store.AddFeature("Pony Accelerator")
+            feature = @store.addFeature("Pony Accelerator")
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
             feature.send(modify_msg, "REMOVE", fake_collection[*dep_dests.pop.name])
 
-            observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+            observed_dests = feature.send(inspect_msg)
             dep_dests.each do |ef| 
               observed_dests.should include(ef.name)
             end
@@ -552,11 +552,11 @@ module Mrg
                 dep_dests << @store.send(create_dest_msg, fn)
               end
 
-              feature = @store.AddFeature("Pony Accelerator")
+              feature = @store.addFeature("Pony Accelerator")
 
               feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -568,11 +568,11 @@ module Mrg
                 dep_dests << @store.send(create_dest_msg, fn)
               end
 
-              feature = @store.AddFeature("Pony Accelerator")
+              feature = @store.addFeature("Pony Accelerator")
 
               feature.send(modify_msg, "REPLACE", fake_collection[*dep_dests.map {|f| f.name}])
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -584,21 +584,21 @@ module Mrg
                 dep_dests << @store.send(create_dest_msg, fn)
               end
 
-              feature = @store.AddFeature("Pony Accelerator")
+              feature = @store.addFeature("Pony Accelerator")
 
               feature.send(modify_msg, "ADD", fake_collection[*dep_dests.slice(0,2).map {|f| f.name}])
 
-              feature.send(inspect_msg).keys.size.should == dep_dests.slice(0,2).size
+              feature.send(inspect_msg).size.should == dep_dests.slice(0,2).size
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests.slice(0,2)).each do |of,ef| 
                 ef.name.should == of
               end
 
               feature.send(modify_msg, "ADD", fake_collection[dep_dests[-1].name])
-              feature.send(inspect_msg).keys.size.should == dep_dests.size
+              feature.send(inspect_msg).size.should == dep_dests.size
 
-              observed_dests = fake_collection.normalize(feature.send(inspect_msg)).to_a
+              observed_dests = feature.send(inspect_msg)
               observed_dests.zip(dep_dests).each do |of,ef| 
                 ef.name.should == of
               end
@@ -607,16 +607,16 @@ module Mrg
         end
 
         it "should properly handle default values" do
-          param = @store.AddParam("FOO")
-          param.SetDefault("BAR")
+          param = @store.addParam("FOO")
+          param.setDefault("BAR")
           
-          feature = @store.AddFeature("FooFeature")
-          feature.ModifyParams("ADD", {"FOO"=>0}, {})
+          feature = @store.addFeature("FooFeature")
+          feature.modifyParams("ADD", {"FOO"=>0}, {})
           
-          node = @store.AddNode("blah.local.")
-          node.idgroup.ModifyFeatures("ADD", FakeList[feature.name], {})
+          node = @store.addNode("blah.local.")
+          node.idgroup.modifyFeatures("ADD", [feature.name], {})
           
-          config = node.GetConfig
+          config = node.getConfig
           
           node.validate.should == true
           
@@ -628,7 +628,7 @@ module Mrg
           feature_list = ("cat".."eel").to_a.sort_by {rand}
           bogus_names = feature_list.slice!(0, feature_list.index("dog"))
           
-          feature_list.each {|feature| @store.AddFeature(feature)}
+          feature_list.each {|feature| @store.addFeature(feature)}
           Feature.select_invalid(bogus_names).should == bogus_names
         end
 
@@ -636,7 +636,7 @@ module Mrg
           feature_list = ("cat".."eel").to_a.sort_by {rand}
           bogus_names = feature_list.slice!(0, feature_list.index("dog"))
           
-          feature_list.each {|feature| @store.AddFeature(feature)}
+          feature_list.each {|feature| @store.addFeature(feature)}
           Feature.select_invalid(feature_list).should == []
         end
 
@@ -644,7 +644,7 @@ module Mrg
           feature_list = ("cat".."eel").to_a.sort_by {rand}
           bogus_names = feature_list.slice!(0, feature_list.index("dog"))
           
-          feature_list.each {|feature| @store.AddFeature(feature)}
+          feature_list.each {|feature| @store.addFeature(feature)}
           invalids = Set[*Feature.select_invalid(feature_list + bogus_names)]
           
           Set[*bogus_names].should == invalids

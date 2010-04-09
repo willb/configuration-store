@@ -7,8 +7,8 @@ module Mrg
         before(:each) do
           setup_rhubarb
           @store = Store.new
-          @add_msg = :AddExplicitGroup
-          @find_msg = :GetGroupByName
+          @add_msg = :addExplicitGroup
+          @find_msg = :getGroupByName
           @gskey = "PONY_GROUP"
         end
 
@@ -31,10 +31,10 @@ module Mrg
 
         it "should no longer exist after it is deleted" do
           thing = @store.send(@add_msg, @gskey)
-          @store.RemoveGroup(@gskey)
+          @store.removeGroup(@gskey)
           
           lambda { @store.send(@find_msg, @gskey) }.should raise_error
-          lambda { @store.RemoveGroup(@gskey) }.should raise_error
+          lambda { @store.removeGroup(@gskey) }.should raise_error
         end
         
         
@@ -42,7 +42,7 @@ module Mrg
           group = @store.send(@add_msg, @gskey)
           group2 = @store.send(@add_msg, @gskey.reverse)
           
-          lambda { group2.SetName(@gskey) }.should raise_error
+          lambda { group2.setName(@gskey) }.should raise_error
         end
         
       end

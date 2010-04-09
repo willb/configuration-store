@@ -21,9 +21,9 @@ module Mrg
     module Config
       module Shell
         class ParamOps
-          MESSAGES = {:kind=>:SetType, :default_val=>:SetDefault, :description=>:SetDescription, :must_change=>:SetDefaultMustChange, :level=>:SetVisibilityLevel, :needsRestart=>:SetRequiresRestart}
+          MESSAGES = {:kind=>:setType, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setDefaultMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
 
-          def initialize(storeclient, name, op=:AddParam)
+          def initialize(storeclient, name, op=:addParam)
             po_initialize(storeclient, name, op)
           end
           
@@ -41,7 +41,7 @@ module Mrg
             
             args.each do |name|
               @name = name
-              puts "#{@op == :AddParam ? "Creating" : "Modifying"} the following param: #{@name} with #{@options.inspect}"
+              puts "#{@op == :addParam ? "Creating" : "Modifying"} the following param: #{@name} with #{@options.inspect}"
               act(@options)
             end
           end
@@ -62,7 +62,7 @@ module Mrg
             @name = name
             @options = {}
             @oparser = OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{op == :AddParam ? "add-param" : "modify-param"} param-name [...] [param-options]"
+              opts.banner = "Usage:  wallaby #{op == :addParam ? "add-param" : "modify-param"} param-name [...] [param-options]"
                 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -70,7 +70,7 @@ module Mrg
               end
               
               {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}.each do |option, kind|
-                opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{@op==:AddParam ? "newly-created" : "modified"} parameter") do |value|
+                opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{@op==:addParam ? "newly-created" : "modified"} parameter") do |value|
                   @options[option] = value
                 end
               end
@@ -78,13 +78,13 @@ module Mrg
           end
         end
         
-        class AddParam < ParamOps
-          Mrg::Grid::Config::Shell::COMMANDS['add-param'] = AddParam
+        class addParam < ParamOps
+          Mrg::Grid::Config::Shell::COMMANDS['add-param'] = addParam
         end
         
         class ModifyParam < ParamOps
           Mrg::Grid::Config::Shell::COMMANDS['modify-param'] = ModifyParam
-          def initialize(storeclient, name, op=:GetParam)
+          def initialize(storeclient, name, op=:getParam)
             po_initialize(storeclient, name, op)
           end
         end

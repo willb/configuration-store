@@ -101,26 +101,26 @@ module Mrg
         expose :checkin do |args|
         end
         
-        # GetLastCheckinTime 
+        # getLastCheckinTime 
         # * time (uint32/O)
-        def GetLastCheckinTime()
-          log.debug "GetLastCheckinTime called on node #{self.inspect}"
+        def getLastCheckinTime()
+          log.debug "getLastCheckinTime called on node #{self.inspect}"
           # Assign values to output parameters
           self.last_checkin ||= 0
           # Return value
           return self.last_checkin
         end
         
-        expose :GetLastCheckinTime do |args|
+        expose :getLastCheckinTime do |args|
           args.declare :time, :uint64, :out, {}
         end
         
-        # GetConfig 
+        # getConfig 
         # * config (map/O)
         #   A map(parameter, value) representing the configuration for the node supplied
-        def GetConfig()
-          log.debug "GetConfig called on node #{self.inspect}"
-          config = Group.DEFAULT_GROUP.GetConfig
+        def getConfig()
+          log.debug "getConfig called on node #{self.inspect}"
+          config = Group.DEFAULT_GROUP.getConfig
           # strip StringSet markers from default group config
           config.each do |(k,v)|
             v.slice!(/^>=/) if v
@@ -144,52 +144,52 @@ module Mrg
           config
         end
         
-        expose :GetConfig do |args|
+        expose :getConfig do |args|
           args.declare :config, :map, :out, {}
         end
         
-        # CheckConfigVersion 
+        # checkConfigVersion 
         # * version (uint32/I)
-        def CheckConfigVersion(version)
+        def checkConfigVersion(version)
           # Print values of input parameters
-          log.debug "CheckConfigVersion: version => #{version.inspect}"
+          log.debug "checkConfigVersion: version => #{version.inspect}"
         end
         
-        expose :CheckConfigVersion do |args|
+        expose :checkConfigVersion do |args|
           args.declare :version, :uint32, :in, {}
         end
         
-        def GetIdentityGroup
-          log.debug "GetIdentityGroup called on node #{self.inspect}"
+        def getIdentityGroup
+          log.debug "getIdentityGroup called on node #{self.inspect}"
           self.idgroup ||= id_group_init
           self.idgroup
         end
 
-        expose :GetIdentityGroup do |args|
+        expose :getIdentityGroup do |args|
           args.declare :group, :objId, :out, {}
         end
         
-        # ModifyMemberships
+        # modifyMemberships
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-        # * groups (map/I)
+        # * groups (list/I)
         #   A list of groups, in inverse priority order (most important first)
         # * options (map/I)
-        def ModifyMemberships(command,groups,options={})
+        def modifyMemberships(command,groups,options={})
           # Print values of input parameters
-          log.debug "ModifyMemberships: command => #{command.inspect}"
-          log.debug "ModifyMemberships: groups => #{groups.inspect}"
-          log.debug "ModifyMemberships: options => #{options.inspect}"
+          log.debug "modifyMemberships: command => #{command.inspect}"
+          log.debug "modifyMemberships: groups => #{groups.inspect}"
+          log.debug "modifyMemberships: options => #{options.inspect}"
           
           invalid_groups = []
           
-          groups = FakeList.normalize(groups).to_a.map do |gn|
+          groups = groups.map do |gn|
             group = Group.find_first_by_name(gn)
             invalid_groups << gn unless group
             group
           end
 
-          fail(42, "Invalid groups for node #{self.name}: #{gn.inspect}") if invalid_groups != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Invalid groups for node #{self.name}: #{gn.inspect}") if invalid_groups != []
 
           command = command.upcase
 
@@ -212,28 +212,28 @@ module Mrg
 
               NodeMembership.create(:node=>self, :grp=>grow)
             end
-          else fail(7, "invalid command #{command}")
+          else fail(Errors.make(Errors::INVALID_COMMAND), "Invalid command #{command}")
           end
           
           DirtyElement.dirty_node(self)
         end
         
-        expose :ModifyMemberships do |args|
+        expose :modifyMemberships do |args|
           args.declare :command, :sstr, :in, {}
-          args.declare :groups, :map, :in, {}
+          args.declare :groups, :list, :in, {}
           args.declare :options, :map, :in, {}
         end
         
-        # GetMemberships 
+        # getMemberships 
         # * list (map/O)
         #   A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group
-        def GetMemberships()
-          log.debug "GetMemberships called on node #{self.inspect}"
-          FakeList[*memberships.map{|g| g.name}]
+        def getMemberships()
+          log.debug "getMemberships called on node #{self.inspect}"
+          memberships.map {|g| g.name}
         end
         
-        expose :GetMemberships do |args|
-          args.declare :groups, :map, :out, {}
+        expose :getMemberships do |args|
+          args.declare :groups, :list, :out, {}
         end
         
         def Node.get_dirty_nodes
@@ -263,7 +263,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         end
 
         def my_groups
-          [Group.DEFAULT_GROUP] + memberships + [self.GetIdentityGroup]
+          [Group.DEFAULT_GROUP] + memberships + [self.getIdentityGroup]
         end
         
         def idgroupname

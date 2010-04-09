@@ -38,24 +38,25 @@ module Mrg
           
           explain = kwargs[:explain] || "have an arc to"
           what = kwargs[:what] || self.class.name.split("::").pop.downcase
+          errwhat = Errors.const_get(what.upcase) || Errors::UNKNOWN
           keymsg = kwargs[:name] || :name
           preserve_order = kwargs[:preserve_order]
           xcmsg = kwargs[:xc]
           command = command.upcase
           
           if xcmsg and %w{ADD UNION REPLACE}.include? command then
-            fail(42, "Including #{what}s #{dests.inspect} in #{self.send(keymsg)} would introduce a cycle") if self.send(xcmsg, dests).include? self.send(keymsg)
+            fail(Errors.make(Errors::CIRCULAR_RELATIONSHIP, errwhat), "Including #{what}s #{dests.inspect} in #{self.send(keymsg)} would introduce a cycle") if self.send(xcmsg, dests).include? self.send(keymsg)
           end
           
           case command
           when "ADD", "UNION" then 
             old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
             new_dests = preserve_order ? dests : Set[*dests]
-            fail(7, "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
+            fail(Errors.make(Errors::CIRCULAR_RELATIONSHIP, Errors::INVALID_RELATIONSHIP, errwhat), "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, (old_dests + new_dests).to_a.uniq) # the uniq is important so this can work either as a list or set
           when "REPLACE" then 
             new_dests = preserve_order ? dests : Set[*dests]
-            fail(7, "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
+            fail(Errors.make(Errors::CIRCULAR_RELATIONSHIP, Errors::INVALID_RELATIONSHIP, errwhat), "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
             self.send(setmsg, new_dests.to_a)
           when "REMOVE" then
             old_dests = self.send(getmsg)
@@ -63,8 +64,8 @@ module Mrg
             new_dests = old_dests - removed_dests
             self.send(setmsg, new_dests)
           when "INTERSECT", "DIFF" then
-            fail(15, "#{command} not implemented")
-          else fail(7, "invalid command #{command}")
+            fail(Errors.make(Errors::INTERNAL_ERROR, Errors::NOT_IMPLEMENTED, errwhat), "#{command} not implemented")
+          else fail(Errors.make(Errors::BAD_COMMAND, errwhat), "Invalid command #{command}")
           end
         end
         
@@ -82,11 +83,12 @@ module Mrg
           options ||= {}
           klass = (options[:klass] or self.class)
           what = (options[:what] or klass.name.split("::").pop.downcase)
+          errwhat = Errors.const_get(what.upcase) || Errors::UNKNOWN
           dests = Set[*dests] unless options[:preserve_ordering]
           
           target_params = dests.map do |key|
             dest = klass.send(keyfindmsg, key)
-            fail(7, "#{key} is not a valid #{what} key") unless dest
+            fail(Errors.make(Errors::NONEXISTENT_ENTITY, errwhat), "#{key} is not a valid #{what} key") unless dest
             dest
           end
           
