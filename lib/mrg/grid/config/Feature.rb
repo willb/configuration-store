@@ -20,7 +20,6 @@ require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
-require 'mrg/grid/config/QmfUtils'
 require 'mrg/grid/config/DataValidating'
 
 require 'set'

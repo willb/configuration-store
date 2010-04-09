@@ -1,4 +1,5 @@
 # QmfUtils: some data structure hacks to make supporting lists and sets more palatable in QMF
+# NOTE:  These are now deprecated, since qmf supports lists natively as of svn rev 929717.
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #

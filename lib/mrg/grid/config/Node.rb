@@ -16,7 +16,6 @@
 require 'rhubarb/rhubarb'
 
 require 'mrg/grid/config/Group'
-require 'mrg/grid/config/QmfUtils'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/ConfigValidating'
 

@@ -17,7 +17,6 @@ require 'rhubarb/rhubarb'
 
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Feature'
-require 'mrg/grid/config/QmfUtils'
 require 'mrg/grid/config/DataValidating'
 
 require 'digest/md5'
