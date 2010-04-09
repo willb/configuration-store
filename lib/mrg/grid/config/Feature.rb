@@ -69,7 +69,7 @@ module Mrg
         def setName(name)
           # Print values of input parameters
           log.debug "setName: name => #{name.inspect}"
-          fail(42, "Feature name #{name} is taken") if (self.name != name and Feature.find_first_by_name(name))
+          fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::FEATURE), "Feature name #{name} is taken") if (self.name != name and Feature.find_first_by_name(name))
           self.name = name
         end
         
@@ -103,7 +103,7 @@ module Mrg
                     
           invalid_fl = Feature.select_invalid(fl)
           
-          fail(42, "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
           
           modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
@@ -171,7 +171,7 @@ module Mrg
             prow
           end
 
-          fail(42, "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}") if invalid_params != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}") if invalid_params != []
           
           command = command.upcase
           
@@ -197,7 +197,7 @@ module Mrg
           when "REPLACE"
             self.clearParams
             self.modifyParams("ADD",pvmap,options)
-          else fail(7, "invalid command #{command}")
+          else fail(Errors.make(Errors::BAD_COMMAND), "invalid command #{command}")
           end
           self_to_dirty_list
         end
@@ -233,7 +233,7 @@ module Mrg
           
           invalid_conflicts = Feature.select_invalid(conflicts)
           
-          fail(42, "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
@@ -270,7 +270,7 @@ module Mrg
           
           invalid_deps = Feature.select_invalid(depends)
           
-          fail(42, "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list

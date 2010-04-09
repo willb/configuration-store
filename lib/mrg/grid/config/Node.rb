@@ -189,7 +189,7 @@ module Mrg
             group
           end
 
-          fail(42, "Invalid groups for node #{self.name}: #{gn.inspect}") if invalid_groups != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Invalid groups for node #{self.name}: #{gn.inspect}") if invalid_groups != []
 
           command = command.upcase
 
@@ -212,7 +212,7 @@ module Mrg
 
               NodeMembership.create(:node=>self, :grp=>grow)
             end
-          else fail(7, "invalid command #{command}")
+          else fail(Errors.make(Errors::INVALID_COMMAND), "Invalid command #{command}")
           end
           
           DirtyElement.dirty_node(self)

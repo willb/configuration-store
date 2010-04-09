@@ -56,20 +56,20 @@ module Mrg
         # * obj (objId/O)
         def getGroup(query)
           qentries = query.entries
-          fail(7, "Invalid group query #{query.inspect}") if qentries.size != 1
+          fail(Errors.make(Errors::BAD_QUERY, Errors::GROUP), "Invalid group query #{query.inspect}") if qentries.size != 1
           qkind, qkey = query.entries.pop
           qkind = qkind.upcase
           
           case qkind
           when "ID"
             grp = Group.find(qkey)
-            fail(7, "Group ID #{qkey} not found") unless grp
+            fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Group ID #{qkey} not found") unless grp
             return grp
           when "NAME"
             grp = Group.find_first_by_name(qkey)
-            fail(7, "Group named #{qkey} not found") unless grp
+            fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Group named #{qkey} not found") unless grp
             return grp
-          else fail(7, "Invalid group query kind #{qkind}")
+          else fail(Errors.make(Errors::BAD_QUERY, Errors::GROUP), "Invalid group query kind #{qkind}")
           end
         end
         
@@ -93,8 +93,8 @@ module Mrg
         def addExplicitGroup(name)
           # Print values of input parameters
           log.debug "addExplicitGroup: name => #{name.inspect}"
-          fail(42, "Group name #{name} is already taken") if Group.find_first_by_name(name)
-          fail(42, "Group name #{name} is invalid; group names may not start with '+++'") if name.slice(0,3) == "+++"
+          fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::GROUP), "Group name #{name} is already taken") if Group.find_first_by_name(name)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::GROUP), "Group name #{name} is invalid; group names may not start with '+++'") if name.slice(0,3) == "+++"
           Group.create(:name=>name)
         end
         
@@ -109,7 +109,7 @@ module Mrg
           # Print values of input parameters
           log.debug "removeGroup: name => #{name.inspect}"
           group = Group.find_first_by_name(name)
-          fail(7, "Group named #{name} not found") unless group
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Group named #{name} not found") unless group
           group.delete
         end
         
@@ -125,7 +125,7 @@ module Mrg
           log.debug "getFeature: name => #{name.inspect}"
           
           feature = Feature.find_first_by_name(name)
-          fail(7, "Feature named #{name} not found") unless feature
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Feature named #{name} not found") unless feature
           return feature
 
         end
@@ -141,7 +141,7 @@ module Mrg
         def addFeature(name)
           # Print values of input parameters
           log.debug "addFeature: name => #{name.inspect}"
-          fail(42, "Feature name #{name} is already taken") if Feature.find_first_by_name(name)
+          fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::FEATURE), "Feature name #{name} is already taken") if Feature.find_first_by_name(name)
           return Feature.create(:name=>name)
         end
         
@@ -157,7 +157,7 @@ module Mrg
           log.debug "removeFeature: name => #{name.inspect}"
           feature = Feature.find_first_by_name(name)
           
-          fail(7, "Feature named #{name} does not exist") unless feature
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Feature named #{name} does not exist") unless feature
           
           feature.delete
         end
@@ -275,7 +275,7 @@ module Mrg
           log.debug "getParam: name => #{name.inspect}"
 
           param = Parameter.find_first_by_name(name)
-          fail(7, "Parameter named #{name} not found") unless param
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Parameter named #{name} not found") unless param
 
           return param
         end
@@ -292,7 +292,7 @@ module Mrg
         def addParam(name)
           # Print values of input parameters
           log.debug "addParam: name => #{name.inspect}"
-           fail(42, "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
+           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::PARAMETER), "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
           # Return value
           return Parameter.create(:name => name)
         end
@@ -325,7 +325,7 @@ module Mrg
         def addSubsys(name)
           # Print values of input parameters
           log.debug "addSubsys: name => #{name.inspect}"
-           fail(42, "Subsystem name #{name} is already taken") if Subsystem.find_first_by_name(name)
+           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::SUBSYSTEM), "Subsystem name #{name} is already taken") if Subsystem.find_first_by_name(name)
           # Return value
           return Subsystem.create(:name => name)
         end
@@ -400,7 +400,7 @@ module Mrg
         def loadSnapshot(name)
           snap = Snapshot.find_first_by_name(name)
           
-          fail(31, "Invalid snapshot name #{name}") unless snap
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::SNAPSHOT), "Invalid snapshot name #{name}") unless snap
           snaptext = snap.snaptext
           
           storeinit("RESETDB"=>true)

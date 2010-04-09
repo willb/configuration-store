@@ -228,7 +228,7 @@ module Mrg
           log.debug "modifyDepends: depends => #{depends.inspect}"
           
           invalid_depends = Parameter.select_invalid(depends)
-          fail(42, "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
@@ -263,7 +263,7 @@ module Mrg
           log.debug "modifyConflicts: conflicts => #{conflicts.inspect}"
           
           invalid_conflicts = Parameter.select_invalid(conflicts)
-          fail(42, "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)

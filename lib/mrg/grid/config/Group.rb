@@ -93,7 +93,7 @@ module Mrg
         def setName(name)
           # Print values of input parameters
           log.debug "setName: name => #{name.inspect}"
-          fail(42, "Group name #{name} is taken") if (self.name != name and Group.find_first_by_name(name))
+          fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::GROUP), "Group name #{name} is taken") if (self.name != name and Group.find_first_by_name(name))
           self.name = name
         end
         
@@ -153,7 +153,7 @@ module Mrg
             frow
           end
 
-          fail(42, "Invalid features applied to group #{self.name}:  #{invalid_features.inspect}") if invalid_features != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features applied to group #{self.name}:  #{invalid_features.inspect}") if invalid_features != []
 
           command = command.upcase
 
@@ -172,7 +172,7 @@ module Mrg
             feats.each do |frow|
               GroupFeatures.create(:grp=>self, :feature=>frow)
             end
-          else fail(7, "invalid command #{command}")
+          else fail(Errors.make(Errors::BAD_COMMAND), "Invalid command #{command}")
           end
           
           DirtyElement.dirty_group(self);
@@ -239,7 +239,7 @@ module Mrg
             prow
           end
           
-          fail(42, "Invalid parameters for group #{self.name}:  #{invalid_params.inspect}") if invalid_params != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters for group #{self.name}:  #{invalid_params.inspect}") if invalid_params != []
 
           command = command.upcase
 
@@ -262,7 +262,7 @@ module Mrg
 
               GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn])
             end
-          else fail(7, "invalid command #{command}")
+          else fail(Errors.make(Errors::BAD_COMMAND), "invalid command #{command}")
           end
           
           DirtyElement.dirty_group(self);
