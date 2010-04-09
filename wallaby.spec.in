@@ -12,9 +12,9 @@ Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby(abi) = 1.8
 Requires: ruby
-Requires: ruby-spqr >= 0.2.2
+Requires: ruby-spqr >= 0.2.3
 Requires: ruby-rhubarb
-Requires: ruby-qmf
+Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby
 BuildArch: noarch
 
@@ -26,7 +26,7 @@ Summary: Configuration store utilities
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
-Requires: ruby-qmf
+Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby
 
 %description utils
@@ -37,7 +37,7 @@ Summary: wallaby qmf api methods
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
-Requires: ruby-qmf
+Requires: ruby-qmf >= 0.7.929717
 BuildRequires: ruby
 
 %description -n ruby-wallaby
@@ -106,6 +106,7 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/Store.rb
 %{ruby_sitelib}/mrg/grid/config/Subsystem.rb
 %{ruby_sitelib}/mrg/grid/config/dbmeta.rb
+%{ruby_sitelib}/mrg/grid/config/errors.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/1.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/2.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/3.rb
@@ -115,6 +116,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+* Fri Apr 9 2010 willb <willb@redhat> - 0.3.0-1
+- Updated to source version 0.3.0
 
 * Tue Mar 30 2010 willb <willb@redhat> - 0.2.12-1
 - Updated to source version 0.2.12
