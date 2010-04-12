@@ -73,10 +73,6 @@ op = OptionParser.new do |opts|
   opts.on("-n", "--name NAME", "name for given feature (overrides one specified in the file)") do |nm|
     name = nm
   end
-
-  opts.on("-a", "--all", "show all nodes (default)") do
-    allnodes = true
-  end
 end
 
 begin
