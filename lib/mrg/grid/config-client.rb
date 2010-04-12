@@ -34,6 +34,8 @@ module Mrg
       end
 
       class ClientObj
+        attr_reader :console
+        
         def initialize(qmfo, console=nil)
           @qmfo = qmfo
           @console = console
@@ -189,11 +191,11 @@ module Mrg
         end
         
         def getConflicts
-          @qmfo.getConflicts.conflicts.keys
+          @qmfo.getConflicts.conflicts
         end
 
         def getSubsys
-          @qmfo.getSubsys.subsystems.keys
+          @qmfo.getSubsys.subsystems
         end
 
         def getDepends
@@ -210,7 +212,7 @@ module Mrg
         end
         
         def getParams
-          @qmfo.getParams.params.keys
+          @qmfo.getParams.params
         end
         
         def modifyParams(command, params, options)
@@ -324,7 +326,7 @@ module Mrg
           explain = @qmfo.activateConfiguration.explain
           explain.inject({}) do |acc, (node, node_explain)|
             acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|
-              ne_acc[reason] = ls.keys
+              ne_acc[reason] = ls
               ne_acc
             end
             acc
