@@ -113,9 +113,13 @@ rm -rf %{buildroot}
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
 %{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
+%{ruby_sitelib}/mrg/grid/config/shell/snapshot.rb
 
 
 %changelog
+
+* Mon Apr 12 2010 willb <willb@redhat> - 0.3.1-1
+- Updated to source version 0.3.1
 
 * Fri Apr 9 2010 willb <willb@redhat> - 0.3.0-1
 - Updated to source version 0.3.0
