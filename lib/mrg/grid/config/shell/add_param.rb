@@ -78,8 +78,8 @@ module Mrg
           end
         end
         
-        class addParam < ParamOps
-          Mrg::Grid::Config::Shell::COMMANDS['add-param'] = addParam
+        class AddParam < ParamOps
+          Mrg::Grid::Config::Shell::COMMANDS['add-param'] = AddParam
         end
         
         class ModifyParam < ParamOps
