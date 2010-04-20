@@ -23,6 +23,8 @@ require 'mrg/grid/config'
 
 require 'logger'
 
+USE_PREPARED_STATEMENTS = ENV['WALLABY_USE_PREPARED_STATEMENTS'] && (ENV['WALLABY_USE_PREPARED_STATEMENTS'] == "1")
+
 dbname = ":memory:"
 snapdb = ":memory:"
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
@@ -85,8 +87,8 @@ puts "storing snapshots to #{snapdb}"
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
 DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 
-Rhubarb::Persistence::open(dbname)
-Rhubarb::Persistence::open(snapdb,:snapshot)
+Rhubarb::Persistence::open(dbname,:default,USE_PREPARED_STATEMENTS)
+Rhubarb::Persistence::open(snapdb,:snapshot,USE_PREPARED_STATEMENTS)
 
 Mrg::Grid::Config::MAIN_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:default] }
 Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
