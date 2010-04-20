@@ -13,7 +13,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby(abi) = 1.8
 Requires: ruby
 Requires: ruby-spqr >= 0.2.3
-Requires: ruby-rhubarb
+Requires: ruby-rhubarb >= 0.2.5
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby
 BuildArch: noarch
