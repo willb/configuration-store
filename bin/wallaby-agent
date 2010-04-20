@@ -34,7 +34,7 @@ debug = Logger::WARN
 logoptions = nil
 
 op = OptionParser.new do |opts|
-  opts.banner = "Usage store-agent.rb [options]"
+  opts.banner = "Usage wallaby-agent [options]"
   
   opts.on("-l", "--logfile FILE", "file for wallaby-agent log") do |file|
     logfile = file
