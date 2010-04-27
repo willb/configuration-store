@@ -263,6 +263,9 @@ module Mrg
 
         def addExplicitGroup(name)
           get_object(@qmfo.addExplicitGroup(name).obj, Group)
+
+        def getExplicitGroup(name)
+          get_object(@qmfo.getGroup({"NAME"=>name}).obj, Group)
         end
 
         def removeGroup(uid)

@@ -1,0 +1,3 @@
+[submodule "stress-test/externals/capricious"]
+	path = stress-test/externals/capricious
+	url = git://github.com/willb/capricious.git

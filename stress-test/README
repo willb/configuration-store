@@ -1,0 +1,35 @@
+Basic setup; WALLABYREPO is a shorthand for the directory of your
+wallaby repo checkout.
+
+1.  Make sure that you have capricious installed, either via RubyGems
+(gem install capricious), from source (github.com/willb/capricious/),
+or by ensuring that the git submodule for capricious is checked out.
+
+2.  Run your wallaby agent as usual.  (If you're running under the
+profiler, you will be dramatically limited in the sorts of scale
+testing that you can comfortably do.)
+
+3.  Ensure that ${WALLABYREPO}/lib and ${WALLABYREPO}/stress-test/lib are
+in your ruby path:
+
+export WALLABY_ST_PATH=${WALLABYREPO}/lib:${WALLABYREPO}/stress-test/lib
+
+4.  Run the stress test fixture script (stress-test/bin/wallaby-st-fixture).
+It is mostly self-documenting (note that you'll need "-rrubygems" if
+you're using the gem version of capricious):
+
+ruby -I$WALLABY_ST_PATH -rrubygems ./stress-test/bin/wallaby-st-fixture -h
+
+You can specify the size of your store (and, indirectly, roughly how
+many objects to create) by specifying the parameters of the
+probability distributions from which the numbers of nodes, params,
+features, groups, and subsystems are drawn (as well as the
+"connectedness" of the object graph, viz., the mean number of how many
+groups each node is in, etc.).  I don't claim that the default values
+model anything useful or realistic (just medium-size and reasonably
+complex) and welcome suggestions for improvements.
+
+5.  If you used the -a option to wallaby-st-fixture, the config will
+be validated and activated (which may be expensive but should not time
+out).  Now you can use the standard wallaby tools (wallaby-inventory,
+wallaby-dump, wallaby-restore) to exercise the agent (and QMF).
