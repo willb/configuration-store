@@ -170,7 +170,7 @@ subsystem_names = make_names(subsystemcount, Mrg::Grid::Config::Misc::BogusData:
 
 # make entities
 
-[[node_names, "node", :AddNode], [param_names, "parameter", :AddParam], [feature_names, "feature", :AddFeature], [group_names, "group", :AddExplicitGroup], [subsystem_names, "subsystem", :AddSubsys]].each do |collection, kind, store_msg|
+[[node_names, "node", :addNode], [param_names, "parameter", :addParam], [feature_names, "feature", :addFeature], [group_names, "group", :addExplicitGroup], [subsystem_names, "subsystem", :addSubsys]].each do |collection, kind, store_msg|
   collection.each do |name|
     puts "creating #{kind} #{name}"
     store_client.send(store_msg, name)
@@ -180,24 +180,24 @@ end
 # make relationships
 
 node_names.each do |node_name|
-  node = store_client.GetNode(node_name)
+  node = store_client.getNode(node_name)
   groups = group_names.sort_by{rand}.slice(0, groups_per_node.next.to_i)
   puts "setting groups for #{node_name} to #{groups.inspect}"
-  node.ModifyMemberships("ADD", groups, {})
+  node.modifyMemberships("ADD", groups, {})
 end
 
 features_to_include = feature_names.sort_by {rand}
 
 while features_to_include.size > 0
-  feature = store_client.GetFeature(features_to_include.pop)
-  puts "adding feature dependencies for #{feature.GetName}"
+  feature = store_client.getFeature(features_to_include.pop)
+  puts "adding feature dependencies for #{feature.getName}"
   ifcount = features_per_feature.next.to_i
   break if ifcount > features_to_include.size
   
   included_features = features_to_include.slice(0, features_per_feature.next.to_i)
   included_features.each do |fn|
     begin
-      feature.ModifyFeatures("ADD", [fn], {})
+      feature.modifyFeatures("ADD", [fn], {})
     rescue Object => ex
       puts "warning:  #{ex.inspect}"
     end
@@ -208,11 +208,11 @@ def param_value(param, owner="")
   "#{param.downcase}_#{owner.downcase.sub(" ", "_")}"
 end
 
-{feature_names=>:GetFeature, group_names=>:GetExplicitGroup}.each do |collection, get_msg|
+{feature_names=>:getFeature, group_names=>:getExplicitGroup}.each do |collection, get_msg|
   collection.each do |th|
     thing = store_client.send(get_msg, th)
     puts "adding params for #{th}"
-    paramcount = get_msg == :GetFeature ? params_per_feature.next.to_i : params_per_group.next.to_i
+    paramcount = get_msg == :getFeature ? params_per_feature.next.to_i : params_per_group.next.to_i
     rands = []
     while rands.size < paramcount
       (paramcount - rands.size).times do
@@ -220,12 +220,12 @@ end
       end
     end
     
-    thing.ModifyParams("ADD", Hash[*rands.zip(rands.map{|r| param_value(r, th)}).flatten], {})
+    thing.modifyParams("ADD", Hash[*rands.zip(rands.map{|r| param_value(r, th)}).flatten], {})
   end
 end
 
 if activate
-  explain = store_client.ActivateConfig
+  explain = store_client.activateConfig
   if explain != {}
     puts "Failed to activate configuration; please correct the following errors."
     explain.each do |node, node_explain|
