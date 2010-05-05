@@ -20,7 +20,7 @@ require 'rhubarb/rhubarb'
 module Mrg
   module Grid
     module Config
-      class Configuration
+      class ConfigVersion
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
@@ -29,96 +29,35 @@ module Mrg
         ### Property method declarations
         # property uid uint32 
 
-        declare_column :uid, :integer, :not_null
+        declare_column :uid, :integer, :not_null, :primary_key
         declare_index_on :uid
         
-        qmf_property :uid, :uint32, :index=>true
-        ### Schema method declarations
-        
-        # getVersion 
-        # * version (uint32/O)
-        def getVersion()
-          # Assign values to output parameters
-          version ||= 0
-          # Return value
-          return version
+        declare_column :version, :integer
+        qmf_property :version, :uint64, :index=>true
+
+        def [](node)
+          getNodeConfig(node, false)
         end
         
-        expose :getVersion do |args|
-          args.declare :version, :uint32, :out, {}
+        def []=(node, config)
+          setNodeConfig(node, config, false)
+        end
+
+        def getNodeConfig(node, dofail=true)
+          
         end
         
-        # getFeatures 
-        # * list (map/O)
-        #   A set of features defined in this configuration
-        def getFeatures()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+        def setNodeConfig(node, config, dofail=true)
+          
         end
+      end
+      
+      class VersionedNodeConfig
+        include ::Rhubarb::Persisting
         
-        expose :getFeatures do |args|
-          args.declare :features, :map, :out, {}
-        end
-        
-        # getCustomParams 
-        # * params (map/O)
-        #   A map(paramName, value) of parameter/value pairs for a configuration
-        def getCustomParams()
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
-        end
-        
-        expose :getCustomParams do |args|
-          args.declare :params, :map, :out, {}
-        end
-        
-        # modifyCustomParams 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * params (map/I)
-        #   map(groupId, map(param, value))
-        def modifyCustomParams(command,params)
-          # Print values of input parameters
-          log.debug "modifyCustomParams: command => #{command.inspect}"
-          log.debug "modifyCustomParams: params => #{params.inspect}"
-        end
-        
-        expose :modifyCustomParams do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :params, :map, :in, {}
-        end
-        
-        # getDefaultFeatures 
-        # * features (map/O)
-        def getDefaultFeatures()
-          # Assign values to output parameters
-          features ||= {}
-          # Return value
-          return features
-        end
-        
-        expose :getDefaultFeatures do |args|
-          args.declare :features, :map, :out, {}
-        end
-        
-        # modifyDefaultFeatures 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * features (map/I)
-        def modifyDefaultFeatures(command,features)
-          # Print values of input parameters
-          log.debug "modifyDefaultFeatures: command => #{command.inspect}"
-          log.debug "modifyDefaultFeatures: features => #{features.inspect}"
-        end
-        
-        expose :modifyDefaultFeatures do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :features, :map, :in, {}
-        end
+        declare_column :version, :integer, references(ConfigVersion)
+        declare_column :node, :string
+        declare_column :config, :object
       end
     end
   end
