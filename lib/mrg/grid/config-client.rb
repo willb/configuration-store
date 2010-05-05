@@ -32,7 +32,7 @@ module Mrg
           klass ? klass.new(obj, @console) : obj
         end
       end
-
+      
       class ClientObj
         attr_reader :console
         
@@ -46,7 +46,7 @@ module Mrg
           @qmfo.send(*callargs)
         end
       end
-
+      
       class Group < ClientObj
         def getMembership
           @qmfo.getMembership.nodes
@@ -148,7 +148,7 @@ module Mrg
         private
         include ObjResolver
       end
-
+      
       class Feature < ClientObj
         def getName
           @qmfo.getName.name
@@ -260,9 +260,10 @@ module Mrg
         def getGroup(query)
           get_object(@qmfo.getGroup(query).obj, Group)
         end
-
+        
         def addExplicitGroup(name)
           get_object(@qmfo.addExplicitGroup(name).obj, Group)
+        end
 
         def getExplicitGroup(name)
           get_object(@qmfo.getGroup({"NAME"=>name}).obj, Group)
@@ -340,7 +341,6 @@ module Mrg
         include ObjResolver
 
       end
-
     end
   end
 end
