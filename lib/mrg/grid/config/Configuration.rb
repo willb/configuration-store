@@ -44,19 +44,58 @@ module Mrg
         end
 
         def getNodeConfig(node, dofail=true)
-          
+          node_obj = VersionedNode[node]
+          VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
+            acc[row.param.name] = row.val
+            acc
+          end
         end
         
         def setNodeConfig(node, config, dofail=true)
-          
+          node_obj = VersionedNode[node]
+          config.each do |param,value|
+            param_obj = VersionedParam[node]
+            VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
+          end
         end
       end
       
-      class VersionedNodeConfig
+      class VersionedNode
+        include ::Rhubarb::Persisting
+        
+        declare_column :name, :string
+        
+        def self[](nm)
+          find_first_by_name(nm) || create(:name=>nm)
+        end
+      end
+      
+      class VersionedParam
+        include ::Rhubarb::Persisting
+        
+        declare_column :name, :string
+        
+        def self[](nm)
+          find_first_by_name(nm) || create(:name=>nm)
+        end
+      end
+      
+      # (mostly-)normalized model of versioned config
+      class VersionedNodeParamMapping
         include ::Rhubarb::Persisting
         
         declare_column :version, :integer, references(ConfigVersion)
-        declare_column :node, :string
+        declare_column :node, :integer, references(VersionedNode)
+        declare_column :param, :integer, references(VersionedParam)
+        declare_column :val, :string
+      end
+      
+      # "serialized object"
+      class VersionedNodeConfig
+        include ::Rhubarb::Persisting
+        
+        declare_column :node, :integer, references(VersionedNode)
+        # config should be a hash of name->value pairs
         declare_column :config, :object
       end
     end
