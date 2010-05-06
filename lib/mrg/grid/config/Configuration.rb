@@ -24,6 +24,30 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
+        STORAGE_PLAN = :normalized
+
+        module NormalizedVersionedConfigLookup
+          def internal_get_node_config(node)
+            node_obj = VersionedNode[node]
+            VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
+              acc[row.param.name] = row.val
+              acc
+            end
+          end
+            
+          def internal_set_node_config(node, config)
+            node_obj = VersionedNode[node]
+            config.each do |param,value|
+              param_obj = VersionedParam[node]
+              VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
+            end
+          end
+        end
+
+        module SerializedVersionedConfigLookup
+          
+        end
+
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Configuration'
         ### Property method declarations
@@ -35,6 +59,10 @@ module Mrg
         declare_column :version, :integer
         qmf_property :version, :uint64, :index=>true
 
+        def self.[](version)
+          find_first_by(:version=>version) || create(:version=>version)
+        end
+
         def [](node)
           getNodeConfig(node, false)
         end
@@ -44,19 +72,18 @@ module Mrg
         end
 
         def getNodeConfig(node, dofail=true)
-          node_obj = VersionedNode[node]
-          VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
-            acc[row.param.name] = row.val
-            acc
-          end
+          internal_get_node_config(node)
         end
         
         def setNodeConfig(node, config, dofail=true)
-          node_obj = VersionedNode[node]
-          config.each do |param,value|
-            param_obj = VersionedParam[node]
-            VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
-          end
+          internal_set_node_config(node, config)
+        end
+        
+        private
+        
+        case STORAGE_PLAN
+        when :normalized include NormalizedVersionedConfigLookup
+        when :serialized include SerializedVersionedConfigLookup
         end
       end
       
@@ -65,7 +92,7 @@ module Mrg
         
         declare_column :name, :string
         
-        def self[](nm)
+        def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
       end
@@ -75,7 +102,7 @@ module Mrg
         
         declare_column :name, :string
         
-        def self[](nm)
+        def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
       end
@@ -90,7 +117,7 @@ module Mrg
         declare_column :val, :string
       end
       
-      # "serialized object"
+      # "serialized object" model of versioned config
       class VersionedNodeConfig
         include ::Rhubarb::Persisting
         
