@@ -45,7 +45,16 @@ module Mrg
         end
 
         module SerializedVersionedConfigLookup
-          
+          def internal_get_node_config(node)
+            node_obj = VersionedNode[node]
+            cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
+            (cnfo && cnfo.config) || {}
+          end
+            
+          def internal_set_node_config(node, config)
+            node_obj = VersionedNode[node]
+            VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+          end          
         end
 
         qmf_package_name 'mrg.grid.config'
@@ -115,6 +124,10 @@ module Mrg
         declare_column :node, :integer, references(VersionedNode)
         declare_column :param, :integer, references(VersionedParam)
         declare_column :val, :string
+
+        declare_index_on :node
+        declare_index_on :version
+
       end
       
       # "serialized object" model of versioned config
@@ -122,6 +135,11 @@ module Mrg
         include ::Rhubarb::Persisting
         
         declare_column :node, :integer, references(VersionedNode)
+        declare_column :version, :integer, references(ConfigVersion)
+        
+        declare_index_on :node
+        declare_index_on :version
+
         # config should be a hash of name->value pairs
         declare_column :config, :object
       end
