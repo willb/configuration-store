@@ -17,6 +17,10 @@
 module Mrg
   module Grid
     module Config
+      # forward declaration
+      class ConfigVersions
+      end
+      
       module ConfigValidating
         
         BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
@@ -36,8 +40,17 @@ module Mrg
         #  that a group does not enable conflicting features).  Returns true if the
         #  configuration is valid, or an explanation if it is not.
         
-        def validate
+        def validate(options=nil)
+          options ||= {}
+          save_for_version = options[:save_for_version]
+          
           my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
+          
+          if save_for_version
+            cv = ConfigVersion[save_for_version]
+            cv[self.name] = my_config
+          end
+            
           classname = self.class.name.split("::")[-1]
           log.debug "in #{classname}#validate for #{self.name}..."
           
