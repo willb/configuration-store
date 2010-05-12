@@ -483,8 +483,21 @@ module Mrg
           app.agent.register_class(event_class)
           event_class
         end
-        
+
         def validate_and_activate(validate_only=false)
+          result = nil
+          unless ::Rhubarb::Persistence::db.transaction_active?
+            ::Rhubarb::Persistence::db.transaction do |the_db|
+              result = _validate_and_activate(validate_only)
+            end
+          else
+            result = _validate_and_activate(validate_only)
+          end
+          
+          result
+        end
+        
+        def _validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
           default_group_only = (dirty_nodes.size == 0)
