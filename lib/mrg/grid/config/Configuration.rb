@@ -24,52 +24,79 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = :normalized
+        STORAGE_PLAN = :serialized
 
         module NormalizedVersionedConfigLookup
-          def internal_get_node_config(node)
-            node_obj = VersionedNode[node]
-            VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
-              acc[row.param.name] = row.val
-              acc
+          module ClassMethods
+            def getVersionedNodeConfig(node, ver=nil)
+              VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>node}, :group_by=>[:node], :version=>ver).inject({}) do |acc, row|
+                acc[row.param.name] = row.val
+                acc
+              end
             end
           end
-            
-          def internal_set_node_config(node, config)
-            node_obj = VersionedNode[node]
-            config.each do |param,value|
-              param_obj = VersionedParam[node]
-              VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
+
+          module InstanceMethods          
+            def internal_get_node_config(node)
+              node_obj = VersionedNode[node]
+              VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
+                acc[row.param.name] = row.val
+                acc
+              end
             end
+
+            def internal_set_node_config(node, config)
+              node_obj = VersionedNode[node]
+              config.each do |param,value|
+                param_obj = VersionedParam[param]
+                vnpm = VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
+          #              vnpm.send(:update, :created, self.version)
+              end
+            end
+          end
+
+          def self.included(receiver)
+            receiver.extend         ClassMethods
+            receiver.send :include, InstanceMethods
           end
         end
 
         module SerializedVersionedConfigLookup
-          def internal_get_node_config(node)
-            node_obj = VersionedNode[node]
-            cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
-            (cnfo && cnfo.config) || {}
+          module ClassMethods
+            def getVersionedNodeConfig(node, ver=nil)
+              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>node}, :group_by=>[:node], :version=>ver)
+              vnc.size == 0 ? {} : vnc[0].config
+            end
           end
-            
-          def internal_set_node_config(node, config)
-            node_obj = VersionedNode[node]
-            VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
-          end          
+
+          module InstanceMethods
+           def internal_get_node_config(node)
+             node_obj = VersionedNode[node]
+             cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
+             (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
+           end
+          
+           def internal_set_node_config(node, config)
+             node_obj = VersionedNode[node]
+             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+             # vnc.send(:update, :created, self.version)
+           end
+          end
+
+          def self.included(receiver)
+            receiver.extend         ClassMethods
+            receiver.send :include, InstanceMethods
+          end
         end
 
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Configuration'
-        ### Property method declarations
-        # property uid uint32 
-
-        declare_column :uid, :integer, :not_null, :primary_key
-        declare_index_on :uid
         
         declare_column :version, :integer
         qmf_property :version, :uint64, :index=>true
 
         def self.[](version)
-          find_first_by(:version=>version) || create(:version=>version)
+          find_first_by_version(version) || create(:version=>version)
         end
 
         def [](node)
@@ -91,8 +118,8 @@ module Mrg
         private
         
         case STORAGE_PLAN
-        when :normalized include NormalizedVersionedConfigLookup
-        when :serialized include SerializedVersionedConfigLookup
+        when :normalized then include NormalizedVersionedConfigLookup
+        when :serialized then include SerializedVersionedConfigLookup
         end
       end
       
@@ -121,12 +148,20 @@ module Mrg
         include ::Rhubarb::Persisting
         
         declare_column :version, :integer, references(ConfigVersion)
-        declare_column :node, :integer, references(VersionedNode)
-        declare_column :param, :integer, references(VersionedParam)
+        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
+        declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
         declare_column :val, :string
 
         declare_index_on :node
         declare_index_on :version
+        
+        alias :rhubarb_initialize :initialize
+        
+        def initialize(tup)
+          rhubarb_initialize(tup)
+          update(:created, self.version.version)
+          self
+        end
 
       end
       
@@ -134,14 +169,23 @@ module Mrg
       class VersionedNodeConfig
         include ::Rhubarb::Persisting
         
-        declare_column :node, :integer, references(VersionedNode)
         declare_column :version, :integer, references(ConfigVersion)
+        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
         
         declare_index_on :node
         declare_index_on :version
 
         # config should be a hash of name->value pairs
         declare_column :config, :object
+
+        alias :rhubarb_initialize :initialize
+        
+        def initialize(tup)
+          rhubarb_initialize(tup)
+          update(:created, self.version.version)
+          self
+        end
+
       end
     end
   end
