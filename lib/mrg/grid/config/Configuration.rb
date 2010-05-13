@@ -29,7 +29,7 @@ module Mrg
         module NormalizedVersionedConfigLookup
           module ClassMethods
             def getVersionedNodeConfig(node, ver=nil)
-              VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>node}, :group_by=>[:node], :version=>ver).inject({}) do |acc, row|
+              VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver).inject({}) do |acc, row|
                 acc[row.param.name] = row.val
                 acc
               end
@@ -64,7 +64,7 @@ module Mrg
         module SerializedVersionedConfigLookup
           module ClassMethods
             def getVersionedNodeConfig(node, ver=nil)
-              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>node}, :group_by=>[:node], :version=>ver)
+              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc.size == 0 ? {} : vnc[0].config
             end
           end
