@@ -20,105 +20,172 @@ require 'rhubarb/rhubarb'
 module Mrg
   module Grid
     module Config
-      class Configuration
+      class ConfigVersion
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
+        STORAGE_PLAN = :serialized
+
+        module NormalizedVersionedConfigLookup
+          module ClassMethods
+            def getVersionedNodeConfig(node, ver=nil)
+              VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver).inject({}) do |acc, row|
+                acc[row.param.name] = row.val
+                acc
+              end
+            end
+          end
+
+          module InstanceMethods          
+            def internal_get_node_config(node)
+              node_obj = VersionedNode[node]
+              VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
+                acc[row.param.name] = row.val
+                acc
+              end
+            end
+
+            def internal_set_node_config(node, config)
+              node_obj = VersionedNode[node]
+              config.each do |param,value|
+                param_obj = VersionedParam[param]
+                vnpm = VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
+          #              vnpm.send(:update, :created, self.version)
+              end
+            end
+          end
+
+          def self.included(receiver)
+            receiver.extend         ClassMethods
+            receiver.send :include, InstanceMethods
+          end
+        end
+
+        module SerializedVersionedConfigLookup
+          module ClassMethods
+            def getVersionedNodeConfig(node, ver=nil)
+              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
+              vnc.size == 0 ? {} : vnc[0].config
+            end
+          end
+
+          module InstanceMethods
+           def internal_get_node_config(node)
+             node_obj = VersionedNode[node]
+             cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
+             (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
+           end
+          
+           def internal_set_node_config(node, config)
+             node_obj = VersionedNode[node]
+             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+             # vnc.send(:update, :created, self.version)
+           end
+          end
+
+          def self.included(receiver)
+            receiver.extend         ClassMethods
+            receiver.send :include, InstanceMethods
+          end
+        end
+
         qmf_package_name 'mrg.grid.config'
         qmf_class_name 'Configuration'
-        ### Property method declarations
-        # property uid uint32 
+        
+        declare_column :version, :integer
+        qmf_property :version, :uint64, :index=>true
 
-        declare_column :uid, :integer, :not_null
-        declare_index_on :uid
-        
-        qmf_property :uid, :uint32, :index=>true
-        ### Schema method declarations
-        
-        # getVersion 
-        # * version (uint32/O)
-        def getVersion()
-          # Assign values to output parameters
-          version ||= 0
-          # Return value
-          return version
+        def self.[](version)
+          find_first_by_version(version) || create(:version=>version)
+        end
+
+        def [](node)
+          getNodeConfig(node, false)
         end
         
-        expose :getVersion do |args|
-          args.declare :version, :uint32, :out, {}
+        def []=(node, config)
+          setNodeConfig(node, config, false)
+        end
+
+        def getNodeConfig(node, dofail=true)
+          internal_get_node_config(node)
         end
         
-        # getFeatures 
-        # * list (map/O)
-        #   A set of features defined in this configuration
-        def getFeatures()
-          # Assign values to output parameters
-          list ||= {}
-          # Return value
-          return list
+        def setNodeConfig(node, config, dofail=true)
+          internal_set_node_config(node, config)
         end
         
-        expose :getFeatures do |args|
-          args.declare :features, :map, :out, {}
-        end
+        private
         
-        # getCustomParams 
-        # * params (map/O)
-        #   A map(paramName, value) of parameter/value pairs for a configuration
-        def getCustomParams()
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
+        case STORAGE_PLAN
+        when :normalized then include NormalizedVersionedConfigLookup
+        when :serialized then include SerializedVersionedConfigLookup
         end
+      end
+      
+      class VersionedNode
+        include ::Rhubarb::Persisting
         
-        expose :getCustomParams do |args|
-          args.declare :params, :map, :out, {}
-        end
+        declare_column :name, :string
         
-        # modifyCustomParams 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * params (map/I)
-        #   map(groupId, map(param, value))
-        def modifyCustomParams(command,params)
-          # Print values of input parameters
-          log.debug "modifyCustomParams: command => #{command.inspect}"
-          log.debug "modifyCustomParams: params => #{params.inspect}"
+        def self.[](nm)
+          find_first_by_name(nm) || create(:name=>nm)
         end
+      end
+      
+      class VersionedParam
+        include ::Rhubarb::Persisting
         
-        expose :modifyCustomParams do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :params, :map, :in, {}
-        end
+        declare_column :name, :string
         
-        # getDefaultFeatures 
-        # * features (map/O)
-        def getDefaultFeatures()
-          # Assign values to output parameters
-          features ||= {}
-          # Return value
-          return features
+        def self.[](nm)
+          find_first_by_name(nm) || create(:name=>nm)
         end
+      end
+      
+      # (mostly-)normalized model of versioned config
+      class VersionedNodeParamMapping
+        include ::Rhubarb::Persisting
         
-        expose :getDefaultFeatures do |args|
-          args.declare :features, :map, :out, {}
-        end
+        declare_column :version, :integer, references(ConfigVersion)
+        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
+        declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
+        declare_column :val, :string
+
+        declare_index_on :node
+        declare_index_on :version
         
-        # modifyDefaultFeatures 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * features (map/I)
-        def modifyDefaultFeatures(command,features)
-          # Print values of input parameters
-          log.debug "modifyDefaultFeatures: command => #{command.inspect}"
-          log.debug "modifyDefaultFeatures: features => #{features.inspect}"
-        end
+        alias :rhubarb_initialize :initialize
         
-        expose :modifyDefaultFeatures do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :features, :map, :in, {}
+        def initialize(tup)
+          rhubarb_initialize(tup)
+          update(:created, self.version.version)
+          self
         end
+
+      end
+      
+      # "serialized object" model of versioned config
+      class VersionedNodeConfig
+        include ::Rhubarb::Persisting
+        
+        declare_column :version, :integer, references(ConfigVersion)
+        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
+        
+        declare_index_on :node
+        declare_index_on :version
+
+        # config should be a hash of name->value pairs
+        declare_column :config, :object
+
+        alias :rhubarb_initialize :initialize
+        
+        def initialize(tup)
+          rhubarb_initialize(tup)
+          update(:created, self.version.version)
+          self
+        end
+
       end
     end
   end

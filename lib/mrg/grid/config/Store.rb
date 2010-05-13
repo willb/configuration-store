@@ -509,9 +509,12 @@ module Mrg
             warnings << "No nodes in configuration; only tested default group"
           end
           
-          results = Hash[*dirty_nodes.map {|node| node.validate}.reject {|result| result == true}.flatten]
+          options = (validate_only || default_group_only) ? nil : {:save_for_version=>this_version}
+          
+          results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || default_group_only || results.keys.size > 0
+            ConfigVersion[this_version].delete
             return [results, warnings]
           end
                     

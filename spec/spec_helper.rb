@@ -19,7 +19,7 @@ include Mrg::Grid::Config
 def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
-  classes = kwargs[:classes] || MAIN_DB_TABLES
+  classes = kwargs[:classes] || (MAIN_DB_TABLES + SNAP_DB_TABLES)
 
   Rhubarb::Persistence::open(dbname)
   classes.each {|cl| cl.create_table}
