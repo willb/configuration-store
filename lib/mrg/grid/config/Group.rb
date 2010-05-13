@@ -70,7 +70,7 @@ module Mrg
         end
         
         expose :getMembership do |args|
-          args.declare :nodes, :list, :out, {}
+          args.declare :nodes, :list, :out, "A list of node names from the nodes that are members of this group."
         end
         
         # getName 
@@ -84,7 +84,7 @@ module Mrg
         end
         
         expose :getName do |args|
-          args.declare :name, :sstr, :out, {}
+          args.declare :name, :sstr, :out, "This group's name."
         end
         
         # setName 
@@ -97,7 +97,7 @@ module Mrg
         end
         
         expose :setName do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "A new name for this group; it must not be in use by another group."
         end
         
         # getFeatures 
@@ -109,7 +109,7 @@ module Mrg
         end
         
         expose :getFeatures do |args|
-          args.declare :features, :list, :out, {}
+          args.declare :features, :list, :out, "A list of features to be applied to this group, from highest to lowest priority."
         end
         
         def clearParams
@@ -119,7 +119,7 @@ module Mrg
         end
         
         expose :clearParams do |args|
-          args.declare :ret, :int, :out, {}
+          args.declare :ret, :int, :out, "0 if successful."
         end
         
         def clearFeatures
@@ -129,7 +129,7 @@ module Mrg
         end
         
         expose :clearFeatures do |args|
-          args.declare :ret, :int, :out, {}
+          args.declare :ret, :int, :out, "0 if successful."
         end
         
         # modifyFeatures 
@@ -176,18 +176,13 @@ module Mrg
           
           DirtyElement.dirty_group(self);
           
-          # FIXME:  not implemented from here on out
-          # Assign values to output parameters
-          params ||= {}
-          # Return value
-          return params
+          nil
         end
         
         expose :modifyFeatures do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :features, :list, :in, {}
-          args.declare :options, :map, :in, {}
-          args.declare :params, :map, :out, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :features, :list, :in, "A list of features to apply to this group, in order of decreasing priority."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         def addFeature(f)
@@ -217,7 +212,7 @@ module Mrg
         end
         
         expose :getParams do |args|
-          args.declare :params, :map, :out, {}
+          args.declare :params, :map, :out, "A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)"
         end
         
         # modifyParams 
@@ -268,9 +263,9 @@ module Mrg
         end
         
         expose :modifyParams do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :params, :map, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :params, :map, :in, "A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)"
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         def apply_to(config, ss_prepend="")
@@ -306,7 +301,7 @@ module Mrg
         end
         
         expose :getConfig do |args|
-          args.declare :config, :map, :out, {}
+          args.declare :config, :map, :out, "Parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings."
         end
         
         def features

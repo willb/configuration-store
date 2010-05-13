@@ -82,10 +82,10 @@ module Mrg
 
         ### Schema method declarations
         
-        [:MakeProvisioned, :MakeUnprovisioned].each do |name|
+        [:makeProvisioned, :makeUnprovisioned].each do |name|
           define_method name do
             log.debug "#{name} called on #{self}"
-            self.provisioned = (name == :MakeProvisioned)
+            self.provisioned = (name == :makeProvisioned)
             # NB: these don't change the dirty status of this node
           end
           
@@ -98,20 +98,6 @@ module Mrg
         end
         
         expose :checkin do |args|
-        end
-        
-        # getLastCheckinTime 
-        # * time (uint32/O)
-        def getLastCheckinTime()
-          log.debug "getLastCheckinTime called on node #{self.inspect}"
-          # Assign values to output parameters
-          self.last_checkin ||= 0
-          # Return value
-          return self.last_checkin
-        end
-        
-        expose :getLastCheckinTime do |args|
-          args.declare :time, :uint64, :out, {}
         end
         
         # getConfig 
@@ -127,8 +113,8 @@ module Mrg
         end
         
         expose :getConfig do |args|
-          args.declare :options, :map, :in, {}
-          args.declare :config, :map, :out, {}
+          args.declare :options, :map, :in, "Valid options include 'version', which maps to a version number.  If this is supplied, return the latest version not newer than 'version'."
+          args.declare :config, :map, :out, "A map from parameter names to values representing the configuration for this node."
         end
         
         def getCurrentConfig
@@ -175,7 +161,7 @@ module Mrg
         end
 
         expose :getIdentityGroup do |args|
-          args.declare :group, :objId, :out, {}
+          args.declare :group, :objId, :out, "The object ID of this node's identity group."
         end
         
         # modifyMemberships
@@ -228,9 +214,9 @@ module Mrg
         end
         
         expose :modifyMemberships do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :groups, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :groups, :list, :in, "A list of groups, in inverse priority order (most important first)."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         # getMemberships 
@@ -242,7 +228,7 @@ module Mrg
         end
         
         expose :getMemberships do |args|
-          args.declare :groups, :list, :out, {}
+          args.declare :groups, :list, :out, "A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group."
         end
         
         def Node.get_dirty_nodes

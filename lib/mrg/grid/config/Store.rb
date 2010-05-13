@@ -47,7 +47,7 @@ module Mrg
         end
         
         expose :getDefaultGroup do |args|
-          args.declare :obj, :objId, :out, {}
+          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the default group."
         end
         
         # getGroup 
@@ -74,8 +74,8 @@ module Mrg
         end
         
         expose :getGroup do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :query, :map, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the requested group."
+          args.declare :query, :map, :in, "A map from a query type to a query parameter. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID supplied as a parameter. 'Name' queryTypes will search for a group with the name supplied as a parameter."
         end
 
         def getGroupByName(name)
@@ -83,8 +83,8 @@ module Mrg
         end
         
         expose :getGroupByName do |args|
-          args.declare :name, :sstr, :in, {}
-          args.declare :obj, :objId, :out, {}
+          args.declare :name, :sstr, :in, "The name of the group to search for."
+          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the requested group."
         end
         
         # addExplicitGroup 
@@ -99,8 +99,8 @@ module Mrg
         end
         
         expose :addExplicitGroup do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the newly-created group."
+          args.declare :name, :sstr, :in, "The name of the newly-created group.  Names beginning with '+++' are reserved for internal use."
         end
         
         # removeGroup 
@@ -114,7 +114,7 @@ module Mrg
         end
         
         expose :removeGroup do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "The name of the group to remove."
         end
         
         # getFeature 
@@ -131,8 +131,8 @@ module Mrg
         end
         
         expose :getFeature do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the Feature object corresponding to the requested feature."
+          args.declare :name, :sstr, :in, "The name of the feature to search for."
         end
         
         # addFeature 
@@ -146,8 +146,8 @@ module Mrg
         end
         
         expose :addFeature do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the newly-created Feature object."
+          args.declare :name, :sstr, :in, "The name of the feature to create."
         end
         
         # removeFeature 
@@ -163,7 +163,7 @@ module Mrg
         end
         
         expose :removeFeature do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "The name of the feature to remove."
         end
         
         # activateConfiguration 
@@ -178,8 +178,8 @@ module Mrg
         end
         
         expose :activateConfiguration do |args|
-          args.declare :explain, :map, :out, {}
-          args.declare :warnings, :list, :out, {}
+          args.declare :explain, :map, :out, "A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated."
+          args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
         end
         
         def validateConfiguration
@@ -187,8 +187,8 @@ module Mrg
         end
         
         expose :validateConfiguration do |args|
-          args.declare :explain, :map, :out, {}
-          args.declare :warnings, :list, :out, {}
+          args.declare :explain, :map, :out, "A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated."
+          args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
         end
         
         # addNode 
@@ -217,8 +217,8 @@ module Mrg
         end
         
         expose :addNode do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the newly-created Node object."
+          args.declare :name, :sstr, :in, "The name of the node to create."
         end
 
         # getNode 
@@ -241,8 +241,8 @@ module Mrg
         end
         
         expose :getNode do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the retrieved Node object."
+          args.declare :name, :sstr, :in, "The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name."
         end
         
         # removeNode 
@@ -263,7 +263,7 @@ module Mrg
         end
         
         expose :removeNode do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "The name of the node to remove."
         end
         
         # getParam 
@@ -281,8 +281,8 @@ module Mrg
         end
         
         expose :getParam do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the requested Parameter object."
+          args.declare :name, :sstr, :in, "The name of the parameter to find."
         end
         
         # addParam 
@@ -298,8 +298,8 @@ module Mrg
         end
         
         expose :addParam do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the newly-created Parameter object."
+          args.declare :name, :sstr, :in, "The name of the parameter to create."
         end
         
         # getSubsys 
@@ -314,8 +314,8 @@ module Mrg
         end
 
         expose :getSubsys do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the requested Subsystem object."
+          args.declare :name, :sstr, :in, "The name of the subsystem to find."
         end
 
         # addSubsys 
@@ -331,8 +331,8 @@ module Mrg
         end
 
         expose :addSubsys do |args|
-          args.declare :obj, :objId, :out, {}
-          args.declare :name, :sstr, :in, {}
+          args.declare :obj, :objId, :out, "The object ID of the newly-created Subsystem object."
+          args.declare :name, :sstr, :in, "The name of the subsystem to create."
         end
         
         
@@ -349,7 +349,7 @@ module Mrg
         end
         
         expose :removeParam do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "The name of the parameter to remove."
         end
 
         # removeSubsys 
@@ -361,7 +361,7 @@ module Mrg
         end
 
         expose :removeSubsys do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "The name of the subsystem to remove."
         end
         
         def storeinit(kwargs=nil)
@@ -375,7 +375,7 @@ module Mrg
         end
         
         expose :storeinit do |args|
-          args.declare :options, :map, :in, {}
+          args.declare :options, :map, :in, "Setting 'RESETDB' will reset the configuration database."
         end
         
         # <method name="makeSnapshot">
@@ -394,7 +394,7 @@ module Mrg
         end
         
         expose :makeSnapshot do |args|
-          args.declare :name, :sstr, :in, :desc=>"A name for this configuration.  A blank name will result in the store creating a name"
+          args.declare :name, :sstr, :in, "A name for this configuration.  A blank name will result in the store creating a name"
         end
         
         def loadSnapshot(name)
@@ -414,7 +414,7 @@ module Mrg
         end
         
         expose :loadSnapshot do |args|
-          args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
+          args.declare :name, :sstr, :in, "A name for the snapshot to load."
         end
         
         def removeSnapshot(name)
@@ -422,7 +422,7 @@ module Mrg
         end
         
         expose :removeSnapshot do |args|
-          args.declare :name, :sstr, :in, :desc=>"A name for the configuration to load."
+          args.declare :name, :sstr, :in, "A name for the snapshot to remove."
         end
 
         def getMustChangeParams
@@ -430,7 +430,7 @@ module Mrg
         end
         
         expose :getMustChangeParams do |args|
-          args.declare :params, :map, :out, :desc=>"Parameters that must change; a map from names to default values"
+          args.declare :params, :map, :out, "Parameters that must change; a map from names to default values"
         end
         
         [Feature, Group, Node, Parameter, Subsystem].each do |klass|
@@ -441,8 +441,8 @@ module Mrg
           end
           
           expose "check#{klass.name.split("::").pop}Validity".to_sym do |args|
-            args.declare :set, :list, :in, :desc=>"A set of #{klass.name} names to check for validity"
-            args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :list, :out, :desc=>"A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
+            args.declare :set, :list, :in, "A set of #{klass.name} names to check for validity"
+            args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :list, :out, "A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
           end
         end
         
@@ -483,21 +483,8 @@ module Mrg
           app.agent.register_class(event_class)
           event_class
         end
-
-        def validate_and_activate(validate_only=false)
-          result = nil
-          unless ::Rhubarb::Persistence::db.transaction_active?
-            ::Rhubarb::Persistence::db.transaction do |the_db|
-              result = _validate_and_activate(validate_only)
-            end
-          else
-            result = _validate_and_activate(validate_only)
-          end
-          
-          result
-        end
         
-        def _validate_and_activate(validate_only=false)
+        def validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
           default_group_only = (dirty_nodes.size == 0)

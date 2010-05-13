@@ -59,7 +59,7 @@ module Mrg
         end
         
         expose :getName do |args|
-          args.declare :name, :sstr, :out, {}
+          args.declare :name, :sstr, :out, "This feature's name."
         end
         
         # setName 
@@ -72,7 +72,7 @@ module Mrg
         end
         
         expose :setName do |args|
-          args.declare :name, :sstr, :in, {}
+          args.declare :name, :sstr, :in, "A new name for this feature; this name must not already be in use by another feature."
         end
         
         # getFeatures 
@@ -84,7 +84,7 @@ module Mrg
         end
         
         expose :getFeatures do |args|
-          args.declare :features, :list, :out, {}
+          args.declare :features, :list, :out, "A list, in priority order, of the names of features that this feature includes (that is, extends)."
         end
         
         # modifyFeatures 
@@ -108,9 +108,9 @@ module Mrg
         end
         
         expose :modifyFeatures do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :features, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :features, :list, :in, "A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE)."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         # getParams 
@@ -122,7 +122,7 @@ module Mrg
         end
         
         expose :getParams do |args|
-          args.declare :params, :map, :out, {}
+          args.declare :params, :map, :out, "A map from parameter names to their values as set in this feature"
         end
 
         # getParams 
@@ -134,7 +134,7 @@ module Mrg
         end
         
         expose :getParamMeta do |args|
-          args.declare :param_info, :map, :out, {}
+          args.declare :param_info, :map, :out, "A map from parameter names used in this feature to maps of metadata about those params"
         end
         
         def clearParams
@@ -145,7 +145,7 @@ module Mrg
         end
         
         expose :clearParams do |args|
-          args.declare :ret, :int, :out, {}
+          args.declare :ret, :int, :out, "0 if successful."
         end
         
         # modifyParams 
@@ -201,9 +201,9 @@ module Mrg
         end
         
         expose :modifyParams do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :params, :map, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :params, :map, :in, "A map from parameter names to their corresponding values, as strings, for this feature.  To use the default value for a parameter, give it the value 0 (as an int)."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         # getConflicts 
@@ -215,7 +215,7 @@ module Mrg
         end
         
         expose :getConflicts do |args|
-          args.declare :conflicts, :list, :out, {}
+          args.declare :conflicts, :list, :out, "A list representing the set of features that this one conflicts with."
         end
         
         # modifyConflicts 
@@ -238,9 +238,9 @@ module Mrg
         end
         
         expose :modifyConflicts do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :conflicts, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :conflicts, :list, :in, "A set of other feature names that conflict with the feature"
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         # getDepends 
@@ -252,7 +252,7 @@ module Mrg
         end
         
         expose :getDepends do |args|
-          args.declare :depends, :list, :out, {}
+          args.declare :depends, :list, :out, "A list of other features that this feature depends on for proper operation, in priority order."
         end
         
         # modifyDepends 
@@ -275,9 +275,9 @@ module Mrg
         end
         
         expose :modifyDepends do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :depends, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :depends, :list, :in, "A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         def apply_to(dict)

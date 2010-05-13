@@ -57,7 +57,7 @@ module Mrg
         end
         
         expose :getType do |args|
-          args.declare :type, :sstr, :out, {}
+          args.declare :type, :sstr, :out, "An int corresponding to the type of this parameter."
         end
         
         # setType 
@@ -69,7 +69,7 @@ module Mrg
         end
         
         expose :setType do |args|
-          args.declare :type, :sstr, :in, {}
+          args.declare :type, :sstr, :in, "An int corresponding to the type of this parameter."
         end
         
         # getDefault 
@@ -83,7 +83,7 @@ module Mrg
         end
         
         expose :getDefault do |args|
-          args.declare :default, :lstr, :out, {}
+          args.declare :default, :lstr, :out, "The current default value for this parameter."
         end
         
         # setDefault 
@@ -96,7 +96,7 @@ module Mrg
         end
         
         expose :setDefault do |args|
-          args.declare :default, :lstr, :in, {}
+          args.declare :default, :lstr, :in, "The new default value for this parameter."
         end
         
         # getDescription 
@@ -110,7 +110,7 @@ module Mrg
         end
         
         expose :getDescription do |args|
-          args.declare :description, :lstr, :out, {}
+          args.declare :description, :lstr, :out, "The description of this parameter."
         end
         
         # setDescription 
@@ -124,7 +124,7 @@ module Mrg
         end
         
         expose :setDescription do |args|
-          args.declare :description, :lstr, :in, {}
+          args.declare :description, :lstr, :in, "A new description of this parameter."
         end
         
         # getDefaultMustChange 
@@ -135,7 +135,7 @@ module Mrg
         end
         
         expose :getDefaultMustChange do |args|
-          args.declare :mustChange, :bool, :out, {}
+          args.declare :mustChange, :bool, :out, "True if the user must supply a value for this parameter; false otherwise."
         end
         
         # setDefaultMustChange 
@@ -148,7 +148,7 @@ module Mrg
         end
         
         expose :setDefaultMustChange do |args|
-          args.declare :mustChange, :bool, :in, {}
+          args.declare :mustChange, :bool, :in, "True if the user must supply a value for this parameter; false otherwise."
         end
         
         # getVisibilityLevel 
@@ -161,7 +161,7 @@ module Mrg
         end
         
         expose :getVisibilityLevel do |args|
-          args.declare :level, :uint8, :out, {}
+          args.declare :level, :uint8, :out, "The current \"visibility level\" for this parameter."
         end
         
         # setVisibilityLevel 
@@ -175,7 +175,7 @@ module Mrg
         end
         
         expose :setVisibilityLevel do |args|
-          args.declare :level, :uint8, :in, {}
+          args.declare :level, :uint8, :in, "The new \"visibility level\" for this parameter."
         end
         
         # getRequiresRestart 
@@ -189,7 +189,7 @@ module Mrg
         end
         
         expose :getRequiresRestart do |args|
-          args.declare :needsRestart, :bool, :out, {}
+          args.declare :needsRestart, :bool, :out, "True if the application must be restarted to see a change to this parameter; false otherwise."
         end
         
         # setRequiresRestart 
@@ -202,7 +202,7 @@ module Mrg
         end
         
         expose :setRequiresRestart do |args|
-          args.declare :needsRestart, :bool, :in, {}
+          args.declare :needsRestart, :bool, :in, "True if the application must be restarted to see a change to this parameter; false otherwise."
         end
         
         # getDepends 
@@ -214,7 +214,7 @@ module Mrg
         end
         
         expose :getDepends do |args|
-          args.declare :depends, :list, :out, {}
+          args.declare :depends, :list, :out, "A set of parameter names that this parameter depends on."
         end
         
         # modifyDepends 
@@ -235,9 +235,9 @@ module Mrg
         end
         
         expose :modifyDepends do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :depends, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :depends, :list, :in, "A set of parameter names that this one depends on."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         # getConflicts 
@@ -249,7 +249,7 @@ module Mrg
         end
         
         expose :getConflicts do |args|
-          args.declare :conflicts, :list, :out, {}
+          args.declare :conflicts, :list, :out, "A set of parameter names that this parameter conflicts with."
         end
         
         # modifyConflicts 
@@ -270,9 +270,9 @@ module Mrg
         end
         
         expose :modifyConflicts do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :conflicts, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :conflicts, :list, :in, "A set of parameter names that this parameter conflicts with."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         def Parameter.s_that_must_change

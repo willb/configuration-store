@@ -43,7 +43,7 @@ module Mrg
         end
         
         expose :getParams do |args|
-          args.declare :params, :list, :out, {}
+          args.declare :params, :list, :out, "A list representing the set of parameter names that this subsystem is interested in."
         end
         
         # modifyParams 
@@ -65,9 +65,9 @@ module Mrg
         end
         
         expose :modifyParams do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :params, :list, :in, {}
-          args.declare :options, :map, :in, {}
+          args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
+          args.declare :params, :list, :in, "A list representing the set of parameter names that this subsystem should be interested in (for ADD and REPLACE) or should not be interested in (for REMOVE)."
+          args.declare :options, :map, :in, "No options are supported at this time."
         end
         
         private
