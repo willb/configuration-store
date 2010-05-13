@@ -47,8 +47,10 @@ module Mrg
           my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
           if save_for_version
+            updated_config = my_config.dup
+            updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
             cv = ConfigVersion[save_for_version]
-            cv[self.name] = my_config
+            cv[self.name] = updated_config
           end
             
           classname = self.class.name.split("::")[-1]

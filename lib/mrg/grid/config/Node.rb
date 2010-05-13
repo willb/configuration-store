@@ -71,7 +71,7 @@ module Mrg
         end
 
         def last_updated_version
-          log.debug "last_updated_version called for #{self}; its value is #{orig_last_checkin.inspect}"
+          log.debug "last_updated_version called for #{self}; its value is #{orig_last_updated_version.inspect}"
           orig_last_updated_version || 0
         end
 
@@ -115,9 +115,23 @@ module Mrg
         end
         
         # getConfig 
+        # * options (map/I)
         # * config (map/O)
         #   A map(parameter, value) representing the configuration for the node supplied
-        def getConfig()
+        def getConfig(options=nil)
+          options ||= {}
+          return getCurrentConfig unless options["version"]
+          v_nodeconfig = VersionedNodeConfig.find_freshest(:group_by=>[:node], :select=>{:node=>VersionedNode[self.name]}, :version=>options["version"])
+          
+          v_nodeconfig.size > 0 ? v_nodeconfig[0].config : {}
+        end
+        
+        expose :getConfig do |args|
+          args.declare :options, :map, :in, {}
+          args.declare :config, :map, :out, {}
+        end
+        
+        def getCurrentConfig
           log.debug "getConfig called on node #{self.inspect}"
           config = Group.DEFAULT_GROUP.getConfig
           # strip StringSet markers from default group config
@@ -141,10 +155,6 @@ module Mrg
           config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
           
           config
-        end
-        
-        expose :getConfig do |args|
-          args.declare :config, :map, :out, {}
         end
         
         # checkConfigVersion 
