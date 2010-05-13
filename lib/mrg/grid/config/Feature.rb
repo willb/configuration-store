@@ -17,7 +17,6 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Parameter'
-require 'mrg/grid/config/Subsystem'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
@@ -281,37 +280,6 @@ module Mrg
           args.declare :options, :map, :in, {}
         end
         
-        # getSubsys 
-        # * subsystems (map/O)
-        #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
-        def getSubsys()
-          log.debug "getSubsys called on feature #{self.inspect}"
-          subsystems
-        end
-        
-        expose :getSubsys do |args|
-          args.declare :subsystems, :list, :out, {}
-        end
-        
-        # modifySubsys 
-        # * command (sstr/I)
-        #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
-        # * subsys (map/I)
-        #   A set of subsystem names that collaborate with the feature. This is used to determine subsystems that may need to be restarted if a configuration is changed
-        def modifySubsys(command,subsys,options={})
-          # Print values of input parameters
-          log.debug "modifySubsys: command => #{command.inspect}"
-          log.debug "modifySubsys: subsys => #{subsys.inspect}"
-
-          modify_arcs(command,subsys.uniq,options,:subsystems,:subsystems=,:explain=>"affect the subsystem")
-          self_to_dirty_list
-        end
-        
-        expose :modifySubsys do |args|
-          args.declare :command, :sstr, :in, {}
-          args.declare :subsys, :list, :in, {}
-        end
-        
         def apply_to(dict)
           includes.reverse_each do |ifname|
             included_feature = self.class.find_first_by_name(ifname)
@@ -417,10 +385,6 @@ module Mrg
           find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
         end
         
-        def subsystems
-          find_arcs(FeatureSubsys,ArcLabel.implication('subsystem')) {|a| a.dest.name }
-        end
-        
         def depends=(deps)
           set_arcs(FeatureArc, ArcLabel.depends_on('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
@@ -431,10 +395,6 @@ module Mrg
 
         def includes=(deps)
           set_arcs(FeatureArc, ArcLabel.inclusion('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
-        end
-
-        def subsystems=(deps)
-          set_arcs(FeatureSubsys, ArcLabel.implication('subsystem'), deps, :find_first_by_name, :klass=>Subsystem)
         end
         
       end
@@ -460,13 +420,6 @@ module Mrg
         def value=(val)
           self.given_value = val
         end
-      end
-      
-      class FeatureSubsys
-        include ::Rhubarb::Persisting
-        declare_column :source, :integer, :not_null, references(Feature, :on_delete=>:cascade)
-        declare_column :dest, :integer, :not_null, references(Subsystem, :on_delete=>:cascade)
-        declare_column :label, :integer, :not_null, references(ArcLabel)        
       end
     end
   end

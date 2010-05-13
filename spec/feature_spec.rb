@@ -453,7 +453,7 @@ module Mrg
           }.should raise_error
         end
         
-        [["include", "inclusion", :getFeatures, :modifyFeatures, true, :addFeature], ["depend on", "dependence", :getDepends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :getConflicts, :modifyConflicts, false, :addFeature], ["affect", "implication", :getSubsys, :modifySubsys, false, :addSubsys]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        [["include", "inclusion", :getFeatures, :modifyFeatures, true, :addFeature], ["depend on", "dependence", :getDepends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :getConflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = Array
           nouns = create_dest_msg == :addFeature ? "features" : "subsystems"
