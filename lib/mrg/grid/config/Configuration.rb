@@ -17,9 +17,25 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 
+require 'set'
+
 module Mrg
   module Grid
     module Config
+      module ConfigUtils
+        
+        # Returns the symmetric difference of two hash tables, represented as an array of pairs
+        def self.diff(c1,c2)
+          s1 = Set[*c1]
+          s2 = Set[*c2]
+          ((s1 | s2) - (s1 & s2)).to_a
+        end
+        
+        def self.what_params_changed(c1,c2)
+          Hash[*diff(c1,c2).to_a.flatten].keys
+        end
+      end
+      
       class ConfigVersion
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
