@@ -3,6 +3,64 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 module Mrg
   module Grid
     module Config
+      describe ConfigUtils do
+        def setup_increasing_hash(keys, startval=0)
+          Hash[*keys.zip((startval...(startval+keys.size)).to_a).flatten]
+        end
+        
+        before(:each) do
+          @h1keys = %w{foo bar blah argh}
+          @h2keys = %w{bar blah argh crumb}
+          @h3keys = %w{ugh foo bar blah argh}
+          
+          @h1 = setup_increasing_hash(@h1keys, 0)
+          @h2 = setup_increasing_hash(@h2keys, 0)
+          @h2_5 = setup_increasing_hash(@h2keys, 1)
+          @h3 = setup_increasing_hash(@h3keys, 0)
+          @h1_3 = setup_increasing_hash(@h1keys, 1)
+        end
+
+        it "should identify that the symmetric difference of a hash with itself is empty" do
+          ConfigUtils.diff(@h1, @h1).should == []
+        end
+
+        it "should identify that the symmetric difference of a hash with an identical hash is empty" do
+          ConfigUtils.diff(@h1, @h1.dup).should == []
+        end
+
+        {:first=>"", :second=>", symmetrically"}.each do |ordering, qualifier|
+        
+          it "should correctly find the symmetric difference of two hashes with nothing in common#{qualifier}" do
+            thediff = ordering == :first ? ConfigUtils.diff(@h1, @h2) : ConfigUtils.diff(@h2, @h1)
+          
+            thediff.size.should == @h1keys.size + @h2keys.size 
+
+            [@h1,@h2].each do |coll|
+              coll.each do |pair|
+                thediff.should include(pair)
+              end
+            end
+          
+          end
+          
+          it "should correctly find the symmetric difference of two hashes with most of the kv-pairs in common when the differing keys are disjoint#{qualifier}" do
+            thediff = ordering == :first ? ConfigUtils.diff(@h1, @h2_5) : ConfigUtils.diff(@h2_5, @h1)
+            
+            keydiff = ((@h1keys | @h2keys) - (@h1keys & @h2keys))
+            
+            thediff.size.should == keydiff.size
+
+            {@h1=>@h1keys-@h2keys, @h2_5=>@h2keys-@h1keys}.each do |from, whichs|
+              whichs.each do |which|
+                thediff.should include([which, from[which]])
+              end
+            end
+          end
+          
+        end
+        
+      end
+
       describe ConfigVersion do
         before(:each) do
           setup_rhubarb
