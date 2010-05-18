@@ -107,9 +107,7 @@ module Mrg
         def getConfig(options=nil)
           options ||= {}
           return getCurrentConfig unless options["version"]
-          v_nodeconfig = VersionedNodeConfig.find_freshest(:group_by=>[:node], :select=>{:node=>VersionedNode[self.name]}, :version=>options["version"])
-          
-          v_nodeconfig.size > 0 ? v_nodeconfig[0].config : {}
+          ConfigVersion.getVersionedNodeConfig(self.name, options["version"]) || {}
         end
         
         expose :getConfig do |args|
