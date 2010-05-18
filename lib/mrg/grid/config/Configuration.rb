@@ -40,12 +40,18 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = :serialized
+        STORAGE_PLAN = :normalized
+
+        def self.whatchanged(node, old_version, new_version)
+          ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
+        end
 
         module NormalizedVersionedConfigLookup
           module ClassMethods
             def getVersionedNodeConfig(node, ver=nil)
-              VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver).inject({}) do |acc, row|
+              version_row = VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
+              cv = (version_row[0].version rescue nil)
+              VersionedNodeParamMapping.find_by(:node=>VersionedNode[node], :version=>cv).inject({}) do |acc, row|
                 acc[row.param.name] = row.val
                 acc
               end
