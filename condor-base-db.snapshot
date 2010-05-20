@@ -288,7 +288,7 @@ features:
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
     SEC_DEFAULT_INTEGRITY: REQUIRED
     SEC_DEFAULT_AUTHENTICATION_METHODS: CLAIMTOBE
-    ALLOW_ADMINISTRATOR: $(FULL_HOSTNAME), $(ALLOW_ADMINISTRATOR)
+    ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
     CONDOR_HOST: ""
     CONDOR_DEVELOPERS_COLLECTOR: NONE
     CONDOR_DEVELOPERS: NONE
@@ -2753,18 +2753,6 @@ params:
   level: 0
   must_change: false
   name: LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: /etc/xen/scripts/network-bridge start bridge=xenbr0
-  depends: []
-
-  description: The command to run to setup a bridging network interface for VM universe jobs
-  kind: String
-  level: 0
-  must_change: false
-  name: VM_BRIDGE_SCRIPT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
