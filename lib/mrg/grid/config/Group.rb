@@ -35,7 +35,7 @@ module Mrg
         include ConfigValidating
 
         declare_table_name('nodegroup') # this line is necessary because you can't have a SQL table named "group"
-        qmf_package_name 'mrg.grid.config'
+        qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Group'
         ### Property method declarations
         # property uid uint32 

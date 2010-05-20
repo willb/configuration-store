@@ -1,7 +1,7 @@
-## mrg.grid.config:Snapshot ##
+## com.redhat.grid.config:Snapshot ##
   * name (sstr property)
 
-## mrg.grid.config:Parameter ##
+## com.redhat.grid.config:Parameter ##
   * name (sstr property)
   * getDescription()
     * description (lstr/out)
@@ -80,10 +80,10 @@
 
       An int corresponding to the type of this parameter.
 
-## mrg.grid.config:Configuration ##
+## com.redhat.grid.config:Configuration ##
   * version (uint64 property)
 
-## mrg.grid.config:Group ##
+## com.redhat.grid.config:Group ##
   * uid (uint32 property)
   * is_identity_group (bool property)
   * modifyFeatures(command, features, options)
@@ -143,7 +143,7 @@
   * addFeature(feature)
     * feature (lstr/in)
 
-## mrg.grid.config:Node ##
+## com.redhat.grid.config:Node ##
   * name (sstr property)
   * provisioned (bool property)
   * last_checkin (uint64 property)
@@ -179,7 +179,7 @@
       The object ID of this node's identity group.
   * makeUnprovisioned()
 
-## mrg.grid.config:Feature ##
+## com.redhat.grid.config:Feature ##
   * uid (uint32 property)
   * clearParams()
     * ret (int64/out)
@@ -254,7 +254,7 @@
 
       A list of other features that this feature depends on for proper operation, in priority order.
 
-## mrg.grid.config:Subsystem ##
+## com.redhat.grid.config:Subsystem ##
   * name (sstr property)
   * modifyParams(command, params, options)
     * command (sstr/in)
@@ -271,7 +271,7 @@
 
       A list representing the set of parameter names that this subsystem is interested in.
 
-## mrg.grid.config:Store ##
+## com.redhat.grid.config:Store ##
   * apiVersionNumber (uint32 property)
 
     The version of the API the store supports

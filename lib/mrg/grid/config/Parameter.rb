@@ -30,7 +30,7 @@ module Mrg
         include ::SPQR::Manageable
         include DataValidating
 
-        qmf_package_name 'mrg.grid.config'
+        qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Parameter'
         ### Property method declarations
         # property name sstr 

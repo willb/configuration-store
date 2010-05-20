@@ -39,7 +39,7 @@ module Mrg
         include DataValidating
         include ConfigValidating
 
-        qmf_package_name 'mrg.grid.config'
+        qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Node'
         ### Property method declarations
         # property name sstr 

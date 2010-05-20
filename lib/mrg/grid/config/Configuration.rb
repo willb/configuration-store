@@ -40,7 +40,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = :normalized
+        STORAGE_PLAN = :serialized
 
         def self.whatchanged(node, old_version, new_version)
           ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
@@ -111,7 +111,7 @@ module Mrg
           end
         end
 
-        qmf_package_name 'mrg.grid.config'
+        qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Configuration'
         
         declare_column :version, :integer

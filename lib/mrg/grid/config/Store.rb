@@ -28,14 +28,14 @@ module Mrg
          arg :targets, :list, "A list of affected subsystems."
 
          qmf_class_name :WallabyConfigEvent
-         qmf_package_name "mrg.grid.config"
+         qmf_package_name "com.redhat.grid.config"
          qmf_severity :notice
       end
       
       class Store
         include ::SPQR::Manageable
 
-        qmf_package_name 'mrg.grid.config'
+        qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Store'
 
         def Store.find_by_id(u)
