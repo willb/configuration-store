@@ -51,7 +51,7 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               version_row = VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               cv = (version_row[0].version rescue nil)
-              VersionedNodeParamMapping.find_by(:node=>VersionedNode[node], :version=>cv).inject({}) do |acc, row|
+              VersionedNodeParamMapping.find_by(:node=>VersionedNode[node], :version=>cv).inject({"WALLABY_CONFIG_VERSION"=>0}) do |acc, row|
                 acc[row.param.name] = row.val
                 acc
               end
@@ -87,7 +87,7 @@ module Mrg
           module ClassMethods
             def getVersionedNodeConfig(node, ver=nil)
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {} : vnc[0].config
+              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
             end
           end
 
