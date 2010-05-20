@@ -118,6 +118,6 @@ options[:host] = host
 options[:port] = port
 
 app = SPQR::App.new(options)
-app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot
+app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::WallabyConfigEvent
 
 app.main

@@ -21,6 +21,17 @@ require 'mrg/grid/config-proxies'
 module Mrg
   module Grid
     module Config
+      class WallabyConfigEvent
+         include ::SPQR::Raiseable
+         arg :affectedNodes, :map, "A map from node names to the version numbers of the latest config for that node."
+         arg :restart, :bool, "Whether or not to restart the subsystems listed in targets."
+         arg :targets, :list, "A list of affected subsystems."
+
+         qmf_class_name :WallabyConfigEvent
+         qmf_package_name "mrg.grid.config"
+         qmf_severity :notice
+      end
+      
       class Store
         include ::SPQR::Manageable
 
@@ -446,23 +457,14 @@ module Mrg
           end
         end
         
-        
-        def event_class
-          @event_class ||= init_event_class
-        end
-        
-        def new_config_event(nodes, version)
-          log.debug "ENTERING new_config_event with app == #{app.inspect}; if you don't see a STILL HERE message soon, we're not raising an event"
-          return nil unless (Store.respond_to?(:app) && app)
-          log.debug "STILL HERE in scenic new_config_event"
+        def new_config_event(nodes, version, restart=true, subsystems=nil)
+          log.debug "About to raise a config event for version #{version}; sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
+          
+          subsystems ||= Subsystem.find_all.map{|ss| ss.name}
           
           map = Hash[*nodes.zip([version] * nodes.length).flatten]
-          event = Qmf::QmfEvent.new(event_class)
-          log.debug "event is #{event.inspect}"
-          event.nodelist = map
-          event.nodelist_str = map.keys.join(",")
-          log.debug "event.nodelist is #{event.nodelist.inspect}"
-          app.agent.raise_event(event)
+          event = WallabyConfigEvent.new(map, restart, subsystems)
+          event.bang!
         end
         
         private
@@ -475,15 +477,7 @@ module Mrg
             table.delete_all rescue table.find_all.each {|row| row.delete}
           end
         end
-        
-        def init_event_class
-          event_class = Qmf::SchemaEventClass.new("mrg.grid.config", "NewConfigEvent", Qmf::SEV_ALERT)
-          event_class.add_argument(Qmf::SchemaArgument.new("nodelist", Qmf::TYPE_MAP))
-          event_class.add_argument(Qmf::SchemaArgument.new("nodelist_str", Qmf::TYPE_LSTR))
-          app.agent.register_class(event_class)
-          event_class
-        end
-        
+
         def validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
