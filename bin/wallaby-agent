@@ -22,6 +22,37 @@ require 'spqr/app'
 require 'mrg/grid/config'
 
 require 'logger'
+require 'syslog'
+
+def daemonify
+  pid = nil
+  sid = nil
+  
+  return if Process.ppid == 1
+  
+  pid = fork
+  
+  if pid != nil
+    if pid < 0
+      Syslog.open {|s| s.fatal "can't fork child process"}
+      exit(1)
+    end
+    exit(0)
+  end
+  
+  sid = Process.setsid
+  if sid < 0
+    Syslog.open {|s| s.fatal "can't set self as session group leader"}
+    exit(1)
+  end
+  
+  exit(1) if Dir.chdir("/") < 0
+
+  # close open FDs
+  $stdin.reopen("/dev/null", "r")
+  $stdout.reopen("/dev/null", "w")
+  $stderr.reopen("/dev/null", "w")
+end
 
 USE_PREPARED_STATEMENTS = ENV['WALLABY_USE_PREPARED_STATEMENTS'] && (ENV['WALLABY_USE_PREPARED_STATEMENTS'] == "1")
 
@@ -33,6 +64,7 @@ username = ENV['WALLABY_BROKER_USER']
 password = ENV['WALLABY_BROKER_PASSWORD']
 logfile = ENV['WALLABY_LOGFILE']
 debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upcase)) || Logger::WARN
+do_daemonify = !ENV['WALLABY_FOREGROUND']
 logoptions = nil
 
 op = OptionParser.new do |opts|
@@ -73,6 +105,10 @@ op = OptionParser.new do |opts|
   opts.on("-v", "--verbose", "output verbose debugging info" "  (repeat for more verbosity)") do
     debug = debug - 1 if debug > 0
   end
+
+  opts.on("-f", "--foreground", "run in the foreground") do
+    do_daemonify = false
+  end
 end
 
 begin
@@ -82,8 +118,15 @@ rescue OptionParser::InvalidOption
   exit
 end
 
-puts "storing results to #{dbname}"
-puts "storing snapshots to #{snapdb}"
+daemonify if do_daemonify
+
+Syslog.open do |s| 
+  s.notice "storing configuration to #{dbname}"
+  s.notice "storing snapshots to #{snapdb}"
+  puts "storing results to #{dbname}"
+  puts "storing snapshots to #{snapdb}"
+end
+
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
 DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 
@@ -96,7 +139,10 @@ Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs
 if DO_CREATE
   classes = Mrg::Grid::Config::MAIN_DB_TABLES
   classes.each do |cl| 
-    puts "creating table for #{cl.name}..."
+    Syslog.open do |s| 
+      s.notice "creating table for #{cl.name}..."
+      puts "creating table for #{cl.name}..." unless do_daemonify
+    end
     cl.create_table
   end
   Rhubarb::Persistence::db.execute("PRAGMA user_version = #{Mrg::Grid::Config::DBVERSION}")
