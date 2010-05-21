@@ -1,4 +1,4 @@
-%define rel 0.4
+%define rel 0.5
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Fri May 21 2010 rrati <rrati@redhat> - 1.1-0.5
+- Fixed setting of COLLECTOR_NAME.  The Master feature sets it to "", and
+  the Collector feature will set it to $(FULL_HOSTNAME)
+
 * Thu May 20 2010 rrati <rrati@redhat> - 1.1-0.4
 - Tightened security a bit.  The Master Feature no longer gives the host
   AMINISTRATOR level access
