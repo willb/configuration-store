@@ -259,7 +259,7 @@ features:
 
   name: Collector
   params: 
-    COLLECTOR_NAME: $(FULL_HOSTNAME)
+    COLLECTOR_NAME: Wallaby Configured Pool
     COLLECTOR_LOG: $(LOG)/CollectorLog
     COLLECTOR_DEBUG: ""
     QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
