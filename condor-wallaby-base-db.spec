@@ -1,4 +1,4 @@
-%define rel 0.5
+%define rel 0.6
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Fri May 21 2010 rrati <rrati@redhat> - 1.1-0.6
+- Changed value for COLLECTOR_NAME to "Wallaby Configured Pool"
+
 * Fri May 21 2010 rrati <rrati@redhat> - 1.1-0.5
 - Fixed setting of COLLECTOR_NAME.  The Master feature sets it to "", and
   the Collector feature will set it to $(FULL_HOSTNAME)
