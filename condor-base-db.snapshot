@@ -259,6 +259,7 @@ features:
 
   name: Collector
   params: 
+    COLLECTOR_NAME: $(FULL_HOSTNAME)
     COLLECTOR_LOG: $(LOG)/CollectorLog
     COLLECTOR_DEBUG: ""
     QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
@@ -279,8 +280,8 @@ features:
 
   name: Master
   params: 
+    COLLECTOR_NAME: ""
     QMF_BROKER_PORT: "5672"
-    COLLECTOR_NAME: $(CONDOR_HOST)
     SEC_DEFAULT_NEGOTIATION: OPTIONAL
     QMF_BROKER_HOST: ""
     DAEMON_LIST: ">= MASTER"
