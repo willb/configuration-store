@@ -12,8 +12,8 @@ Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: ruby(abi) = 1.8
 Requires: ruby
-Requires: ruby-spqr >= 0.2.3
-Requires: ruby-rhubarb >= 0.2.5
+Requires: ruby-spqr >= 0.3.0
+Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby
 BuildArch: noarch
@@ -53,6 +53,11 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_sharedstatedir}/wallaby
+mkdir -p %{buildroot}/%{_initrddir}
+mkdir -p %{buildroot}/%{_sysconfdir}
+mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
+mkdir -p %{buildroot}/%{_localstatedir}/log/wallaby
 cp -f bin/wallaby %{buildroot}/%{_bindir}
 cp -f bin/wallaby-dump %{buildroot}/%{_bindir}
 cp -f bin/wallaby-load %{buildroot}/%{_bindir}
@@ -64,6 +69,8 @@ cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
+cp -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
+cp -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
 
 %clean
 rm -rf %{buildroot}
@@ -72,7 +79,11 @@ rm -rf %{buildroot}
 %defattr(-, root, root, -)
 %doc LICENSE README.rdoc TODO VERSION
 %defattr(0755,root,root,-)
+%dir %{_sharedstatedir}/wallaby
+%dir %{_localstatedir}/log/wallaby
 %{_bindir}/wallaby-agent
+%{_initrddir}/wallaby
+%{_sysconfdir}/sysconfig/wallaby-agent
 
 %files utils
 %defattr(-, root, root, -)
@@ -118,6 +129,10 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+
+* Fri May 21 2010 willb <willb@redhat> - 0.3.5-1
+- Updated to source version 0.3.5
 
 * Tue Apr 20 2010 willb <willb@redhat> - 0.3.2-1
 - Updated to source version 0.3.2
