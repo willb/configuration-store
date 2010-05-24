@@ -194,10 +194,6 @@ module Mrg
           @qmfo.getConflicts.conflicts
         end
 
-        def getSubsys
-          @qmfo.getSubsys.subsystems
-        end
-
         def getDepends
           @qmfo.getDepends.depends
         end

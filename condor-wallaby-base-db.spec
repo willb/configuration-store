@@ -1,4 +1,4 @@
-%define rel 0.3
+%define rel 0.4
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,11 @@ rm -rf %{buildroot}
 %{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
 
 %changelog
+* Thu May 20 2010 rrati <rrati@redhat> - 1.1-0.4
+- Tightened security a bit.  The Master Feature no longer gives the host
+  AMINISTRATOR level access
+- Removed the VM_BRIDGE_SCRIPT parameter
+
 * Tue Mar 09 2010 rrati <rrati@redhat> - 1.1-0.3
 - Added LL_DAEMON to LowLatency feature
 - Added JobHooks feature and LowLatency depends upon it

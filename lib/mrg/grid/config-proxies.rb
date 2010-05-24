@@ -272,7 +272,7 @@ module Mrg
           @features.each do |name, old_feature|
             log.info "Creating feature '#{name}'"
             feature = @store.addFeature(name)
-            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"],[:subsystems, :modifySubsys, :setify, "implicated subsystems"]].each do |get,set,xform,desc|
+            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
                   log.info "Setting #{desc} for #{name}"
@@ -419,7 +419,6 @@ module Mrg
             out.included = fl_normalize(feature.getFeatures)
             out.conflicts = fs_normalize(feature.getConflicts)
             out.depends = fl_normalize(feature.getDepends)
-            out.subsystems = fs_normalize(feature.getSubsys)
             out
           end
         end
