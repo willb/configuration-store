@@ -283,7 +283,7 @@ module Mrg
         end
         
         def Parameter.s_for_node(node)
-          feature_params = Feature.features_for_node(node).map {|feat| feat.getParams.keys}.flatten.sort.uniq
+          feature_params = Feature.features_for_node(node).map {|feat| feat.params.keys}.flatten.sort.uniq
           default_group_params = Group.DEFAULT_GROUP.getParams.keys.sort.uniq
           id_group_params = node.idgroup ? node.idgroup.getParams.keys.sort.uniq : []
           explicit_group_params = node.send(:memberships).map {|grp| grp.getParams.keys}.flatten.sort.uniq
@@ -299,7 +299,7 @@ module Mrg
         end
 
         def Parameter.s_for_group(grp)
-          feature_params = Feature.features_for_group(grp).map {|feat| feat.getParams.keys}.flatten.sort.uniq
+          feature_params = Feature.features_for_group(grp).map {|feat| feat.params.keys}.flatten.sort.uniq
           explicit_group_params = grp.getParams.keys
           
           feature_params | explicit_group_params

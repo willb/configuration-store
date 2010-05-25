@@ -197,7 +197,7 @@ while features_to_include.size > 0
   included_features = features_to_include.slice(0, features_per_feature.next.to_i)
   included_features.each do |fn|
     begin
-      feature.modifyFeatures("ADD", [fn], {})
+      feature.modifyIncludes("ADD", [fn], {})
     rescue Object => ex
       puts "warning:  #{ex.inspect}"
     end

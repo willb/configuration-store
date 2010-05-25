@@ -159,20 +159,27 @@ module Mrg
         end
         
         def getFeatures()
-          @qmfo.getFeatures.features
+          @qmfo.includes
         end
         
-        def modifyFeatures(command, features, options={})
-          @qmfo.modifyFeatures(command, features, options)
+        alias getFeatures includes
+        
+        def modifyIncludes(command, features, options={})
+          @qmfo.modifyIncludes(command, features, options)
         end
+        
+        alias modifyIncludes modifyFeatures
         
         def getParams()
-          @qmfo.getParams.params
+          @qmfo.params
         end
         
         def getParamMeta()
-          @qmfo.getParamMeta.param_info
+          @qmfo.param_meta
         end
+        
+        alias getParams params
+        alias getParamMeta param_meta
         
         def modifyParams(command,pvmap,options={})
           @qmfo.modifyParams(command,pvmap,options)
@@ -191,12 +198,15 @@ module Mrg
         end
         
         def getConflicts
-          @qmfo.getConflicts.conflicts
+          @qmfo.conflicts
         end
 
         def getDepends
-          @qmfo.getDepends.depends
+          @qmfo.depends
         end
+        
+        alias getDepends depends
+        alias getConflicts conflicts
         
         private
         include ObjResolver

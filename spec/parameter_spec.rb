@@ -220,7 +220,7 @@ module Mrg
           
           feature1.modifyParams("ADD", Hash[*param_names.map{|p| [p, p.downcase]}.flatten])
 
-          feature.modifyFeatures("ADD", [feature1.name])
+          feature.modifyIncludes("ADD", [feature1.name])
 
           pfn = Parameter.s_for_node(node)
           pfn.size.should == 0

@@ -35,9 +35,10 @@ module Mrg
         qmf_class_name 'Feature'
         ### Property method declarations
         # property uid uint32 
-
+        
         declare_column :name, :string
         declare_index_on :name
+        qmf_property :name, :sstr, :desc=>"This feature's name"
         
         def uid
           @row_id
@@ -49,18 +50,6 @@ module Mrg
         
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
-        
-        # getName 
-        # * name (sstr/O)
-        def getName()
-          log.debug "getName called on feature #{self.inspect}"
-          # Assign values to output parameters
-          return self.name
-        end
-        
-        expose :getName do |args|
-          args.declare :name, :sstr, :out, "This feature's name."
-        end
         
         # setName 
         # * name (sstr/I)
@@ -75,24 +64,12 @@ module Mrg
           args.declare :name, :sstr, :in, "A new name for this feature; this name must not already be in use by another feature."
         end
         
-        # getFeatures 
-        # * features (map/O)
-        #   list of other feature names a feature includes
-        def getFeatures()
-          log.debug "getFeatures called on feature #{self.inspect}"
-          includes
-        end
-        
-        expose :getFeatures do |args|
-          args.declare :features, :list, :out, "A list, in priority order, of the names of features that this feature includes (that is, extends)."
-        end
-        
-        # modifyFeatures 
+        # modifyIncludes 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other feature names a feature includes
-        def modifyFeatures(command,features,options={})
+        def modifyIncludes(command,features,options={})
           # Print values of input parameters
           log.debug "modifyFeatures: command => #{command.inspect}"
           log.debug "modifyFeatures: features => #{features.inspect}"
@@ -107,35 +84,14 @@ module Mrg
           self_to_dirty_list
         end
         
-        expose :modifyFeatures do |args|
+        expose :modifyIncludes do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :features, :list, :in, "A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE)."
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
-        # getParams 
-        # * params (map/O)
-        #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def getParams()
-          log.debug "getParams called on feature #{self.inspect}"
-          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
-        end
-        
-        expose :getParams do |args|
-          args.declare :params, :map, :out, "A map from parameter names to their values as set in this feature"
-        end
-
-        # getParams 
-        # * param_info (map/O)
-        #   A map(paramName, map) of parameters to maps of metainformation
-        def getParamMeta()
-          log.debug "getParamMeta called on feature #{self.inspect}"
-          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, {"uses_default"=>fp.uses_default, "given_value"=>fp.given_value}]}.flatten]
-        end
-        
-        expose :getParamMeta do |args|
-          args.declare :param_info, :map, :out, "A map from parameter names used in this feature to maps of metadata about those params"
-        end
+        qmf_property :params, :map, :desc=>"A map from parameter names to their values as set in this feature"
+        qmf_property :param_meta, :map, :desc=>"A map from parameter names used in this feature to maps of metadata about those params"
         
         def clearParams
           log.debug "clearParams called on feature #{self.inspect}"
@@ -206,17 +162,10 @@ module Mrg
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
-        # getConflicts 
-        # * conflicts (map/O)
-        #   A set of other features that this feature conflicts with
-        def getConflicts()
-          log.debug "getConflicts called on feature #{self.inspect}"
-          conflicts
-        end
-        
-        expose :getConflicts do |args|
-          args.declare :conflicts, :list, :out, "A list representing the set of features that this one conflicts with."
-        end
+
+        qmf_property :conflicts, :list, :desc=>"A set of other features that this feature conflicts with"
+        qmf_property :depends, :list, :desc=>"A list of other features that this feature depends on"
+        qmf_property :includes, :list, :desc=>"A list of other features that this feature includes, in priority order"
         
         # modifyConflicts 
         # * command (sstr/I)
@@ -241,18 +190,6 @@ module Mrg
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :conflicts, :list, :in, "A set of other feature names that conflict with the feature"
           args.declare :options, :map, :in, "No options are supported at this time."
-        end
-        
-        # getDepends 
-        # * depends (map/O)
-        #   A list of other features that this feature depends on for proper operation, in priority order.
-        def getDepends()
-          log.debug "getDepends called on feature #{self.inspect}"
-          depends
-        end
-        
-        expose :getDepends do |args|
-          args.declare :depends, :list, :out, "A list of other features that this feature depends on for proper operation, in priority order."
         end
         
         # modifyDepends 
@@ -286,7 +223,7 @@ module Mrg
             dict = included_feature.apply_to(dict)
           end
           
-          self.getParams.each do |k,v|
+          self.params.each do |k,v|
             if (v && v.slice(/^>=/))
               while v.slice!(/^>=/) ;  v.strip! ; end
               dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v.strip}" : "#{v.strip}"
@@ -360,6 +297,26 @@ module Mrg
         SELECT * FROM __TABLE__ WHERE row_id IN (SELECT source FROM featurearc WHERE dest = :dest and label = :label)
         QUERY
         
+        def depends
+          find_arcs(FeatureArc,ArcLabel.depends_on('feature')) {|a| a.dest.name }
+        end
+        
+        def conflicts
+          find_arcs(FeatureArc,ArcLabel.conflicts_with('feature')) {|a| a.dest.name }
+        end
+
+        def includes
+          find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
+        end
+        
+        def params
+          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
+        end
+        
+        def param_meta
+          Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, {"uses_default"=>fp.uses_default, "given_value"=>fp.given_value}]}.flatten]
+        end
+        
         private
         include ArcUtils
         
@@ -371,18 +328,6 @@ module Mrg
         
         def included_by
           Feature.immed_edge_to(:dest=>self, :label=>ArcLabel.inclusion('feature'))
-        end
-        
-        def depends
-          find_arcs(FeatureArc,ArcLabel.depends_on('feature')) {|a| a.dest.name }
-        end
-        
-        def conflicts
-          find_arcs(FeatureArc,ArcLabel.conflicts_with('feature')) {|a| a.dest.name }
-        end
-
-        def includes
-          find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
         end
         
         def depends=(deps)
