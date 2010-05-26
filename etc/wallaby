@@ -42,7 +42,7 @@ start() {
 stop() {
     echo -n $"Stopping $prog: "
 #    killproc $exec
-	kill $(ps wx | grep $exec | grep -v grep | cut -f1 -d\ )
+    pkill -f $exec
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile

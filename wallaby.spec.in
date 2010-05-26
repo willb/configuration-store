@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -15,7 +15,7 @@ Requires: ruby
 Requires: ruby-spqr >= 0.3.0
 Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-qmf >= 0.7.929717
-Requires: ruby-wallaby
+Requires: ruby-wallaby = %{version}-%{release}
 BuildArch: noarch
 
 %description
@@ -53,7 +53,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{_bindir}
-mkdir -p %{buildroot}/%{_sharedstatedir}/wallaby
+mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
 mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
@@ -79,7 +79,7 @@ rm -rf %{buildroot}
 %defattr(-, root, root, -)
 %doc LICENSE README.rdoc TODO VERSION
 %defattr(0755,root,root,-)
-%dir %{_sharedstatedir}/wallaby
+%dir %{_localstatedir}/lib/wallaby
 %dir %{_localstatedir}/log/wallaby
 %{_bindir}/wallaby-agent
 %{_initrddir}/wallaby
@@ -130,6 +130,8 @@ rm -rf %{buildroot}
 
 %changelog
 
+* Wed May 26 2010 willb <willb@redhat> - 0.3.5-2
+- Packaging and initscript fixes
 
 * Fri May 21 2010 willb <willb@redhat> - 0.3.5-1
 - Updated to source version 0.3.5
