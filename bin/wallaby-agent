@@ -160,7 +160,7 @@ options[:logfile] = logfile if logfile
 options[:appname] = "Wallaby configuration agent"
 options[:user] = username if username
 options[:password] = password if password
-options[:host] = host
+options[:server] = host
 options[:port] = port
 
 app = SPQR::App.new(options)
