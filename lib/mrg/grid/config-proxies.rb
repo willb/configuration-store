@@ -83,7 +83,6 @@ module Mrg
         field :included, Array
         field :conflicts, Set
         field :depends, Array
-        field :subsystems, Set
       end
       
       class Group
