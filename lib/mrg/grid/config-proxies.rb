@@ -380,8 +380,8 @@ module Mrg
             out = Group.new
             out.name = group.getName
             out.is_identity_group = group.is_identity_group
-            out.features = fl_normalize(group.getFeatures)
-            out.params = group.getParams
+            out.features = fl_normalize(group.features)
+            out.params = group.params
             out
           end
         end
@@ -407,17 +407,17 @@ module Mrg
           get_instances(:Feature).map do |f|
             feature = get_object(f)
             out = Feature.new
-            out.name = feature.getName
-            params = feature.getParams
+            out.name = feature.name
+            params = feature.params
             
             # Ensure that params that should get the default values are serialized
             default_params = feature.getParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
             default_params.each {|dp_key| params[dp_key] = 0}
             
             out.params = params
-            out.included = fl_normalize(feature.getFeatures)
-            out.conflicts = fs_normalize(feature.getConflicts)
-            out.depends = fl_normalize(feature.getDepends)
+            out.included = fl_normalize(feature.includes)
+            out.conflicts = fs_normalize(feature.conflicts)
+            out.depends = fl_normalize(feature.depends)
             out
           end
         end

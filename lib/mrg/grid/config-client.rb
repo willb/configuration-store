@@ -49,23 +49,28 @@ module Mrg
       
       class Group < ClientObj
         def getMembership
-          @qmfo.getMembership.nodes
+          @qmfo.membership
         end
         
         def getName
-          @qmfo.getName.name
+          @qmfo.name
         end
         
         def getFeatures
-          @qmfo.getFeatures.features
-        end
-        
-        def modifyFeatures(c,fs,o)
-          @qmfo.modifyFeatures(c,fs,o)
+          @qmfo.features
         end
         
         def getParams
-          @qmfo.getParams.params
+          @qmfo.params
+        end
+        
+        alias features getFeatures
+        alias name getName
+        alias membership getMembership
+        alias params getParams
+        
+        def modifyFeatures(c,fs,o)
+          @qmfo.modifyFeatures(c,fs,o)
         end
         
         def modifyParams(c,p,o={})
