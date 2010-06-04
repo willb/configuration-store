@@ -24,6 +24,24 @@ require 'mrg/grid/config'
 require 'logger'
 require 'syslog'
 
+require 'pathname'
+
+# resolves symbolic links and "."/".." in a path that *mostly* exists,
+# where a "mostly-existing" path is defined as one in which at most
+# the rightmost component does not exist.
+def path_resolve(p)
+  path = Pathname.new(p)
+
+  # we can realpath existing files
+  if path.exist?
+    return path.realpath.to_s
+  end
+
+  # we're creating a new file here.  the dir must exist, but the file will not
+  dirname = path.dirname.realpath rescue (raise "Directory #{path.dirname.to_s} does not exist")
+  (dirname + path.basename).to_s
+end
+
 def daemonify
   pid = nil
   sid = nil
@@ -71,15 +89,15 @@ op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-agent [options]"
   
   opts.on("-l", "--logfile FILE", "file for wallaby-agent log") do |file|
-    logfile = file
+    logfile = path_resolve(file)
   end
   
   opts.on("-d", "--dbname FILE", "file for persistent storage (will be created if it doesn't exist)") do |db| 
-    dbname = db
+    dbname = path_resolve(db)
   end
   
   opts.on("-s", "--snapdb FILE", "file for store snapshots (will be created if it doesn't exist)") do |db|
-    snapdb = db
+    snapdb = path_resolve(db)
   end
   
   opts.on("-h", "--help", "shows this message") do
