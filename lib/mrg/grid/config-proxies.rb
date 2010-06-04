@@ -83,7 +83,6 @@ module Mrg
         field :included, Array
         field :conflicts, Set
         field :depends, Array
-        field :subsystems, Set
       end
       
       class Group
@@ -200,7 +199,7 @@ module Mrg
           @nodes.each do |name, old_node|
             log.info("Creating node '#{name}'")
             node = @store.addNode(name)
-            node.MakeUnprovisioned unless (old_node.provisioned)
+            node.makeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0
               flmemberships = listify(memberships)
