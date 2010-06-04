@@ -50,43 +50,43 @@ module Mrg
           param = @store.addParam("BIOTECH")
           old_id = param.row_id
           param.setDefault(OLD_DEFAULT)
-          param.setType(OLD_TYPE)
+          param.setKind(OLD_TYPE)
           @store.removeParam("BIOTECH")
           
           param = @store.addParam("BIOTECH")
           param = @store.getParam("BIOTECH")
           param.should_not == nil
-          param.getDefault.should_not == OLD_DEFAULT
-          param.getType.should_not == OLD_TYPE
+          param.default.should_not == OLD_DEFAULT
+          param.kind.should_not == OLD_TYPE
           # param.row_id.should_not == old_id
         end
 
         
         it "enables setting a parameter's type" do
-          describe_getter_and_setter(:setType, :getType, ["int", "string", "timestamp", "hostname"])
+          describe_getter_and_setter(:setKind, :kind, ["int", "string", "timestamp", "hostname"])
         end
         
         it "enables setting a parameter's default value" do
-          describe_getter_and_setter(:setDefault, :getDefault, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
+          describe_getter_and_setter(:setDefault, :default, ("The quick brown fox jumps over the lazy dad".."The quick brown fox jumps over the lazy dog"))
         end
         
         it "enables setting a parameter's description" do
           vals = ["Does anyone know what this does?", "Perhaps not.", "All right, then."]
-          describe_getter_and_setter(:setDescription, :getDescription, vals)
+          describe_getter_and_setter(:setDescription, :description, vals)
         end
         
         it "enables setting a parameter's visibility level" do
-          describe_getter_and_setter(:setVisibilityLevel, :getVisibilityLevel, (0..12))
+          describe_getter_and_setter(:setVisibilityLevel, :visibility_level, (0..12))
         end
 
         it "enables setting a parameter's requires-restart property" do
-          describe_getter_and_setter(:setRequiresRestart, :getRequiresRestart, [true, false])
+          describe_getter_and_setter(:setRequiresRestart, :requires_restart, [true, false])
         end
 
         it "has no dependencies or conflicts by default" do
           param = @store.addParam("BIOTECH")
-          param.getDepends.should == []
-          param.getConflicts.should == []
+          param.depends.should == []
+          param.conflicts.should == []
         end
         
         it "accepts added dependencies" do
@@ -97,7 +97,7 @@ module Mrg
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.modifyDepends("ADD", added_deps, {})
-          deps = param.getDepends
+          deps = param.depends
           
           deps.size.should == added_deps.size
           added_deps.each {|dep| deps.should include(dep) }
@@ -109,7 +109,7 @@ module Mrg
           
           params.each_cons(2) do |source, dest|
             source.modifyDepends("ADD", [dest.name], {})
-            deps = source.getDepends
+            deps = source.depends
             deps.size.should == 1
             deps.should include(dest.name)
           end
@@ -277,12 +277,12 @@ module Mrg
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.modifyDepends("ADD", added_deps, {})
-          deps = param.getDepends
+          deps = param.depends
           
           pre_size = deps.size
           
           param.modifyDepends("ADD", added_deps, {})
-          deps = param.getDepends
+          deps = param.depends
           
           deps.size.should == pre_size
         end
@@ -298,12 +298,12 @@ module Mrg
           added_deps = param_names.sort_by{ rand }.slice(0..5)
           
           param.modifyDepends("ADD", first_added_dep, {})
-          deps = param.getDepends
+          deps = param.depends
           
           pre_size = deps.size
           
           param.modifyDepends("ADD", added_deps, {})
-          deps = param.getDepends
+          deps = param.depends
           
           deps.size.should == pre_size + added_deps.size
           
@@ -334,7 +334,7 @@ module Mrg
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.modifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.getConflicts
+          cnfs = param.conflicts
 
           cnfs.size.should == added_cnfs.size
           added_cnfs.each {|dep| cnfs.should include(dep) }
@@ -348,12 +348,12 @@ module Mrg
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.modifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.getConflicts
+          cnfs = param.conflicts
 
           pre_size = cnfs.size
 
           param.modifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.getConflicts
+          cnfs = param.conflicts
 
           cnfs.size.should == pre_size
         end
@@ -369,12 +369,12 @@ module Mrg
           added_cnfs = param_names.sort_by{ rand }.slice(0..5)
 
           param.modifyConflicts("ADD", first_added_dep, {})
-          cnfs = param.getConflicts
+          cnfs = param.conflicts
 
           pre_size = cnfs.size
 
           param.modifyConflicts("ADD", added_cnfs, {})
-          cnfs = param.getConflicts
+          cnfs = param.conflicts
 
           cnfs.size.should == pre_size + added_cnfs.size
 

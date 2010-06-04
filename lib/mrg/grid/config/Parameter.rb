@@ -46,44 +46,37 @@ module Mrg
         declare_column :needsRestart, :boolean
 
         qmf_property :name, :sstr, :index=>true
+        qmf_property :kind, :sstr, :desc=>"The type of this parameter"
+        qmf_property :default, :lstr, :desc=>"The current default value for this parameter."
+        qmf_property :description, :lstr, :desc=>"The description of this parameter."
+        qmf_property :must_change, :bool, :desc=>"True if the user must supply a value for this parameter; false otherwise."
+        qmf_property :visibility_level, :uint8, :desc=>"The current \"visibility level\" for this parameter."
+        qmf_property :requires_restart, :bool, :desc=>"True if the application must be restarted to see a change to this parameter; false otherwise."
+        qmf_property :depends, :list, :desc=>"A set of parameter names that this parameter depends on."
+        qmf_property :conflicts, :list, :desc=>"A set of parameter names that this parameter conflicts with."
+        
         ### Schema method declarations
         
-        # getType 
-        # * type (uint8/O)
-        def getType()
-          log.debug "getType called on param #{self.inspect}"
-          # Assign values to output parameters
-          return kind
-        end
-        
-        expose :getType do |args|
-          args.declare :type, :sstr, :out, "An int corresponding to the type of this parameter."
-        end
-        
-        # setType 
+        # setKind
         # * ty (uint8/I)
-        def setType(type)
+        def setKind(ty)
           # Print values of input parameters
           log.debug "setType: type => #{type.inspect}"
-          self.kind = type
+          self.kind = ty
         end
         
-        expose :setType do |args|
-          args.declare :type, :sstr, :in, "An int corresponding to the type of this parameter."
+        expose :setKind do |args|
+          args.declare :kind, :sstr, :in, "The type of this parameter."
         end
         
-        # getDefault 
+        # default 
         # * default (lstr/O)
-        def getDefault()
+        def default
           log.debug "getDefault called on param #{self.inspect}"
           # Assign values to output parameters
           self.default_val ||= ""
           # Return value
           return self.default_val
-        end
-        
-        expose :getDefault do |args|
-          args.declare :default, :lstr, :out, "The current default value for this parameter."
         end
         
         # setDefault 
@@ -99,18 +92,15 @@ module Mrg
           args.declare :default, :lstr, :in, "The new default value for this parameter."
         end
         
-        # getDescription 
-        # * description (lstr/O)
-        def getDescription()
+        alias db_description description
+        alias db_description= description=
+
+        def description()
           log.debug "getDescription called on param #{self.inspect}"
           # Assign values to output parameters
-          self.description ||= ""
+          self.db_description ||= ""
           # Return value
-          return self.description
-        end
-        
-        expose :getDescription do |args|
-          args.declare :description, :lstr, :out, "The description of this parameter."
+          return self.db_description
         end
         
         # setDescription 
@@ -120,48 +110,31 @@ module Mrg
           log.debug "setDescription: description => #{description.inspect}"
           # XXX:  is this necessary?
           # DirtyElement.dirty_parameter(self)
-          self.description = description
+          self.db_description = description
         end
         
         expose :setDescription do |args|
           args.declare :description, :lstr, :in, "A new description of this parameter."
         end
-        
-        # getDefaultMustChange 
-        # * mustChange (bool/O)
-        def getDefaultMustChange()
-          log.debug "getDefaultMustChange called on param #{self.inspect}"
-          return self.must_change
-        end
-        
-        expose :getDefaultMustChange do |args|
-          args.declare :mustChange, :bool, :out, "True if the user must supply a value for this parameter; false otherwise."
-        end
-        
-        # setDefaultMustChange 
+                
+        # setMustChange 
         # * mustChange (bool/I)
-        def setDefaultMustChange(mustChange)
+        def setMustChange(mustChange)
           # Print values of input parameters
           log.debug "setDefaultMustChange: mustChange => #{mustChange.inspect}"
           DirtyElement.dirty_parameter(self)
           self.must_change = mustChange
         end
         
-        expose :setDefaultMustChange do |args|
+        expose :setMustChange do |args|
           args.declare :mustChange, :bool, :in, "True if the user must supply a value for this parameter; false otherwise."
         end
         
-        # getVisibilityLevel 
-        # * level (uint8/O)
-        def getVisibilityLevel()
+        def visibility_level()
           log.debug "getVisibilityLevel called on param #{self.inspect}"
           self.level ||= 0
           # Return value
           return self.level
-        end
-        
-        expose :getVisibilityLevel do |args|
-          args.declare :level, :uint8, :out, "The current \"visibility level\" for this parameter."
         end
         
         # setVisibilityLevel 
@@ -180,7 +153,7 @@ module Mrg
         
         # getRequiresRestart 
         # * needsRestart (bool/O)
-        def getRequiresRestart()
+        def requires_restart
           log.debug "getRequiresRestart called on param #{self.inspect}"
           # Assign values to output parameters
           self.needsRestart ||= false
@@ -204,19 +177,7 @@ module Mrg
         expose :setRequiresRestart do |args|
           args.declare :needsRestart, :bool, :in, "True if the application must be restarted to see a change to this parameter; false otherwise."
         end
-        
-        # getDepends 
-        # * depends (map/O)
-        #   A set of parameter names that this one depends on
-        def getDepends()
-          log.debug "getDepends called on param #{self.inspect}"
-          depends
-        end
-        
-        expose :getDepends do |args|
-          args.declare :depends, :list, :out, "A set of parameter names that this parameter depends on."
-        end
-        
+
         # modifyDepends 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
@@ -238,18 +199,6 @@ module Mrg
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :depends, :list, :in, "A set of parameter names that this one depends on."
           args.declare :options, :map, :in, "No options are supported at this time."
-        end
-        
-        # getConflicts 
-        # * conflicts (map/O)
-        #   A set of parameter names that conflict with the parameter
-        def getConflicts()
-          log.debug "getConflicts called on param #{self.inspect}"
-          conflicts
-        end
-        
-        expose :getConflicts do |args|
-          args.declare :conflicts, :list, :out, "A set of parameter names that this parameter conflicts with."
         end
         
         # modifyConflicts 
@@ -320,11 +269,7 @@ module Mrg
             acc
           end
         end
-        
-        private
-        
-        include ArcUtils
-        
+
         def depends
           find_arcs(ParameterArc,ArcLabel.depends_on('param')) {|pa| pa.dest.name }
         end
@@ -332,6 +277,10 @@ module Mrg
         def conflicts
           find_arcs(ParameterArc,ArcLabel.conflicts_with('param')) {|pa| pa.dest.name }
         end
+                
+        private
+        
+        include ArcUtils
         
         def depends=(deps)
           set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)

@@ -36,7 +36,7 @@ module Mrg
 
         it "should not validate nodeless configurations that do not provide values for must-change parameters" do
           param = @store.addParam("FOO")
-          param.setDefaultMustChange(true)
+          param.setMustChange(true)
 
           feature = @store.addFeature("FooFeature")
           feature.modifyParams("ADD", {"FOO"=>0}, {})

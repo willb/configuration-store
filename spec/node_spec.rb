@@ -174,7 +174,7 @@ module Mrg
           group = @store.addExplicitGroup("FAILNODES")
           
           # step 1:  add two mustchange params (and some other params for good measure)
-          %w{FIRST SECOND THIRD FOURTH FIFTH}.each {|nm| @store.addParam(nm).setDefaultMustChange(true)}
+          %w{FIRST SECOND THIRD FOURTH FIFTH}.each {|nm| @store.addParam(nm).setMustChange(true)}
           
           # step 2:  create a feature that has these params enabled
           feature = @store.addFeature("Pony Accelerator")
@@ -435,7 +435,7 @@ module Mrg
 
           it "should, if it is #{nodekind}, not validate configurations that do not provide values for must-change parameters" do
             param = @store.addParam("FOO")
-            param.setDefaultMustChange(true)
+            param.setMustChange(true)
 
             feature = @store.addFeature("FooFeature")
             feature.modifyParams("ADD", {"FOO"=>0}, {})
@@ -467,7 +467,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
                 param = @store.addParam("FOO")
-                param.setDefaultMustChange(mustchange)
+                param.setMustChange(mustchange)
 
                 feature = @store.addFeature("FooFeature")
                 feature.modifyParams("ADD", {"FOO"=>0}, {})
@@ -491,7 +491,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
                 param = @store.addParam("FOO")
-                param.setDefaultMustChange(mustchange)
+                param.setMustChange(mustchange)
 
                 feature = @store.addFeature("FooFeature")
                 feature.modifyParams("ADD", {"FOO"=>0}, {})
@@ -516,7 +516,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
                 param = @store.addParam("FOO")
-                param.setDefaultMustChange(mustchange)
+                param.setMustChange(mustchange)
 
                 feature = @store.addFeature("FooFeature")
                 feature.modifyParams("ADD", {"FOO"=>0}, {})
@@ -545,7 +545,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
-                params.each {|param| param.setDefaultMustChange(mustchange)}
+                params.each {|param| param.setMustChange(mustchange)}
 
                 features = %w{FooBarFeature BlahFeature}.map {|fname| @store.addFeature(fname)}
                 features[0].modifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
@@ -572,7 +572,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
-                params.each {|param| param.setDefaultMustChange(mustchange)}
+                params.each {|param| param.setMustChange(mustchange)}
 
                 features = %w{FooBarFeature BlahFeature}.map {|fname| @store.addFeature(fname)}
                 features[0].modifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
@@ -599,7 +599,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
-                params.each {|param| param.setDefaultMustChange(mustchange)}
+                params.each {|param| param.setMustChange(mustchange)}
 
                 features = %w{FooBarFeature BlahFeature}.map {|fname| @store.addFeature(fname)}
                 features[0].modifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
@@ -627,7 +627,7 @@ module Mrg
 
               it "should, if it is #{nodekind}, report the highest-priority parameter value in #{action}d configurations that provide values for #{mustchangestr} parameters in multiple places" do
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
-                params.each {|param| param.setDefaultMustChange(mustchange)}
+                params.each {|param| param.setMustChange(mustchange)}
 
                 features = %w{FooBarFeature BlahFeature}.map {|fname| @store.addFeature(fname)}
                 features[0].modifyParams("ADD", {"FOO"=>0, "BAR"=>0}, {})
