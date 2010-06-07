@@ -160,7 +160,7 @@ module Mrg
           
           param_map.values.each {|param| @store.addParam(param)}
           features = %w{FredFeature BarneyFeature WilmaFeature BettyFeature}.map {|fn| f = @store.addFeature(fn); f.modifyParams("ADD", {param_map[fn]=>fn}); f}
-          features[0].modifyIncludes("ADD", Array[*features[1..-1].map{|f| f.name}])
+          features[0].modifyIncludedFeatures("ADD", Array[*features[1..-1].map{|f| f.name}])
           
           group.modifyFeatures("ADD", Array[features[0].name])
           

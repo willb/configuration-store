@@ -297,7 +297,7 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].modifyIncludes("ADD", [dep_dests[2].name])
+          dep_dests[0].modifyIncludedFeatures("ADD", [dep_dests[2].name])
           default.modifyFeatures("ADD", [dep_dests[0].name])
           
           ffg = Feature.features_for_group(default)
@@ -408,7 +408,7 @@ module Mrg
           
           idgroup = node.idgroup
           
-          dep_dests[2].modifyIncludes("ADD", [dep_dests[3].name])
+          dep_dests[2].modifyIncludedFeatures("ADD", [dep_dests[3].name])
           
           idgroup.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
@@ -429,11 +429,11 @@ module Mrg
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.modifyIncludes("ADD", [dependent.name])
+            feature.modifyIncludedFeatures("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].modifyIncludes("ADD", [dep_dests[0].name])
+            dep_dests[-1].modifyIncludedFeatures("ADD", [dep_dests[0].name])
           }.should raise_error
         end
 
@@ -453,7 +453,7 @@ module Mrg
           }.should raise_error
         end
         
-        [["include", "inclusion", :includes, :modifyIncludes, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = Array
           nouns = create_dest_msg == :addFeature ? "features" : "subsystems"

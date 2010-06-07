@@ -64,12 +64,12 @@ module Mrg
           args.declare :name, :sstr, :in, "A new name for this feature; this name must not already be in use by another feature."
         end
         
-        # modifyIncludes 
+        # modifyIncludedFeatures 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other feature names a feature includes
-        def modifyIncludes(command,features,options={})
+        def modifyIncludedFeatures(command,features,options={})
           # Print values of input parameters
           log.debug "modifyFeatures: command => #{command.inspect}"
           log.debug "modifyFeatures: features => #{features.inspect}"
@@ -80,11 +80,11 @@ module Mrg
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
           
-          modify_arcs(command,fl,options,:includes,:includes=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
+          modify_arcs(command,fl,options,:included_features,:included_features=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
         end
         
-        expose :modifyIncludes do |args|
+        expose :modifyIncludedFeatures do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :features, :list, :in, "A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE)."
           args.declare :options, :map, :in, "No options are supported at this time."
@@ -165,7 +165,7 @@ module Mrg
 
         qmf_property :conflicts, :list, :desc=>"A set of other features that this feature conflicts with"
         qmf_property :depends, :list, :desc=>"A list of other features that this feature depends on"
-        qmf_property :includes, :list, :desc=>"A list of other features that this feature includes, in priority order"
+        qmf_property :included_features, :list, :desc=>"A list of other features that this feature includes, in priority order"
         
         # modifyConflicts 
         # * command (sstr/I)
@@ -218,7 +218,7 @@ module Mrg
         end
         
         def apply_to(dict)
-          includes.reverse_each do |ifname|
+          included_features.reverse_each do |ifname|
             included_feature = self.class.find_first_by_name(ifname)
             dict = included_feature.apply_to(dict)
           end
@@ -236,7 +236,7 @@ module Mrg
         
         def x_includes(xtra = nil)
           xtra ||= []
-          (includes | xtra).inject([]) do |acc,feat|
+          (included_features | xtra).inject([]) do |acc,feat|
             acc << feat
             acc |= Feature.find_first_by_name(feat).x_includes
             acc
@@ -305,7 +305,7 @@ module Mrg
           find_arcs(FeatureArc,ArcLabel.conflicts_with('feature')) {|a| a.dest.name }
         end
 
-        def includes
+        def included_features
           find_arcs(FeatureArc,ArcLabel.inclusion('feature')) {|a| a.dest.name }
         end
         
@@ -338,7 +338,7 @@ module Mrg
           set_arcs(FeatureArc, ArcLabel.conflicts_with('feature'), conflicts, :find_first_by_name)
         end
 
-        def includes=(deps)
+        def included_features=(deps)
           set_arcs(FeatureArc, ArcLabel.inclusion('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
         

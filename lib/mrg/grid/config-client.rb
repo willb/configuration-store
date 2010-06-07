@@ -158,14 +158,12 @@ module Mrg
           @qmfo.setName(name)
         end
         
-        def includes()
-          @qmfo.includes
+        def included_features()
+          @qmfo.included_features
         end
         
-        alias getFeatures includes
-        
-        def modifyIncludes(command, features, options={})
-          @qmfo.modifyIncludes(command, features, options)
+        def modifyIncludedFeatures(command, features, options={})
+          @qmfo.modifyIncludedFeatures(command, features, options)
         end
         
         def params()
