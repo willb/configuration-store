@@ -251,7 +251,7 @@ module Mrg
             param.setType(old_param.kind)
             param.setDefault(old_param.default_val)
             param.setDescription(old_param.description)
-            param.setDefaultMustChange(old_param.must_change)
+            param.setMustChange(old_param.must_change)
             param.setVisibilityLevel(old_param.level)
             param.setRequiresRestart(old_param.needs_restart)
 
@@ -391,14 +391,14 @@ module Mrg
             param = get_object(p)
             out = Parameter.new
             out.name = param.name
-            out.kind = param.getType
-            out.default_val = param.getDefault.to_s
-            out.description = param.getDescription
-            out.must_change = param.getDefaultMustChange
-            out.level = param.getVisibilityLevel
-            out.needs_restart = param.getRequiresRestart
-            out.conflicts = fs_normalize(param.getConflicts)
-            out.depends = fs_normalize(param.getDepends)
+            out.kind = param.kind
+            out.default_val = param.default.to_s
+            out.description = param.description
+            out.must_change = param.must_change
+            out.level = param.visibility_level
+            out.needs_restart = param.requires_restart
+            out.conflicts = fs_normalize(param.conflicts)
+            out.depends = fs_normalize(param.depends)
             out
           end
         end

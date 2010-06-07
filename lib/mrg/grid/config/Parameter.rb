@@ -61,7 +61,7 @@ module Mrg
         # * ty (uint8/I)
         def setKind(ty)
           # Print values of input parameters
-          log.debug "setType: type => #{type.inspect}"
+          log.debug "setType: type => #{ty.inspect}"
           self.kind = ty
         end
         

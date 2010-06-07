@@ -86,64 +86,64 @@ module Mrg
           @qmfo.name
         end
         
-        def getType
-          @qmfo.getType.args["type"]
+        def kind
+          @qmfo.kind
         end
 
-        def setType(t)
-          @qmfo.setType(t)
+        def setKind(t)
+          @qmfo.setKind(t)
         end
         
-        def getDefault
-          @qmfo.getDefault.default
+        def default
+          @qmfo.default
         end
 
         def setDefault(v)
           @qmfo.setDefault(v)
         end
         
-        def getDescription
-          @qmfo.getDescription.description
+        def description
+          @qmfo.description
         end
 
         def setDescription(d)
           @qmfo.setDescription(d)
         end
         
-        def getVisibilityLevel
-          @qmfo.getVisibilityLevel.level
+        def visibility_level
+          @qmfo.visibility_level
         end
 
         def setVisibilityLevel(level)
           @qmfo.setVisibilityLevel(level)
         end
 
-        def getRequiresRestart
-          @qmfo.getRequiresRestart.needsRestart
+        def requires_restart
+          @qmfo.requires_restart
         end
 
         def setRequiresRestart(needsRestart)
           @qmfo.setRequiresRestart(needsRestart)
         end
 
-        def getDefaultMustChange
-          @qmfo.getDefaultMustChange.mustChange
+        def must_change
+          @qmfo.must_change
         end
         
-        def setDefaultMustChange(mustChange)
-          @qmfo.setDefaultMustChange(mustChange)
+        def setMustChange(mustChange)
+          @qmfo.setMustChange(mustChange)
         end
 
-        def getDepends
-          @qmfo.getDepends.depends
+        def depends
+          @qmfo.depends
         end
 
         def modifyDepends(c,d,o)
           @qmfo.modifyDepends(c,d.uniq,o)
         end
 
-        def getConflicts
-          @qmfo.getConflicts.conflicts
+        def conflicts
+          @qmfo.conflicts
         end
 
         def modifyConflicts(c,co,o)
