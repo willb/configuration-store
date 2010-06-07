@@ -48,26 +48,21 @@ module Mrg
       end
       
       class Group < ClientObj
-        def getMembership
+        def membership
           @qmfo.membership
         end
         
-        def getName
+        def name
           @qmfo.name
         end
         
-        def getFeatures
+        def features
           @qmfo.features
         end
         
-        def getParams
+        def params
           @qmfo.params
         end
-        
-        alias features getFeatures
-        alias name getName
-        alias membership getMembership
-        alias params getParams
         
         def modifyFeatures(c,fs,o)
           @qmfo.modifyFeatures(c,fs,o)
@@ -163,7 +158,7 @@ module Mrg
           @qmfo.setName(name)
         end
         
-        def getFeatures()
+        def includes()
           @qmfo.includes
         end
         
@@ -173,18 +168,13 @@ module Mrg
           @qmfo.modifyIncludes(command, features, options)
         end
         
-        alias modifyIncludes modifyFeatures
-        
-        def getParams()
+        def params()
           @qmfo.params
         end
         
-        def getParamMeta()
+        def param_meta()
           @qmfo.param_meta
         end
-        
-        alias getParams params
-        alias getParamMeta param_meta
         
         def modifyParams(command,pvmap,options={})
           @qmfo.modifyParams(command,pvmap,options)
@@ -202,17 +192,14 @@ module Mrg
           @qmfo.modifySubsys(command, subsys.uniq, options)
         end
         
-        def getConflicts
+        def conflicts
           @qmfo.conflicts
         end
 
-        def getDepends
+        def depends
           @qmfo.depends
         end
-        
-        alias getDepends depends
-        alias getConflicts conflicts
-        
+                
         private
         include ObjResolver
       end
