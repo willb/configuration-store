@@ -128,7 +128,7 @@
     * config (map/out)
 
       Parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings.
-  * getParams()
+  * params()
     * params (map/out)
 
       A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)
@@ -237,7 +237,7 @@
     * name (sstr/in)
 
       A new name for this feature; this name must not already be in use by another feature.
-  * getParams()
+  * params()
     * params (map/out)
 
       A map from parameter names to their values as set in this feature
@@ -266,7 +266,7 @@
     * options (map/in)
 
       No options are supported at this time.
-  * getParams()
+  * params()
     * params (list/out)
 
       A list representing the set of parameter names that this subsystem is interested in.

@@ -207,8 +207,8 @@ module Mrg
           @qmfo.name
         end
         
-        def getParams
-          @qmfo.getParams.params
+        def params
+          @qmfo.params
         end
         
         def modifyParams(command, params, options)

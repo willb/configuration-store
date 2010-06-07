@@ -33,19 +33,9 @@ module Mrg
         declare_index_on :name
         
         qmf_property :name, :sstr, :index=>true
+        qmf_property :params, :list, :desc=>"A list representing the set of parameter names that this subsystem is interested in."
         ### Schema method declarations
-        
-        # getParams 
-        # * params (map/O)
-        #   A set of parameter names that the subsystem is interested in
-        def getParams()
-          params
-        end
-        
-        expose :getParams do |args|
-          args.declare :params, :list, :out, "A list representing the set of parameter names that this subsystem is interested in."
-        end
-        
+
         # modifyParams 
         # * command (sstr/I)
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
@@ -70,12 +60,12 @@ module Mrg
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
-        private
-        include ArcUtils
-        
         def params
           find_arcs(SubsystemParams,ArcLabel.implication('parameter')) {|a| a.dest.name }
         end
+        
+        private
+        include ArcUtils
         
         def params=(deps)
           set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name, :klass=>Parameter)

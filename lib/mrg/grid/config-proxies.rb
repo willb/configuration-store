@@ -427,7 +427,7 @@ module Mrg
             subsys = get_object(s)
             out = Subsystem.new
             out.name = subsys.name
-            out.params = fs_normalize(subsys.getParams)
+            out.params = fs_normalize(subsys.params)
             out
           end
         end
