@@ -150,8 +150,8 @@ module Mrg
       end
       
       class Feature < ClientObj
-        def getName
-          @qmfo.getName.name
+        def name
+          @qmfo.name
         end
         
         def setName(name)
@@ -232,16 +232,16 @@ module Mrg
           @qmfo.last_checkin
         end
 
-        def getIdentityGroup
-          get_object(@qmfo.getIdentityGroup.group, Group)
+        def identity_group
+          get_object(@qmfo.identity_group.group, Group)
         end
 
         def modifyMemberships(command, groups, options)
           @qmfo.modifyMemberships(command, groups, options)
         end
 
-        def getMemberships
-          @qmfo.getMemberships.groups
+        def memberships
+          @qmfo.memberships
         end
 
         def getConfig

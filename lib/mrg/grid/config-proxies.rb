@@ -369,7 +369,7 @@ module Mrg
             out = Node.new
             out.name = node.name
             out.provisioned = node.provisioned
-            out.membership = fl_normalize(node.getMemberships)
+            out.membership = fl_normalize(node.memberships)
             out
           end
         end
@@ -378,7 +378,7 @@ module Mrg
           get_instances(:Group).map do |g|
             group = get_object(g)
             out = Group.new
-            out.name = group.getName
+            out.name = group.name
             out.is_identity_group = group.is_identity_group
             out.features = fl_normalize(group.features)
             out.params = group.params

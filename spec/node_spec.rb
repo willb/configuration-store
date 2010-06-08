@@ -45,7 +45,7 @@ module Mrg
 
         it "should have an affiliated identity group" do
           n = @store.addNode("blather.local.")
-          group = n.getIdentityGroup
+          group = n.identity_group
           
           expected_group_name = "+++#{Digest::MD5.hexdigest("blather.local.")}"
           group.should_not == nil
@@ -64,7 +64,7 @@ module Mrg
         ["add","ADD"].each do |p_cmd|
           it "should be possible to #{p_cmd} params on the identity group" do
             n = @store.addNode("blather.local.")
-            group = n.getIdentityGroup
+            group = n.identity_group
             prm = @store.addParam("BIOTECH")
 
             group.modifyParams(p_cmd, {"BIOTECH"=>"true"})
@@ -77,7 +77,7 @@ module Mrg
 
           it "should be possible to #{p_cmd} features on the identity group" do
             n = @store.addNode("blather.local.")
-            group = n.getIdentityGroup
+            group = n.identity_group
             
             @store.addParam("BIOTECH")
             @store.addParam("UKULELE")
@@ -113,7 +113,7 @@ module Mrg
         
         it "should not be a member of any groups by default" do
           n = @store.addNode("blather.local.")
-          n.getMemberships.size.should == 0
+          n.memberships.size.should == 0
         end
         
         it "should be possible to add a node to a group" do
@@ -122,8 +122,8 @@ module Mrg
           groups = groupnames.map {|g| @store.addExplicitGroup(g)}
           n.modifyMemberships("ADD", Array[*groupnames])
           
-          n.getMemberships.size.should == groupnames.size
-          n.getMemberships.should == Array[*groupnames]
+          n.memberships.size.should == groupnames.size
+          n.memberships.should == Array[*groupnames]
         end
         
         it "should be unprovisioned unless explicitly added" do
@@ -154,7 +154,7 @@ module Mrg
 
         it "should set parameters from an enabled feature F and all features that F includes" do
           node = @store.addNode("blather.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           
           param_map = Hash[*%w{FredFeature BarneyFeature WilmaFeature BettyFeature}.map {|fn| [fn, fn.sub("Feature", "").upcase]}.flatten]
           
@@ -296,7 +296,7 @@ module Mrg
             feature2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
             Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
-            node.getIdentityGroup.modifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
+            node.identity_group.modifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
             config = node.getConfig
 
             config.should have_key("STRINGSET")
@@ -319,7 +319,7 @@ module Mrg
             feature3.modifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
 
             Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
-            node.getIdentityGroup.modifyFeatures("ADD", Array[feature3.name], {})
+            node.identity_group.modifyFeatures("ADD", Array[feature3.name], {})
             config = node.getConfig
 
             config.should have_key("STRINGSET")
@@ -360,7 +360,7 @@ module Mrg
             feature1.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
             feature2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
 
-            node.getIdentityGroup.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
+            node.identity_group.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
             config = node.getConfig
 
             config.should have_key("STRINGSET")
@@ -418,7 +418,7 @@ module Mrg
 
             node = @store.send(node_find_msg, "blah.local.")
 
-            node.getIdentityGroup.modifyFeatures("ADD", Array[features[0].name], {})
+            node.identity_group.modifyFeatures("ADD", Array[features[0].name], {})
 
             config = node.getConfig
             node.validate.should_not == true
@@ -441,7 +441,7 @@ module Mrg
             feature.modifyParams("ADD", {"FOO"=>0}, {})
 
             node = @store.send(node_find_msg, "blah.local.")
-            node.getIdentityGroup.modifyFeatures("ADD", Array[feature.name], {})
+            node.identity_group.modifyFeatures("ADD", Array[feature.name], {})
 
             config = node.getConfig
 
@@ -473,7 +473,7 @@ module Mrg
                 feature.modifyParams("ADD", {"FOO"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.getIdentityGroup.modifyFeatures("ADD", Array[feature.name], {})
+                node.identity_group.modifyFeatures("ADD", Array[feature.name], {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
@@ -499,7 +499,7 @@ module Mrg
                 node = @store.send(node_find_msg, "blah.local.")
                 Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature.name], {})
 
-                node.getIdentityGroup.modifyParams("ADD", {"FOO"=>"ARGH"}, {})
+                node.identity_group.modifyParams("ADD", {"FOO"=>"ARGH"}, {})
 
                 config = node.getConfig
 
@@ -528,7 +528,7 @@ module Mrg
                 node = @store.send(node_find_msg, "blah.local.")
                 Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature.name], {})
 
-                node.getIdentityGroup.modifyFeatures("ADD", Array[feature2.name], {})
+                node.identity_group.modifyFeatures("ADD", Array[feature2.name], {})
 
                 config = node.getConfig
 
@@ -554,7 +554,7 @@ module Mrg
                 node = @store.send(node_find_msg, "blah.local.")
                 Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
-                node.getIdentityGroup.modifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
+                node.identity_group.modifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
                 config = node.getConfig
 
@@ -579,7 +579,7 @@ module Mrg
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.getIdentityGroup.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
@@ -606,10 +606,10 @@ module Mrg
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.getIdentityGroup.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-                node.getIdentityGroup.modifyParams("ADD", {"BAR"=>"BARGH"}, {})
+                node.identity_group.modifyParams("ADD", {"BAR"=>"BARGH"}, {})
 
                 config = node.getConfig
 
@@ -634,10 +634,10 @@ module Mrg
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.getIdentityGroup.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
-                node.getIdentityGroup.modifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
+                node.identity_group.modifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})
 
                 config = node.getConfig
 

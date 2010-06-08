@@ -166,14 +166,14 @@
     * config (map/out)
 
       A map from parameter names to values representing the configuration for this node.
-  * getMemberships()
+  * memberships()
     * groups (list/out)
 
       A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group.
   * checkConfigVersion(version)
     * version (uint32/in)
   * makeProvisioned()
-  * getIdentityGroup()
+  * identity_group()
     * group (ref/out)
 
       The object ID of this node's identity group.
