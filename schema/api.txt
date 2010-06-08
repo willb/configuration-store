@@ -1,448 +1,433 @@
 ## com.redhat.grid.config:Snapshot ##
-  * name (sstr property)
-
-## com.redhat.grid.config:Parameter ##
-  * name (sstr property)
-  * getDescription()
-    * description (lstr/out)
-
-      The description of this parameter.
-  * getType()
-    * type (sstr/out)
-
-      An int corresponding to the type of this parameter.
-  * modifyConflicts(command, conflicts, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * conflicts (list/in)
-
-      A set of parameter names that this parameter conflicts with.
-    * options (map/in)
-
-      No options are supported at this time.
-  * getDefault()
-    * default (lstr/out)
-
-      The current default value for this parameter.
-  * modifyDepends(command, depends, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * depends (list/in)
-
-      A set of parameter names that this one depends on.
-    * options (map/in)
-
-      No options are supported at this time.
-  * setDescription(description)
-    * description (lstr/in)
-
-      A new description of this parameter.
-  * setVisibilityLevel(level)
-    * level (uint8/in)
-
-      The new "visibility level" for this parameter.
-  * getDefaultMustChange()
-    * mustChange (bool/out)
-
-      True if the user must supply a value for this parameter; false otherwise.
-  * getRequiresRestart()
-    * needsRestart (bool/out)
-
-      True if the application must be restarted to see a change to this parameter; false otherwise.
-  * setDefault(default)
-    * default (lstr/in)
-
-      The new default value for this parameter.
-  * setRequiresRestart(needsRestart)
-    * needsRestart (bool/in)
-
-      True if the application must be restarted to see a change to this parameter; false otherwise.
-  * getConflicts()
-    * conflicts (list/out)
-
-      A set of parameter names that this parameter conflicts with.
-  * setDefaultMustChange(mustChange)
-    * mustChange (bool/in)
-
-      True if the user must supply a value for this parameter; false otherwise.
-  * getDepends()
-    * depends (list/out)
-
-      A set of parameter names that this parameter depends on.
-  * getVisibilityLevel()
-    * level (uint8/out)
-
-      The current "visibility level" for this parameter.
-  * setType(type)
-    * type (sstr/in)
-
-      An int corresponding to the type of this parameter.
-
-## com.redhat.grid.config:Configuration ##
-  * version (uint64 property)
-
-## com.redhat.grid.config:Group ##
-  * uid (uint32 property)
-  * is_identity_group (bool property)
-  * modifyFeatures(command, features, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * features (list/in)
-
-      A list of features to apply to this group, in order of decreasing priority.
-    * options (map/in)
-
-      No options are supported at this time.
-  * clearFeatures()
-    * ret (int64/out)
-
-      0 if successful.
-  * clearParams()
-    * ret (int64/out)
-
-      0 if successful.
-  * removeFeature(feature)
-    * feature (lstr/in)
-  * modifyParams(command, params, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * params (map/in)
-
-      A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)
-    * options (map/in)
-
-      No options are supported at this time.
-  * getName()
-    * name (sstr/out)
-
-      This group's name.
-  * setName(name)
-    * name (sstr/in)
-
-      A new name for this group; it must not be in use by another group.
-  * getConfig()
-    * config (map/out)
-
-      Parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings.
-  * getParams()
-    * params (map/out)
-
-      A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)
-  * getFeatures()
-    * features (list/out)
-
-      A list of features to be applied to this group, from highest to lowest priority.
-  * getMembership()
-    * nodes (list/out)
-
-      A list of node names from the nodes that are members of this group.
-  * addFeature(feature)
-    * feature (lstr/in)
-
-## com.redhat.grid.config:Node ##
-  * name (sstr property)
-  * provisioned (bool property)
-  * last_checkin (uint64 property)
-  * last_updated_version (uint64 property)
-  * checkin()
-  * modifyMemberships(command, groups, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * groups (list/in)
-
-      A list of groups, in inverse priority order (most important first).
-    * options (map/in)
-
-      No options are supported at this time.
-  * getConfig(options)
-    * options (map/in)
-
-      Valid options include 'version', which maps to a version number.  If this is supplied, return the latest version not newer than 'version'.
-    * config (map/out)
-
-      A map from parameter names to values representing the configuration for this node.
-  * getMemberships()
-    * groups (list/out)
-
-      A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group.
-  * checkConfigVersion(version)
-    * version (uint32/in)
-  * makeProvisioned()
-  * getIdentityGroup()
-    * group (ref/out)
-
-      The object ID of this node's identity group.
-  * makeUnprovisioned()
-
-## com.redhat.grid.config:Feature ##
-  * uid (uint32 property)
-  * clearParams()
-    * ret (int64/out)
-
-      0 if successful.
-  * modifyFeatures(command, features, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * features (list/in)
-
-      A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE).
-    * options (map/in)
-
-      No options are supported at this time.
-  * modifyConflicts(command, conflicts, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * conflicts (list/in)
-
-      A set of other feature names that conflict with the feature
-    * options (map/in)
-
-      No options are supported at this time.
-  * modifyDepends(command, depends, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * depends (list/in)
-
-      A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
-    * options (map/in)
-
-      No options are supported at this time.
-  * modifyParams(command, params, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * params (map/in)
-
-      A map from parameter names to their corresponding values, as strings, for this feature.  To use the default value for a parameter, give it the value 0 (as an int).
-    * options (map/in)
-
-      No options are supported at this time.
-  * getName()
-    * name (sstr/out)
-
-      This feature's name.
-  * getParamMeta()
-    * param_info (map/out)
-
-      A map from parameter names used in this feature to maps of metadata about those params
-  * setName(name)
-    * name (sstr/in)
-
-      A new name for this feature; this name must not already be in use by another feature.
-  * getParams()
-    * params (map/out)
-
-      A map from parameter names to their values as set in this feature
-  * getFeatures()
-    * features (list/out)
-
-      A list, in priority order, of the names of features that this feature includes (that is, extends).
-  * getConflicts()
-    * conflicts (list/out)
-
-      A list representing the set of features that this one conflicts with.
-  * getDepends()
-    * depends (list/out)
-
-      A list of other features that this feature depends on for proper operation, in priority order.
-
-## com.redhat.grid.config:Subsystem ##
-  * name (sstr property)
-  * modifyParams(command, params, options)
-    * command (sstr/in)
-
-      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
-    * params (list/in)
-
-      A list representing the set of parameter names that this subsystem should be interested in (for ADD and REPLACE) or should not be interested in (for REMOVE).
-    * options (map/in)
-
-      No options are supported at this time.
-  * getParams()
-    * params (list/out)
-
-      A list representing the set of parameter names that this subsystem is interested in.
+  * <tt>name</tt> (<tt>sstr</tt> property)
 
 ## com.redhat.grid.config:Store ##
-  * apiVersionNumber (uint32 property)
+  * <tt>apiVersionNumber</tt> (<tt>uint32</tt> property)
 
     The version of the API the store supports
-  * checkNodeValidity(set)
-    * set (list/in)
-
-      A set of Mrg::Grid::Config::Node names to check for validity
-    * invalidNodes (list/out)
-
-      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Node names from the input set that do not correspond to valid Mrg::Grid::Config::Nodes
-  * addSubsys(name)
-    * obj (ref/out)
-
-      The object ID of the newly-created Subsystem object.
-    * name (sstr/in)
-
-      The name of the subsystem to create.
-  * getFeature(name)
-    * obj (ref/out)
-
-      The object ID of the Feature object corresponding to the requested feature.
-    * name (sstr/in)
-
-      The name of the feature to search for.
-  * getNode(name)
-    * obj (ref/out)
-
-      The object ID of the retrieved Node object.
-    * name (sstr/in)
-
-      The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name.
-  * removeFeature(name)
-    * name (sstr/in)
-
-      The name of the feature to remove.
-  * removeSnapshot(name)
-    * name (sstr/in)
-
-      A name for the snapshot to remove.
-  * removeParam(name)
-    * name (sstr/in)
-
-      The name of the parameter to remove.
-  * activateConfiguration()
-    * explain (map/out)
-
-      A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated.
-    * warnings (list/out)
-
-      A set of warnings encountered during configuration activation.
-  * checkFeatureValidity(set)
-    * set (list/in)
+  * <tt>checkFeatureValidity(set)</tt>
+    * <tt>set</tt> (<tt>list</tt>/in)
 
       A set of Mrg::Grid::Config::Feature names to check for validity
-    * invalidFeatures (list/out)
+    * <tt>invalidFeatures</tt> (<tt>list</tt>/out)
 
       A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Feature names from the input set that do not correspond to valid Mrg::Grid::Config::Features
-  * storeinit(options)
-    * options (map/in)
-
-      Setting 'RESETDB' will reset the configuration database.
-  * removeNode(name)
-    * name (sstr/in)
-
-      The name of the node to remove.
-  * checkParameterValidity(set)
-    * set (list/in)
-
-      A set of Mrg::Grid::Config::Parameter names to check for validity
-    * invalidParameters (list/out)
-
-      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Parameter names from the input set that do not correspond to valid Mrg::Grid::Config::Parameters
-  * getMustChangeParams()
-    * params (map/out)
-
-      Parameters that must change; a map from names to default values
-  * removeSubsys(name)
-    * name (sstr/in)
-
-      The name of the subsystem to remove.
-  * loadSnapshot(name)
-    * name (sstr/in)
-
-      A name for the snapshot to load.
-  * getParam(name)
-    * obj (ref/out)
-
-      The object ID of the requested Parameter object.
-    * name (sstr/in)
-
-      The name of the parameter to find.
-  * getGroupByName(name)
-    * name (sstr/in)
-
-      The name of the group to search for.
-    * obj (ref/out)
-
-      The object ID of the Group object corresponding to the requested group.
-  * getDefaultGroup()
-    * obj (ref/out)
-
-      The object ID of the Group object corresponding to the default group.
-  * checkGroupValidity(set)
-    * set (list/in)
-
-      A set of Mrg::Grid::Config::Group names to check for validity
-    * invalidGroups (list/out)
-
-      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Group names from the input set that do not correspond to valid Mrg::Grid::Config::Groups
-  * addParam(name)
-    * obj (ref/out)
-
-      The object ID of the newly-created Parameter object.
-    * name (sstr/in)
-
-      The name of the parameter to create.
-  * addExplicitGroup(name)
-    * obj (ref/out)
-
-      The object ID of the Group object corresponding to the newly-created group.
-    * name (sstr/in)
-
-      The name of the newly-created group.  Names beginning with '+++' are reserved for internal use.
-  * checkSubsystemValidity(set)
-    * set (list/in)
-
-      A set of Mrg::Grid::Config::Subsystem names to check for validity
-    * invalidSubsystems (list/out)
-
-      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Subsystem names from the input set that do not correspond to valid Mrg::Grid::Config::Subsystems
-  * makeSnapshot(name)
-    * name (sstr/in)
-
-      A name for this configuration.  A blank name will result in the store creating a name
-  * validateConfiguration()
-    * explain (map/out)
-
-      A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated.
-    * warnings (list/out)
-
-      A set of warnings encountered during configuration activation.
-  * getGroup(query)
-    * obj (ref/out)
-
-      The object ID of the Group object corresponding to the requested group.
-    * query (map/in)
-
-      A map from a query type to a query parameter. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID supplied as a parameter. 'Name' queryTypes will search for a group with the name supplied as a parameter.
-  * getSubsys(name)
-    * obj (ref/out)
-
-      The object ID of the requested Subsystem object.
-    * name (sstr/in)
-
-      The name of the subsystem to find.
-  * removeGroup(name)
-    * name (sstr/in)
-
-      The name of the group to remove.
-  * addNode(name)
-    * obj (ref/out)
+  * <tt>addNode(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
 
       The object ID of the newly-created Node object.
-    * name (sstr/in)
+    * <tt>name</tt> (<tt>sstr</tt>/in)
 
       The name of the node to create.
-  * addFeature(name)
-    * obj (ref/out)
+  * <tt>removeFeature(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the feature to remove.
+  * <tt>checkParameterValidity(set)</tt>
+    * <tt>set</tt> (<tt>list</tt>/in)
+
+      A set of Mrg::Grid::Config::Parameter names to check for validity
+    * <tt>invalidParameters</tt> (<tt>list</tt>/out)
+
+      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Parameter names from the input set that do not correspond to valid Mrg::Grid::Config::Parameters
+  * <tt>storeinit(options)</tt>
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      Setting 'RESETDB' will reset the configuration database.
+  * <tt>addSubsys(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the newly-created Subsystem object.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the subsystem to create.
+  * <tt>getFeature(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the Feature object corresponding to the requested feature.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the feature to search for.
+  * <tt>getNode(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the retrieved Node object.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name.
+  * <tt>removeSnapshot(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      A name for the snapshot to remove.
+  * <tt>removeParam(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the parameter to remove.
+  * <tt>activateConfiguration()</tt>
+    * <tt>explain</tt> (<tt>map</tt>/out)
+
+      A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated.
+    * <tt>warnings</tt> (<tt>list</tt>/out)
+
+      A set of warnings encountered during configuration activation.
+  * <tt>checkGroupValidity(set)</tt>
+    * <tt>set</tt> (<tt>list</tt>/in)
+
+      A set of Mrg::Grid::Config::Group names to check for validity
+    * <tt>invalidGroups</tt> (<tt>list</tt>/out)
+
+      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Group names from the input set that do not correspond to valid Mrg::Grid::Config::Groups
+  * <tt>removeNode(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the node to remove.
+  * <tt>checkSubsystemValidity(set)</tt>
+    * <tt>set</tt> (<tt>list</tt>/in)
+
+      A set of Mrg::Grid::Config::Subsystem names to check for validity
+    * <tt>invalidSubsystems</tt> (<tt>list</tt>/out)
+
+      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Subsystem names from the input set that do not correspond to valid Mrg::Grid::Config::Subsystems
+  * <tt>getMustChangeParams()</tt>
+    * <tt>params</tt> (<tt>map</tt>/out)
+
+      Parameters that must change; a map from names to default values
+  * <tt>removeSubsys(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the subsystem to remove.
+  * <tt>loadSnapshot(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      A name for the snapshot to load.
+  * <tt>getParam(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the requested Parameter object.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the parameter to find.
+  * <tt>getGroupByName(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the group to search for.
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the Group object corresponding to the requested group.
+  * <tt>getDefaultGroup()</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the Group object corresponding to the default group.
+  * <tt>checkNodeValidity(set)</tt>
+    * <tt>set</tt> (<tt>list</tt>/in)
+
+      A set of Mrg::Grid::Config::Node names to check for validity
+    * <tt>invalidNodes</tt> (<tt>list</tt>/out)
+
+      A (possibly-empty) set consisting of all of the Mrg::Grid::Config::Node names from the input set that do not correspond to valid Mrg::Grid::Config::Nodes
+  * <tt>addParam(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the newly-created Parameter object.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the parameter to create.
+  * <tt>addExplicitGroup(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the Group object corresponding to the newly-created group.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the newly-created group.  Names beginning with '+++' are reserved for internal use.
+  * <tt>makeSnapshot(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      A name for this configuration.  A blank name will result in the store creating a name
+  * <tt>validateConfiguration()</tt>
+    * <tt>explain</tt> (<tt>map</tt>/out)
+
+      A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated.
+    * <tt>warnings</tt> (<tt>list</tt>/out)
+
+      A set of warnings encountered during configuration activation.
+  * <tt>addFeature(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
 
       The object ID of the newly-created Feature object.
-    * name (sstr/in)
+    * <tt>name</tt> (<tt>sstr</tt>/in)
 
       The name of the feature to create.
+  * <tt>getGroup(query)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the Group object corresponding to the requested group.
+    * <tt>query</tt> (<tt>map</tt>/in)
+
+      A map from a query type to a query parameter. The queryType can be either 'ID' or 'Name'. 'ID' queryTypes will search for a group with the ID supplied as a parameter. 'Name' queryTypes will search for a group with the name supplied as a parameter.
+  * <tt>getSubsys(name)</tt>
+    * <tt>obj</tt> (<tt>ref</tt>/out)
+
+      The object ID of the requested Subsystem object.
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the subsystem to find.
+  * <tt>removeGroup(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      The name of the group to remove.
+
+## com.redhat.grid.config:Node ##
+  * <tt>name</tt> (<tt>sstr</tt> property)
+  * <tt>provisioned</tt> (<tt>bool</tt> property)
+  * <tt>last_checkin</tt> (<tt>uint64</tt> property)
+  * <tt>last_updated_version</tt> (<tt>uint64</tt> property)
+  * <tt>identityGroup</tt> (<tt>ref</tt> property)
+
+    The object ID of this node's identity group.
+  * <tt>memberships</tt> (<tt>list</tt> property)
+
+    A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group.
+  * <tt>getConfig(options)</tt>
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      Valid options include 'version', which maps to a version number.  If this is supplied, return the latest version not newer than 'version'.
+    * <tt>config</tt> (<tt>map</tt>/out)
+
+      A map from parameter names to values representing the configuration for this node.
+  * <tt>makeUnprovisioned()</tt>
+  * <tt>checkin()</tt>
+  * <tt>modifyMemberships(command, groups, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>groups</tt> (<tt>list</tt>/in)
+
+      A list of groups, in inverse priority order (most important first).
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>checkConfigVersion(version)</tt>
+    * <tt>version</tt> (<tt>uint32</tt>/in)
+  * <tt>makeProvisioned()</tt>
+
+## com.redhat.grid.config:Configuration ##
+  * <tt>version</tt> (<tt>uint64</tt> property)
+
+## com.redhat.grid.config:WallabyConfigEvent ##
+
+## com.redhat.grid.config:Group ##
+  * <tt>uid</tt> (<tt>uint32</tt> property)
+  * <tt>is_identity_group</tt> (<tt>bool</tt> property)
+  * <tt>membership</tt> (<tt>list</tt> property)
+
+    A list of node names from the nodes that are members of this group.
+  * <tt>name</tt> (<tt>sstr</tt> property)
+
+    This group's name.
+  * <tt>features</tt> (<tt>list</tt> property)
+
+    A list of features to be applied to this group, from highest to lowest priority.
+  * <tt>params</tt> (<tt>map</tt> property)
+
+    A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)
+  * <tt>modifyParams(command, params, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>params</tt> (<tt>map</tt>/in)
+
+      A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>removeFeature(feature)</tt>
+    * <tt>feature</tt> (<tt>lstr</tt>/in)
+  * <tt>getConfig()</tt>
+    * <tt>config</tt> (<tt>map</tt>/out)
+
+      Current parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings.
+  * <tt>clearParams()</tt>
+    * <tt>ret</tt> (<tt>int64</tt>/out)
+
+      0 if successful.
+  * <tt>setName(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      A new name for this group; it must not be in use by another group.
+  * <tt>clearFeatures()</tt>
+    * <tt>ret</tt> (<tt>int64</tt>/out)
+
+      0 if successful.
+  * <tt>addFeature(feature)</tt>
+    * <tt>feature</tt> (<tt>lstr</tt>/in)
+  * <tt>modifyFeatures(command, features, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>features</tt> (<tt>list</tt>/in)
+
+      A list of features to apply to this group, in order of decreasing priority.
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+
+## com.redhat.grid.config:Subsystem ##
+  * <tt>name</tt> (<tt>sstr</tt> property)
+  * <tt>params</tt> (<tt>list</tt> property)
+
+    A list representing the set of parameter names that this subsystem is interested in.
+  * <tt>modifyParams(command, params, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>params</tt> (<tt>list</tt>/in)
+
+      A list representing the set of parameter names that this subsystem should be interested in (for ADD and REPLACE) or should not be interested in (for REMOVE).
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+
+## com.redhat.grid.config:Parameter ##
+  * <tt>name</tt> (<tt>sstr</tt> property)
+  * <tt>kind</tt> (<tt>sstr</tt> property)
+
+    The type of this parameter
+  * <tt>default</tt> (<tt>lstr</tt> property)
+
+    The current default value for this parameter.
+  * <tt>description</tt> (<tt>lstr</tt> property)
+
+    The description of this parameter.
+  * <tt>must_change</tt> (<tt>bool</tt> property)
+
+    True if the user must supply a value for this parameter; false otherwise.
+  * <tt>visibility_level</tt> (<tt>uint8</tt> property)
+
+    The current "visibility level" for this parameter.
+  * <tt>requires_restart</tt> (<tt>bool</tt> property)
+
+    True if the application must be restarted to see a change to this parameter; false otherwise.
+  * <tt>depends</tt> (<tt>list</tt> property)
+
+    A set of parameter names that this parameter depends on.
+  * <tt>conflicts</tt> (<tt>list</tt> property)
+
+    A set of parameter names that this parameter conflicts with.
+  * <tt>setRequiresRestart(needsRestart)</tt>
+    * <tt>needsRestart</tt> (<tt>bool</tt>/in)
+
+      True if the application must be restarted to see a change to this parameter; false otherwise.
+  * <tt>setDescription(description)</tt>
+    * <tt>description</tt> (<tt>lstr</tt>/in)
+
+      A new description of this parameter.
+  * <tt>modifyDepends(command, depends, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>depends</tt> (<tt>list</tt>/in)
+
+      A set of parameter names that this one depends on.
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>setKind(kind)</tt>
+    * <tt>kind</tt> (<tt>sstr</tt>/in)
+
+      The type of this parameter.
+  * <tt>setMustChange(mustChange)</tt>
+    * <tt>mustChange</tt> (<tt>bool</tt>/in)
+
+      True if the user must supply a value for this parameter; false otherwise.
+  * <tt>setDefault(default)</tt>
+    * <tt>default</tt> (<tt>lstr</tt>/in)
+
+      The new default value for this parameter.
+  * <tt>setVisibilityLevel(level)</tt>
+    * <tt>level</tt> (<tt>uint8</tt>/in)
+
+      The new "visibility level" for this parameter.
+  * <tt>modifyConflicts(command, conflicts, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>conflicts</tt> (<tt>list</tt>/in)
+
+      A set of parameter names that this parameter conflicts with.
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>getRequiresRestart()</tt>
+    * <tt>needsRestart</tt> (<tt>bool</tt>/out)
+
+      True if the application must be restarted to see a change to this parameter; false otherwise.
+
+## com.redhat.grid.config:Feature ##
+  * <tt>name</tt> (<tt>sstr</tt> property)
+
+    This feature's name
+  * <tt>uid</tt> (<tt>uint32</tt> property)
+  * <tt>params</tt> (<tt>map</tt> property)
+
+    A map from parameter names to their values as set in this feature
+  * <tt>param_meta</tt> (<tt>map</tt> property)
+
+    A map from parameter names used in this feature to maps of metadata about those params
+  * <tt>conflicts</tt> (<tt>list</tt> property)
+
+    A set of other features that this feature conflicts with
+  * <tt>depends</tt> (<tt>list</tt> property)
+
+    A list of other features that this feature depends on
+  * <tt>included_features</tt> (<tt>list</tt> property)
+
+    A list of other features that this feature includes, in priority order
+  * <tt>modifyParams(command, params, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>params</tt> (<tt>map</tt>/in)
+
+      A map from parameter names to their corresponding values, as strings, for this feature.  To use the default value for a parameter, give it the value 0 (as an int).
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>clearParams()</tt>
+    * <tt>ret</tt> (<tt>int64</tt>/out)
+
+      0 if successful.
+  * <tt>modifyDepends(command, depends, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>depends</tt> (<tt>list</tt>/in)
+
+      A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>setName(name)</tt>
+    * <tt>name</tt> (<tt>sstr</tt>/in)
+
+      A new name for this feature; this name must not already be in use by another feature.
+  * <tt>modifyIncludedFeatures(command, features, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>features</tt> (<tt>list</tt>/in)
+
+      A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE).
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
+  * <tt>modifyConflicts(command, conflicts, options)</tt>
+    * <tt>command</tt> (<tt>sstr</tt>/in)
+
+      Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
+    * <tt>conflicts</tt> (<tt>list</tt>/in)
+
+      A set of other feature names that conflict with the feature
+    * <tt>options</tt> (<tt>map</tt>/in)
+
+      No options are supported at this time.
 

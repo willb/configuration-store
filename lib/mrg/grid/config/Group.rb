@@ -61,30 +61,28 @@ module Mrg
 
         ### Schema method declarations
                 
-        # getMembership 
+        qmf_property :membership, :list, :desc=>"A list of node names from the nodes that are members of this group."
+
+        # membership 
         # * nodes (map/O)
         #   A list of the nodes associated with this group
-        def getMembership()
-          log.debug "getMembership called on group #{self.inspect}"
+        def membership()
+          log.debug "membership called on group #{self.inspect}"
           NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}
         end
         
-        expose :getMembership do |args|
-          args.declare :nodes, :list, :out, "A list of node names from the nodes that are members of this group."
-        end
+        qmf_property :name, :sstr, :desc=>"This group's name."
+        alias orig_name name
+        alias orig_name= name=
         
-        # getName 
+        # name 
         # * name (sstr/O)
-        def getName()
-          log.debug "getName called on group #{self.inspect}"
+        def name()
+          log.debug "name called on group #{self.orig_name}"
           # Assign values to output parameters
-          self.name ||= ""
+          self.orig_name ||= ""
           # Return value
-          return self.name
-        end
-        
-        expose :getName do |args|
-          args.declare :name, :sstr, :out, "This group's name."
+          return self.orig_name
         end
         
         # setName 
@@ -100,16 +98,15 @@ module Mrg
           args.declare :name, :sstr, :in, "A new name for this group; it must not be in use by another group."
         end
         
-        # getFeatures 
+        
+        qmf_property :features, :list, :desc=>"A list of features to be applied to this group, from highest to lowest priority."
+        
+        # features 
         # * features (map/O)
         #   A list of features to be applied to this group, in priority order (that is, the first one will be applied last, to take effect after ones with less priority)
-        def getFeatures()
-          log.debug "getFeatures called on group #{self.inspect}"
-          features.map{|f| f.name}
-        end
-        
-        expose :getFeatures do |args|
-          args.declare :features, :list, :out, "A list of features to be applied to this group, from highest to lowest priority."
+        def features()
+          log.debug "features called on group #{self.inspect}"
+          feature_objs.map{|f| f.name}
         end
         
         def clearParams
@@ -203,17 +200,7 @@ module Mrg
           args.declare :feature, :lstr, :in
         end
         
-        # getParams 
-        # * params (map/O)
-        #   A map(paramName, value) of parameters and their values that are specific to the group
-        def getParams()
-          log.debug "getParams called on group #{self.inspect}"
-          Hash[*GroupParams.find_by(:grp=>self).map {|fp| [fp.param.name, fp.value]}.flatten]
-        end
-        
-        expose :getParams do |args|
-          args.declare :params, :map, :out, "A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)"
-        end
+        qmf_property :params, :map, :desc=>"A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)"
         
         # modifyParams 
         # * command (sstr/I)
@@ -227,7 +214,7 @@ module Mrg
 
           invalid_params = []
 
-          params = pvmap.keys.map do |pn|
+          prms = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
             invalid_params << pn unless prow
             prow
@@ -239,7 +226,7 @@ module Mrg
 
           case command
           when "ADD", "REMOVE" then
-            params.each do |prow|
+            prms.each do |prow|
               pn = prow.name
 
               # Delete any prior mappings for each supplied param in either case
@@ -251,7 +238,7 @@ module Mrg
           when "REPLACE" then
             GroupParams.find_by(:grp=>self).map {|gp| gp.delete}
 
-            params.each do |prow|
+            prms.each do |prow|
               pn = prow.name
 
               GroupParams.create(:grp=>self, :param=>prow, :value=>pvmap[pn])
@@ -269,7 +256,7 @@ module Mrg
         end
         
         def apply_to(config, ss_prepend="")
-          features.reverse_each do |feature|
+          feature_objs.reverse_each do |feature|
             log.debug("applying config for #{feature.name}")
             config = feature.apply_to(config)
             log.debug("config is #{config.inspect}")
@@ -301,15 +288,16 @@ module Mrg
         end
         
         expose :getConfig do |args|
-          args.declare :config, :map, :out, "Parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings."
+          args.declare :config, :map, :out, "Current parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings."
         end
         
-        def features
+        def feature_objs
           GroupFeatures.find_by(:grp=>self).map{|gf| gf.feature}
         end
         
         def params
-          Hash[*GroupParams.find_by(:grp=>self).map{|gp| [gp.param.name, gp.value]}.flatten]
+          log.debug "params called on group #{self.inspect}"
+          Hash[*GroupParams.find_by(:grp=>self).map {|gp| [gp.param.name, gp.value]}.flatten]
         end
       end
       

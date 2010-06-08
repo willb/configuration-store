@@ -126,7 +126,7 @@ module Mrg
           
           log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
 
-          memberships.reverse_each do |grp|
+          db_memberships.reverse_each do |grp|
             log.debug("#{self.name} is a member of #{grp.name}")
             log.debug("#{grp.name} has #{grp.features.size} features")
             
@@ -152,15 +152,13 @@ module Mrg
           args.declare :version, :uint32, :in, {}
         end
         
-        def getIdentityGroup
-          log.debug "getIdentityGroup called on node #{self.inspect}"
+        def identity_group
+          log.debug "identity_group called on node #{self.inspect}"
           self.idgroup ||= id_group_init
           self.idgroup
         end
 
-        expose :getIdentityGroup do |args|
-          args.declare :group, :objId, :out, "The object ID of this node's identity group."
-        end
+        qmf_property :identityGroup, :objId, :desc=>"The object ID of this node's identity group."
         
         # modifyMemberships
         # * command (sstr/I)
@@ -217,17 +215,15 @@ module Mrg
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
-        # getMemberships 
+        # memberships 
         # * list (map/O)
         #   A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group
-        def getMemberships()
-          log.debug "getMemberships called on node #{self.inspect}"
-          memberships.map {|g| g.name}
+        def memberships()
+          log.debug "memberships called on node #{self.inspect}"
+          db_memberships.map {|g| g.name}
         end
         
-        expose :getMemberships do |args|
-          args.declare :groups, :list, :out, "A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group."
-        end
+        qmf_property :memberships, :list, :desc=>"A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group."
         
         def Node.get_dirty_nodes
           return Node.find_all() if DirtyElement.find_first_by_kind(DirtyElement.const_get("KIND_EVERYTHING"))
@@ -256,7 +252,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         end
 
         def my_groups
-          [Group.DEFAULT_GROUP] + memberships + [self.getIdentityGroup]
+          [Group.DEFAULT_GROUP] + db_memberships + [self.identity_group]
         end
         
         def idgroupname
@@ -270,7 +266,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
           ig
         end
         
-        def memberships
+        def db_memberships
           NodeMembership.find_by(:node=>self).map{|nm| nm.grp}.select {|g| not g.is_identity_group}
         end
       end

@@ -73,7 +73,7 @@ module Mrg
 
         it "should create a versioned configuration when activating a node's configuration" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
 
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
@@ -97,7 +97,7 @@ module Mrg
         
         it "should make two versioned configurations when activating an update to a node's configuration" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 
@@ -136,7 +136,7 @@ module Mrg
 
         it "should set the version of versioned configurations" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 
@@ -176,7 +176,7 @@ module Mrg
         
         it "should create a versioned configuration when activating a node's configuration when using Node#get_config" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
 
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
@@ -200,7 +200,7 @@ module Mrg
 
         it "should make two versioned configurations when activating an update to a node's configuration when using Node#get_config" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 
@@ -239,7 +239,7 @@ module Mrg
 
         it "should set the version of versioned configurations when using Node#get_config" do
           node = @store.addNode("nodely.local.")
-          group = node.getIdentityGroup
+          group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 

@@ -126,7 +126,7 @@ f = store_client.addFeature(feature[:name])
 
 unless feature[:includes] == []
   puts "Setting included features to #{feature[:includes].inspect}"
-  f.modifyFeatures("ADD", feature[:includes], {})
+  f.modifyIncludedFeatures("ADD", feature[:includes], {})
 end
 
 unless feature[:depends] == []
