@@ -248,7 +248,7 @@ module Mrg
             log.info "Creating parameter '#{name}'"
             
             param = @store.addParam(name)
-            param.setType(old_param.kind)
+            param.setKind(old_param.kind)
             param.setDefault(old_param.default_val)
             param.setDescription(old_param.description)
             param.setMustChange(old_param.must_change)
@@ -271,7 +271,7 @@ module Mrg
           @features.each do |name, old_feature|
             log.info "Creating feature '#{name}'"
             feature = @store.addFeature(name)
-            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
+            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyIncludedFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
                   log.info "Setting #{desc} for #{name}"
@@ -411,11 +411,11 @@ module Mrg
             params = feature.params
             
             # Ensure that params that should get the default values are serialized
-            default_params = feature.getParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+            default_params = feature.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
             default_params.each {|dp_key| params[dp_key] = 0}
             
             out.params = params
-            out.included = fl_normalize(feature.includes)
+            out.included = fl_normalize(feature.included_features)
             out.conflicts = fs_normalize(feature.conflicts)
             out.depends = fl_normalize(feature.depends)
             out
