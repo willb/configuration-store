@@ -44,7 +44,7 @@ module Mrg
           
           param_names.each do |k|
             ss.modifyParams("ADD", [k])
-            mappings = ss.getParams
+            mappings = ss.params
             mappings.size.should == old_size + 1
             mappings.should include(k)
             
@@ -63,7 +63,7 @@ module Mrg
           ss = @store.addSubsys(@gskey)
           ss.modifyParams("ADD", pvmap.keys)
           
-          mappings = ss.getParams
+          mappings = ss.params
           
           mappings.size.should == pvmap.size
           

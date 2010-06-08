@@ -248,10 +248,10 @@ module Mrg
             log.info "Creating parameter '#{name}'"
             
             param = @store.addParam(name)
-            param.setType(old_param.kind)
+            param.setKind(old_param.kind)
             param.setDefault(old_param.default_val)
             param.setDescription(old_param.description)
-            param.setDefaultMustChange(old_param.must_change)
+            param.setMustChange(old_param.must_change)
             param.setVisibilityLevel(old_param.level)
             param.setRequiresRestart(old_param.needs_restart)
 
@@ -271,7 +271,7 @@ module Mrg
           @features.each do |name, old_feature|
             log.info "Creating feature '#{name}'"
             feature = @store.addFeature(name)
-            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
+            [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyIncludedFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
                   log.info "Setting #{desc} for #{name}"
@@ -369,7 +369,7 @@ module Mrg
             out = Node.new
             out.name = node.name
             out.provisioned = node.provisioned
-            out.membership = fl_normalize(node.getMemberships)
+            out.membership = fl_normalize(node.memberships)
             out
           end
         end
@@ -378,10 +378,10 @@ module Mrg
           get_instances(:Group).map do |g|
             group = get_object(g)
             out = Group.new
-            out.name = group.getName
+            out.name = group.name
             out.is_identity_group = group.is_identity_group
-            out.features = fl_normalize(group.getFeatures)
-            out.params = group.getParams
+            out.features = fl_normalize(group.features)
+            out.params = group.params
             out
           end
         end
@@ -391,14 +391,14 @@ module Mrg
             param = get_object(p)
             out = Parameter.new
             out.name = param.name
-            out.kind = param.getType
-            out.default_val = param.getDefault.to_s
-            out.description = param.getDescription
-            out.must_change = param.getDefaultMustChange
-            out.level = param.getVisibilityLevel
-            out.needs_restart = param.getRequiresRestart
-            out.conflicts = fs_normalize(param.getConflicts)
-            out.depends = fs_normalize(param.getDepends)
+            out.kind = param.kind
+            out.default_val = param.default.to_s
+            out.description = param.description
+            out.must_change = param.must_change
+            out.level = param.visibility_level
+            out.needs_restart = param.requires_restart
+            out.conflicts = fs_normalize(param.conflicts)
+            out.depends = fs_normalize(param.depends)
             out
           end
         end
@@ -407,17 +407,17 @@ module Mrg
           get_instances(:Feature).map do |f|
             feature = get_object(f)
             out = Feature.new
-            out.name = feature.getName
-            params = feature.getParams
+            out.name = feature.name
+            params = feature.params
             
             # Ensure that params that should get the default values are serialized
-            default_params = feature.getParamMeta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+            default_params = feature.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
             default_params.each {|dp_key| params[dp_key] = 0}
             
             out.params = params
-            out.included = fl_normalize(feature.getFeatures)
-            out.conflicts = fs_normalize(feature.getConflicts)
-            out.depends = fl_normalize(feature.getDepends)
+            out.included = fl_normalize(feature.included_features)
+            out.conflicts = fs_normalize(feature.conflicts)
+            out.depends = fl_normalize(feature.depends)
             out
           end
         end
@@ -427,7 +427,7 @@ module Mrg
             subsys = get_object(s)
             out = Subsystem.new
             out.name = subsys.name
-            out.params = fs_normalize(subsys.getParams)
+            out.params = fs_normalize(subsys.params)
             out
           end
         end

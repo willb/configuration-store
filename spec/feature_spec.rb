@@ -66,7 +66,7 @@ module Mrg
           
           param_names.zip(param_values).each do |k,v|
             feature.modifyParams("ADD", {k=>v})
-            mappings = feature.getParams
+            mappings = feature.params
             mappings.size.should == old_size + 1
             mappings.keys.should include(k)
             mappings[k].should == v
@@ -86,7 +86,7 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap.size
           
@@ -110,13 +110,13 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap1)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap1.size
           
           feature.modifyParams("REPLACE", pvmap2)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap2.size
           
@@ -140,13 +140,13 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap1)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap1.size
           
           feature.modifyParams("ADD", pvmap2)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == param_names.size
           
@@ -169,7 +169,7 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap.size
           
@@ -183,7 +183,7 @@ module Mrg
           
           feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == param_names.size
           
@@ -204,18 +204,18 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == pvmap.size
 
           feature.modifyParams("REMOVE", pvmap)
           
-          mappings = feature.getParams
+          mappings = feature.params
           
           mappings.size.should == 0
           
           param_names.zip(param_values).each do |k,v|
-            mappings = feature.getParams
+            mappings = feature.params
             mappings.keys.should_not include(k)
             mappings[k].should_not == v
           end
@@ -232,12 +232,12 @@ module Mrg
           feature = @store.addFeature(@gskey)
           feature.modifyParams("ADD", pvmap)
 
-          mappings = feature.getParams
+          mappings = feature.params
           old_size = mappings.size
           
           param_names.zip(param_values).each do |k,v|
             feature.modifyParams("REMOVE", {k=>v})
-            mappings = feature.getParams
+            mappings = feature.params
             mappings.size.should == old_size - 1
             mappings.keys.should_not include(k)
             
@@ -297,7 +297,7 @@ module Mrg
           
           default = Group.DEFAULT_GROUP
           
-          dep_dests[0].modifyFeatures("ADD", [dep_dests[2].name])
+          dep_dests[0].modifyIncludedFeatures("ADD", [dep_dests[2].name])
           default.modifyFeatures("ADD", [dep_dests[0].name])
           
           ffg = Feature.features_for_group(default)
@@ -408,7 +408,7 @@ module Mrg
           
           idgroup = node.idgroup
           
-          dep_dests[2].modifyFeatures("ADD", [dep_dests[3].name])
+          dep_dests[2].modifyIncludedFeatures("ADD", [dep_dests[3].name])
           
           idgroup.modifyFeatures("ADD", [dep_dests[0].name, dep_dests[2].name])
           
@@ -429,11 +429,11 @@ module Mrg
           end
           
           dep_dests.each_cons(2) do |feature, dependent|
-            feature.modifyFeatures("ADD", [dependent.name])
+            feature.modifyIncludedFeatures("ADD", [dependent.name])
           end
           
           lambda {
-            dep_dests[-1].modifyFeatures("ADD", [dep_dests[0].name])
+            dep_dests[-1].modifyIncludedFeatures("ADD", [dep_dests[0].name])
           }.should raise_error
         end
 
@@ -453,7 +453,7 @@ module Mrg
           }.should raise_error
         end
         
-        [["include", "inclusion", :getFeatures, :modifyFeatures, true, :addFeature], ["depend on", "dependence", :getDepends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :getConflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = Array
           nouns = create_dest_msg == :addFeature ? "features" : "subsystems"

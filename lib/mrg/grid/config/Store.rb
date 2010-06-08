@@ -223,7 +223,7 @@ module Mrg
           DirtyElement.dirty_node(n)
           
           # Return the appropriate node after ensuring that its identity group is initialized
-          n.getIdentityGroup
+          n.identity_group
           n
         end
         
