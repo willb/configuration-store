@@ -158,7 +158,7 @@ module Mrg
           self.idgroup
         end
 
-        qmf_property :identityGroup, :objId, :desc=>"The object ID of this node's identity group."
+        qmf_property :identity_group, :objId, :desc=>"The object ID of this node's identity group."
         
         # modifyMemberships
         # * command (sstr/I)
