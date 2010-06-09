@@ -181,7 +181,7 @@
   * <tt>provisioned</tt> (<tt>bool</tt> property)
   * <tt>last_checkin</tt> (<tt>uint64</tt> property)
   * <tt>last_updated_version</tt> (<tt>uint64</tt> property)
-  * <tt>identityGroup</tt> (<tt>ref</tt> property)
+  * <tt>identity_group</tt> (<tt>ref</tt> property)
 
     The object ID of this node's identity group.
   * <tt>memberships</tt> (<tt>list</tt> property)
