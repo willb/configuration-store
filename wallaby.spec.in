@@ -82,12 +82,19 @@ rm -rf %{buildroot}
 %files
 %defattr(-, root, root, -)
 %doc LICENSE README.rdoc TODO VERSION
-%defattr(0755,root,root,-)
+%defattr(0755,wallaby,wallaby,-)
 %dir %{_localstatedir}/lib/wallaby
 %dir %{_localstatedir}/log/wallaby
+%defattr(0755,root,root,-)
 %{_bindir}/wallaby-agent
 %{_initrddir}/wallaby
 %{_sysconfdir}/sysconfig/wallaby-agent
+
+%pre
+getent group wallaby >/dev/null || groupadd -r wallaby
+getent passwd wallaby >/dev/null || \
+  useradd -r -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
+    -c "Owner of Wallaby service" wallaby
 
 %post
 # This adds the proper /etc/rc*.d links for the script
@@ -101,6 +108,7 @@ fi
 
 %postun
 if [ "$1" -ge "1" ] ; then
+    chown -R wallaby:wallaby /var/lib/wallaby /var/log/wallaby
     /sbin/service wallaby condrestart >/dev/null 2>&1 || :
 fi
 
