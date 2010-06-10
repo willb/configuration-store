@@ -157,6 +157,9 @@ fi
 
 %changelog
 
+* Thu Jun 10 2010 willb <willb@redhat> - 0.4.2-1
+- Updated to source version 0.4.2
+
 * Thu Jun 10 2010 willb <willb@redhat> - 0.4.1-1
 - Updated to source version 0.4.1
 
