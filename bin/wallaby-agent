@@ -42,6 +42,24 @@ def path_resolve(p)
   (dirname + path.basename).to_s
 end
 
+def drop_privs(to_user=nil)
+  to_user ||= "wallaby"
+  if Process.euid == 0
+    begin
+      new_uid = Etc.getpwnam(to_user).uid
+      new_gid = Etc.getpwnam(to_user).gid
+      
+      Process::Sys.setgid(new_gid)
+      Process::Sys.setuid(new_uid)
+    rescue ArgumentError
+      Syslog.open do |s|
+        s.warning "can't switch to user #{to_user}; does it exist?"
+        puts  "can't switch to user #{to_user}; does it exist?"
+      end
+    end
+  end
+end
+    
 def daemonify
   pid = nil
   sid = nil
@@ -83,6 +101,7 @@ password = ENV['WALLABY_BROKER_PASSWORD']
 logfile = ENV['WALLABY_LOGFILE']
 debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upcase)) || Logger::WARN
 do_daemonify = !ENV['WALLABY_FOREGROUND']
+run_as = nil
 logoptions = nil
 
 op = OptionParser.new do |opts|
@@ -119,6 +138,13 @@ op = OptionParser.new do |opts|
   opts.on("-P", "--password PASS", "qpid password") do |pass|
     password = pass
   end
+
+  opts.on("--run-as USER", "unix user to execute wallaby-agent as") do |user|
+    # NB:  Perhaps obviously, this only has an effect if we're running as root
+    # Also, if we're running in the foreground, we'll run as the current user
+    # unless a run-as user is explicitly specified
+    run_as = user
+  end
   
   opts.on("-v", "--verbose", "output verbose debugging info" "  (repeat for more verbosity)") do
     debug = debug - 1 if debug > 0
@@ -137,6 +163,7 @@ rescue OptionParser::InvalidOption
 end
 
 daemonify if do_daemonify
+drop_privs(run_as) if (do_daemonify || run_as)
 
 Syslog.open do |s| 
   s.notice "storing configuration to #{dbname}"
@@ -148,40 +175,46 @@ end
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
 DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 
-Rhubarb::Persistence::open(dbname,:default,USE_PREPARED_STATEMENTS)
-Rhubarb::Persistence::open(snapdb,:snapshot,USE_PREPARED_STATEMENTS)
-
-Mrg::Grid::Config::MAIN_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:default] }
-Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
-
-if DO_CREATE
-  classes = Mrg::Grid::Config::MAIN_DB_TABLES
-  classes.each do |cl| 
-    Syslog.open do |s| 
-      s.notice "creating table for #{cl.name}..."
-      puts "creating table for #{cl.name}..." unless do_daemonify
+begin
+  Rhubarb::Persistence::open(dbname,:default,USE_PREPARED_STATEMENTS)
+  Rhubarb::Persistence::open(snapdb,:snapshot,USE_PREPARED_STATEMENTS)
+  
+  Mrg::Grid::Config::MAIN_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:default] }
+  Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
+  
+  if DO_CREATE
+    classes = Mrg::Grid::Config::MAIN_DB_TABLES
+    classes.each do |cl| 
+      Syslog.open do |s| 
+        s.notice "creating table for #{cl.name}..."
+        puts "creating table for #{cl.name}..." unless do_daemonify
+      end
+      cl.create_table
     end
-    cl.create_table
+    Rhubarb::Persistence::db.execute("PRAGMA user_version = #{Mrg::Grid::Config::DBVERSION}")
+    Mrg::Grid::Config::Store.find_by_id(0).storeinit
   end
-  Rhubarb::Persistence::db.execute("PRAGMA user_version = #{Mrg::Grid::Config::DBVERSION}")
-  Mrg::Grid::Config::Store.find_by_id(0).storeinit
+  
+  if DO_SNAPCREATE
+    puts "creating snapshot tables"
+    Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
+  end
+  
+  options = {}
+  options[:loglevel] = debug
+  options[:logfile] = logfile if logfile
+  options[:appname] = "Wallaby configuration agent"
+  options[:user] = username if username
+  options[:password] = password if password
+  options[:server] = host
+  options[:port] = port
+  
+  app = SPQR::App.new(options)
+  app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::WallabyConfigEvent
+  
+  app.main
+rescue Exception => ex
+  Syslog.open do |s|
+    s.crit "agent exiting with exception #{ex.inspect}"
+  end
 end
-
-if DO_SNAPCREATE
-  puts "creating snapshot tables"
-  Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
-end
-
-options = {}
-options[:loglevel] = debug
-options[:logfile] = logfile if logfile
-options[:appname] = "Wallaby configuration agent"
-options[:user] = username if username
-options[:password] = password if password
-options[:server] = host
-options[:port] = port
-
-app = SPQR::App.new(options)
-app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::WallabyConfigEvent
-
-app.main
