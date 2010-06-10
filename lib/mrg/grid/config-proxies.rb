@@ -61,6 +61,63 @@ module Mrg
         end
       end
       
+      # sort of bogus, not included in DefaultStruct in production.  Perhaps useful for testing
+      module DSComparators
+        def eql?(other)
+          return false unless self.class == other.class
+          self == other
+        end
+        
+        def <=>(other)
+          return nil unless self.class == other.class
+          
+          self.class.saved_fields.keys.each do |msg|
+            mine = self.send(msg)
+            yours = self.send(msg)
+            $submine = mine
+            $subyours = yours
+            
+            if mine.respond_to? :<=>
+              result = mine <=> yours
+              return result unless result == 0
+            else
+              result = (mine == yours || nil)
+              return result if result.nil?
+            end
+            
+            0
+          end
+        end
+        
+        def ==(other)
+          self.class.saved_fields.each do |msg,default|
+            mine = self.send(msg)
+            yours = self.send(msg)
+            
+            if default == Set
+              mine = (mine.to_a.sort_by {|s| s.name} rescue Set[*mine.to_a])
+              yours = (yours.to_a.sort_by {|s| s.name} rescue Set[*yours.to_a])
+            end
+            
+            unless mine == yours
+              return false
+            end
+          end
+          
+          true
+        end
+        
+        def hash
+          result = {'PROXY_CLASSNAME'=>self.class.name}
+          
+          self.class.saved_fields.each do |msg,default|
+            result[msg] = default == Set ? default[*self.send(msg)] : self.send(msg)
+          end
+
+          result.hash
+        end
+      end
+      
       class Configuration 
         def initialize
           raise "Configuration proxy not implemented"
@@ -433,7 +490,7 @@ module Mrg
         end
         
         def fs_normalize(fs)
-          fs
+          Set[*fs]
         end
         
         def fl_normalize(fl)
