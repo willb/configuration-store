@@ -411,11 +411,11 @@ module Mrg
         end
         
         def serialize
-          @struct.nodes = serialize_nodes
-          @struct.groups = serialize_groups
-          @struct.params = serialize_params
-          @struct.features = serialize_features
-          @struct.subsystems = serialize_subsystems
+          @struct.nodes = serialize_nodes.sort_by {|o| o.name}
+          @struct.groups = serialize_groups.sort_by {|o| o.name}
+          @struct.params = serialize_params.sort_by {|o| o.name}
+          @struct.features = serialize_features.sort_by {|o| o.name}
+          @struct.subsystems = serialize_subsystems.sort_by {|o| o.name}
           @struct
         end
         
@@ -490,7 +490,7 @@ module Mrg
         end
         
         def fs_normalize(fs)
-          Set[*fs]
+          fs.sort
         end
         
         def fl_normalize(fl)
