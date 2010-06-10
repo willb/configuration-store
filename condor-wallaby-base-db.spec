@@ -1,4 +1,4 @@
-%define rel 0.6
+%define rel 0.7
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,16 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Thu Jun 10 2010 rrati <rrati@redhta> - 1.1-0.7
+- Added kbdd feature/subsystem and supporting params
+- Removed old explicit subsystem entries
+- Removed the QMF plugin configuration from the Collector feature and added
+  a ConsoleCollector feature
+- Added MASTER param and the Master feature now defines the MASTER executabl
+- Added LL_BROKER params to the LowLatency feature
+- All changes to hook or binary paths require a restart
+- Changed location of base db snapshot installation
+
 * Fri May 21 2010 rrati <rrati@redhat> - 1.1-0.6
 - Changed value for COLLECTOR_NAME to "Wallaby Configured Pool"
 
