@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 2
+%define rel 1
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -16,6 +16,10 @@ Requires: ruby-spqr >= 0.3.0
 Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby = %{version}-%{release}
+Requires(post): chkconfig
+Requires(preun): chkconfig
+Requires(preun): initscripts
+Requires(postun): initscripts
 BuildArch: noarch
 
 %description
@@ -85,6 +89,21 @@ rm -rf %{buildroot}
 %{_initrddir}/wallaby
 %{_sysconfdir}/sysconfig/wallaby-agent
 
+%post
+# This adds the proper /etc/rc*.d links for the script
+/sbin/chkconfig --add wallaby
+
+%preun
+if [ $1 = 0 ] ; then
+    /sbin/service wallaby stop >/dev/null 2>&1
+    /sbin/chkconfig --del wallaby
+fi
+
+%postun
+if [ "$1" -ge "1" ] ; then
+    /sbin/service wallaby condrestart >/dev/null 2>&1 || :
+fi
+
 %files utils
 %defattr(-, root, root, -)
 %doc LICENSE
@@ -129,6 +148,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+* Thu Jun 10 2010 willb <willb@redhat> - 0.4.0-1
+- Updated to source version 0.4.0
 
 * Wed May 26 2010 willb <willb@redhat> - 0.3.5-2
 - Packaging and initscript fixes
