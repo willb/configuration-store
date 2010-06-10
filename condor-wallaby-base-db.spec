@@ -23,7 +23,7 @@ options for a condor pool
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{_var}/lib/wallaby/snapshots
+mkdir -p %{buildroot}/%{_var}/lib/condor-wallaby-base-db
 cp condor-base-db.snapshot %{buildroot}/%{_var}/lib/condor-wallaby-base-db
 
 %clean
