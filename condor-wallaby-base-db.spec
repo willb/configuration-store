@@ -24,7 +24,7 @@ options for a condor pool
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{_var}/lib/wallaby/snapshots
-cp condor-base-db.snapshot %{buildroot}/%{_var}/lib/wallaby/snapshots
+cp condor-base-db.snapshot %{buildroot}/%{_var}/lib/condor-wallaby-base-db
 
 %clean
 rm -rf %{buildroot}
@@ -32,7 +32,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-, root, root, -)
 %doc LICENSE
-%{_var}/lib/wallaby/snapshots/condor-base-db.snapshot
+%{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
 * Fri May 21 2010 rrati <rrati@redhat> - 1.1-0.6
