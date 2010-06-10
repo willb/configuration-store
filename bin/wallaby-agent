@@ -42,6 +42,22 @@ def path_resolve(p)
   (dirname + path.basename).to_s
 end
 
+def drop_privs(to_user=nil)
+  to_user ||= "wallaby"
+  if Process.euid == 0
+    new_uid = Process.euid
+    begin
+      new_uid = Etc.getpwnam(to_user).uid
+      Process::Sys.setuid(new_uid)
+    rescue ArgumentError
+      Syslog.open do |s|
+        s.warn "can't switch to user #{to_user}; does it exist?"
+        puts  "can't switch to user #{to_user}; does it exist?"
+      end
+    end
+  end
+end
+    
 def daemonify
   pid = nil
   sid = nil
@@ -83,6 +99,7 @@ password = ENV['WALLABY_BROKER_PASSWORD']
 logfile = ENV['WALLABY_LOGFILE']
 debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upcase)) || Logger::WARN
 do_daemonify = !ENV['WALLABY_FOREGROUND']
+run_as = nil
 logoptions = nil
 
 op = OptionParser.new do |opts|
@@ -119,6 +136,13 @@ op = OptionParser.new do |opts|
   opts.on("-P", "--password PASS", "qpid password") do |pass|
     password = pass
   end
+
+  opts.on("--run-as USER", "unix user to execute wallaby-agent as") do |user|
+    # NB:  Perhaps obviously, this only has an effect if we're running as root
+    # Also, if we're running in the foreground, we'll run as the current user
+    # unless a run-as user is explicitly specified
+    run_as = user
+  end
   
   opts.on("-v", "--verbose", "output verbose debugging info" "  (repeat for more verbosity)") do
     debug = debug - 1 if debug > 0
@@ -137,6 +161,7 @@ rescue OptionParser::InvalidOption
 end
 
 daemonify if do_daemonify
+drop_privs(run_as) if (do_daemonify || run_as)
 
 Syslog.open do |s| 
   s.notice "storing configuration to #{dbname}"
