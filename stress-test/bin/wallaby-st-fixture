@@ -190,7 +190,7 @@ features_to_include = feature_names.sort_by {rand}
 
 while features_to_include.size > 0
   feature = store_client.getFeature(features_to_include.pop)
-  puts "adding feature dependencies for #{feature.getName}"
+  puts "adding feature dependencies for #{feature.name}"
   ifcount = features_per_feature.next.to_i
   break if ifcount > features_to_include.size
   

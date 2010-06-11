@@ -361,7 +361,7 @@ module Mrg
         end
         
         def dictify(ls)
-          Hash[*ls.map {|obj| [(obj.name rescue obj.getName), obj]}.flatten]
+          Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
         end
         
         def skk(x)
