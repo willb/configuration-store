@@ -84,36 +84,52 @@ module Mrg
       
       # makes a ReconfigEventMap from a map from nodes to lists of changed parameters
       module ReconfigEventMapBuilder
-        class ParamMeta < Struct.new(:requires_restart, :subsystems) ; end
-        
-        def self.make(in_map)
-          result = ReconfigEventMap.new
-          param_meta = Hash.new {|h,k| h[k] = fetchParamMeta(k)}
+        def self.build(in_map)
+          tmp_table_name = "tmp_#{::Rhubarb::Util::timestamp.to_s(26)}_#{Process.pid}_#{Thread.current.object_id.to_s(26)}"
+          # Get the config database; we want to be sure to use the same one
+          # that subsystem and parameter are in
+          configdb = Subsystem.db
           
+          # Set up our temporary table
+          configdb.execute <<-QUERY
+          CREATE TEMPORARY TABLE #{tmp_table_name} (
+            node STRING,
+            param STRING
+          )
+          QUERY
+          
+          # Populate the temporary table
           in_map.each do |node, params|
-            this_nodes_ss = params.inject({:restart=>[], :reconfig=>[]}) do |acc,p|
-              pm = param_meta[p]
-              key = pm.requires_restart ? :restart : :reconfig
-              acc[key] = (acc[key] | pm.subsystems)
-              acc
+            params.each do |param|
+              configdb.execute("INSERT INTO #{tmp_table_name} (node, param) VALUES (?, ?)", node, param)
             end
-            
-            [:restart, :reconfig].each do |msg|
-              this_nodes_ss[msg].each do |ss|
-                result.send(msg)[ss] << node
-              end
-            end
-            
           end
           
+          # Find the subsystem information we need for each parameter
+          rows = configdb.execute <<-QUERY
+          SELECT node, MAX(needsRestart) AS restart, subsys FROM
+            (SELECT node, parameter.row_id AS pid, 
+                    needsRestart, subsystem.name AS subsys 
+                FROM #{tmp_table_name}, parameter, subsystemparams, subsystem 
+                WHERE parameter.name = #{tmp_table_name}.param AND 
+                      subsystemparams.dest = pid AND 
+                      subsystem.row_id = subsystemparams.source
+            ) GROUP BY node, subsys
+          QUERY
+          
+          result = ReconfigEventMap.new
+          
+          rows.each do |row|
+            if row["restart"]
+              result.restart[row["subsys"]] << row["node"]
+            else
+              result.reconfig[row["subsys"]] << row["node"]
+            end
+          end
+          
+          configdb.execute "DROP TABLE #{tmp_table_name}" rescue nil
+          
           result
-        end
-        
-        def self.fetchParamMeta(param)
-          result = ParamMeta.new
-          p = Parameter.find_first_by_name(param)
-          result.requires_restart = p.requires_restart
-          result.subsystems = Set[*Subsystem.s_for_param(param).map{|s| s.name}]
         end
       end
       
