@@ -503,11 +503,38 @@ module Mrg
           
           DirtyElement.delete_all
           
-          new_config_event(dirty_nodes.map {|dn| dn.name}, this_version)
+          config_events_to(dirty_nodes, this_version)
           
           [results, warnings]
         end
         
+        module CoarseGrainedEventGenerator
+          def config_events_to(node_list, current_version)
+            new_config_event(node_list.map {|dn| dn.name}, current_version)
+          end
+        end
+
+        module FineGrainedEventGenerator
+          def config_events_to(node_list, current_version)
+            node_params = {}
+            node_list.each do |node|
+              old_version = [node.last_checkin, node.last_updated_version].min
+              node_params[node.name] = ConfigVersion.whatchanged(node.name, old_version, current_version)
+            end
+
+            rem = ReconfigEventMapBuilder.build(node_params)
+
+            rem.restart.each do |subsystem, nodeset|
+              new_config_event(nodeset.to_a, this_version, true, [subsystem])
+            end
+
+            rem.reconfig.each do |subsystem, nodeset|
+              new_config_event(nodeset.to_a, this_version, false, [subsystem])
+            end
+          end
+        end
+        
+        include FineGrainedEventGenerator
       end
     end
   end
