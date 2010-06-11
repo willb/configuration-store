@@ -458,7 +458,7 @@ module Mrg
         end
         
         def new_config_event(nodes, version, restart=true, subsystems=nil)
-          log.debug "About to raise a config event for version #{version}; sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
+          log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
           
           subsystems ||= Subsystem.find_all.map{|ss| ss.name}
           
