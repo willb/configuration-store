@@ -52,7 +52,7 @@ default_params = Capricious::Poisson.new(6)
 
 # not configurable yet
 features_per_feature = Capricious::Poisson.new(1)
-params_per_subsys = Capricious::Poisson.new(12)
+params_per_subsys = Capricious::Poisson.new(50)
 
 # not used yet
 deps_per_feature = Capricious::Poisson.new(1)
@@ -180,6 +180,14 @@ end
 
 # make relationships
 
+param_names.each do |param_name|
+  if rand(100) < 25
+    puts "making parameter #{param_name} require a restart"
+    param = store_client.getParam(param_name)
+    param.setRequiresRestart(true)
+  end
+end
+
 node_names.each do |node_name|
   node = store_client.getNode(node_name)
   groups = group_names.sort_by{rand}.slice(0, groups_per_node.next.to_i)
@@ -238,6 +246,8 @@ subsystem_names.each do |sname|
       rands |= [param_names[rand(param_names.size)]]
     end
   end
+  
+  thing.modifyParams("ADD", rands, {})
 end
 
 if activate
