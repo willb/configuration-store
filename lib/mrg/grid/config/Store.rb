@@ -525,11 +525,11 @@ module Mrg
             rem = ReconfigEventMapBuilder.build(node_params)
 
             rem.restart.each do |subsystem, nodeset|
-              new_config_event(nodeset.to_a, this_version, true, [subsystem])
+              new_config_event(nodeset.to_a, current_version, true, [subsystem])
             end
 
             rem.reconfig.each do |subsystem, nodeset|
-              new_config_event(nodeset.to_a, this_version, false, [subsystem])
+              new_config_event(nodeset.to_a, current_version, false, [subsystem])
             end
           end
         end
