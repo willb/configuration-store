@@ -64,13 +64,18 @@ module Mrg
           find_arcs(SubsystemParams,ArcLabel.implication('parameter')) {|a| a.dest.name }
         end
         
+        
+        def self.s_for_param(param)
+          p = Parameter.find_first_by_name(param)
+          SubsystemParams.find_by(:dest=>p, :label=>ArcLabel.implication('parameter')).map {|sp| sp.source}
+        end
+          
         private
         include ArcUtils
         
         def params=(deps)
           set_arcs(SubsystemParams, ArcLabel.implication('parameter'), deps, :find_first_by_name, :klass=>Parameter)
         end
-        
       end
 
       class SubsystemParams
