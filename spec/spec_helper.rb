@@ -21,7 +21,7 @@ def setup_rhubarb(kwargs=nil)
   dbname = kwargs[:dbname] || ":memory:"
   classes = kwargs[:classes] || (MAIN_DB_TABLES + SNAP_DB_TABLES)
 
-  Rhubarb::Persistence::open(dbname)
+  Rhubarb::Persistence::open(dbname, :default, false)
   classes.each {|cl| cl.create_table}
 end
 
