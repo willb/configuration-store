@@ -36,6 +36,87 @@ module Mrg
         end
       end
       
+      class ReconfigEventMap
+        # maps from subsystem names to lists of nodes
+        attr_accessor :restart, :reconfig
+        
+        def initialize(restart=nil, reconfig=nil)
+          self.restart = restart || Hash.new {|h,k| h[k] = Set.new}
+          self.reconfig = reconfig || Hash.new {|h,k| h[k] = Set.new}
+        end
+        
+        # returns a newly-allocated event map consisting of the 
+        # algebraic join of this map and other
+        def |(other)
+          # basic rules for partial ordering of event maps:
+          #  1.  reconfig: {X=>[Y]} >= reconfig: {}
+          #  2.  reconfig: {X=>[Y,Z]} >= reconfig: {X=>[Y]}
+          #  3.  reconfig: {X=>[Y], A=>[B]} >= reconfig: {X=>[Y]}
+          #  4.  restart: {X=>[Y]} >= reconfig: {X=>[Y]}
+          
+          # XXX:  I am fairly confident that this implementation could be far more efficient
+          
+          self_restart = pairs(:restart)
+          self_reconfig = pairs(:reconfig)
+          
+          other_restart = other.pairs(:restart)
+          other_reconfig = other.pairs(:reconfig)
+          
+          join_restart = pairs2multimap((self_restart | other_restart).sort.uniq)
+          join_reconfig = pairs2multimap((self_reconfig | other_reconfig).sort.uniq - join_restart)
+          
+          ReconfigEventMap.new(join_restart, join_reconfig)
+        end
+        
+        def pairs(msg)
+          return nil unless %w{restart reconfig}.include? msg.to_s
+          self.send(msg).inject([]) {|acc, (k,v)| v.each {|elt| acc << [k,elt]}; acc}
+        end
+        
+        private
+        def pairs2multimap(pairs)
+          pairs.inject(Hash.new {|h,k| h[k] = Set.new}) do |acc, (k,v)|
+            acc[k] << v
+            acc
+          end
+        end
+      end
+      
+      # makes a ReconfigEventMap from a map from nodes to lists of changed parameters
+      module ReconfigEventMapBuilder
+        class ParamMeta < Struct.new(:requires_restart, :subsystems) ; end
+        
+        def self.make(in_map)
+          result = ReconfigEventMap.new
+          param_meta = Hash.new {|h,k| h[k] = fetchParamMeta(k)}
+          
+          in_map.each do |node, params|
+            this_nodes_ss = params.inject({:restart=>[], :reconfig=>[]}) do |acc,p|
+              pm = param_meta[p]
+              key = pm.requires_restart ? :restart : :reconfig
+              acc[key] = (acc[key] | pm.subsystems)
+              acc
+            end
+            
+            [:restart, :reconfig].each do |msg|
+              this_nodes_ss[msg].each do |ss|
+                result.send(msg)[ss] << node
+              end
+            end
+            
+          end
+          
+          result
+        end
+        
+        def self.fetchParamMeta(param)
+          result = ParamMeta.new
+          p = Parameter.find_first_by_name(param)
+          result.requires_restart = p.requires_restart
+          result.subsystems = Set[*Subsystem.s_for_param(param).map{|s| s.name}]
+        end
+      end
+      
       class ConfigVersion
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
