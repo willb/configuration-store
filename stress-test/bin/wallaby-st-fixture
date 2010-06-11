@@ -52,6 +52,7 @@ default_params = Capricious::Poisson.new(6)
 
 # not configurable yet
 features_per_feature = Capricious::Poisson.new(1)
+params_per_subsys = Capricious::Poisson.new(12)
 
 # not used yet
 deps_per_feature = Capricious::Poisson.new(1)
@@ -221,6 +222,21 @@ end
     end
     
     thing.modifyParams("ADD", Hash[*rands.zip(rands.map{|r| param_value(r, th)}).flatten], {})
+  end
+end
+
+subsystem_names.each do |sname|
+  thing = store_client.getSubsys(sname)
+  puts "adding params for subsystem #{sname}"
+  
+  paramcount = params_per_subsys.next.to_i
+  
+  rands = []
+  
+  while rands.size < paramcount
+    (paramcount - rands.size).times do
+      rands |= [param_names[rand(param_names.size)]]
+    end
   end
 end
 
