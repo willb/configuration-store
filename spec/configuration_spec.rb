@@ -61,6 +61,119 @@ module Mrg
         
       end
 
+      describe ReconfigEventMapBuilder do
+        before(:each) do
+          setup_rhubarb
+          @store = Store.new
+        end
+        
+        after(:each) do
+          teardown_rhubarb
+        end
+        
+        def basic_fixture
+          @params = Hash[*("param_AA".."param_XX").to_a.map {|name| [name,@store.addParam(name)]}.flatten]
+          @subsystems = Hash[*("subsystem_A".."subsystem_X").to_a.map {|name| [name,@store.addSubsys(name)]}.flatten]
+          @nodes = Hash[*("node_A".."node_F").to_a.map {|name| [name,@store.addNode(name)]}.flatten]
+          
+          @params.keys.grep(/[AEIOU]/).map {|name| @params[name].setRequiresRestart(true)}
+          
+          ("A".."X").each do |letter|
+            @subsystems["subsystem_#{letter}"].modifyParams("ADD", @params.keys.grep(/#{letter}/))
+          end
+        end
+        
+        def basic_fixture
+          @params = Hash[*("param_AA".."param_XX").to_a.map {|name| [name,@store.addParam(name)]}.flatten]
+          @subsystems = Hash[*("subsystem_A".."subsystem_X").to_a.map {|name| [name,@store.addSubsys(name)]}.flatten]
+          @nodes = Hash[*("node_A".."node_F").to_a.map {|name| [name,@store.addNode(name)]}.flatten]
+          
+          @params.keys.grep(/[AEIOU]/).map {|name| @params[name].setRequiresRestart(true)}
+          
+          ("A".."X").each do |letter|
+            @subsystems["subsystem_#{letter}"].modifyParams("ADD", @params.keys.grep(/#{letter}/))
+          end
+        end
+        
+        def small_fixture
+          @params = Hash[*("param_AA".."param_DD").to_a.map {|name| [name,@store.addParam(name)]}.flatten]
+          @subsystems = Hash[*("subsystem_A".."subsystem_D").to_a.map {|name| [name,@store.addSubsys(name)]}.flatten]
+          @nodes = Hash[*("node_A".."node_F").to_a.map {|name| [name,@store.addNode(name)]}.flatten]
+          
+          @params.keys.grep(/[AEIOU]/).map {|name| @params[name].setRequiresRestart(true)}
+          
+          ("A".."D").each do |letter|
+            @subsystems["subsystem_#{letter}"].modifyParams("ADD", @params.keys.grep(/#{letter}/))
+          end
+        end
+        
+        def node_fixture
+          i = 0
+          nodenames = @nodes.keys
+          @params.keys.sort.each do |param|
+            @nodes[nodenames[i%nodenames.size]].identity_group.modifyParams("ADD", {param=>"#{param}_value"})
+            i+=1
+          end
+        end
+        
+        it "should detect all affiliated subsystems given a single node and a single param" do
+          small_fixture
+
+          first_node = @nodes.keys.sort[0]
+          first_param = @params.keys.sort[0]
+          
+          rem = ReconfigEventMapBuilder.build({first_node=>[first_param]})
+
+          rem.restart.should_not == nil
+          rem.restart[@subsystems.keys.sort[0]].should include(first_node)
+        end
+        
+        it "should detect all affiliated subsystems given a single node and a single param that implies two subsystems" do
+          small_fixture
+
+          first_node = @nodes.keys.sort[0]
+          second_param = @params.keys.sort[1]
+          
+          rem = ReconfigEventMapBuilder.build({first_node=>[second_param]})
+
+          rem.restart.should_not == nil
+          rem.restart[@subsystems.keys.sort[0]].should include(first_node)
+          rem.restart[@subsystems.keys.sort[1]].should include(first_node)
+        end
+        
+        it "should detect all affiliated subsystems given a single node and a single param that implies two subsystems, when some are restart and others are reconfig" do
+          small_fixture
+
+          first_node = @nodes.keys.sort[0]
+          second_param = @params.keys.sort[1]
+          reconfig_param = "param_CC"
+          
+          rem = ReconfigEventMapBuilder.build({first_node=>[second_param, reconfig_param]})
+
+          rem.restart.should_not == nil
+          rem.restart[@subsystems.keys.sort[0]].should include(first_node)
+          rem.restart[@subsystems.keys.sort[1]].should include(first_node)
+          rem.reconfig["subsystem_C"].should include(first_node)
+          rem.restart["subsystem_C"].size.should == 0
+        end
+        
+        it "should detect all affiliated subsystems given a single node and a single param that implies two subsystems, when a restart overrides a reconfig" do
+          small_fixture
+
+          first_node = @nodes.keys.sort[0]
+          second_param = @params.keys.sort[1]
+          reconfig_param = "param_BB"
+          
+          rem = ReconfigEventMapBuilder.build({first_node=>[second_param, reconfig_param]})
+
+          rem.restart.should_not == nil
+          rem.restart[@subsystems.keys.sort[0]].should include(first_node)
+          rem.restart[@subsystems.keys.sort[1]].should include(first_node)
+          rem.reconfig[@subsystems.keys.sort[1]].size.should == 0
+        end
+        
+      end
+
       describe ConfigVersion do
         before(:each) do
           setup_rhubarb
