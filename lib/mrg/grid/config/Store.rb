@@ -265,6 +265,9 @@ module Mrg
           # Actually remove the node
           node = Node.find_first_by_name(name)
           
+          # Remove any versioned configurations for this node
+          VersionedNode[name].delete
+          
           if node
             node.idgroup.delete if node.idgroup
             node.delete
