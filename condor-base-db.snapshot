@@ -24,13 +24,12 @@ features:
     COLLECTOR_NAME: Wallaby Configured Pool
     COLLECTOR_LOG: $(LOG)/CollectorLog
     COLLECTOR_DEBUG: ""
-    QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
     COLLECTOR: $(SBIN)/condor_collector
     DAEMON_LIST: ">= COLLECTOR"
     FLOCK_COLLECTOR_HOSTS: $(FLOCK_TO)
     MAX_COLLECTOR_LOG: "1000000"
     COLLECTOR_HOST: $(CONDOR_HOST)
-    COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
+    COLLECTOR_ADDRESS_FILE: $(LOG)/.collector_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -54,7 +53,8 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
+  depends:
+  - QMF
 
   included: 
   - Collector
@@ -95,7 +95,7 @@ features:
     START: (SCHEDULER =?= $(DEDICATEDSCHEDULER)) || ($(START))
     RANK_FACTOR: "1000000"
     PREEMPT: SCHEDULER =!= $(DEDICATEDSCHEDULER) && ($(PREEMPT))
-    DEDICATEDSCHEDULER: DedicatedScheduler@$(FULL_HOSTNAME)
+    DEDICATEDSCHEDULER: ""
     WANT_SUSPEND: "False"
     SUSPEND: SCHEDULER =!= $(DEDICATEDSCHEDULER)) || ($(SUSPEND))
     CONTINUE: "True"
@@ -111,6 +111,7 @@ features:
   name: DedicatedScheduler
   params: 
     DEDICATED_SCHEDULER_USE_FIFO: "TRUE"
+    UNUSED_CLAIM_TIMEOUT: 600
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -159,7 +160,7 @@ features:
 
   depends: 
   - Master
-  - NodeAccess
+  - QMF
   included: []
 
   name: ExecuteNode
@@ -255,12 +256,14 @@ features:
     MAX_HAD_LOG: "640000"
     HAD_PORT: "51450"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
+  conflicts:
+  - Scheduler
 
   depends: []
 
   included: 
-  - Scheduler
+  - JobQueueLocation
+  - BaseScheduler
   name: HAScheduler
   params: 
     VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
@@ -268,7 +271,6 @@ features:
     SCHEDD_NAME: ""
     SCHEDD.QMF_STOREFILE: $(SPOOL)/.schedd_storefile
     MASTER_HA_LIST: $(MASTER_HA_LIST), SCHEDD
-    SPOOL: ""
     HA_POLL_PERIOD: "60"
     HA_LOCK_HOLD_TIME: "300"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -287,7 +289,7 @@ features:
 
   depends: 
   - Master
-  - Scheduler
+  - BaseScheduler
   included: []
 
   name: JobRouter
@@ -295,13 +297,13 @@ features:
     MAX_JOB_ROUTER_LOG: "1000000"
     SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
     JOB_ROUTER_DEBUG: ""
-    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
     DAEMON_LIST: ">= JOB_ROUTER"
     MAX_HISTORY_ROTATIONS: "20"
     JOB_ROUTER: $(LIBEXEC)/condor_job_router
     JOB_ROUTER_LOG: $(LOG)/JobRouterLog
     JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
     JOB_ROUTER_POLLING_PERIOD: "10"
+    JOB_ROUTER_ADDRESS_FILE: $(LOG)/.job_router_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -316,6 +318,7 @@ features:
     MAX_KBDD_LOG: "1000000"
     KBDD: $(SBIN)/condor_kbdd
     KBDD_LOG: $(LOG)/KbdLog
+    KBDD_ADDRESS_FILE: $(LOG)/.kbdd_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -351,13 +354,25 @@ features:
 
   included: []
 
-  name: Master
+  name: QMF
   params: 
     QMF_BROKER_PORT: "5672"
+    QMF_BROKER_HOST: ""
+    QMF_DELETE_ON_SHUTDOWN: "TRUE"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: 
+  - QMF
+  - NodeAccess
+
+  included: []
+
+  name: Master
+  params: 
     COLLECTOR_NAME: ""
     MASTER: $(SBIN)/condor_master
     SEC_DEFAULT_NEGOTIATION: OPTIONAL
-    QMF_BROKER_HOST: ""
     DAEMON_LIST: ">= MASTER"
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
@@ -369,11 +384,15 @@ features:
     CONDOR_DEVELOPERS: NONE
     SEC_DEFAULT_ENCRYPTION: REQUIRED
     MASTER.PLUGINS: $(LIB)/plugins/MgmtMasterPlugin-plugin.so
+    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    MASTER_ADDRESS_FILE: $(LOG)/.master_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
   depends: 
   - Master
+  - NodeAccess
+  - QMF
   included: []
 
   name: Negotiator
@@ -392,6 +411,7 @@ features:
     FLOCK_NEGOTIATOR_HOSTS: $(FLOCK_TO)
     NEGOTIATOR_MATCH_LOG: $(LOG)/MatchLog
     NEGOTIATOR.PLUGINS: $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so
+    NEGOTIATOR_ADDRESS_FILE: $(LOG)/.negotiator_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -406,12 +426,23 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: 
-  - Master
-  - NodeAccess
+  depends: []
   included: []
 
-  name: Scheduler
+  name: JobQueueLocation
+  params: 
+    SPOOL: ""
+    HISTORY: $(SPOOL)/history
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends:
+  - Master
+  - NodeAccess
+  - QMF
+  included: []
+
+  name: BaseScheduler
   params: 
     SHADOW_SIZE_ESTIMATE: "1800"
     SHADOW_LIST: SHADOW
@@ -432,6 +463,18 @@ features:
     SHADOW_LOG: $(LOG)/ShadowLog
     SHADOW_DEBUG: ""
     START_SCHEDULER_UNIVERSE: "True"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts:
+  - HAScheduler
+
+  depends: []
+  included:
+  - JobQueueLocation
+  - BaseScheduler
+
+  name: Scheduler
+  params: 
+    SPOOL: $(LOCAL_DIR)/spool
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -458,19 +501,49 @@ features:
 
   depends: 
   - Master
+  - QMF
   included: []
 
   name: TriggerService
   params: 
-    QMF_BROKER_PORT: "5672"
     TRIGGERD: $(SBIN)/condor_triggerd
     MAX_TRIGGERD_LOG: "1000000"
-    QMF_BROKER_HOST: ""
     DAEMON_LIST: ">= TRIGGERD"
     TRIGGERD.QMF_STOREFILE: $(DATA)/.triggerd_storefile
     TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
     TRIGGERD_LOG: $(LOG)/TriggerLog
     DATA: $(SPOOL)
+    TRIGGERD_ADDRESS_FILE: $(LOG)/.triggerd_address
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: 
+  - BaseScheduler
+
+  included: []
+
+  name: JobServerSchedulerMods
+  params: 
+    QMF_PUBLISH_SUBMISSIONS: "FALSE"
+    QUEUE_ALL_USERS_TRUSTED: "True"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: 
+  - Master
+  - QMF
+  - JobQueueLocation
+  included: []
+
+  name: JobServer
+  params: 
+    JOB_SERVER: $(SBIN)/condor_job_server
+    MAX_JOB_SERVER_LOG: "1000000"
+    JOB_SERVER_DEBUG: ""
+    DAEMON_LIST: ">= JOB_SERVER"
+    DC_DAEMON_LIST: ">= JOB_SERVER"
+    JOB_SERVER_LOG: $(LOG)/JobServerLog
+    JOB_SERVER_ADDRESS_FILE: $(LOG)/.job_server_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -622,6 +695,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/.collector_address
+  depends: []
+
+  description: The file where the Collector will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: COLLECTOR_ADDRESS_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -762,7 +847,7 @@ params:
   level: 0
   must_change: false
   name: CREDD_ADDRESS_FILE
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -850,14 +935,159 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
+  default_val: "$(SPOOL)"
+  depends:
+  - SPOOL
 
   description: Where files used by the condor_triggerd are stored
   kind: String
   level: 0
   must_change: true
   name: DATA
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The daemons that use the Condor daemoncore library
+  kind: String
+  level: 0
+  must_change: false
+  name: DC_DAEMON_LIST
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SPOOL)/history
+  depends: 
+  - SPOOL
+  description: The location of the historical jobs file
+  kind: String
+  level: 0
+  must_change: false
+  name: HISTORY
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "600"
+  depends: []
+
+  description: Determines how often the Job Server will read the historical jobs file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: HISTORY_INTERVAL
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/condor_job_server
+  depends: []
+
+  description: The location of the Job Server binary
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_SERVER
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/.job_server_address
+  depends: []
+
+  description: The file where the Job Server will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_SERVER_ADDRESS_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The debugging output the Job Server will produce in its log file
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_SERVER_DEBUG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/JobServerLog
+  depends: []
+
+  description: The location of the Job Server log file
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_SERVER_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Job Server log file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_JOB_SERVER_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "FALSE"
+  depends: []
+
+  description: Determines if the Scheduler should publish job submissions over QMF
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: QMF_PUBLISH_SUBMISSIONS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "FALSE"
+  depends: []
+
+  description: Determines if all users that access the job queue are trusted
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: QUEUE_ALL_USERS_TRUSTED
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(RELEASE_DIR)/libexec/condor
+  depends: []
+
+  description: The directory that contains support commands for Condor
+  kind: String
+  level: 0
+  must_change: false
+  name: LIBEXEC
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "600"
+  depends: []
+
+  description: How long a Dedicated Scheduler should hold onto claims if it has no jobs to run on them
+  kind: Integer
+  level: 0
+  must_change: false
+  name: UNUSED_CLAIM_TIMEOUT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -899,7 +1129,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_cleanup.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The cleanup hook used by the Job Router for EC2 Enhanced
   kind: String
@@ -911,7 +1142,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_job_finalize.py
-  depends: []
+  depends:
+  - LIBEXEC
 
   description: The exit hook used by the Job Router for EC2 Enhanced
   kind: String
@@ -923,7 +1155,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_translate.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The translation hook used by the Job Router for EC2 Enhanced
   kind: String
@@ -935,7 +1168,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_retrieve_status.py
-  depends: []
+  depends:
+  - LIBEXEC
 
   description: The update hook used by the Job Router for EC2 Enhanced
   kind: String
@@ -1175,7 +1409,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/condor_job_router
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The location of the Job Router binary
   kind: String
@@ -1195,6 +1430,18 @@ params:
   must_change: true
   name: JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/.job_router_address
+  depends: []
+
+  description: The file where the Job Router will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_ROUTER_ADDRESS_FILE
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1282,6 +1529,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/.kbdd_address
+  depends: []
+
+  description: The file where the KBDD will place its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: KBDD_ADDRESS_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1319,7 +1578,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/libvirt_simple_script.awk
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: A script that produces XML output used to start a libvirt VM
   kind: String
@@ -1439,7 +1699,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_fetch_work.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The fetch work hook the Startd will use when grabbing low-latency work
   kind: String
@@ -1451,7 +1712,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_reply_fetch.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The reply fetch hook the Startd will use when processing low-latency jobs
   kind: String
@@ -1463,7 +1725,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_job_exit.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The job exit hook the Starter will use when processing low-latency jobs
   kind: String
@@ -1475,7 +1738,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_prepare_job.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The prepare job hook the Starter will use when processing low-latency jobs
   kind: String
@@ -1487,7 +1751,8 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_update_job_status.py
-  depends: []
+  depends: 
+  - LIBEXEC
 
   description: The update job info hook the Starter will use with processing low-latency jobs
   kind: String
@@ -1531,6 +1796,18 @@ params:
   must_change: true
   name: MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/.master_address
+  depends: []
+
+  description: The file where the Master will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: MASTER_ADDRESS_FILE
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1822,6 +2099,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/.negotiator_address
+  depends: []
+
+  description: The file where the Negotiator will write its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: NEGOTIATOR_ADDRESS_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "60"
   depends: []
 
@@ -1942,6 +2231,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "TRUE"
+  depends: []
+
+  description: Delete the QMF resources on shutdown
+  kind: String
+  level: 0
+  must_change: false
+  name: QMF_DELETE_ON_SHUTDOWN
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1950,7 +2251,7 @@ params:
   level: 0
   must_change: true
   name: QMF_BROKER_HOST
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1962,7 +2263,7 @@ params:
   level: 0
   must_change: false
   name: QMF_BROKER_PORT
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2154,7 +2455,7 @@ params:
   level: 0
   must_change: false
   name: SCHEDD_ADDRESS_FILE
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2462,11 +2763,11 @@ params:
   depends: []
 
   description: The file where the Startd will place its address information
-  kind: STring
+  kind: String
   level: 0
   must_change: false
   name: STARTD_ADDRESS_FILE
-  needs_restart: false
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2652,7 +2953,8 @@ params:
   conflicts: []
 
   default_val: $(SPOOL)/Accountantnew.log
-  depends: []
+  depends: 
+  - SPOOL
 
   description: The name of the file that will be replicated
   kind: String
@@ -2720,6 +3022,18 @@ params:
   must_change: false
   name: TRIGGERD.QMF_UPDATE_INTERVAL
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/.triggerd_address
+  depends: []
+
+  description: The file where the Triggerd will store its address information
+  kind: String
+  level: 0
+  must_change: false
+  name: TRIGGERD_ADDRESS_FILE
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2998,6 +3312,10 @@ subsystems:
   - FLOCK_COLLECTOR_HOSTS
   - MAX_COLLECTOR_LOG
   - QMF_IGNORE_UPDATE_STARTD_AD
+  - QMF_DELETE_ON_SHUTDOWN
+  - QMF_BROKER_HOST
+  - QMF_BROKER_PORT
+  - COLLECTOR_ADDRESS_FILE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: credd
   params: 
@@ -3033,6 +3351,7 @@ subsystems:
   - EC2E_HOOK_UPDATE_JOB_INFO
   - JOB_ROUTER
   - JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
+  - JOB_ROUTER_ADDRESS_FILE
   - JOB_ROUTER_DEBUG
   - JOB_ROUTER_DEFAULTS
   - JOB_ROUTER_ENTRIES
@@ -3042,12 +3361,26 @@ subsystems:
   - MAX_HISTORY_ROTATIONS
   - MAX_JOB_ROUTER_LOG
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: job_server
+  params: 
+  - JOB_SERVER
+  - JOB_SERVER_ADDRESS_FILE
+  - JOB_SERVER_LOG
+  - JOB_SERVER_DEBUG
+  - MAX_JOB_SERVER_LOG
+  - HISTORY
+  - HISTORY_INTERVAL
+  - QMF_BROKER_HOST
+  - QMF_BROKER_PORT
+  - QMF_DELETE_ON_SHUTDOWN
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: kbdd
   params: 
   - KBDD
   - KBDD_DEBUG
   - KBDD_LOG
   - MAX_KBDD_LOG
+  - KBDD_ADDRESS_FILE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: master
   params: 
@@ -3057,8 +3390,12 @@ subsystems:
   - CONDOR_DEVELOPERS_COLLECTOR
   - CONDOR_HOST
   - DAEMON_LIST
+  - DC_DAEMON_LIST
   - MASTER
   - MASTER.PLUGINS
+  - MASTER_ADDRESS_FILE
+  - MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
+  - QMF_DELETE_ON_SHUTDOWN
   - QMF_BROKER_HOST
   - QMF_BROKER_PORT
   - SEC_DEFAULT_AUTHENTICATION
@@ -3076,6 +3413,7 @@ subsystems:
   - MAX_NEGOTIATOR_MATCH_LOG
   - NEGOTIATOR
   - NEGOTIATOR.PLUGINS
+  - NEGOTIATOR_ADDRESS_FILE
   - NEGOTIATOR_DEBUG
   - NEGOTIATOR_INTERVAL
   - NEGOTIATOR_LOG
@@ -3083,6 +3421,9 @@ subsystems:
   - NEGOTIATOR_PRE_JOB_RANK
   - PREEMPTION_RANK
   - PREEMPTION_REQUIREMENTS
+  - QMF_DELETE_ON_SHUTDOWN
+  - QMF_BROKER_HOST
+  - QMF_BROKER_PORT
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: replication
   params: 
@@ -3099,8 +3440,14 @@ subsystems:
   params: 
   - ALLOW_NEGOTIATOR_SCHEDD
   - ALLOW_WRITE
+  - HISTORY
   - MAX_SCHEDD_LOG
   - MAX_SHADOW_LOG
+  - QMF_DELETE_ON_SHUTDOWN
+  - QMF_BROKER_HOST
+  - QMF_BROKER_PORT
+  - QMF_PUBLISH_SUBMISSIONS
+  - QUEUE_ALL_USERS_TRUSTED
   - QUEUE_SUPER_USERS
   - SCHEDD
   - SCHEDD.PLUGINS
@@ -3130,6 +3477,9 @@ subsystems:
   - MAX_STARTER_LOG
   - PERIODIC_CHECKPOINT
   - PREEMPT
+  - QMF_DELETE_ON_SHUTDOWN
+  - QMF_BROKER_HOST
+  - QMF_BROKER_PORT
   - RUNBENCHMARKS
   - START
   - STARTD
@@ -3162,9 +3512,11 @@ subsystems:
   name: triggerd
   params: 
   - DATA
+  - QMF_DELETE_ON_SHUTDOWN
   - QMF_BROKER_HOST
   - QMF_BROKER_PORT
   - TRIGGERD.QMF_STOREFILE
   - TRIGGERD.QMF_UPDATE_INTERVAL
   - TRIGGERD_DEFAULT_EVAL_PERIOD
   - TRIGGERD_QUERY_COLLECTOR
+  - TRIGGERD_ADDRESS_FILE
