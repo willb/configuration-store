@@ -32,6 +32,15 @@ module Mrg
          qmf_severity :notice
       end
       
+      class NodeUpdatedNotice
+         include ::SPQR::Raiseable
+         arg :nodes, :map, "A map from node names to the version numbers of the latest config for that node."
+
+         qmf_class_name :NodeUpdatedNotice
+         qmf_package_name "com.redhat.grid.config"
+         qmf_severity :notice
+      end
+      
       class Store
         include ::SPQR::Manageable
 
@@ -537,7 +546,13 @@ module Mrg
           end
         end
         
-        include FineGrainedEventGenerator
+        module PullEventGenerator
+          def config_events_to(node_list, current_version)
+            NodeUpdatedNotice.new(Hash[*node_list.zip([current_version] * node_list.size).flatten]).bang!
+          end
+        end
+
+        include PullEventGenerator
       end
     end
   end
