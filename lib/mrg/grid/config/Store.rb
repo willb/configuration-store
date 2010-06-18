@@ -469,16 +469,6 @@ module Mrg
           end
         end
         
-        def new_config_event(nodes, version, restart=true, subsystems=nil)
-          subsystems ||= Subsystem.find_all.map{|ss| ss.name}
-          
-          log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
-                    
-          map = Hash[*nodes.zip([version] * nodes.length).flatten]
-          event = WallabyConfigEvent.new(map, restart, subsystems)
-          event.bang!
-        end
-        
         private
         def app
           Store.app rescue nil
@@ -494,6 +484,7 @@ module Mrg
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
           default_group_only = (dirty_nodes.size == 0)
+          all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
           if default_group_only
@@ -515,19 +506,33 @@ module Mrg
           
           DirtyElement.delete_all
           
-          config_events_to(dirty_nodes, this_version)
+          config_events_to(dirty_nodes, this_version, all_nodes)
           
           [results, warnings]
         end
         
+        module PerSubsystemEventer
+          def new_config_event(nodes, version, restart=true, subsystems=nil)
+            subsystems ||= Subsystem.find_all.map{|ss| ss.name}
+
+            log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
+
+            map = Hash[*nodes.zip([version] * nodes.length).flatten]
+            event = WallabyConfigEvent.new(map, restart, subsystems)
+            event.bang!
+          end
+        end
+        
         module CoarseGrainedEventGenerator
-          def config_events_to(node_list, current_version)
+          include PerSubsystemEventer
+          def config_events_to(node_list, current_version, all_nodes=false)
             new_config_event(node_list.map {|dn| dn.name}, current_version)
           end
         end
 
         module FineGrainedEventGenerator
-          def config_events_to(node_list, current_version)
+          include PerSubsystemEventer
+          def config_events_to(node_list, current_version, all_nodes=false)
             node_params = {}
             node_list.each do |node|
               old_version = [node.last_checkin, node.last_updated_version].min
@@ -547,8 +552,26 @@ module Mrg
         end
         
         module PullEventGenerator
-          def config_events_to(node_list, current_version)
-            NodeUpdatedNotice.new(Hash[*node_list.zip([current_version] * node_list.size).flatten]).bang!
+          MAX_ARG_SIZE = 65535          # QMFv1 maximum argument size
+          MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
+
+          def config_events_to(node_list, current_version, all_nodes=false)
+            acc = {}
+            bytes = 0
+            node_list = %w{*} if all_nodes
+            
+            node_list.each do |node|
+              if (bytes + node.size + current_version.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
+                NodeUpdatedNotice.new(acc).bang!
+                acc = {}
+                bytes = 0
+              end
+              
+              acc[node] = current_version
+              bytes += (node.size + current_version.size)
+            end
+            
+            NodeUpdatedNotice.new(acc).bang! if acc.size > 0
           end
         end
 
