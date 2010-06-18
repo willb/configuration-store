@@ -557,7 +557,7 @@ module Mrg
 
           def new_config_event(nodes, current_version)
             notice = NodeUpdatedNotice.new
-            notice.nodes = notice
+            notice.nodes = nodes
             notice.version = current_version
             notice.bang!
           end
