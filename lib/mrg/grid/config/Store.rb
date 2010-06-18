@@ -555,14 +555,23 @@ module Mrg
           MAX_ARG_SIZE = 65535          # QMFv1 maximum argument size
           MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
 
+          def new_config_event(nodes, current_version)
+            notice = NodeUpdatedNotice.new
+            notice.nodes = notice
+            notice.version = current_version
+            notice.bang!
+          end
+
           def config_events_to(node_list, current_version, all_nodes=false)
+            node_names = all_nodes ? ["*"] : node_list.map {|n| n.name}
+            
+            log.debug { "calling PullEventGenerator#config_events_to; node_names is #{node_names.inspect}, current_version is #{current_version.inspect}" }
             acc = []
             bytes = 0
-            node_list = all_nodes ? %w{*} : node_list.map {|n| n.name}
             
-            node_list.sort.each do |node|
+            node_names.sort.each do |node|
               if (bytes + node.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
-                NodeUpdatedNotice.new(acc,current_version).bang!
+                new_config_event(acc, current_version)
                 acc = []
                 bytes = 0
               end
@@ -571,7 +580,7 @@ module Mrg
               bytes += (node.size)
             end
             
-            NodeUpdatedNotice.new(acc,current_version).bang! if acc.size > 0
+            new_config_event(acc, current_version) if acc.size > 0
           end
         end
 
