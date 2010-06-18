@@ -576,7 +576,7 @@ module Mrg
                 bytes = 0
               end
               
-              acc << current_version
+              acc << node
               bytes += (node.size)
             end
             
