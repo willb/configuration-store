@@ -34,8 +34,8 @@ module Mrg
       
       class NodeUpdatedNotice
          include ::SPQR::Raiseable
-         arg :nodes, :map, "A map from node names to the version numbers of the latest config for that node."
-
+         arg :nodes, :list, "A list of node names to update."
+         arg :version, :uint64, "The version of the latest configuration for these nodes."
          qmf_class_name :NodeUpdatedNotice
          qmf_package_name "com.redhat.grid.config"
          qmf_severity :notice
@@ -556,22 +556,22 @@ module Mrg
           MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
 
           def config_events_to(node_list, current_version, all_nodes=false)
-            acc = {}
+            acc = []
             bytes = 0
             node_list = %w{*} if all_nodes
             
-            node_list.each do |node|
-              if (bytes + node.size + current_version.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
-                NodeUpdatedNotice.new(acc).bang!
-                acc = {}
+            node_list.sort.each do |node|
+              if (bytes + node.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
+                NodeUpdatedNotice.new(acc,current_version).bang!
+                acc = []
                 bytes = 0
               end
               
-              acc[node] = current_version
-              bytes += (node.size + current_version.size)
+              acc << current_version
+              bytes += (node.size)
             end
             
-            NodeUpdatedNotice.new(acc).bang! if acc.size > 0
+            NodeUpdatedNotice.new(acc,current_version).bang! if acc.size > 0
           end
         end
 
