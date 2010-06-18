@@ -558,7 +558,7 @@ module Mrg
           def config_events_to(node_list, current_version, all_nodes=false)
             acc = []
             bytes = 0
-            node_list = %w{*} if all_nodes
+            node_list = all_nodes ? %w{*} : node_list.map {|n| n.name}
             
             node_list.sort.each do |node|
               if (bytes + node.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
