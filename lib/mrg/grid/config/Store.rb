@@ -487,6 +487,12 @@ module Mrg
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
+          log.debug do
+            dirty_elements = DirtyElement.count
+            
+            "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
+          end
+          
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
@@ -501,12 +507,16 @@ module Mrg
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
-                    
-          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
           DirtyElement.delete_all
           
+          log.debug do
+            "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
+          end
+          
           config_events_to(dirty_nodes, this_version, all_nodes)
+          
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
           [results, warnings]
         end
