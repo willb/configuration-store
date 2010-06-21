@@ -482,20 +482,14 @@ module Mrg
 
         def validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
+          dirty_elements = DirtyElement.count
           this_version = ::Rhubarb::Util::timestamp
           nothing_changed = (dirty_nodes.size == 0)
           default_group_only = (nothing_changed && Node.count == 0)
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
-          log.debug do
-            dirty_elements = DirtyElement.count
-            
-            log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}"
-            Node._get_dirty_nodes.each {|n| log.debug "validate_and_activate:  dirty node #{n.name} (from Node._get_dirty_nodes)"}
-            
-            "validate_and_activate:  dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
-          end
+          log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
           
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
@@ -517,9 +511,7 @@ module Mrg
           
           DirtyElement.delete_all
           
-          log.debug do
-            "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
-          end
+          log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
           
           config_events_to(dirty_nodes, this_version, all_nodes)
           
