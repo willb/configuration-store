@@ -34,7 +34,7 @@ module Mrg
       
       class NodeUpdatedNotice
          include ::SPQR::Raiseable
-         arg :nodes, :list, "A list of node names to update."
+         arg :nodes, :map, "A map whose keys are the node names that must update."
          arg :version, :uint64, "The version of the latest configuration for these nodes."
          qmf_class_name :NodeUpdatedNotice
          qmf_package_name "com.redhat.grid.config"
@@ -583,17 +583,17 @@ module Mrg
             node_names = all_nodes ? ["*"] : node_list.map {|n| n.name}
             
             log.debug { "calling PullEventGenerator#config_events_to; node_names is #{node_names.inspect}, current_version is #{current_version.inspect}" }
-            acc = []
+            acc = {}
             bytes = 0
             
             node_names.sort.each do |node|
               if (bytes + node.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
                 new_config_event(acc, current_version)
-                acc = []
+                acc = {}
                 bytes = 0
               end
               
-              acc << node
+              acc[node] = 1
               bytes += (node.size)
             end
             
