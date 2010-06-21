@@ -483,7 +483,8 @@ module Mrg
         def validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
           this_version = ::Rhubarb::Util::timestamp
-          default_group_only = (dirty_nodes.size == 0)
+          nothing_changed = (dirty_nodes.size == 0)
+          default_group_only = (nothing_changed && Node.count == 0)
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
@@ -500,13 +501,16 @@ module Mrg
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
             warnings << "No nodes in configuration; only tested default group"
+          elsif nothing_changed
+            log.warn "User requested configuration #{validate_only ? "validation" : "activation"}, but no nodes have changed configurations since last activate."
+            warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
           options = (validate_only || default_group_only) ? nil : {:save_for_version=>this_version}
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
-          if validate_only || default_group_only || results.keys.size > 0
+          if validate_only || nothing_changed || results.keys.size > 0
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
