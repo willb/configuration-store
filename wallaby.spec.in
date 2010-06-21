@@ -88,7 +88,7 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby-agent
 %{_initrddir}/wallaby
-%{_sysconfdir}/sysconfig/wallaby-agent
+%config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
 
 %pre
 getent group wallaby >/dev/null || groupadd -r wallaby
