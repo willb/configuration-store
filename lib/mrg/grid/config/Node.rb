@@ -246,8 +246,8 @@ module Mrg
         end
         
         def Node.get_dirty_nodes
-          return Node.find_all() if DirtyElement.find_first_by_kind(DirtyElement.const_get("KIND_EVERYTHING"))
-          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_GROUP"), :grp=>Group.DEFAULT_GROUP)
+          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_EVERYTHING")).size > 0
+          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_GROUP"), :grp=>Group.DEFAULT_GROUP).size > 0
           Node._get_dirty_nodes
         end
         
@@ -260,25 +260,6 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
   SELECT nodemembership.node AS node FROM dirtyelement JOIN groupfeatures, nodemembership WHERE dirtyelement.feature = groupfeatures.feature AND nodemembership.grp = groupfeatures.grp
 )
         QUERY
-
-        declare_custom_query :_get_dirty_nodes_groups, <<-QUERY
-SELECT * FROM __TABLE__ WHERE row_id IN (
-  SELECT nodemembership.node AS node FROM dirtyelement JOIN nodemembership WHERE dirtyelement.grp = nodemembership.grp
-)
-        QUERY
-
-        declare_custom_query :_get_dirty_nodes_nodes, <<-QUERY
-SELECT * FROM __TABLE__ WHERE row_id IN (
-  SELECT node FROM dirtyelement
-)
-        QUERY
-
-        declare_custom_query :_get_dirty_nodes_params, <<-QUERY
-SELECT * FROM __TABLE__ WHERE row_id IN (
-  SELECT nodemembership.node AS node FROM dirtyelement JOIN groupparams, nodemembership WHERE dirtyelement.parameter = groupparams.param AND nodemembership.grp = groupparams.grp
-)
-        QUERY
-
         
         private
         
