@@ -490,7 +490,9 @@ module Mrg
           log.debug do
             dirty_elements = DirtyElement.count
             
-            "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
+            log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}"
+            Node._get_dirty_nodes.each {|n| log.debug "validate_and_activate:  dirty node #{n.name} (from Node._get_dirty_nodes)"}
+            "validate_and_activate:  dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
           end
           
           if default_group_only
