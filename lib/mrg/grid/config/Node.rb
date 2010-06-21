@@ -261,6 +261,25 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
 )
         QUERY
 
+        declare_custom_query :_get_dirty_nodes_groups, <<-QUERY
+SELECT * FROM __TABLE__ WHERE row_id IN (
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN nodemembership WHERE dirtyelement.grp = nodemembership.grp
+)
+        QUERY
+
+        declare_custom_query :_get_dirty_nodes_nodes, <<-QUERY
+SELECT * FROM __TABLE__ WHERE row_id IN (
+  SELECT node FROM dirtyelement
+)
+        QUERY
+
+        declare_custom_query :_get_dirty_nodes_params, <<-QUERY
+SELECT * FROM __TABLE__ WHERE row_id IN (
+  SELECT nodemembership.node AS node FROM dirtyelement JOIN groupparams, nodemembership WHERE dirtyelement.parameter = groupparams.param AND nodemembership.grp = groupparams.grp
+)
+        QUERY
+
+        
         private
         
         def my_features
