@@ -33,6 +33,12 @@ module Mrg
       class DirtyElement
       end
       
+      class ConfigVersion
+      end
+      
+      module ReconfigEventMapBuilder
+      end
+      
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
@@ -224,10 +230,24 @@ module Mrg
         end
         
         qmf_property :memberships, :list, :desc=>"A list of the groups associated with this node, in inverse priority order (most important first), not including the identity group."
+
+        def whatChanged(old_version, new_version)
+          node_params = {self.name => ConfigVersion.whatchanged(self.name, old_version, new_version)}
+          rem = ReconfigEventMapBuilder.build(node_params)
+          [node_params[self.name], rem.restart.keys, rem.reconfig.keys]
+        end
+        
+        expose :whatChanged do |args|
+          args.declare :old_version, :uint64, :in, "The old version."
+          args.declare :new_version, :uint64, :in, "The new version."
+          args.declare :params, :list, :out, "A list of parameters whose values changed between old_version and new_version."
+          args.declare :restart, :list, :out, "A list of subsystems that must be restarted as a result of the changes between old_version and new_version."
+          args.declare :affected, :list, :out, "A list of subsystems that must re-read their configurations as a result of the changes between old_version and new_version."
+        end
         
         def Node.get_dirty_nodes
-          return Node.find_all() if DirtyElement.find_first_by_kind(DirtyElement.const_get("KIND_EVERYTHING"))
-          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_GROUP"), :grp=>Group.DEFAULT_GROUP)
+          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_EVERYTHING")).size > 0
+          return Node.find_all() if DirtyElement.find_by(:kind=>DirtyElement.const_get("KIND_GROUP"), :grp=>Group.DEFAULT_GROUP).size > 0
           Node._get_dirty_nodes
         end
         
@@ -240,7 +260,7 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
   SELECT nodemembership.node AS node FROM dirtyelement JOIN groupfeatures, nodemembership WHERE dirtyelement.feature = groupfeatures.feature AND nodemembership.grp = groupfeatures.grp
 )
         QUERY
-
+        
         private
         
         def my_features

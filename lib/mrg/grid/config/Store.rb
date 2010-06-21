@@ -32,6 +32,15 @@ module Mrg
          qmf_severity :notice
       end
       
+      class NodeUpdatedNotice
+         include ::SPQR::Raiseable
+         arg :nodes, :map, "A map whose keys are the node names that must update."
+         arg :version, :uint64, "The version of the latest configuration for these nodes."
+         qmf_class_name :NodeUpdatedNotice
+         qmf_package_name "com.redhat.grid.config"
+         qmf_severity :notice
+      end
+      
       class Store
         include ::SPQR::Manageable
 
@@ -460,16 +469,6 @@ module Mrg
           end
         end
         
-        def new_config_event(nodes, version, restart=true, subsystems=nil)
-          subsystems ||= Subsystem.find_all.map{|ss| ss.name}
-          
-          log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
-                    
-          map = Hash[*nodes.zip([version] * nodes.length).flatten]
-          event = WallabyConfigEvent.new(map, restart, subsystems)
-          event.bang!
-        end
-        
         private
         def app
           Store.app rescue nil
@@ -483,42 +482,66 @@ module Mrg
 
         def validate_and_activate(validate_only=false)
           dirty_nodes = Node.get_dirty_nodes
+          dirty_elements = DirtyElement.count
           this_version = ::Rhubarb::Util::timestamp
-          default_group_only = (dirty_nodes.size == 0)
+          nothing_changed = (dirty_nodes.size == 0)
+          default_group_only = (nothing_changed && Node.count == 0)
+          all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
+          
+          log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
           
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
             warnings << "No nodes in configuration; only tested default group"
+          elsif nothing_changed
+            log.warn "User requested configuration #{validate_only ? "validation" : "activation"}, but no nodes have changed configurations since last activate."
+            warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
           options = (validate_only || default_group_only) ? nil : {:save_for_version=>this_version}
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
-          if validate_only || default_group_only || results.keys.size > 0
+          if validate_only || nothing_changed || results.keys.size > 0
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
-                    
-          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
           DirtyElement.delete_all
           
-          config_events_to(dirty_nodes, this_version)
+          log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
+          
+          config_events_to(dirty_nodes, this_version, all_nodes)
+          
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
           [results, warnings]
         end
         
+        module PerSubsystemEventer
+          def new_config_event(nodes, version, restart=true, subsystems=nil)
+            subsystems ||= Subsystem.find_all.map{|ss| ss.name}
+
+            log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
+
+            map = Hash[*nodes.zip([version] * nodes.length).flatten]
+            event = WallabyConfigEvent.new(map, restart, subsystems)
+            event.bang!
+          end
+        end
+        
         module CoarseGrainedEventGenerator
-          def config_events_to(node_list, current_version)
+          include PerSubsystemEventer
+          def config_events_to(node_list, current_version, all_nodes=false)
             new_config_event(node_list.map {|dn| dn.name}, current_version)
           end
         end
 
         module FineGrainedEventGenerator
-          def config_events_to(node_list, current_version)
+          include PerSubsystemEventer
+          def config_events_to(node_list, current_version, all_nodes=false)
             node_params = {}
             node_list.each do |node|
               old_version = [node.last_checkin, node.last_updated_version].min
@@ -537,7 +560,40 @@ module Mrg
           end
         end
         
-        include FineGrainedEventGenerator
+        module PullEventGenerator
+          MAX_ARG_SIZE = 65535          # QMFv1 maximum argument size
+          MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
+
+          def new_config_event(nodes, current_version)
+            notice = NodeUpdatedNotice.new
+            notice.nodes = nodes
+            notice.version = current_version
+            notice.bang!
+          end
+
+          def config_events_to(node_list, current_version, all_nodes=false)
+            node_names = all_nodes ? ["*"] : node_list.map {|n| n.name}
+            
+            log.debug { "calling PullEventGenerator#config_events_to; node_names is #{node_names.inspect}, current_version is #{current_version.inspect}" }
+            acc = {}
+            bytes = 0
+            
+            node_names.sort.each do |node|
+              if (bytes + node.size) > (MAX_ARG_SIZE - MAX_SIZE_CUSHION)
+                new_config_event(acc, current_version)
+                acc = {}
+                bytes = 0
+              end
+              
+              acc[node] = 1
+              bytes += (node.size)
+            end
+            
+            new_config_event(acc, current_version) if acc.size > 0
+          end
+        end
+
+        include PullEventGenerator
       end
     end
   end
