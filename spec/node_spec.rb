@@ -657,9 +657,22 @@ module Mrg
 
         end
 
+        include BaseDBFixture
+
+        def setup_whatchanged_tests
+          reconstitute_db
+        end
+        
+        it "should identify parameter diffs between two changed versions" do
+          setup_whatchanged_tests
+          pending 
+        end
+
         it "should have only one identity group" do
           pending
         end
+        
+        
         
       end
     end

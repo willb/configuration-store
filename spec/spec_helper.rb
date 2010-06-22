@@ -10,6 +10,10 @@ require 'enumerator'
 require 'spec'
 require 'spec/autorun'
 
+require 'mrg/grid/config-client'
+require 'mrg/grid/config-proxies'
+
+
 Spec::Runner.configure do |config|
   
 end
@@ -41,5 +45,16 @@ module DescribeGetterAndSetter
       param = @store.send(@find_msg, key)
       param.send(getmsg).should == val
     end
+  end
+end
+
+module BaseDBFixture
+  def reconstitute_db
+    s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(@store, dbtext)
+    s.load
+  end
+  
+  def dbtext
+    ""
   end
 end
