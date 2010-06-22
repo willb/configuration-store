@@ -111,6 +111,14 @@ task :clean do
   FileUtils.rm_r db_pkg_dir(), :force => true
 end
 
+task :copy_db do
+  src = 'condor-base-db.snapshot'
+  target = 'spec/base-db.yaml'
+  unless uptodate?(target, src)
+    FileUtils.cp src, target
+  end
+end
+
 require 'spec/rake/spectask'
 Spec::Rake::SpecTask.new(:spec) do |spec|
   spec.libs << 'lib' << 'spec'
@@ -124,7 +132,8 @@ Spec::Rake::SpecTask.new(:rcov) do |spec|
   spec.rcov = true
 end
 
-task :spec => :check_dependencies
+task :spec => [:check_dependencies, :copy_db]
+task :rcov => [:check_dependencies, :copy_db]
 
 begin
   require 'reek/adapters/rake_task'

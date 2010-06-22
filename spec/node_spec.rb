@@ -659,20 +659,94 @@ module Mrg
 
         include BaseDBFixture
 
+        def self.PARAM(x)
+          [:PARAM, x]
+        end
+
+        def self.VALUE(x)
+          [:VALUE, x]
+        end
+
+        def get_params(restart=false)
+          (self.send(restart ? :restart_params : :reconfig_params).keys - param_deps.keys - param_conflicts.keys).sort_by {rand}
+        end
+
+        def get_values
+          o = Object.new
+          def o.shift
+            @val = (@val && @val + 1) || 0
+            "value_#{@val}"
+          end
+
+          o
+        end
+
+        def self.domain(x)
+          x[0]
+        end
+
         def setup_whatchanged_tests
           reconstitute_db
         end
         
-        it "should identify parameter diffs between two changed versions" do
-          setup_whatchanged_tests
-          pending 
+        def unify_param_expectations(before, after, expected_diff, restart_params=false)
+          params = get_params(restart_params)
+          values = get_values
+          domains_and_keys = {:PARAM=>Hash.new {|h,k| h[k] = params.shift},
+            :VALUE=>Hash.new {|h,k| h[k] = values.shift}}
+          
+          b = before.dup
+          a = after.dup
+
+          [b, a].each do |hash|
+            hash.each do |k,v|
+              key_domain = k[0]
+              key_var = k[1]
+              val_domain = v[0]
+              val_var = v[1]
+              hash.delete(k)
+              puts "key domain: #{key_domain.inspect}; key var:  #{key_var.inspect}"
+              puts "value domain: #{val_domain.inspect}; value var:  #{val_var.inspect}"
+              puts "key is #{domains_and_keys[key_domain][key_var]}"
+              puts "value is #{domains_and_keys[val_domain][val_var]}"
+
+              hash[domains_and_keys[key_domain][key_var]] = domains_and_keys[val_domain][val_var] rescue (puts "key_domain is #{key_domain}; value_domain is #{val_domain}")
+            end
+          end
+          
+          ed = expected_diff.map {|dom,key| domains_and_keys[dom][key]}
+
+          [b,a,ed]
+        end
+          
+
+        [
+         {:before=>{}, :after=>{PARAM(:a)=>VALUE(:a)}, :expected_diff=>[PARAM(:a)], :description=>"when a param is set in AFTER but not in BEFORE"},
+         {:before=>{PARAM(:a)=>VALUE(:a)}, :after=>{}, :expected_diff=>[PARAM(:a)], :description=>"when a param is set in BEFORE but not in AFTER"},
+         {:before=>{PARAM(:a)=>VALUE(:a)}, :after=>{PARAM(:a)=>VALUE(:a)}, :expected_diff=>[], :description=>"when a param is set identically in AFTER and in BEFORE"},
+         {:before=>{PARAM(:a)=>VALUE(:a)}, :after=>{PARAM(:a)=>VALUE(:b)}, :expected_diff=>[PARAM(:a)], :description=>"when a param is set in AFTER, but to a different value than in BEFORE"},
+         {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:a)=>VALUE(:a)}, :expected_diff=>[PARAM(:b)], :description=>"when the param set for BEFORE is a strict superset of that for AFTER and common params have common values"},
+         {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:a)=>VALUE(:c)}, :expected_diff=>[PARAM(:a), PARAM(:b)], :description=>"when the param set for BEFORE is a strict superset of that for AFTER and common params do not have common values"},
+
+         {:after=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :before=>{PARAM(:a)=>VALUE(:a)}, :expected_diff=>[PARAM(:b)], :description=>"when the param set for BEFORE is a strict subset of that for AFTER and common params have common values"},
+         {:after=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :before=>{PARAM(:a)=>VALUE(:c)}, :expected_diff=>[PARAM(:a), PARAM(:b)], :description=>"when the param set for BEFORE is a strict subset that for AFTER and common params do not have common values"},
+         {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:a)=>VALUE(:a), PARAM(:c)=>VALUE(:c)}, :expected_diff=>[PARAM(:b), PARAM(:c)], :description=>"when the param sets for BEFORE and AFTER are intersecting but neither is a strict superset of the other, and common params have common values"},
+         {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:a)=>VALUE(:d), PARAM(:c)=>VALUE(:c)}, :expected_diff=>[PARAM(:a), PARAM(:b), PARAM(:c)], :description=>"when the param sets for BEFORE and AFTER are intersecting but neither is a strict superset of the other, and common params do not have common values"},
+         {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:d)=>VALUE(:d), PARAM(:c)=>VALUE(:c)}, :expected_diff=>[PARAM(:a), PARAM(:b), PARAM(:c), PARAM(:d)], :description=>"when the param sets for BEFORE and AFTER are disjoint"}
+        ].each do |exampleinfo|
+          [true,false].each do |dorestart|
+          
+            it "should properly identify #{dorestart ? "restart" : "reconfigure"}-parameter diffs between two changed versions #{exampleinfo[:description]}" do
+              setup_whatchanged_tests
+              before, after, expected_diff = unify_param_expectations(exampleinfo[:before], exampleinfo[:after], exampleinfo[:expected_diff])
+              pending 
+            end
+          end
         end
 
         it "should have only one identity group" do
           pending
         end
-        
-        
         
       end
     end
