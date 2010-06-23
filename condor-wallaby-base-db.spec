@@ -1,8 +1,8 @@
-%define rel 0.7
+%define rel 1
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
-Version: 1.1
+Version: 1.2
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
@@ -35,6 +35,17 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Wed Jun 23 2010 rrati <rrati@redhta> - 1.2-1
+- Separated QMF parameters into features starting with Console
+- Added JobServer feature
+- *.PLUGINS attributes require restart if changed
+- Changed carod subsystem to ll_daemon
+- Added ADDRESS_FILE params for/to all daemoncore daemons
+- Re-org for Scheduler/QMF based features
+- DEDICATEDSCHEDULER must now be set by the user.  No default value provided
+- Tweak to the Dedicated Scheduler
+- Added many more parameters
+
 * Thu Jun 10 2010 rrati <rrati@redhta> - 1.1-0.7
 - Added kbdd feature/subsystem and supporting params
 - Removed old explicit subsystem entries
