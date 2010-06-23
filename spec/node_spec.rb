@@ -883,6 +883,60 @@ module Mrg
           end
         end
 
+        # it "should have a better example name than this!"
+        it "should not exhibit Rob's failure case of 6/23/2010" do
+          setup_whatchanged_tests
+          
+          feature_names_1 = %w{Master QMF NodeAccess CentralManager}
+          feature_names_2 = %w{ExecuteNode}
+          param_names = %w{DAEMON_LIST}
+          
+          params = []
+          
+          # make sure that we have all of the features we need for this test
+          (feature_names_1 + feature_names_2).each do |fn|
+            f = @store.getFeature(fn)
+            unless f
+              pending "can't find feature #{fn} in the base db"
+              return
+            end
+          end
+          
+          # make sure that we have all of the params we need for this test
+          param_names.each do |pn|
+            p = @store.getParam(pn)
+            unless p
+              pending "can't find param #{pn} in the base db"
+              return
+            end
+
+            params << p
+          end
+          
+          # create a node
+          node = @store.addNode("example.local.")
+          
+          # enable the first set of features
+          Group.DEFAULT_GROUP.modifyFeatures("ADD", feature_names_1, {})
+          
+          # activate and record version info
+          @store.activateConfiguration
+          old_version = node.last_updated_version
+          
+          puts "OLD CONFIG is #{node.getCurrentConfig.inspect}"
+          
+          # make DAEMON_LIST a non-mustchange parameter
+          params.each {|p| p.setRequiresRestart(true)}
+          
+          # enable ExecuteNode on the default group
+          Group.DEFAULT_GROUP.modifyFeatures("ADD", feature_names_2, {})
+          @store.activateConfiguration
+
+          new_version = node.last_updated_version
+          puts "NEW CONFIG is #{node.getCurrentConfig.inspect}"
+          puts "WHATCHANGED is #{node.whatChanged(old_version, new_version).inspect}"
+        end
+
         it "should have only one identity group" do
           pending
         end
