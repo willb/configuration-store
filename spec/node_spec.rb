@@ -926,7 +926,7 @@ module Mrg
           puts "OLD CONFIG is #{node.getCurrentConfig.inspect}"
           
           # make DAEMON_LIST a non-mustchange parameter
-          params.each {|p| p.setRequiresRestart(true)}
+          params.each {|p| p.setRequiresRestart(false)}
           
           # enable ExecuteNode on the default group
           Group.DEFAULT_GROUP.modifyFeatures("ADD", feature_names_2, {})
