@@ -120,7 +120,8 @@ module Mrg
           result = ReconfigEventMap.new
           
           rows.each do |row|
-            if row["restart"]
+            restart_val = row["restart"]
+            if restart_val.to_s.downcase == "true" || restart_val.to_s == "1"
               result.restart[row["subsys"]] << row["node"]
             else
               result.reconfig[row["subsys"]] << row["node"]
