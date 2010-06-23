@@ -730,6 +730,7 @@ module Mrg
          {:before=>{PARAM(:a)=>VALUE(:a), PARAM(:b)=>VALUE(:b)}, :after=>{PARAM(:d)=>VALUE(:d), PARAM(:c)=>VALUE(:c)}, :expected_diff=>[PARAM(:a), PARAM(:b), PARAM(:c), PARAM(:d)], :description=>"when the param sets for BEFORE and AFTER are disjoint"}
         ].each do |exampleinfo|
           [true,false].each do |dorestart|
+            
           
             it "should properly identify #{dorestart ? "restart" : "reconfigure"}-parameter diffs between two changed versions #{exampleinfo[:description]}" do
               setup_whatchanged_tests
@@ -756,6 +757,33 @@ module Mrg
                 reconfig.sort.uniq.should == sss
               end
             end
+          end
+
+          it "should properly identify reconfigure-parameter diffs between two changed versions when the parameters in question have been changed from restart-parameters and #{exampleinfo[:description]}" do
+            setup_whatchanged_tests
+            c_before, c_after, expected_diff = unify_param_expectations(exampleinfo[:before], exampleinfo[:after], exampleinfo[:expected_diff], true)
+            node = @store.addNode("example.local.")
+          
+            node.identity_group.modifyParams("REPLACE", c_before)
+            @store.activateConfiguration
+            old_version = node.last_updated_version
+          
+            # change all of the parameters involved to reconfig-parameters
+            (c_before.keys | c_after.keys).each do |prm|
+              @store.getParam(prm).setRequiresRestart(false)
+            end
+          
+            node.identity_group.modifyParams("REPLACE", c_after)
+            @store.activateConfiguration
+            new_version = node.last_updated_version
+          
+            params, restart, reconfig = node.whatChanged(old_version, new_version)
+            (params.sort - %w{WALLABY_CONFIG_VERSION}).should == expected_diff.sort
+          
+            sss = expected_diff.map {|prm| Subsystem.s_for_param(prm).map {|ss| ss.name}}.flatten.sort.uniq
+          
+            restart.size.should == 0
+            reconfig.sort.uniq.should == sss
           end
         end
 
