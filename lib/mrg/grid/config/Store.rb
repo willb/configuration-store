@@ -20,18 +20,7 @@ require 'mrg/grid/config-proxies'
 
 module Mrg
   module Grid
-    module Config
-      class WallabyConfigEvent
-         include ::SPQR::Raiseable
-         arg :affectedNodes, :map, "A map from node names to the version numbers of the latest config for that node."
-         arg :restart, :bool, "Whether or not to restart the subsystems listed in targets."
-         arg :targets, :list, "A list of affected subsystems."
-
-         qmf_class_name :WallabyConfigEvent
-         qmf_package_name "com.redhat.grid.config"
-         qmf_severity :notice
-      end
-      
+    module Config      
       class NodeUpdatedNotice
          include ::SPQR::Raiseable
          arg :nodes, :map, "A map whose keys are the node names that must update."
@@ -518,46 +507,6 @@ module Mrg
           dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
           [results, warnings]
-        end
-        
-        module PerSubsystemEventer
-          def new_config_event(nodes, version, restart=true, subsystems=nil)
-            subsystems ||= Subsystem.find_all.map{|ss| ss.name}
-
-            log.debug "About to raise a config event for version #{version}; #{restart ? "restarting" : "reconfiguring"} #{subsystems.join(", ")} and sending to #{nodes.size} node#{nodes.size == 1 ? "" : "s"}"
-
-            map = Hash[*nodes.zip([version] * nodes.length).flatten]
-            event = WallabyConfigEvent.new(map, restart, subsystems)
-            event.bang!
-          end
-        end
-        
-        module CoarseGrainedEventGenerator
-          include PerSubsystemEventer
-          def config_events_to(node_list, current_version, all_nodes=false)
-            new_config_event(node_list.map {|dn| dn.name}, current_version)
-          end
-        end
-
-        module FineGrainedEventGenerator
-          include PerSubsystemEventer
-          def config_events_to(node_list, current_version, all_nodes=false)
-            node_params = {}
-            node_list.each do |node|
-              old_version = [node.last_checkin, node.last_updated_version].min
-              node_params[node.name] = ConfigVersion.whatchanged(node.name, old_version, current_version)
-            end
-
-            rem = ReconfigEventMapBuilder.build(node_params)
-
-            rem.restart.each do |subsystem, nodeset|
-              new_config_event(nodeset.to_a, current_version, true, [subsystem])
-            end
-
-            rem.reconfig.each do |subsystem, nodeset|
-              new_config_event(nodeset.to_a, current_version, false, [subsystem])
-            end
-          end
         end
         
         module PullEventGenerator
