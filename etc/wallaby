@@ -30,7 +30,6 @@ lockfile=/var/lock/subsys/$prog
 
 start() {
     [ -x $exec ] || exit 5
-#    [ -f $config ] || exit 6
     echo -n $"Starting $prog: "
     daemon $exec
     retval=$?
@@ -41,8 +40,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-#    killproc $exec
-    pkill -f $exec
+    killproc $exec
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
@@ -102,4 +100,5 @@ case "$1" in
         echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
         exit 2
 esac
+
 exit $?
