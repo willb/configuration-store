@@ -89,3 +89,69 @@ module BaseDBFixture
     end
   end
 end
+
+module SpecHelper
+  module ClassMethods
+    
+  end
+  
+  module InstanceMethods
+    
+  end
+  
+  def self.included(receiver)
+    receiver.extend         ClassMethods
+    receiver.send :include, InstanceMethods
+  end
+end
+
+module WhatChangedTester
+  module Im
+    def get_params(restart=false)
+      (self.send(restart ? :restart_params : :reconfig_params).keys - param_deps.keys - param_conflicts.keys).sort_by {rand}
+    end
+  
+    def get_values
+      o = Object.new
+      def o.shift
+        @val = (@val && @val + 1) || 0
+        "value_#{@val}"
+      end
+  
+      o
+    end
+    
+    def setup_whatchanged_tests
+      reconstitute_db
+    end
+    
+    def unify_param_expectations(c_before, c_after, expected_diff, restart_params=false)
+      params = get_params(restart_params)
+      values = get_values
+      domains_and_keys = {:PARAM=>Hash.new {|h,k| h[k] = params.shift},
+        :VALUE=>Hash.new {|h,k| h[k] = values.shift}}
+      
+      b = {}
+      a = {}
+  
+      [[b, c_before], [a, c_after]].each do |hash, source|
+        source.each do |k,v|
+          key_domain = k[0]
+          key_var = k[1]
+          val_domain = v[0]
+          val_var = v[1]
+  
+          hash[domains_and_keys[key_domain][key_var]] = domains_and_keys[val_domain][val_var]
+        end
+      end
+      
+      ed = expected_diff.map {|dom,key| domains_and_keys[dom][key]}
+  
+      [b,a,ed]
+    end
+  end
+  
+  def self.included(receiver)
+    receiver.send :include, Im
+  end
+end
