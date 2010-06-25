@@ -213,7 +213,7 @@
 ## com.redhat.grid.config:Configuration ##
   * <tt>version</tt> (<tt>uint64</tt> property)
 
-## com.redhat.grid.config:WallabyConfigEvent ##
+## com.redhat.grid.config:NodeUpdatedNotice ##
 
 ## com.redhat.grid.config:Group ##
   * <tt>uid</tt> (<tt>uint32</tt> property)
