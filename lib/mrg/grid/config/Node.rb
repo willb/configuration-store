@@ -202,7 +202,7 @@ module Mrg
               NodeMembership.create(:node=>self, :grp=>grow) if command == "ADD"
             end
           when "REPLACE" then
-            memberships.map {|nm| nm.delete}
+            NodeMembership.find_by(:node=>self).map {|nm| nm.delete unless nm.grp.is_identity_group}
 
             groups.each do |grow|
               gn = grow.name
