@@ -20,6 +20,12 @@ module Mrg
           n = @store.addNode("blather.local.")
           n.name.should == "blather.local."
         end
+        
+        {"explicitly"=>:addNode, "implicitly"=>:getNode}.each do |ckind,msg|
+          it "disallows #{ckind} creating a node with a reserved name" do
+            lambda { @store.send(msg, "+++blah") }.should raise_error
+          end
+        end
 
         it "should be possible to create a node and then retrieve it" do
           n1 = @store.addNode("blather.local.")
