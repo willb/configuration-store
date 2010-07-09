@@ -376,6 +376,9 @@ module Mrg
             o
           end
           
+          # XXX:  as of recently, this (like the analogous method in
+          # InStoreConfigSerializer) duplicates effort with methods
+          # in the Store client class
           def get_instances(klass)
             @console.objects(:class=>klass.to_s, :timeout=>45).map do |obj|
               ::Mrg::Grid::ConfigClient.const_get(klass).new(obj, @console)
@@ -389,6 +392,9 @@ module Mrg
             o
           end
           
+          # XXX:  as of recently, this (like the analogous method in
+          # QmfConfigSerializer) duplicates effort with (non-exposed)
+          # methods in the Store class
           def get_instances(klass)
             ::Mrg::Grid::Config.const_get(klass).find_all
           end

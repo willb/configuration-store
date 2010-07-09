@@ -458,7 +458,18 @@ module Mrg
           end
         end
         
+        [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
+          define_method "#{klass.to_s.downcase}s" do
+            instances_of(klass)
+          end
+        end
+        
         private
+        
+        def instances_of(klass)
+          ::Mrg::Grid::Config.const_get(klass).find_all
+        end
+        
         def app
           Store.app rescue nil
         end
