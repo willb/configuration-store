@@ -55,7 +55,7 @@ module Mrg
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |prov_status, node_find_msg|
           {:provisioned=>node_find_msg==:addNode, :last_checkin=>0, :last_updated_version=>0}.each do |prop_msg, default|
             it "should give #{prov_status} nodes proper default values for the #{prop_msg} property" do
-              n = @store.send(node_find_msg, prop_msg)
+              n = @store.send(node_find_msg, "example.local.")
               n.send(prop_msg).should == default
             end
           end

@@ -214,7 +214,7 @@ module Mrg
             n.provisioned = true
           else
             # Return a newly-created node 
-            n = Node.create(:name => name, :last_checkin => 0, :last_updated_version=>0)
+            n = createNode(name)
           end
           
           # Mark the new node as "dirty" so it will get an updated configuration
@@ -240,7 +240,7 @@ module Mrg
           # Return the node with the given name
           n = Node.find_first_by_name(name) 
           unless n
-            n = Node.create(:name=>name, :provisioned=>false, :last_checkin=>0, :last_updated_version=>0)
+            n = createNode(name, false)
             
             # Mark the new node as "dirty" so it will get an updated configuration
             DirtyElement.dirty_node(n)
@@ -252,6 +252,11 @@ module Mrg
         expose :getNode do |args|
           args.declare :obj, :objId, :out, "The object ID of the retrieved Node object."
           args.declare :name, :sstr, :in, "The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name."
+        end
+        
+        def createNode(name, is_provisioned=true)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
+          Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
         end
         
         # removeNode 
