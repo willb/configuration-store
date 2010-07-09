@@ -122,7 +122,7 @@ s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(store_client, input.read)
 s.load
 
 if activate
-  explain = store_client.ActivateConfig
+  explain = store_client.activateConfig
   if explain != {}
     puts "Failed to activate configuration; please correct the following errors."
     explain.each do |node, node_explain|

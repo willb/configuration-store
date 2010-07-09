@@ -322,7 +322,7 @@ module Mrg
           nil
         end
         
-        def ActivateConfig
+        def activateConfig
           explain = @qmfo.activateConfiguration.explain
           explain.inject({}) do |acc, (node, node_explain)|
             acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|

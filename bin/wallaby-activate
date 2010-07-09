@@ -74,7 +74,7 @@ store = console.object(:class=>"Store")
 
 store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
-explain = store_client.ActivateConfig
+explain = store_client.activateConfig
 if explain != {}
   puts "Failed to activate configuration; please correct the following errors."
   explain.each do |node, node_explain|
