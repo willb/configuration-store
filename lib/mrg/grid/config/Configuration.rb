@@ -248,6 +248,8 @@ module Mrg
         
         declare_column :name, :string
         
+        DEFAULT_NODE = "+++DEFAULT"
+        
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
