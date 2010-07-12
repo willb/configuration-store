@@ -256,7 +256,9 @@ module Mrg
         
         def createNode(name, is_provisioned=true)
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
-          Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
+          n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
+          validate_and_activate(false, [n])
+          n
         end
         
         # removeNode 
@@ -485,8 +487,8 @@ module Mrg
           end
         end
 
-        def validate_and_activate(validate_only=false)
-          dirty_nodes = Node.get_dirty_nodes
+        def validate_and_activate(validate_only=false, explicit_nodelist=nil)
+          dirty_nodes = explicit_nodelist || Node.get_dirty_nodes
           dirty_elements = DirtyElement.count
           this_version = ::Rhubarb::Util::timestamp
           nothing_changed = (dirty_nodes.size == 0)
@@ -494,7 +496,7 @@ module Mrg
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
-          log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
+          log.debug "entering validate_and_activate for an #{explicit_nodelist ? "explicit" : "implicit"} node list; we have #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
           
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
@@ -505,7 +507,7 @@ module Mrg
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
-          options = (validate_only || default_group_only) ? nil : {:save_for_version=>this_version}
+          options = (validate_only) ? nil : {:save_for_version=>this_version}
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
@@ -518,7 +520,7 @@ module Mrg
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
           
-          config_events_to(dirty_nodes, this_version, all_nodes)
+          config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
           
           dirty_nodes.each {|dn| dn.last_updated_version = this_version }
           
