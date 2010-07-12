@@ -59,12 +59,20 @@ module Mrg
         end
         
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |prov_status, node_find_msg|
-          {:provisioned=>node_find_msg==:addNode, :last_checkin=>0, :last_updated_version=>0}.each do |prop_msg, default|
+          {:provisioned=>node_find_msg==:addNode, :last_checkin=>0}.each do |prop_msg, default|
             it "should give #{prov_status} nodes proper default values for the #{prop_msg} property" do
+              # XXX
               n = @store.send(node_find_msg, "example.local.")
               n.send(prop_msg).should == default
             end
           end
+
+          it "should give #{prov_status} nodes proper default values for the last_updated_version property" do
+            default = ::Rhubarb::Util::timestamp
+            n = @store.send(node_find_msg, "example.local.")
+            n.send(:last_updated_version).should >= default
+          end
+
         end
 
         ["add","ADD"].each do |p_cmd|
@@ -492,7 +500,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
@@ -516,7 +524,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
 
               end
 
@@ -545,7 +553,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
 
               end
 
@@ -573,7 +581,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
@@ -600,7 +608,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
@@ -628,7 +636,7 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
               end
 
               it "should, if it is #{nodekind}, report the highest-priority parameter value in #{action}d configurations that provide values for #{mustchangestr} parameters in multiple places" do
@@ -656,15 +664,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should_not == 0
               end
             end
           end
 
-        end
-
-        it "should have only one identity group" do
-          pending
         end
         
       end

@@ -189,17 +189,19 @@ module Mrg
           group = node.identity_group
           prm = @store.addParam("BIOTECH")
 
+          old_size = ConfigVersion.find_all.size
+
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
 
           @store.activateConfiguration
           
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 1
+          config_versions.size.should == old_size + 1
           
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
           
-          version = config_versions[0].version
+          version = config_versions[old_size].version
           
           config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version)
           config["BIOTECH"].should == "true"
@@ -214,6 +216,8 @@ module Mrg
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 
+          old_size = ConfigVersion.find_all.size
+
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
           @store.activateConfiguration
 
@@ -221,18 +225,18 @@ module Mrg
           @store.activateConfiguration
           
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 2
+          config_versions.size.should == old_size + 2
           
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
           
-          config = config_versions[1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."]
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
           
-          version = config_versions[0].version
-          version_prime = config_versions[1].version - 1
+          version = config_versions[old_size].version
+          version_prime = config_versions[old_size + 1].version - 1
           
           config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version)
           config["BIOTECH"].should == "true"
@@ -253,6 +257,8 @@ module Mrg
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
 
+          old_size = ConfigVersion.find_all.size
+
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
           @store.activateConfiguration
 
@@ -260,18 +266,18 @@ module Mrg
           @store.activateConfiguration
           
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 2
+          config_versions.size.should == old_size + 2
           
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
           
-          config = config_versions[1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."]
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
           
-          early_version = config_versions[0].version
-          late_version = config_versions[1].version
+          early_version = config_versions[old_size].version
+          late_version = config_versions[old_size + 1].version
           
           config = ConfigVersion.getVersionedNodeConfig("nodely.local.", early_version)
           config["WALLABY_CONFIG_VERSION"].should == early_version.to_s
@@ -291,18 +297,19 @@ module Mrg
           node = @store.addNode("nodely.local.")
           group = node.identity_group
           prm = @store.addParam("BIOTECH")
+          old_size = ConfigVersion.find_all.size
 
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
 
           @store.activateConfiguration
 
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 1
+          config_versions.size.should == old_size + 1
 
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
 
-          version = config_versions[0].version
+          version = config_versions[old_size].version
 
           config = node.getConfig("version" => version)
           config["BIOTECH"].should == "true"
@@ -316,6 +323,7 @@ module Mrg
           group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
+          old_size = ConfigVersion.find_all.size
 
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
           @store.activateConfiguration
@@ -324,18 +332,18 @@ module Mrg
           @store.activateConfiguration
 
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 2
+          config_versions.size.should == old_size + 2
 
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = config_versions[1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."]
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
 
-          version = config_versions[0].version
-          version_prime = config_versions[1].version - 1
+          version = config_versions[old_size + 0].version
+          version_prime = config_versions[old_size + 1].version - 1
 
           config = node.getConfig("version" => version)
           config["BIOTECH"].should == "true"
@@ -355,6 +363,7 @@ module Mrg
           group = node.identity_group
           prm = @store.addParam("BIOTECH")
           prm = @store.addParam("PONY_COUNTER")
+          old_size = ConfigVersion.find_all.size
 
           group.modifyParams("ADD", {"BIOTECH"=>"true"})
           @store.activateConfiguration
@@ -363,18 +372,18 @@ module Mrg
           @store.activateConfiguration
 
           config_versions = ConfigVersion.find_all
-          config_versions.size.should == 2
+          config_versions.size.should == old_size + 2
 
-          config = config_versions[0]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."]
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = config_versions[1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."]
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
 
-          early_version = config_versions[0].version
-          late_version = config_versions[1].version
+          early_version = config_versions[old_size].version
+          late_version = config_versions[old_size + 1].version
 
           config = node.getConfig("version" => early_version)
           config["WALLABY_CONFIG_VERSION"].should == early_version.to_s
