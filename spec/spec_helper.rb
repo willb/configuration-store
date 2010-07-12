@@ -50,6 +50,9 @@ end
 
 module BaseDBFixture
   def reconstitute_db
+    
+    pending "You've disabled tests involving the full database for this run" if ENV['WALLABY_SKIP_EXPENSIVE_TESTS']
+    
     @store.storeinit("resetdb"=>"yes")
     s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(@store, dbtext)
     s.load
