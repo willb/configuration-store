@@ -257,7 +257,7 @@ module Mrg
         def createNode(name, is_provisioned=true)
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
-          validate_and_activate(false, [n])
+          n.last_updated_version = ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
           n
         end
         
@@ -487,10 +487,10 @@ module Mrg
           end
         end
 
-        def validate_and_activate(validate_only=false, explicit_nodelist=nil)
+        def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
           dirty_nodes = explicit_nodelist || Node.get_dirty_nodes
           dirty_elements = DirtyElement.count
-          this_version = ::Rhubarb::Util::timestamp
+          this_version ||= ::Rhubarb::Util::timestamp
           nothing_changed = (dirty_nodes.size == 0)
           default_group_only = (nothing_changed && Node.count == 0)
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
@@ -512,17 +512,23 @@ module Mrg
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || nothing_changed || results.keys.size > 0
+            puts "OHH SNAP!" if (explicit_nodelist && !validate_only && results.keys.size == 0)
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
           
+          # we're activating this configuration; save the default group configuration by itself 
+          # if possible and if we aren't dealing with an explicit node list
+          unless explicit_nodelist
+            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version)
+          end
           DirtyElement.delete_all
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
           
           config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
           
-          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version if dn.respond_to? :last_updated_version }
           
           [results, warnings]
         end
