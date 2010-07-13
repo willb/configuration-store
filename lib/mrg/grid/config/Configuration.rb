@@ -187,6 +187,13 @@ module Mrg
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
             end
+            
+            def dupVersionedNodeConfig(from, to, ver=nil)
+              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
+              return 0 unless vnc
+              to = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup)
+              vnc.version
+            end
           end
 
           module InstanceMethods
