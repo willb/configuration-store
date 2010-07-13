@@ -67,11 +67,23 @@ module Mrg
             end
           end
 
-          it "should give #{prov_status} nodes proper default values for the last_updated_version property" do
+          it "should give #{prov_status} nodes proper default values for the last_updated_version property when there is a config on the default group" do
+            @store.addParam("FROTZ")
+            Group.DEFAULT_GROUP.modifyParams("ADD", {"FROTZ"=>"YES"}, {})
+
+            @store.activateConfiguration
+
             default = ::Rhubarb::Util::timestamp
             n = @store.send(node_find_msg, "example.local.")
             n.send(:last_updated_version).should >= default
           end
+
+it "should give #{prov_status} nodes proper default values for the last_updated_version property" do
+            n = @store.send(node_find_msg, "example.local.")
+            n.send(:last_updated_version).should == 0
+          end
+
+          
 
         end
 
