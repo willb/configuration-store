@@ -214,7 +214,7 @@ module Mrg
             n.provisioned = true
           else
             # Return a newly-created node 
-            n = Node.create(:name => name, :last_checkin => 0, :last_updated_version=>0)
+            n = createNode(name)
           end
           
           # Mark the new node as "dirty" so it will get an updated configuration
@@ -240,7 +240,7 @@ module Mrg
           # Return the node with the given name
           n = Node.find_first_by_name(name) 
           unless n
-            n = Node.create(:name=>name, :provisioned=>false, :last_checkin=>0, :last_updated_version=>0)
+            n = createNode(name, false)
             
             # Mark the new node as "dirty" so it will get an updated configuration
             DirtyElement.dirty_node(n)
@@ -252,6 +252,13 @@ module Mrg
         expose :getNode do |args|
           args.declare :obj, :objId, :out, "The object ID of the retrieved Node object."
           args.declare :name, :sstr, :in, "The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name."
+        end
+        
+        def createNode(name, is_provisioned=true)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
+          n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
+          n.last_updated_version = ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
+          n
         end
         
         # removeNode 
@@ -458,7 +465,18 @@ module Mrg
           end
         end
         
+        [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
+          define_method "#{klass.to_s.downcase}s" do
+            instances_of(klass)
+          end
+        end
+        
         private
+        
+        def instances_of(klass)
+          ::Mrg::Grid::Config.const_get(klass).find_all
+        end
+        
         def app
           Store.app rescue nil
         end
@@ -469,16 +487,16 @@ module Mrg
           end
         end
 
-        def validate_and_activate(validate_only=false)
-          dirty_nodes = Node.get_dirty_nodes
+        def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
+          dirty_nodes = explicit_nodelist || Node.get_dirty_nodes
           dirty_elements = DirtyElement.count
-          this_version = ::Rhubarb::Util::timestamp
+          this_version ||= ::Rhubarb::Util::timestamp
           nothing_changed = (dirty_nodes.size == 0)
           default_group_only = (nothing_changed && Node.count == 0)
           all_nodes = dirty_nodes.size == Node.count && !default_group_only
           warnings = []
           
-          log.debug "entering validate_and_activate with #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
+          log.debug "entering validate_and_activate for an #{explicit_nodelist ? "explicit" : "implicit"} node list; we have #{dirty_elements} dirty element#{dirty_elements == 1 ? "" : "s"}; dirty node count is #{dirty_nodes.size} (#{all_nodes ? "all" : "not all"} nodes)"
           
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
@@ -489,22 +507,28 @@ module Mrg
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
-          options = (validate_only || default_group_only) ? nil : {:save_for_version=>this_version}
+          options = (validate_only) ? nil : {:save_for_version=>this_version}
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || nothing_changed || results.keys.size > 0
+            puts "OHH SNAP!" if (explicit_nodelist && !validate_only && results.keys.size == 0)
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
           
+          # we're activating this configuration; save the default group configuration by itself 
+          # if possible and if we aren't dealing with an explicit node list
+          unless explicit_nodelist
+            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version)
+          end
           DirtyElement.delete_all
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
           
-          config_events_to(dirty_nodes, this_version, all_nodes)
+          config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
           
-          dirty_nodes.each {|dn| dn.last_updated_version = this_version }
+          dirty_nodes.each {|dn| dn.last_updated_version = this_version if dn.respond_to? :last_updated_version }
           
           [results, warnings]
         end

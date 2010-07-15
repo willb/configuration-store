@@ -90,11 +90,7 @@ module Mrg
           
           def act(kwargs=nil)
 
-            params = @store.console.objects(:class=>'Parameter', :timeout=>45).map do |obj|
-              ::Mrg::Grid::ConfigClient.const_get('Parameter').new(obj, @store.console)
-            end
-
-            params = params.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
+            params = @store.parameters.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
 
             params.each do |prm|
               puts "#{prm.name}:  #{prm.description}"

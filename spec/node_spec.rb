@@ -20,6 +20,12 @@ module Mrg
           n = @store.addNode("blather.local.")
           n.name.should == "blather.local."
         end
+        
+        {"explicitly"=>:addNode, "implicitly"=>:getNode}.each do |ckind,msg|
+          it "disallows #{ckind} creating a node with a reserved name" do
+            lambda { @store.send(msg, "+++blah") }.should raise_error
+          end
+        end
 
         it "should be possible to create a node and then retrieve it" do
           n1 = @store.addNode("blather.local.")
@@ -53,12 +59,39 @@ module Mrg
         end
         
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |prov_status, node_find_msg|
-          {:provisioned=>node_find_msg==:addNode, :last_checkin=>0, :last_updated_version=>0}.each do |prop_msg, default|
+          {:provisioned=>node_find_msg==:addNode, :last_checkin=>0}.each do |prop_msg, default|
             it "should give #{prov_status} nodes proper default values for the #{prop_msg} property" do
-              n = @store.send(node_find_msg, prop_msg)
+              # XXX
+              n = @store.send(node_find_msg, "example.local.")
               n.send(prop_msg).should == default
             end
           end
+
+          it "should give #{prov_status} nodes proper default values for the last_updated_version property when there is a config on the default group" do
+            # XXX:  default group configuration is only saved if we have nodes
+            @store.addNode("blah_example")
+            @store.addParam("FROTZ")
+            Group.DEFAULT_GROUP.modifyParams("ADD", {"FROTZ"=>"YES"}, {})
+
+            default = ::Rhubarb::Util::timestamp
+            @store.activateConfiguration
+
+            ConfigVersion.find_all.size.should == 1
+
+            n = @store.send(node_find_msg, "example.local.")
+            ConfigVersion.find_all.size.should == 1
+
+            n.send(:last_updated_version).should >= default
+            n.getConfig["FROTZ"].should == "YES"
+          end
+
+it "should give #{prov_status} nodes proper default values for the last_updated_version property" do
+            n = @store.send(node_find_msg, "example.local.")
+            n.send(:last_updated_version).should == 0
+          end
+
+          
+
         end
 
         ["add","ADD"].each do |p_cmd|
@@ -464,8 +497,10 @@ module Mrg
 
               mustchangestr = mustchange ? "must-change" : "defaultable"
               action = va_msg == :validateConfiguration ? "validate" : "activate"
+              ev_gen = va_msg == :validateConfiguration ? Proc.new { 0 } : Proc.new { ::Rhubarb::Util::timestamp }
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a lower priority than the bare inclusion" do
+                expected_version = ev_gen.call
                 param = @store.addParam("FOO")
                 param.setMustChange(mustchange)
 
@@ -486,10 +521,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters at a higher priority than the bare inclusion" do
+                expected_version = ev_gen.call
                 param = @store.addParam("FOO")
                 param.setMustChange(mustchange)
 
@@ -510,11 +546,12 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
 
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for #{mustchangestr} parameters to a feature at a higher priority than the bare inclusion" do
+                expected_version = ev_gen.call
                 param = @store.addParam("FOO")
                 param.setMustChange(mustchange)
 
@@ -539,11 +576,12 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
 
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to an identity group at a higher priority than the bare inclusion" do
+                expected_version = ev_gen.call
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
                 params.each {|param| param.setMustChange(mustchange)}
 
@@ -567,10 +605,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters to a group at a lower priority than the bare inclusion" do
+                expected_version = ev_gen.call
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
                 params.each {|param| param.setMustChange(mustchange)}
 
@@ -594,10 +633,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
               end
 
               it "should, if it is #{nodekind}, #{action} configurations that provide values for multiple #{mustchangestr} parameters both to a group at a lower priority than and to a group at the same priority as the bare inclusion" do
+                expected_version = ev_gen.call
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
                 params.each {|param| param.setMustChange(mustchange)}
 
@@ -622,10 +662,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
               end
 
               it "should, if it is #{nodekind}, report the highest-priority parameter value in #{action}d configurations that provide values for #{mustchangestr} parameters in multiple places" do
+                expected_version = ev_gen.call
                 params = %w{FOO BAR BLAH}.map {|pname| @store.addParam(pname)}
                 params.each {|param| param.setMustChange(mustchange)}
 
@@ -650,15 +691,11 @@ module Mrg
                 explain.should == {}
                 warnings.should == []
 
-                node.last_updated_version.send((va_msg == :validateConfiguration ? :should : :should_not), equal(0))
+                node.last_updated_version.should >= expected_version
               end
             end
           end
 
-        end
-
-        it "should have only one identity group" do
-          pending
         end
         
       end

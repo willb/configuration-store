@@ -184,8 +184,17 @@ module Mrg
         module SerializedVersionedConfigLookup
           module ClassMethods
             def getVersionedNodeConfig(node, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
+            end
+            
+            def dupVersionedNodeConfig(from, to, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
+              return 0 unless vnc
+              to = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup)
+              vnc.version.version
             end
           end
 
@@ -248,6 +257,8 @@ module Mrg
         
         declare_column :name, :string
         
+        DEFAULT_NODE = "+++DEFAULT"
+        
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
@@ -267,7 +278,7 @@ module Mrg
       class VersionedNodeParamMapping
         include ::Rhubarb::Persisting
         
-        declare_column :version, :integer, references(ConfigVersion)
+        declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
         declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
         declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
         declare_column :val, :string
@@ -289,7 +300,7 @@ module Mrg
       class VersionedNodeConfig
         include ::Rhubarb::Persisting
         
-        declare_column :version, :integer, references(ConfigVersion)
+        declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
         declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
         
         declare_index_on :node
@@ -302,7 +313,8 @@ module Mrg
         
         def initialize(tup)
           rhubarb_initialize(tup)
-          update(:created, self.version.version)
+          ver = self.version.respond_to?(:version) ? self.version.version : self.version
+          update(:created, ver)
           self
         end
 

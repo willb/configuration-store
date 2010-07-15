@@ -333,9 +333,20 @@ module Mrg
           end
         end
 
+        [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
+          define_method "#{klass.to_s.downcase}s" do
+            instances_of(klass)
+          end
+        end
+
         private
         include ObjResolver
 
+        def instances_of(klass)
+          console.objects(:class=>klass.to_s, :timeout=>45).map do |obj|
+            ::Mrg::Grid::ConfigClient.const_get(klass.to_s).new(obj, console)
+          end
+        end
       end
     end
   end
