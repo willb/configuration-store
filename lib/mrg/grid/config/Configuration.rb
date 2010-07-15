@@ -193,9 +193,8 @@ module Mrg
               ver ||= ::Rhubarb::Util::timestamp
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
               return 0 unless vnc
-              puts "vnc is (#{vnc.version.inspect}, #{vnc.node.inspect}) (#{vnc.class.inspect}); vnc.version is #{vnc.version.inspect} (#{vnc.version.class.inspect})"
               to = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup)
-              vnc.version
+              vnc.version.version
             end
           end
 
