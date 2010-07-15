@@ -512,14 +512,16 @@ module Mrg
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || nothing_changed || results.keys.size > 0
+            puts "OHH SNAP!" if (explicit_nodelist && !validate_only && results.keys.size == 0)
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
           
           # we're activating this configuration; save the default group configuration by itself 
           # if possible and if we aren't dealing with an explicit node list
-          validate_and_activate(false, [Group.DEFAULT_GROUP], this_version) unless explicit_nodelist
-          
+          unless explicit_nodelist
+            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version)
+          end
           DirtyElement.delete_all
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
