@@ -60,7 +60,7 @@ module Mrg
         qmf_property :is_identity_group, :bool
 
         ### Schema method declarations
-                
+        
         qmf_property :membership, :list, :desc=>"A list of node names from the nodes that are members of this group."
 
         # membership 
@@ -74,6 +74,13 @@ module Mrg
         qmf_property :name, :sstr, :desc=>"This group's name."
         alias orig_name name
         alias orig_name= name=
+        
+        qmf_property :display_name, :sstr, :desc=>"A human-readable version of this group's name, useful for presenting names of identity groups to end-users."
+        def display_name
+          return "the default group" if name == "+++DEFAULT"
+          return "the identity group for #{membership[0]}" if is_identity_group
+          return "group #{name}"
+        end
         
         # name 
         # * name (sstr/O)
@@ -149,7 +156,7 @@ module Mrg
             frow
           end
 
-          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features applied to group #{self.name}:  #{invalid_features.inspect}") if invalid_features != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features applied to #{self.display_name}:  #{invalid_features.inspect}") if invalid_features != []
 
           command = command.upcase
 
@@ -220,7 +227,7 @@ module Mrg
             prow
           end
           
-          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters for group #{self.name}:  #{invalid_params.inspect}") if invalid_params != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters for #{self.display_name}:  #{invalid_params.inspect}") if invalid_params != []
 
           command = command.upcase
 

@@ -18,6 +18,25 @@ module Mrg
 
         include DescribeGetterAndSetter
         
+        it "should have an appropriate display name when it is the default group" do
+          Group.DEFAULT_GROUP.display_name.should == "the default group"
+        end
+
+        it "should have an appropriate display name when it is an identity group" do
+          %w{frotz blotz knotz argh blargh}.each do |nn|
+            node = @store.addNode(nn)
+            node.idgroup.display_name.should == "the identity group for #{node.name}"
+          end
+        end
+
+        it "should have an appropriate display name when it is an explicit group" do
+          %w{foo bar blah argh}.each do |gn|
+            group = @store.addExplicitGroup(gn)
+            group.display_name.should == "group #{group.name}"
+          end
+        end
+
+        
         it "should be instantiable" do
           thing = @store.send(@add_msg, @gskey)
           thing.should_not == nil
