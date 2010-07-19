@@ -26,6 +26,8 @@ module Mrg
         BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
         UNSET_MUSTCHANGE_PARAMS = "Unset necessary parameters"
         BROKEN_PARAM_DEPS = "Unsatisfied parameter dependencies"
+        PARAM_CONFLICTS = "Conflicting parameters"
+        FEATURE_CONFLICTS = "Conflicting features"
 
         
         # Validate ensures the following for a given node or group NG:
@@ -92,9 +94,38 @@ module Mrg
           end
         end
         
+        def identify_conflicts(things)
+          conflicts_to = Hash.new {|h,v| h[v] = [] }
+          conflict_horizon = Set.new
+          sources = Set.new
+          
+          things.each do |thing|
+            sources << thing.name
+            conflict_horizon |= thing.conflicts
+            
+            thing.conflicts.each do |conf|
+              conflicts_to[conf] << thing.name
+            end
+          end
+          
+          conflicting_things = (sources & conflict_horizon)
+          
+          if conflicting_things.size > 0
+            result = []
+            conflicting_things.each do |to|
+              result |= conflicts_to[to].map {|from| [from, to].sort}
+            end
+            
+            return result
+          end
+          
+          []
+        end
+        
         def self.included(base)
           base.instance_eval do
             private :my_unset_params
+            private :identify_conflicts
           end
         end
       end
