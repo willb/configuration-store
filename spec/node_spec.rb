@@ -466,6 +466,99 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
             
           end
 
+          it "should, if it is #{nodekind}, not validate configurations that include identity group->default group feature conflicts" do
+            feature_names = %w{FooFeature BarFeature}
+            features = feature_names.map {|fname| @store.addFeature(fname)}
+            features[0].modifyConflicts("ADD", Array[features[1].name], {})
+
+            node = @store.send(node_find_msg, "blah.local.")
+
+            node.identity_group.modifyFeatures("ADD", Array[features[0].name], {})
+            Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[features[1].name], {})
+            
+            config = node.getConfig
+            node.validate.should_not == true
+            node.validate[1][Node::FEATURE_CONFLICTS].should include(feature_names.sort)
+
+            [:validateConfiguration, :activateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::FEATURE_CONFLICTS].should include(feature_names.sort)
+              warnings.should == []
+            end
+            
+          end
+
+          it "should, if it is #{nodekind}, not validate configurations that include default group->identity group feature conflicts" do
+            feature_names = %w{FooFeature BarFeature}
+            features = feature_names.map {|fname| @store.addFeature(fname)}
+            features[1].modifyConflicts("ADD", Array[features[0].name], {})
+
+            node = @store.send(node_find_msg, "blah.local.")
+
+            node.identity_group.modifyFeatures("ADD", Array[features[0].name], {})
+            Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[features[1].name], {})
+            
+            config = node.getConfig
+            node.validate.should_not == true
+            node.validate[1][Node::FEATURE_CONFLICTS].should include(feature_names.sort)
+
+            [:validateConfiguration, :activateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::FEATURE_CONFLICTS].should include(feature_names.sort)
+              warnings.should == []
+            end
+            
+          end
+          
+          it "should, if it is #{nodekind}, not validate configurations that include identity group->default group param conflicts" do
+            param_names = %w{FOO BAR}
+            params = param_names.map {|fname| @store.addParam(fname)}
+            params[0].modifyConflicts("ADD", Array[params[1].name], {})
+
+            node = @store.send(node_find_msg, "blah.local.")
+
+            node.identity_group.modifyParams("ADD", {params[0].name => "#{params[0].name.downcase}"}, {})
+            Group.DEFAULT_GROUP.modifyParams("ADD", {params[1].name => "#{params[1].name.downcase}"}, {})
+
+            config = node.getConfig
+            node.validate.should_not == true
+            node.validate[1][Node::PARAM_CONFLICTS].should include(param_names.sort)
+
+            [:validateConfiguration, :activateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::PARAM_CONFLICTS].should include(param_names.sort)
+              warnings.should == []
+            end
+
+          end
+
+          it "should, if it is #{nodekind}, not validate configurations that include default group->identity group param conflicts" do
+            param_names = %w{FOO BAR}
+            params = param_names.map {|fname| @store.addParam(fname)}
+            params[1].modifyConflicts("ADD", Array[params[0].name], {})
+
+            node = @store.send(node_find_msg, "blah.local.")
+
+            node.identity_group.modifyParams("ADD", {params[0].name => "#{params[0].name.downcase}"}, {})
+            Group.DEFAULT_GROUP.modifyParams("ADD", {params[1].name => "#{params[1].name.downcase}"}, {})
+
+            config = node.getConfig
+            node.validate.should_not == true
+            node.validate[1][Node::PARAM_CONFLICTS].should include(param_names.sort)
+
+            [:validateConfiguration, :activateConfiguration].each do |va_msg|
+              explain, warnings = @store.send(va_msg)
+              explain.should_not == {}
+              explain["blah.local."][Node::PARAM_CONFLICTS].should include(param_names.sort)
+              warnings.should == []
+            end
+
+          end
+          
+
           it "should, if it is #{nodekind}, not validate configurations that do not provide values for must-change parameters" do
             param = @store.addParam("FOO")
             param.setMustChange(true)

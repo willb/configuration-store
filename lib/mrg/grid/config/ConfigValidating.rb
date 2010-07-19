@@ -65,7 +65,13 @@ module Mrg
           dfn = Feature.send(dependency_msg, self).map {|f| f.name}
           log.debug "dependencies for #{self.name} is #{dfn}"
           
-          ffn = Feature.send(feature_msg, self).map {|f| f.name}
+          features_for_entity = Feature.send(feature_msg, self)
+          params_for_entity = my_config.keys.map {|pn| Parameter.find_first_by_name(pn)}.compact
+          
+          feature_conflicts = identify_conflicts(features_for_entity)
+          param_conflicts = identify_conflicts(params_for_entity)
+          
+          ffn = features_for_entity.map {|f| f.name}
           log.debug "features for #{self.name} is #{ffn}"
           
           orphaned_deps = (dfn - ffn).reject {|f| f == nil }
@@ -74,12 +80,14 @@ module Mrg
           my_param_deps = Parameter.send(dependency_msg, self, my_params)
           orphaned_params = my_param_deps - my_params
           
-          return true if orphaned_deps == [] && unset_params == [] && orphaned_params == []
+          return true if orphaned_deps == [] && unset_params == [] && orphaned_params == [] && param_conflicts == [] && feature_conflicts == []
           
           result = {}
           result[BROKEN_FEATURE_DEPS] = orphaned_deps.uniq if orphaned_deps != []
           result[UNSET_MUSTCHANGE_PARAMS] = unset_params.uniq if unset_params != []
           result[BROKEN_PARAM_DEPS] = orphaned_params.uniq if orphaned_params != []
+          result[PARAM_CONFLICTS] = param_conflicts if param_conflicts != []
+          result[FEATURE_CONFLICTS] = feature_conflicts if feature_conflicts != []
           
           [self.name, result]
         end
