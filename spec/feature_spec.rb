@@ -606,7 +606,7 @@ module Mrg
           end
         end
 
-        it "should properly handle default values" do
+        it "should properly handle default values in the highest-priority feature assignment" do
           param = @store.addParam("FOO")
           param.setDefault("BAR")
           
@@ -615,6 +615,27 @@ module Mrg
           
           node = @store.addNode("blah.local.")
           node.idgroup.modifyFeatures("ADD", [feature.name], {})
+          
+          config = node.getConfig
+          
+          node.validate.should == true
+          
+          config.should have_key("FOO")
+          config["FOO"].should == "BAR"
+        end
+        
+        it "should properly handle default values in lower-priority feature assignments" do
+          param = @store.addParam("FOO")
+          param.setDefault("BAR")
+          
+          feature1 = @store.addFeature("FooFeature")
+          feature1.modifyParams("ADD", {"FOO"=>"ARGH"}, {})
+
+          feature2 = @store.addFeature("BarFeature")
+          feature2.modifyParams("ADD", {"FOO"=>0}, {})
+          
+          node = @store.addNode("blah.local.")
+          node.idgroup.modifyFeatures("ADD", [feature2.name, feature1.name], {})
           
           config = node.getConfig
           
