@@ -1024,8 +1024,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_cleanup.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The cleanup hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1036,8 +1035,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_job_finalize.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The exit hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1048,8 +1046,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_translate.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The translation hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1060,8 +1057,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_retrieve_status.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The update hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1324,8 +1320,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/condor_job_router
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The location of the Job Router binary
   kind: String
   level: 0
@@ -1539,21 +1534,8 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(RELEASE_DIR)/libexec/condor
-  depends: []
-
-  description: The directory that contains support commands for Condor
-  kind: String
-  level: 0
-  must_change: false
-  name: LIBEXEC
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: $(LIBEXEC)/libvirt_simple_script.awk
-  depends: 
-  - LIBEXEC
+  depends: []
   description: A script that produces XML output used to start a libvirt VM
   kind: String
   level: 0
@@ -1672,8 +1654,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_fetch_work.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The fetch work hook the Startd will use when grabbing low-latency work
   kind: String
   level: 0
@@ -1684,8 +1665,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_reply_fetch.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The reply fetch hook the Startd will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1696,8 +1676,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_job_exit.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The job exit hook the Starter will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1708,8 +1687,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_prepare_job.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The prepare job hook the Starter will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1720,8 +1698,7 @@ params:
   conflicts: []
 
   default_val: $(LIBEXEC)/hooks/hook_update_job_status.py
-  depends: 
-  - LIBEXEC
+  depends: []
   description: The update job info hook the Starter will use with processing low-latency jobs
   kind: String
   level: 0
