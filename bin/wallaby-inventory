@@ -71,7 +71,7 @@ op = OptionParser.new do |opts|
 
   opts.on("-o", "--only KIND", NODEKINDS, "show only KIND nodes", "   (#{NODEKINDS.join(", ")})") do |nkind|
     allnodes = false
-    nodekind = nkind
+    nodekind = nkind.downcase
   end
 end
 
@@ -107,7 +107,7 @@ nodes = nodes.map do |node|
   n.name = node.name
   n.provisioned = node.provisioned
   n.checkin = node.last_checkin
-  (allnodes || ((nodekinds == provisioned) == n.provisioned)) && n
+  ((allnodes || ((nodekind == "provisioned") == n.provisioned)) && n) || nil
 end.compact
 
 printf("%25.25s %15.15s %40.40s\n", "node name", "is provisioned?", "last checkin") if nodes.size > 0
