@@ -94,19 +94,9 @@ features:
 
   depends: 
   - QMF
-  - BaseScheduler
-  included: []
-  name: ConsoleScheduler
-  params: 
-    SCHEDD.PLUGINS: $(LIB)/plugins/MgmtScheddPlugin-plugin.so
-    SCHEDD.QMF_STOREFILE: $(SPOOL)/.schedd_storefile
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: 
-  - QMF
   - ExecuteNode
   included: []
+
   name: ConsoleExecuteNode
   params: 
     STARTD.PLUGINS: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
@@ -117,6 +107,7 @@ features:
   - QMF
   - Master
   included: []
+
   name: ConsoleMaster
   params: 
     MASTER.PLUGINS: $(LIB)/plugins/MgmtMasterPlugin-plugin.so
@@ -127,6 +118,7 @@ features:
   - QMF
   - Negotiator
   included: []
+
   name: ConsoleNegotiator
   params: 
     NEGOTIATOR.PLUGINS: $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so
@@ -134,21 +126,25 @@ features:
   conflicts: []
 
   depends: 
-  - Master
+  - QMF
+  - BaseScheduler
   included: []
 
-  name: Credd
+  name: ConsoleScheduler
   params: 
-    MAX_CREDD_LOG: "4000000"
-    CRED_STORE_DIR: $(LOCAL_DIR)/cred_dir
-    DAEMON_LIST: ">= CREDD"
-    CREDD_PORT: "9620"
-    CREDD_DEBUG: D_FULLDEBUG
-    CREDD: $(SBIN)/condor_credd
-    CREDD_HOST: $(CONDOR_HOST):$(CREDD_PORT)
-    CREDD_LOG: $(LOG)/CredLog
-    CREDD_ADDRESS_FILE: $(LOG)/.credd_address
-    CREDD_ARGS: -p $(CREDD_PORT) -f
+    SCHEDD.PLUGINS: $(LIB)/plugins/MgmtScheddPlugin-plugin.so
+    SCHEDD.QMF_STOREFILE: $(SPOOL)/.schedd_storefile
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: 
+  - BaseScheduler
+  included: []
+
+  name: ConsoleSchedulerForJobServer
+  params: 
+    QUEUE_ALL_USERS_TRUSTED: "True"
+    QMF_PUBLISH_SUBMISSIONS: "FALSE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -347,7 +343,9 @@ features:
   name: JobHooks
   params: 
     JOB_HOOKS_PORT: "10000"
+    MAX_JOB_HOOKS_LOG: "10000000"
     JOB_HOOKS_IP: 127.0.0.1
+    JOB_HOOKS_LOG: $(LOG)/JobHooksLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -401,17 +399,6 @@ features:
   conflicts: []
 
   depends: 
-  - BaseScheduler
-  included: []
-
-  name: ConsoleSchedulerForJobServer
-  params: 
-    QUEUE_ALL_USERS_TRUSTED: "True"
-    QMF_PUBLISH_SUBMISSIONS: "FALSE"
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: 
   - Master
   included: []
 
@@ -435,6 +422,7 @@ features:
     LL_DAEMON_PORT: "10000"
     LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
     JOB_HOOKS_PORT: $(LL_DAEMON_PORT)
+    LL_DAEMON_LOG: $(LOG)/CaroLog
     LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
     FETCHWORKDELAY: 10 * (Activity == "Idle")
     LOW_LATENCY_JOB_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_exit.py
@@ -442,12 +430,13 @@ features:
     LL_DAEMON_LEASE_TIME: "35"
     LL_DAEMON_IP: 127.0.0.1
     LL_DAEMON: $(SBIN)/carod
-    LL_BROKER_QUEUE: ""
+    LL_BROKER_QUEUE: 0
     DAEMON_LIST: ">= LL_DAEMON"
     STARTER_UPDATE_INTERVAL: "30"
     STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
     LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
-    LL_BROKER_IP: ""
+    MAX_LL_DAEMON_LOG: "1000000"
+    LL_BROKER_IP: 0
     LL_BROKER_PORT: "5672"
     LL_DAEMON_QUEUED_CONNECTIONS: "5"
     LOW_LATENCY_HOOK_FETCH_WORK: $(LIBEXEC)/hooks/hook_fetch_work.py
@@ -855,102 +844,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SBIN)/condor_credd
-  depends: []
-
-  description: The location of the Credd binary
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/.credd_address
-  depends: []
-
-  description: The file where the Credd will store its address information
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_ADDRESS_FILE
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: -p $(CREDD_PORT) -f
-  depends: 
-  - CREDD_PORT
-  description: The arguments to pass to the Credd daemon
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_ARGS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The debugging output the Credd will produce in its log file
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_DEBUG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The machine running the Credd daemon
-  kind: String
-  level: 0
-  must_change: true
-  name: CREDD_HOST
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/CredLog
-  depends: []
-
-  description: The location of the Credd's log file
-  kind: String
-  level: 0
-  must_change: false
-  name: CREDD_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "9620"
-  depends: []
-
-  description: The port the Credd will listen on for connections
-  kind: Integer
-  level: 0
-  must_change: false
-  name: CREDD_PORT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOCAL_DIR)/cred_dir
-  depends: []
-
-  description: The location where credential information will be stored
-  kind: String
-  level: 0
-  must_change: false
-  name: CRED_STORE_DIR
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: ""
   depends: []
 
@@ -1025,6 +918,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_cleanup.py
   depends: []
+
   description: The cleanup hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1036,6 +930,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_job_finalize.py
   depends: []
+
   description: The exit hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1047,6 +942,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_translate.py
   depends: []
+
   description: The translation hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1058,6 +954,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_retrieve_status.py
   depends: []
+
   description: The update hook used by the Job Router for EC2 Enhanced
   kind: String
   level: 0
@@ -1307,6 +1204,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/JobHooksLog
+  depends: []
+
+  description: The location of the Job Hooks log files
+  kind: String
+  level: 0
+  must_change: false
+  name: JOB_HOOKS_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "10000"
   depends: []
 
@@ -1321,6 +1230,7 @@ params:
 
   default_val: $(LIBEXEC)/condor_job_router
   depends: []
+
   description: The location of the Job Router binary
   kind: String
   level: 0
@@ -1536,6 +1446,7 @@ params:
 
   default_val: $(LIBEXEC)/libvirt_simple_script.awk
   depends: []
+
   description: A script that produces XML output used to start a libvirt VM
   kind: String
   level: 0
@@ -1629,6 +1540,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LOG)/CaroLog
+  depends: []
+
+  description: The location of the Low-Latency daemon log file
+  kind: String
+  level: 0
+  must_change: false
+  name: LL_DAEMON_LOG
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "10000"
   depends: []
 
@@ -1655,6 +1578,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_fetch_work.py
   depends: []
+
   description: The fetch work hook the Startd will use when grabbing low-latency work
   kind: String
   level: 0
@@ -1666,6 +1590,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_reply_fetch.py
   depends: []
+
   description: The reply fetch hook the Startd will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1677,6 +1602,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_job_exit.py
   depends: []
+
   description: The job exit hook the Starter will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1688,6 +1614,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_prepare_job.py
   depends: []
+
   description: The prepare job hook the Starter will use when processing low-latency jobs
   kind: String
   level: 0
@@ -1699,6 +1626,7 @@ params:
 
   default_val: $(LIBEXEC)/hooks/hook_update_job_status.py
   depends: []
+
   description: The update job info hook the Starter will use with processing low-latency jobs
   kind: String
   level: 0
@@ -1819,18 +1747,6 @@ params:
   default_val: "1000000"
   depends: []
 
-  description: The maximum size of the Credd's log file
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_CREDD_LOG
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "1000000"
-  depends: []
-
   description: The maximum size of the HAD log
   kind: Integer
   level: 0
@@ -1848,6 +1764,18 @@ params:
   level: 0
   must_change: false
   name: MAX_HISTORY_ROTATIONS
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Job Hooks log files
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_JOB_HOOKS_LOG
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1885,6 +1813,18 @@ params:
   must_change: false
   name: MAX_KBDD_LOG
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Low-Latency daemon log
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_LL_DAEMON_LOG
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3280,18 +3220,6 @@ params:
   needs_restart: false
 subsystems: 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: ll_daemon
-  params: 
-  - LL_BROKER_IP
-  - LL_BROKER_PORT
-  - LL_BROKER_QUEUE
-  - LL_DAEMON
-  - LL_DAEMON_IP
-  - LL_DAEMON_LEASE_CHECK_INTERVAL
-  - LL_DAEMON_LEASE_TIME
-  - LL_DAEMON_PORT
-  - LL_DAEMON_QUEUED_CONNECTIONS
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: collector
   params: 
   - ALLOW_READ
@@ -3308,18 +3236,6 @@ subsystems:
   - QMF_BROKER_PORT
   - QMF_DELETE_ON_SHUTDOWN
   - QMF_IGNORE_UPDATE_STARTD_AD
-- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
-  name: credd
-  params: 
-  - CREDD
-  - CREDD_ADDRESS_FILE
-  - CREDD_ARGS
-  - CREDD_DEBUG
-  - CREDD_HOST
-  - CREDD_LOG
-  - CREDD_PORT
-  - CRED_STORE_DIR
-  - MAX_CREDD_LOG
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: had
   params: 
@@ -3373,6 +3289,20 @@ subsystems:
   - KBDD_DEBUG
   - KBDD_LOG
   - MAX_KBDD_LOG
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: ll_daemon
+  params: 
+  - LL_BROKER_IP
+  - LL_BROKER_PORT
+  - LL_BROKER_QUEUE
+  - LL_DAEMON
+  - LL_DAEMON_IP
+  - LL_DAEMON_LEASE_CHECK_INTERVAL
+  - LL_DAEMON_LEASE_TIME
+  - LL_DAEMON_LOG
+  - LL_DAEMON_PORT
+  - LL_DAEMON_QUEUED_CONNECTIONS
+  - MAX_LL_DAEMON_LOG
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: master
   params: 
