@@ -203,7 +203,7 @@ begin
   options = {}
   options[:loglevel] = debug
   options[:logfile] = logfile if logfile
-  options[:appname] = "Wallaby configuration agent"
+  options[:appname] = "com.redhat.grid.config:Store"
   options[:user] = username if username
   options[:password] = password if password
   options[:server] = host
