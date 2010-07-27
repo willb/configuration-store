@@ -2,7 +2,7 @@
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
-Version: 1.2
+Version: 1.3
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
@@ -35,7 +35,12 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
-* Wed Jun 23 2010 rrati <rrati@redhta> - 1.2-1
+* Tue Jul 27 2010 rrati <rrati@redhat> - 1.3-1
+- Removed Credd feature and releated parameters/subsystems
+- Added LOG related parameters for LowLatency and JobHooks
+- Removed LIBEXEC and parameter deps on it
+
+* Wed Jun 23 2010 rrati <rrati@redhat> - 1.2-1
 - Separated QMF parameters into features starting with Console
 - Added JobServer feature
 - *.PLUGINS attributes require restart if changed
@@ -46,7 +51,7 @@ rm -rf %{buildroot}
 - Tweak to the Dedicated Scheduler
 - Added many more parameters
 
-* Thu Jun 10 2010 rrati <rrati@redhta> - 1.1-0.7
+* Thu Jun 10 2010 rrati <rrati@redhat> - 1.1-0.7
 - Added kbdd feature/subsystem and supporting params
 - Removed old explicit subsystem entries
 - Removed the QMF plugin configuration from the Collector feature and added
