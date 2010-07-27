@@ -458,8 +458,6 @@ module Mrg
                fail(error_code, "Feature #{name} cannot both #{what} and #{cwhat} with #{intersection.join(", ")}") if intersection != []
              end
           end
-          
-          
         end
         
         def depends=(deps)
