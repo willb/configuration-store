@@ -408,6 +408,8 @@ module Mrg
           #   4.  if F' #{first} includes or depends on F, it should be impossible 
           #       to introduce an immediate conflict from F to F'
           # end
+          
+          # XXX: this method could use a few hours of refactoring
           options ||= {}
           [:new_includes, :new_depends, :new_conflicts].each {|option| options[option] ||= nil}
           
@@ -437,9 +439,7 @@ module Mrg
           td_names = transitive_depends.map {|f| f.name}
           tcc_names = transitively_carried_conflicts.map {|f| f.name}
           xib_names = x_included_by.map {|f| f.name}
-          puts "xib:  #{xib_names.inspect} (included_by == #{included_by.inspect})" if $XXDEBUG
           xdub_names = x_depended_on_by.map {|f| f.name}
-          puts "xdub:  #{xdub_names.inspect} (depended_on_by == #{depended_on_by.inspect})" if $XXDEBUG
           xxib_names = lookup(xib_names).map {|f| [f.name] | f.x_includes | f.x_depends}.flatten.uniq
           xxdub_names = lookup(xdub_names).map {|f| [f.name] | f.x_includes | f.x_depends}.flatten.uniq
           
@@ -454,9 +454,6 @@ module Mrg
            }.each do |what, where|
              {"immediately conflict"=>immediate_conflicts, "transitively conflict (via an inclusion or dependency)"=>tcc_names}.each do |cwhat, cwhere|
                intersection = (where & cwhere).compact
-               if $XXDEBUG && what =~ /transitively/
-                 puts "Testing that feature #{name} cannot both #{what} and #{cwhat} via an intersection between #{where.inspect} and #{cwhere.inspect} --- #{intersection.join(", ")}"
-               end
 
                fail(error_code, "Feature #{name} cannot both #{what} and #{cwhat} with #{intersection.join(", ")}") if intersection != []
              end
