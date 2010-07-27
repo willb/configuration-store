@@ -191,6 +191,19 @@ module Mrg
           invalid_depends = Parameter.select_invalid(depends)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
+          do_validate = false
+          new_depends = self.depends
+          case command.upcase
+          when "ADD" then
+            new_depends |= depends
+            do_validate = true
+          when "REPLACE" then
+            new_depends = depends
+            do_validate = true
+          end
+
+          validate_changes(:new_depends=>new_depends) if do_validate
+          
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
         end
@@ -213,6 +226,19 @@ module Mrg
           
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
+          
+          do_validate = false
+          new_conflicts = self.conflicts
+          case command.upcase
+          when "ADD" then
+            new_conflicts |= conflicts
+            do_validate = true
+          when "REPLACE" then
+            new_conflicts = conflicts
+            do_validate = true
+          end
+          
+          validate_changes(:new_conflicts=>new_conflicts) if do_validate
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
@@ -277,10 +303,60 @@ module Mrg
         def conflicts
           find_arcs(ParameterArc,ArcLabel.conflicts_with('param')) {|pa| pa.dest.name }
         end
-                
+        
+        def x_depends(xtra=[])
+          raw_depends = find_arcs(ParameterArc,ArcLabel.depends_on('param')) {|pa| pa.dest }
+          raw_depends |= xtra.map {|pn| Parameter.find_first_by_name(pn)}.compact
+          result = Set.new
+          raw_depends.each do |rd|
+            result << rd.name
+            rd.x_depends.each do |xd|
+              # nb:  x_depends returns an array of names, not params
+              result << xd
+            end
+          end
+          
+          result.to_a
+        end
+        
+        def depended_on_by
+          ParameterArc.find_by(:dest=>self, :label=>ArcLabel.depends_on('param')).map {|pa| pa.source}
+        end
+        
+        def x_depended_on_by
+          raw_dependents = depended_on_by
+          result = Set[*raw_dependents.map {|rd| rd.name}]
+          raw_dependents.each do |rd|
+            rd.x_depended_on_by.each do |xdpt|
+              result << xdpt
+            end
+          end
+          
+          result.to_a
+        end
+        
         private
         
         include ArcUtils
+        
+        def validate_changes(options=nil)
+          options ||= {}
+          {:new_depends=>Proc.new {self.depends},
+           :new_conflicts=>Proc.new {self.conflicts}}.each do |option, dproc| 
+            options[option] ||= dproc.call
+          end
+          
+          error_code = Errors.make(Errors::INVALID_RELATIONSHIP, Errors::PARAMETER)
+          intersection = options[:new_depends] & options[:new_conflicts]
+          
+          fail(error_code, "Param #{name} cannot both immediately depend on and immediately conflict with #{intersection.inspect}") unless intersection == []
+          
+          intersection = x_depends(options[:new_depends]) & options[:new_conflicts]
+          fail(error_code, "Param #{name} cannot both transitively depend on and immediately conflict with #{intersection.inspect}") unless intersection == []
+          
+          intersection = x_depended_on_by & options[:new_conflicts]
+          fail(error_code, "Param #{name} cannot conflict with parameters that depend on it: #{intersection.inspect}") unless intersection == []
+        end
         
         def depends=(deps)
           set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
