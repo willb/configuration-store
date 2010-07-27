@@ -1,4 +1,4 @@
-%define rel 1
+%define rel 2
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Jul 27 2010 rrati <rrati@redhat> - 1.3-2
+- Fixed setting of parameters that require user input
+
 * Tue Jul 27 2010 rrati <rrati@redhat> - 1.3-1
 - Removed Credd feature and releated parameters/subsystems
 - Added LOG related parameters for LowLatency and JobHooks
