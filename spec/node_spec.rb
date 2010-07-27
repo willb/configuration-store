@@ -67,9 +67,24 @@ module Mrg
             end
           end
 
-          it "should give #{prov_status} nodes proper default values for the last_updated_version property when there is a config on the default group" do
-            # XXX:  default group configuration is only saved if we have nodes
+          it "should give #{prov_status} nodes proper default values for the last_updated_version property when there is a config on the default group if nodes exist before activate" do
             @store.addNode("blah_example")
+            @store.addParam("FROTZ")
+            Group.DEFAULT_GROUP.modifyParams("ADD", {"FROTZ"=>"YES"}, {})
+
+            default = ::Rhubarb::Util::timestamp
+            @store.activateConfiguration
+
+            ConfigVersion.find_all.size.should == 1
+
+            n = @store.send(node_find_msg, "example.local.")
+            ConfigVersion.find_all.size.should == 1
+
+            n.send(:last_updated_version).should >= default
+            n.getConfig["FROTZ"].should == "YES"
+          end
+
+          it "should give #{prov_status} nodes proper default values for the last_updated_version property when there is a config on the default group if nodes don't exist before activate" do
             @store.addParam("FROTZ")
             Group.DEFAULT_GROUP.modifyParams("ADD", {"FROTZ"=>"YES"}, {})
 

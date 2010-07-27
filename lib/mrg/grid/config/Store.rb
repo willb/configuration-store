@@ -502,6 +502,7 @@ module Mrg
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
             warnings << "No nodes in configuration; only tested default group"
+            nothing_changed = false
           elsif nothing_changed
             log.warn "User requested configuration #{validate_only ? "validation" : "activation"}, but no nodes have changed configurations since last activate."
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
