@@ -8,6 +8,7 @@ module Mrg
           setup_rhubarb
           @store = Store.new
           @feature_names = %w{foo bar blah argh frotz}
+          $XXDEBUG = nil
         end
 
         after(:each) do
@@ -45,6 +46,8 @@ module Mrg
           end
 
           it "should not be possible to introduce new conflicts to a feature so as to break another feature that transitively #{what} it" do
+            $XXDEBUG = true
+            
             features = @feature_names.map {|fn| @store.addFeature(fn)}
             3.downto(0) {|x| features[x].send(how, "ADD", [@feature_names[x+1]], {})}
             lambda { features[4].modifyConflicts("ADD", [@feature_names[0]], {}) }.should raise_error(SPQR::ManageableObjectError)
