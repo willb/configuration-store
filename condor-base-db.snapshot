@@ -67,7 +67,7 @@ features:
 
   name: CommonUIDDomain
   params: 
-    UID_DOMAIN: ""
+    UID_DOMAIN: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -159,7 +159,7 @@ features:
     START: (SCHEDULER =?= $(DEDICATEDSCHEDULER)) || ($(START))
     RANK_FACTOR: "1000000"
     PREEMPT: SCHEDULER =!= $(DEDICATEDSCHEDULER) && ($(PREEMPT))
-    DEDICATEDSCHEDULER: ""
+    DEDICATEDSCHEDULER: 0
     WANT_SUSPEND: "False"
     SUSPEND: SCHEDULER =!= $(DEDICATEDSCHEDULER)) || ($(SUSPEND))
     CONTINUE: "True"
@@ -218,7 +218,7 @@ features:
     EC2E_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_finalize.py
     EC2E_ATTRS_TO_COPY: EC2RunAttempts, EC2JobSuccessful
     EC2E_HOOK_JOB_CLEANUP: $(LIBEXEC)/hooks/hook_cleanup.py
-    JOB_ROUTER_ENTRIES: ""
+    JOB_ROUTER_ENTRIES: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -306,12 +306,12 @@ features:
     ALLOW_NEGOTIATOR_SCHEDD: $(FLOCK_NEGOTIATOR_HOSTS), $(COLLECTOR_HOST)
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR), $(COLLECTOR_HOST)
     REPLICATION_LOG: $(LOG)/ReplicationLog
-    REPLICATION_LIST: ""
+    REPLICATION_LIST: 0
     REPLICATION_INTERVAL: "300"
     HAD_ARGS: -p $(HAD_PORT)
-    CONDOR_HOST: ""
+    CONDOR_HOST: 0
     HAD_UPDATE_INTERVAL: "300"
-    HAD_LIST: ""
+    HAD_LIST: 0
     COLLECTOR_HOST: $(CONDOR_HOST)
     STATE_FILE: $(SPOOL)/Accountantnew.log
     MAX_TRANSFERER_LIFETIME: "300"
@@ -328,8 +328,8 @@ features:
   name: HAScheduler
   params: 
     VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
-    HA_LOCK_URL: ""
-    SCHEDD_NAME: ""
+    HA_LOCK_URL: 0
+    SCHEDD_NAME: 0
     MASTER_HA_LIST: $(MASTER_HA_LIST), SCHEDD
     HA_POLL_PERIOD: "60"
     HA_LOCK_HOLD_TIME: "300"
@@ -356,7 +356,7 @@ features:
   name: JobQueueLocation
   params: 
     HISTORY: $(SPOOL)/history
-    SPOOL: ""
+    SPOOL: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -459,7 +459,7 @@ features:
     SEC_DEFAULT_INTEGRITY: REQUIRED
     SEC_DEFAULT_AUTHENTICATION_METHODS: CLAIMTOBE
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
-    CONDOR_HOST: ""
+    CONDOR_HOST: 0
     CONDOR_DEVELOPERS_COLLECTOR: NONE
     CONDOR_DEVELOPERS: NONE
     SEC_DEFAULT_ENCRYPTION: REQUIRED
@@ -497,8 +497,8 @@ features:
 
   name: NodeAccess
   params: 
-    ALLOW_WRITE: ""
-    ALLOW_READ: ""
+    ALLOW_WRITE: 0
+    ALLOW_READ: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -509,7 +509,7 @@ features:
   name: QMF
   params: 
     QMF_BROKER_PORT: "5672"
-    QMF_BROKER_HOST: ""
+    QMF_BROKER_HOST: 0
     QMF_DELETE_ON_SHUTDOWN: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
@@ -532,7 +532,7 @@ features:
   name: SchedulerDedicatedPreemption
   params: 
     SCHEDD_PREEMPTION_RANK: "0"
-    SCHEDD_PREEMPTION_REQUIREMENTS: ""
+    SCHEDD_PREEMPTION_REQUIREMENTS: 9
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -542,7 +542,7 @@ features:
 
   name: SharedFileSystem
   params: 
-    FILESYSTEM_DOMAIN: ""
+    FILESYSTEM_DOMAIN: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -570,11 +570,11 @@ features:
   - ExecuteNode
   name: VMUniverse
   params: 
-    VM_TYPE: ""
+    VM_TYPE: 0
     VM_MEMORY: $(DETECTED_MEMORY)
-    VM_NETWORKING: ""
+    VM_NETWORKING: 0
     VM_GAHP_SERVER: $(SBIN)/condor_vm-gahp
-    LIBVIRT_XML_SCRIPT: ""
+    LIBVIRT_XML_SCRIPT: 0
     VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
     VM_GAHP_LOG: $(LOG)/VMGahpLog
     MAX_VM_GAHP_LOG: "1000000"
