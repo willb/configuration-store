@@ -80,6 +80,19 @@ module Mrg
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
           
+          do_validate = false
+          new_includes = nil
+          case command.upcase
+          when "ADD" then
+            do_validate = true
+            new_includes = included_features | features
+          when "REPLACE" then
+            do_validate = true
+            new_includes = features
+          end
+          
+          validate_changes(:new_includes=>new_includes) if do_validate
+          
           modify_arcs(command,fl,options,:included_features,:included_features=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
         end
@@ -182,6 +195,20 @@ module Mrg
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
+          do_validate = false
+          new_conflicts = nil
+          case command.upcase
+          when "ADD" then
+            do_validate = true
+            new_conflicts = self.conflicts | conflicts
+          when "REPLACE" then
+            do_validate = true
+            new_conflicts = conflicts
+          end
+          
+          validate_changes(:new_conflicts=>new_conflicts) if do_validate
+          
+          
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
         end
@@ -206,6 +233,19 @@ module Mrg
           invalid_deps = Feature.select_invalid(depends)
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
+          
+          do_validate = false
+          new_depends = nil
+          case command.upcase
+          when "ADD" then
+          do_validate = true
+          new_depends = self.depends | depends
+          when "REPLACE" then
+          do_validate = true
+          new_depends = depends
+          end
+
+          validate_changes(:new_depends=>new_depends) if do_validate
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list
@@ -317,8 +357,36 @@ module Mrg
           Hash[*FeatureParams.find_by(:feature=>self).map {|fp| [fp.param.name, {"uses_default"=>fp.uses_default, "given_value"=>fp.given_value}]}.flatten]
         end
         
+        def included_by
+          Feature.immed_edge_to(:dest=>self.row_id, :label=>ArcLabel.inclusion('feature').row_id)
+        end
+        
+        def x_included_by(xtra_fs=[])
+          result = included_by
+          result.dup.each do |f|
+            result |= f.send(:x_included_by)
+          end
+          result
+        end
+        
+        def depended_on_by
+          Feature.immed_edge_to(:dest=>self.row_id, :label=>ArcLabel.depends_on('feature').row_id)
+        end
+        
+        def x_depended_on_by(xtra_fs=[])
+          result = depended_on_by
+          result.dup.each do |f|
+            result |= f.send(:x_depended_on_by)
+          end
+          result
+        end
+        
         private
         include ArcUtils
+        
+        def lookup(fs)
+          fs.map {|fn| fn.is_a?(Feature) ? fn : Feature.find_first_by_name(fn)}.compact
+        end
         
         # convenience method to mark this dirty as well as any feature that includes this
         def self_to_dirty_list
@@ -326,8 +394,75 @@ module Mrg
           included_by.each {|feature| feature.send(:self_to_dirty_list)}
         end
         
-        def included_by
-          Feature.immed_edge_to(:dest=>self, :label=>ArcLabel.inclusion('feature'))
+        def validate_changes(options=nil)
+          # check to make sure that these changes won't break the existing configuration, on several axes:
+          # ["immediately", "transitively"].each do |first|
+          #   ["an immediate", "a transitive"].each do |second|
+          #     1.  if F #{first} conflicts with F', it should be impossible 
+          #         to introduce #{second} inclusion or dependency from F to F'
+          #     2.  if F' #{first} conflicts with F, it should be impossible 
+          #         to introduce #{second} inclusion or dependency from F to F'
+          #   end
+          #   3.  if F #{first} includes or depends on F', it should be impossible 
+          #       to introduce an immediate conflict from F to F'
+          #   4.  if F' #{first} includes or depends on F, it should be impossible 
+          #       to introduce an immediate conflict from F to F'
+          # end
+          options ||= {}
+          [:new_includes, :new_depends, :new_conflicts].each {|option| options[option] ||= nil}
+          
+          immediate_includes = options[:new_includes] || included_features
+          immediate_depends = options[:new_depends] || depends
+          immediate_conflicts = options[:new_conflicts] || conflicts
+          
+          transitive_includes = immediate_includes.inject(Set.new) do |acc,inc| 
+            feature, = lookup([inc])
+            acc << feature
+            acc |= Set[*lookup(feature.x_includes)]
+            acc
+          end.to_a
+          
+          transitive_depends = immediate_depends.inject(Set.new) do |acc,inc|
+            feature, = lookup([inc])
+            acc << feature
+            acc |= Set[*lookup(feature.x_depends)]
+            acc
+          end.to_a
+          
+          transitively_carried_conflicts = lookup(transitive_includes | transitive_depends).inject(Set.new) {|acc,f| acc |= f.conflicts; acc}.to_a
+          
+          error_code = Errors.make(Errors::INVALID_RELATIONSHIP, Errors::FEATURE)
+          
+          ti_names = transitive_includes.map {|f| f.name}
+          td_names = transitive_depends.map {|f| f.name}
+          tcc_names = transitively_carried_conflicts.map {|f| f.name}
+          xib_names = x_included_by.map {|f| f.name}
+          puts "xib:  #{xib_names.inspect} (included_by == #{included_by.inspect})" if $XXDEBUG
+          xdub_names = x_depended_on_by.map {|f| f.name}
+          puts "xdub:  #{xdub_names.inspect} (depended_on_by == #{depended_on_by.inspect})" if $XXDEBUG
+          xxib_names = lookup(xib_names).map {|f| [f.name] | f.x_includes | f.x_depends}.flatten.uniq
+          xxdub_names = lookup(xdub_names).map {|f| [f.name] | f.x_includes | f.x_depends}.flatten.uniq
+          
+          {"immediately include"=>immediate_includes, 
+           "immediately depend upon"=>immediate_depends, 
+           "transitively include"=>ti_names, 
+           "transitively depend upon"=>td_names,
+           "be transitively included by"=>xib_names,
+           "be transitively depended upon by"=>xdub_names,
+           "be transitively included by a feature that transitively includes or depends on"=>xxib_names,
+           "be transitively depended upon by a feature that transitively includes or depends on"=>xxdub_names
+           }.each do |what, where|
+             {"immediately conflict"=>immediate_conflicts, "transitively conflict (via an inclusion or dependency)"=>tcc_names}.each do |cwhat, cwhere|
+               intersection = (where & cwhere).compact
+               if $XXDEBUG && what =~ /transitively/
+                 puts "Testing that feature #{name} cannot both #{what} and #{cwhat} via an intersection between #{where.inspect} and #{cwhere.inspect} --- #{intersection.join(", ")}"
+               end
+
+               fail(error_code, "Feature #{name} cannot both #{what} and #{cwhat} with #{intersection.join(", ")}") if intersection != []
+             end
+          end
+          
+          
         end
         
         def depends=(deps)

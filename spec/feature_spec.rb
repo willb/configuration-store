@@ -672,6 +672,13 @@ module Mrg
           (Set[*feature_list] & invalids).size.should == 0
         end
 
+        it "should properly identify features that immediately include it" do
+          feature_list = %w{foo bar blah argh}
+          features = feature_list.map {|fn| @store.addFeature(fn)}
+          features.slice(1,3).each {|f| f.modifyIncludedFeatures("ADD", [feature_list[0]], {})}
+          features[0].included_by.map {|f| f.name}.sort.should == feature_list.slice(1,3).sort
+        end
+
       end
 
     end
