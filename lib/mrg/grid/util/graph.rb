@@ -1,4 +1,5 @@
-# graph.rb:  directed and undirected graphs with labeled edges
+# graph.rb:  directed and undirected graphs with labeled edges; 
+# also, related utilities
 #
 # Copyright (c) 2010 Red Hat, Inc.
 #
@@ -54,7 +55,7 @@ module Mrg
           end
 
           @nodes = Set.new
-          @edges = Hash.new {|h,k| h[k] = Set.new}
+          @edges = Hash.new {|h,k| h[k] = Set.new; h[k]}
           @add_edge_callbacks = []
 
           unless self.directed
@@ -183,6 +184,61 @@ module Mrg
           @exit_time[node] = time
 
           @processed[node] = true
+        end
+      end
+
+      class Floyd
+        MAX = ((1 << (0.size * 8 - 4)) - 1)
+        
+        attr_reader :xc
+        
+        def initialize(graph)
+          @nodes = graph.nodes.to_a
+          @node_positions = {}
+          @nodes.each_with_index {|k,v| @node_positions[k] = v}
+
+          @path_via = @nodes.map {|n| [nil] * @nodes.size}
+          @path_sizes = @nodes.map {|n| [MAX] * @nodes.size}
+          @edge_kinds = @nodes.map {|n| @nodes.map{|n2| []}}
+          
+          @xc = Hash.new {|h,k| h[k] = Set.new}
+          
+          graph.edges.each do |from, edges|
+            edges.each do |label, to|
+              from_idx = @node_positions[from]
+              to_idx = @node_positions[to]
+              @path_sizes[from_idx][to_idx] = 1
+              @edge_kinds[from_idx][to_idx] << label
+              @xc[from] << to
+            end
+          end
+
+          @nodes.size.times do |k|
+            @nodes.size.times do |i|
+              @nodes.size.times do |j|
+                tmp = @path_sizes[i][k]+@path_sizes[k][j]
+                if tmp < @path_sizes[i][j]
+                  @path_sizes[i][j] = tmp
+                  @path_via[i][j] = [@edge_kinds[k][j][0], @nodes[k]]
+                  @xc[@nodes[i]] << @nodes[j]
+                end
+              end
+            end
+          end     
+        end
+
+        def shortest_path(from_node, to_node)
+          from = @node_positions[from_node]
+          to = @node_positions[to_node]
+          
+          return nil if @path_sizes[from][to] == MAX
+          via = @path_via[from][to]
+          edge_kind = @edge_kinds[from][to][0] || "-->"
+          edge_kind = "-->" if edge_kind.size == 0
+          
+          via_edge = ["#{from_node}", "#{edge_kind}", "#{to_node}"]
+          return [via_edge] unless via
+          return [shortest_path(from_node, via[1])[0], via_edge]
         end
       end
     end
