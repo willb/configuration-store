@@ -362,13 +362,21 @@ module Mrg
             acc
           end
           
+          puts arcs.inspect if $XXDEBUG
+          
           case command
           when "ADD" then
+            puts "ADDING #{ls.inspect} to arcs[#{collection}][#{name}]" if $XXDEBUG
             arcs[collection][name] |= ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
           when "REPLACE" then
+            puts "REPLACING arcs[#{collection}][#{name}] with #{ls.inspect}" if $XXDEBUG
             arcs[collection][name] = ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
           when "REMOVE" then
+            puts "REMOVING #{ls.inspect} from arcs[#{collection}][#{name}]" if $XXDEBUG
             arcs[collection][name] -= ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
           end
           
           # build the inclusion-dependency graph
@@ -407,20 +415,24 @@ module Mrg
               intersection.each do |dest|
                 path = floyd.shortest_path(source, dest)
                 
-                if path.size == 2
-                  path = path.join("and")
+                if !path
+                  failures << "\t * this change would break #{source}, which transitively includes or depends on #{name} and cannot carry #{intersection.to_a.inspect} as conflicts"
                 else
-                  path[-1] = "and #{path[-1]}"
-                  path = path.join(", ")
-                end
+                  if path.size == 2
+                    path = path.join("and")
+                  else
+                    path[-1] = "and #{path[-1]}"
+                    path = path.join(", ")
+                  end
                 
-                failures << "\t * #{source} cannot both transitively conflict with and include or depend on #{dest}:  #{path}"
+                  failures << "\t * #{source} cannot both transitively conflict with and include or depend on #{dest}:  #{path}"
+                end
               end
             end
           end
             
           if failures.size > 0
-            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of feature #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
+            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.to_a.inspect} to the #{collection} set of feature #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
           end
         end
         
