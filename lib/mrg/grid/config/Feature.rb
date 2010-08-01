@@ -21,6 +21,8 @@ require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
 
+require 'mrg/grid/util/graph'
+
 require 'set'
 
 module Mrg
@@ -79,6 +81,8 @@ module Mrg
           invalid_fl = Feature.select_invalid(fl)
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
+          
+          detect_inconsistencies(:includedFeatures, command, features)
           
           modify_arcs(command,fl,options,:included_features,:included_features=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
@@ -182,6 +186,8 @@ module Mrg
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
+          detect_inconsistencies(:conflicts, command, conflicts)
+          
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
         end
@@ -206,6 +212,8 @@ module Mrg
           invalid_deps = Feature.select_invalid(depends)
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
+          
+          detect_inconsistencies(:depends, command, depends)
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list
@@ -319,6 +327,114 @@ module Mrg
         
         private
         include ArcUtils
+        
+        # collection is either :conflicts, :depends, or :includedFeatures
+        # command is "ADD", "REPLACE", or "REMOVE"
+        # ls is the argument to the API call
+        def detect_inconsistencies(collection, command, ls)
+          command = command.upcase
+          gerund = command.downcase.sub(/([e]|)$/, "ing")
+          arcs = {}
+          
+          ls = Set[*ls]
+          
+          raise "bogus collection #{collection.inspect}" unless [:conflicts, :depends, :includedFeatures].include?(collection)
+          raise "bogus command #{command.inspect}" unless %w{ADD REPLACE REMOVE}.include?(command)
+          
+          conflict_arcs = FeatureArc.find_by_label(ArcLabel.conflicts_with('feature').row_id)
+          
+          arcs[:conflicts] = conflict_arcs.inject(Hash.new {|h,k| h[k] = Set.new}) do |acc, fa|
+            acc[fa.source.name] << fa.dest.name
+            acc
+          end
+          
+          depend_arcs = FeatureArc.find_by_label(ArcLabel.depends_on('feature').row_id)
+          
+          arcs[:depends] = depend_arcs.inject(Hash.new {|h,k| h[k] = Set.new}) do |acc, fa|
+            acc[fa.source.name] << fa.dest.name
+            acc
+          end
+          
+          include_arcs = FeatureArc.find_by_label(ArcLabel.inclusion('feature').row_id)
+          
+          arcs[:includedFeatures] = include_arcs.inject(Hash.new {|h,k| h[k] = Set.new}) do |acc, fa|
+            acc[fa.source.name] << fa.dest.name
+            acc
+          end
+          
+          puts arcs.inspect if $XXDEBUG
+          
+          case command
+          when "ADD" then
+            puts "ADDING #{ls.inspect} to arcs[#{collection}][#{name}]" if $XXDEBUG
+            arcs[collection][name] |= ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
+          when "REPLACE" then
+            puts "REPLACING arcs[#{collection}][#{name}] with #{ls.inspect}" if $XXDEBUG
+            arcs[collection][name] = ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
+          when "REMOVE" then
+            puts "REMOVING #{ls.inspect} from arcs[#{collection}][#{name}]" if $XXDEBUG
+            arcs[collection][name] -= ls
+            puts "arcs[#{collection}][#{name}] is now #{arcs[collection][name].inspect}" if $XXDEBUG
+          end
+          
+          # build the inclusion-dependency graph
+          g = ::Mrg::Grid::Util::Graph.new
+          
+          {:includedFeatures=>"includes", :depends=>"depends on"}.each do |key, label|
+            arcs[key].each do |source, dests|
+              dests.each do |dest|
+                g.add_edge(source, dest, label)
+              end
+            end
+          end
+          
+          begin
+            ::Mrg::Grid::Util::TopologicalSorter.sort(g)
+          rescue ::Mrg::Grid::Util::GraphInvariantViolation
+            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of feature #{name} would introduce a circular inclusion or dependency relationship")
+          end
+          
+          floyd = ::Mrg::Grid::Util::Floyd.new(g)
+          
+          # keep track of all failures, to present a comprehensive error message at the end
+          failures = []
+          
+          inverse_xc = Hash.new {|h,k| h[k] = Set.new}
+          
+          floyd.xc.each do |source, dests|
+            conflict_range = dests.inject(arcs[:conflicts][source]) do |acc, dest|
+              acc |= arcs[:conflicts][dest]
+              acc
+            end
+            
+            intersection = conflict_range & (dests | [source])
+            
+            if intersection.size > 0
+              intersection.each do |dest|
+                path = floyd.shortest_path(source, dest)
+                
+                if !path
+                  failures << "\t * this change would break #{source}, which transitively includes or depends on #{name} and cannot carry #{intersection.to_a.inspect} as conflicts"
+                else
+                  if path.size == 2
+                    path = path.join("and")
+                  else
+                    path[-1] = "and #{path[-1]}"
+                    path = path.join(", ")
+                  end
+                
+                  failures << "\t * #{source} cannot both transitively conflict with and include or depend on #{dest}:  #{path}"
+                end
+              end
+            end
+          end
+            
+          if failures.size > 0
+            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.to_a.inspect} to the #{collection} set of feature #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
+          end
+        end
         
         # convenience method to mark this dirty as well as any feature that includes this
         def self_to_dirty_list
