@@ -37,7 +37,9 @@ module Mrg
             edges[from] << ["", to]
           end
         end
-
+        
+        # Creates a new graph, defaulting to a directed graph with labeled edges.
+        # * =options=:  a hash of options, including =:ignore_labels= and =:undirected=.
         def initialize(options = nil)
           options ||= {}
           @labeled_edges = !options[:ignore_labels]
@@ -85,9 +87,142 @@ module Mrg
         def ensure_nodes(*ns)
           ns.each {|n| nodes << n}
         end
-      end
 
-      class GraphInvariantViolation < RuntimeError ; end
+
+        class DFS
+          class Done < Exception
+          end
+
+          attr_reader :time, :entry_time, :discovered, :processed, :parent
+          attr_accessor :finished
+
+          def initialize(graph, pre_visit_callback=nil, post_visit_callback=nil, edge_callback=nil)
+            @graph = graph
+            @pre_visit_callbacks ||= []
+            @pre_visit_callbacks << pre_visit_callback if pre_visit_callback
+            @post_visit_callbacks ||= []
+            @post_visit_callbacks << post_visit_callback if post_visit_callback
+            @edge_callbacks ||= []
+            @edge_callbacks << edge_callback if edge_callback
+            reset_self
+          end
+
+          def dfs(node, reset=true)
+            if reset
+              reset_self
+            end
+
+            begin
+              do_dfs(node)
+            rescue Done
+              return
+            end
+          end
+
+          private
+
+          def reset_self
+            @time = 0
+            @discovered = {}
+            @processed = {}
+            @entry_time = {}
+            @exit_time = {}
+            @finished = false
+            @parent = {}
+          end
+
+          def tick
+            @time = @time + 1
+          end
+
+          def do_dfs(node)
+            raise Done.new if @finished
+
+            @discovered[node] = true
+            tick
+            @entry_time[node] = time
+
+            @pre_visit_callbacks.each {|cb| cb.call(node, self)}
+
+            outbound_edges = @graph.labeled_edges_from(node)
+
+            outbound_edges.each do |label, to_node|
+              if !@discovered[to_node]
+                @parent[to_node] = node
+                @edge_callbacks.each {|ec| ec.call(node, to_node, label, self) }
+                do_dfs(to_node)
+              elsif @processed[to_node] || @graph.directed
+                @edge_callbacks.each {|ec| ec.call(node, to_node, label, self) }
+                raise Done.new if @finished
+              end
+            end
+
+            @post_visit_callbacks.each {|cb| cb.call(node, self)}
+
+            tick
+            @exit_time[node] = time
+
+            @processed[node] = true
+          end
+        end
+
+        class TransitiveClosure
+          MAX = ((1 << (0.size * 8 - 4)) - 1)
+
+          attr_reader :xc
+
+          def initialize(graph)
+            @nodes = graph.nodes.to_a
+            @node_positions = {}
+            @nodes.each_with_index {|k,v| @node_positions[k] = v}
+
+            @path_via = @nodes.map {|n| [nil] * @nodes.size}
+            @path_sizes = @nodes.map {|n| [MAX] * @nodes.size}
+            @edge_kinds = @nodes.map {|n| @nodes.map{|n2| []}}
+
+            @xc = Hash.new {|h,k| h[k] = Set.new}
+
+            graph.edges.each do |from, edges|
+              edges.each do |label, to|
+                from_idx = @node_positions[from]
+                to_idx = @node_positions[to]
+                @path_sizes[from_idx][to_idx] = 1
+                @edge_kinds[from_idx][to_idx] << label
+                @xc[from] << to
+              end
+            end
+
+            @nodes.size.times do |k|
+              @nodes.size.times do |i|
+                @nodes.size.times do |j|
+                  tmp = @path_sizes[i][k]+@path_sizes[k][j]
+                  if tmp < @path_sizes[i][j]
+                    @path_sizes[i][j] = tmp
+                    @path_via[i][j] = [@edge_kinds[k][j][0], @nodes[k]]
+                    @xc[@nodes[i]] << @nodes[j]
+                  end
+                end
+              end
+            end     
+          end
+
+          def shortest_path(from_node, to_node)
+            from = @node_positions[from_node]
+            to = @node_positions[to_node]
+
+            return nil if @path_sizes[from][to] == MAX
+            via = @path_via[from][to]
+            edge_kind = @edge_kinds[from][to][0] || "-->"
+            edge_kind = "-->" if edge_kind.size == 0
+
+            via_edge = ["#{from_node}", "#{edge_kind}", "#{to_node}"]
+            return [via_edge] unless via
+            return [shortest_path(from_node, via[1])[0], via_edge]
+          end
+        end
+
+        class InvariantViolation < RuntimeError ; end
+      end
 
       module TopologicalSorter
         def self.sort(graph)
@@ -96,11 +231,11 @@ module Mrg
           post_visit_callback = Proc.new {|node, dfs| stack << node}
           edge_callback = Proc.new do |from, to, label, dfs|
             if dfs.discovered[to] && !dfs.processed[to]
-              raise GraphInvariantViolation.new("graph #{graph} is not a DAG (back edge from #{from} --> #{to})")
+              raise Graph::InvariantViolation.new("graph #{graph} is not a DAG (back edge from #{from} --> #{to})")
             end
           end
 
-          dfs = DFS.new(graph, nil, post_visit_callback, edge_callback)
+          dfs = Graph::DFS.new(graph, nil, post_visit_callback, edge_callback)
 
           graph.nodes.each do |node|
             dfs.dfs(node, false) unless dfs.discovered[node]
@@ -110,137 +245,6 @@ module Mrg
         end
       end
 
-      class DFS
-        class Done < Exception
-        end
-
-        attr_reader :time, :entry_time, :discovered, :processed, :parent
-        attr_accessor :finished
-
-        def initialize(graph, pre_visit_callback=nil, post_visit_callback=nil, edge_callback=nil)
-          @graph = graph
-          @pre_visit_callbacks ||= []
-          @pre_visit_callbacks << pre_visit_callback if pre_visit_callback
-          @post_visit_callbacks ||= []
-          @post_visit_callbacks << post_visit_callback if post_visit_callback
-          @edge_callbacks ||= []
-          @edge_callbacks << edge_callback if edge_callback
-          reset_self
-        end
-
-        def dfs(node, reset=true)
-          if reset
-            reset_self
-          end
-          
-          begin
-            do_dfs(node)
-          rescue Done
-            return
-          end
-        end
-
-        private
-
-        def reset_self
-          @time = 0
-          @discovered = {}
-          @processed = {}
-          @entry_time = {}
-          @exit_time = {}
-          @finished = false
-          @parent = {}
-        end
-
-        def tick
-          @time = @time + 1
-        end
-
-        def do_dfs(node)
-          raise Done.new if @finished
-          
-          @discovered[node] = true
-          tick
-          @entry_time[node] = time
-          
-          @pre_visit_callbacks.each {|cb| cb.call(node, self)}
-
-          outbound_edges = @graph.labeled_edges_from(node)
-          
-          outbound_edges.each do |label, to_node|
-            if !@discovered[to_node]
-              @parent[to_node] = node
-              @edge_callbacks.each {|ec| ec.call(node, to_node, label, self) }
-              do_dfs(to_node)
-            elsif @processed[to_node] || @graph.directed
-              @edge_callbacks.each {|ec| ec.call(node, to_node, label, self) }
-              raise Done.new if @finished
-            end
-          end
-
-          @post_visit_callbacks.each {|cb| cb.call(node, self)}
-
-          tick
-          @exit_time[node] = time
-
-          @processed[node] = true
-        end
-      end
-
-      class Floyd
-        MAX = ((1 << (0.size * 8 - 4)) - 1)
-        
-        attr_reader :xc
-        
-        def initialize(graph)
-          @nodes = graph.nodes.to_a
-          @node_positions = {}
-          @nodes.each_with_index {|k,v| @node_positions[k] = v}
-
-          @path_via = @nodes.map {|n| [nil] * @nodes.size}
-          @path_sizes = @nodes.map {|n| [MAX] * @nodes.size}
-          @edge_kinds = @nodes.map {|n| @nodes.map{|n2| []}}
-          
-          @xc = Hash.new {|h,k| h[k] = Set.new}
-          
-          graph.edges.each do |from, edges|
-            edges.each do |label, to|
-              from_idx = @node_positions[from]
-              to_idx = @node_positions[to]
-              @path_sizes[from_idx][to_idx] = 1
-              @edge_kinds[from_idx][to_idx] << label
-              @xc[from] << to
-            end
-          end
-
-          @nodes.size.times do |k|
-            @nodes.size.times do |i|
-              @nodes.size.times do |j|
-                tmp = @path_sizes[i][k]+@path_sizes[k][j]
-                if tmp < @path_sizes[i][j]
-                  @path_sizes[i][j] = tmp
-                  @path_via[i][j] = [@edge_kinds[k][j][0], @nodes[k]]
-                  @xc[@nodes[i]] << @nodes[j]
-                end
-              end
-            end
-          end     
-        end
-
-        def shortest_path(from_node, to_node)
-          from = @node_positions[from_node]
-          to = @node_positions[to_node]
-          
-          return nil if @path_sizes[from][to] == MAX
-          via = @path_via[from][to]
-          edge_kind = @edge_kinds[from][to][0] || "-->"
-          edge_kind = "-->" if edge_kind.size == 0
-          
-          via_edge = ["#{from_node}", "#{edge_kind}", "#{to_node}"]
-          return [via_edge] unless via
-          return [shortest_path(from_node, via[1])[0], via_edge]
-        end
-      end
     end
   end
 end
