@@ -50,12 +50,20 @@ module Mrg
             lambda { params[4].modifyConflicts("ADD", [@param_names[0]], {}) }.should raise_error(SPQR::ManageableObjectError)
           end
           
-          it "should not be possible for P to immediately #{what} on a param that conflicts with it" do
-            pending "FIXME:  need this test and code to make it pass"
+          it "should not allow P to immediately depend on a param that conflicts with it" do
+            @param_names.slice!(0,2)
+            params = @param_names.map {|pn| @store.addParam(pn)}
+            params[1].modifyConflicts("ADD", [@param_names[0]], {})
+            lambda {params[0].modifyDepends("ADD", [@param_names[1]], {})}.should raise_error(SPQR::ManageableObjectError)
           end
 
-          it "should not be possible for P to transitively #{what} on a param that conflicts with it" do
-            pending "FIXME:  need this test and code to make it pass"
+          it "should not allow P to transitively depend on a param that conflicts with it" do
+            params = @param_names.map {|pn| @store.addParam(pn)}
+            4.downto(1) do |x| 
+              params[x].modifyConflicts("ADD", [@param_names[0]], {})
+              params[x].modifyDepends("ADD", [@param_names[x+1]], {}) if @param_names[x+1]
+            end
+            lambda {params[0].modifyDepends("ADD", [@param_names[4]], {})}.should raise_error(SPQR::ManageableObjectError)
           end
 
           
