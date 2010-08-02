@@ -56,6 +56,7 @@ Functions to communicate with wallaby over qmf
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
+mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 mkdir -p %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
 mkdir -p %{buildroot}/%{_initrddir}
@@ -70,6 +71,7 @@ cp -f bin/wallaby-feature-import %{buildroot}/%{_bindir}
 cp -f bin/wallaby-activate %{buildroot}/%{_bindir}
 cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
@@ -136,6 +138,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/DataValidating.rb
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
 %{ruby_sitelib}/mrg/grid/config/Group.rb
+%{ruby_sitelib}/mrg/grid/config/InconsistencyDetecting.rb
 %{ruby_sitelib}/mrg/grid/config/Node.rb
 %{ruby_sitelib}/mrg/grid/config/NodeMembership.rb
 %{ruby_sitelib}/mrg/grid/config/Parameter.rb
@@ -150,6 +153,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/3.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/5.rb
+%{ruby_sitelib}/mrg/grid/util/graph.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
 %{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
 %{ruby_sitelib}/mrg/grid/config/shell/apropos.rb
