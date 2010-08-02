@@ -40,7 +40,7 @@ module Mrg
         # the constant for the type of entity self is must be given in error_kind
         
         # ls is the argument to the API call
-        def detect_inconsistencies(collection, command, ls)          
+        def detect_inconsistencies(collection, command, ls)
           command = command.upcase
           gerund = command.downcase.sub(/([e]|)$/, "ing")
           arcs = {}

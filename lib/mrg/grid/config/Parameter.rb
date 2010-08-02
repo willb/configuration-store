@@ -19,6 +19,7 @@ require 'rhubarb/rhubarb'
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
+require 'mrg/grid/config/InconsistencyDetecting'
 
 require 'set'
 
@@ -191,6 +192,8 @@ module Mrg
           invalid_depends = Parameter.select_invalid(depends)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
+          detect_inconsistencies(:depends, command, depends)
+          
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
         end
@@ -213,6 +216,8 @@ module Mrg
           
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
+          
+          detect_inconsistencies(:conflicts, command, conflicts)
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
@@ -281,6 +286,28 @@ module Mrg
         private
         
         include ArcUtils
+        
+        def what_am_i
+          "param"
+        end
+        
+        def id_labels
+          {:conflicts=>:conflicts_with, :depends=>:depends_on}
+        end
+        
+        def id_relations_for_graph
+          {:depends=>"depends on"}
+        end
+        
+        def id_require_msg
+          "depend on"
+        end
+
+        def id_requires_msg
+          "depends on"
+        end
+        include InconsistencyDetecting
+        
         
         def depends=(deps)
           set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
