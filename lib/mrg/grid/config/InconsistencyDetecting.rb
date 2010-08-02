@@ -15,21 +15,34 @@
 # limitations under the License.
 
 require 'mrg/grid/util/graph'
+require 'mrg/grid/config/errors'
 
 module Mrg
   module Grid
     module Config
       module InconsistencyDetecting
+        def c_basename
+          self.class.name.split("::").pop
+        end
+        
+        def error_kind
+          Errors.const_get(c_basename.upcase)
+        end
+        
         def what_am_i
-          self.class.name.split("::").pop.downcase
+          c_basename.downcase
         end
         
         def self_arc_class
-          Mrg::Grid::Config::const_get("#{self.class.name.split("::").pop}Arc")
+          Mrg::Grid::Config::const_get("#{c_basename}Arc")
         end
         
         def id_valid_commands
           %w{ADD REPLACE REMOVE}
+        end
+        
+        def id_callbacks
+          []
         end
         
         # a human-readable name for this class must be what_am_i
@@ -82,7 +95,7 @@ module Mrg
           begin
             ::Mrg::Grid::Util::TopologicalSorter.sort(g)
           rescue ::Mrg::Grid::Util::Graph::InvariantViolation
-            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce a circular inclusion or dependency relationship")
+            fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce a circular inclusion or dependency relationship")
           end
 
           floyd = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(g)
@@ -120,8 +133,12 @@ module Mrg
             end
           end
 
+          id_callbacks.each do |cb|
+            cb.call(graph, floyd, failures)
+          end
+
           if failures.size > 0
-            fail(Errors.make(Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.to_a.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
+            fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.to_a.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
           end
         end
       end
