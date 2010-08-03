@@ -73,13 +73,18 @@ module Mrg
             end
           end
 
+          preposition = "to"
+
           case command
           when "ADD" then
             arcs[collection][name] |= ls
+            preposition = "to"
           when "REPLACE" then
             arcs[collection][name] = ls
+            preposition = "with"
           when "REMOVE" then
             arcs[collection][name] -= ls
+            preposition = "from"
           end
 
           # build the inclusion-dependency graph
@@ -121,12 +126,7 @@ module Mrg
                 if !path
                   failures << "\t * this change would break #{source}, which transitively #{id_requires_msg} #{name} and cannot carry #{intersection.to_a.inspect} as conflicts"
                 else
-                  if path.size == 2
-                    path = path.join("and")
-                  else
-                    path[-1] = "and #{path[-1]}"
-                    path = path.join(", ")
-                  end
+                  path = path.map {|pelem| pelem.join(" ")}.join("; ")
 
                   failures << "\t * #{source} cannot both transitively conflict with and #{id_require_msg} #{dest}:  #{path}"
                 end
@@ -139,7 +139,7 @@ module Mrg
           end
 
           if failures.size > 0
-            fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.to_a.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
+            fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} the #{collection} set #{preposition} #{ls.to_a.inspect} of #{what_am_i} #{name} would introduce the following inconsistenc#{failures.size > 1 ? "ies" : "y"}:\n#{failures.join('\n')}")
           end
         end
       end
