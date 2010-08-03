@@ -72,6 +72,12 @@ broker.wait_for_stable
 
 store = console.object(:class=>"Store")
 
+unless store
+  puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
+  puts "use -h for help"
+  exit
+end
+
 store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
 explain = store_client.activateConfig
