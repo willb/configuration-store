@@ -388,6 +388,8 @@ module Mrg
           p_conflicts = Hash.new {|h,k| h[k] = Set.new}
           
 
+          parameters_of_interest = Set.new
+
           if existing_graph
             feature_memo = Hash.new {|h,k| h[k] = Feature.find_first_by_name(k)}
             existing_graph.edges.each do |source, edges|
@@ -410,6 +412,14 @@ module Mrg
           
           ParameterArc.find_by(:label=>ArcLabel.depends_on('param')).each do |pa|
             pv_graph.add_edge(pa.source, pa.dest, "param dependency")
+            parameters_of_interest << pa.source.row_id
+            parameters_of_interest << pa.dest.row_id
+          end
+          
+          ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
+            p_conflicts[pa.source.name] << pa.dest.name
+            parameters_of_interest << pa.source.row_id
+            parameters_of_interest << pa.dest.row_id
           end
           
           case command.upcase
@@ -427,7 +437,7 @@ module Mrg
             puts "FP:  fp.feature.row_id == #{fp.feature.row_id}; self.row_id == #{self.row_id}" if $XXDEBUG
             if (fp.feature != self || new_params.sort == params.keys.sort)
               puts "FP: ADDING A 'sets param value' EDGE FROM #{fp.feature.name} TO #{fp.param.name}" if $XXDEBUG
-              pv_graph.add_edge(fp.feature, fp.param, "sets param value")
+              pv_graph.add_edge(fp.feature, fp.param, "sets param value") if parameters_of_interest.include?(fp.param.row_id)
             end
           end
           
@@ -435,10 +445,6 @@ module Mrg
             new_params.each do |np|
               pv_graph.add_edge(self, Parameter.find_first_by_name(np), "sets param value")
             end
-          end
-          
-          ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
-            p_conflicts[pa.source.name] << pa.dest.name
           end
           
           feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)

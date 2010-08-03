@@ -331,6 +331,9 @@ module Mrg
 
           pv_graph = ::Mrg::Grid::Util::Graph.new
           arcs = {}
+          
+          parameters_of_interest = Set.new
+          
           arcs[:conflicts] = Hash.new {|h,k| h[k] = Set.new}
           arcs[:depends] = Hash.new {|h,k| h[k] = Set.new}
 
@@ -345,10 +348,14 @@ module Mrg
 
           ParameterArc.find_by(:label=>ArcLabel.depends_on('param')).each do |pa|
             arcs[:depends][pa.source] << pa.dest
+            parameters_of_interest << pa.source.row_id
+            parameters_of_interest << pa.dest.row_id
           end
 
           ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
             arcs[:conflicts][pa.source] << pa.dest.name
+            parameters_of_interest << pa.source.row_id
+            parameters_of_interest << pa.dest.row_id
           end
 
           case command.upcase
@@ -367,7 +374,7 @@ module Mrg
           end
 
           FeatureParams.find_all do |fp|
-            pv_graph.add_edge(fp.feature, fp.param, "sets param value")
+            pv_graph.add_edge(fp.feature, fp.param, "sets param value") if parameters_of_interest.include?(fp.param)
           end
 
           feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)
