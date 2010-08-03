@@ -134,7 +134,7 @@ module Mrg
           end
 
           id_callbacks.each do |cb|
-            cb.call(graph, floyd, failures)
+            cb.call(g, floyd, failures)
           end
 
           if failures.size > 0
