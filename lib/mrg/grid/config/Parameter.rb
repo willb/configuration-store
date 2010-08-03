@@ -78,6 +78,7 @@ module Mrg
         # * default (lstr/O)
         def default
           log.debug "getDefault called on param #{self.inspect}"
+          log.warn "param #{self.name} is a must_change parameter; its default value is meaningless by definition" if self.must_change
           # Assign values to output parameters
           self.default_val ||= ""
           # Return value
@@ -89,6 +90,12 @@ module Mrg
         def setDefault(default)
           # Print values of input parameters
           log.debug "setDefault: default => #{default.inspect}"
+          
+          if self.must_change
+            log.warn "ignoring attempt to set the default value of must_change param #{self.name}"
+            return
+          end
+          
           DirtyElement.dirty_parameter(self)
           self.default_val = default
         end
