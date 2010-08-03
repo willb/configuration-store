@@ -382,6 +382,8 @@ module Mrg
           new_params ||= []
           result = []
           
+          return result if $wallaby_skip_inconsistency_detection
+          
           pv_graph = ::Mrg::Grid::Util::Graph.new
           p_conflicts = Hash.new {|h,k| h[k] = Set.new}
           

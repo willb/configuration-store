@@ -54,6 +54,7 @@ module Mrg
         
         # ls is the argument to the API call
         def detect_inconsistencies(collection, command, ls)
+          return if $wallaby_skip_inconsistency_detection
           command = command.upcase
           gerund = command.downcase.sub(/([e]|)$/, "ing")
           arcs = {}

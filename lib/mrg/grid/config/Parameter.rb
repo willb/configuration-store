@@ -327,6 +327,8 @@ module Mrg
           ls ||= []
           result = []
 
+          return result if $wallaby_skip_inconsistency_detection
+
           pv_graph = ::Mrg::Grid::Util::Graph.new
           arcs = {}
           arcs[:conflicts] = Hash.new {|h,k| h[k] = Set.new}
