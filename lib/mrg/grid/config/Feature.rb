@@ -54,6 +54,10 @@ module Mrg
         qmf_property :uid, :uint32, :index=>true
         ### Schema method declarations
         
+        def eql?(other)
+          return self.class == other.class && self.row_id == other.row_id
+        end
+        
         # setName 
         # * name (sstr/I)
         def setName(name)
@@ -133,6 +137,12 @@ module Mrg
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameters supplied to feature #{self.name}:  #{invalid_params}") if invalid_params != []
           
           command = command.upcase
+          
+          failures = validate_params(command, pvmap.keys) 
+          gerund = command.downcase.sub(/(E|)$/, "ing")
+          if failures.size > 0
+            fail(Errors::make(Errors::PARAMETER, Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{pvmap.inspect} to #{self.name} would introduce the following errors:\n" + failures.join("\n"))
+          end
           
           case command
           when "ADD", "REMOVE" then
@@ -368,6 +378,120 @@ module Mrg
           set_arcs(FeatureArc, ArcLabel.inclusion('feature'), deps, :find_first_by_name, :preserve_ordering=>true)
         end
         
+        def validate_params(command="SKIP", new_params=nil, existing_graph=nil)
+          new_params ||= []
+          result = []
+          
+          pv_graph = ::Mrg::Grid::Util::Graph.new
+          p_conflicts = Hash.new {|h,k| h[k] = Set.new}
+          
+
+          if existing_graph
+            feature_memo = Hash.new {|h,k| h[k] = Feature.find_first_by_name(k)}
+            existing_graph.edges.each do |source, edges|
+              sf = feature_memo[source]
+              edges.each do |label, dest|
+                puts "ADDING A #{label} edge from #{source} to #{dest}" if $XXDEBUG
+                pv_graph.add_edge(sf, feature_memo[dest], label)
+              end
+            end
+          else
+            # NB:  since this graph has heterogeneous nodes, we don't use names -- we use references to actual objects
+            FeatureArc.find_by(:label=>ArcLabel.depends_on('feature')).each do |fa|
+              pv_graph.add_edge(fa.source, fa.dest, "depends on")
+            end
+          
+            FeatureArc.find_by(:label=>ArcLabel.inclusion('feature')).each do |fa|
+              pv_graph.add_edge(fa.source, fa.dest, "includes")
+            end
+          end
+          
+          ParameterArc.find_by(:label=>ArcLabel.depends_on('param')).each do |pa|
+            pv_graph.add_edge(pa.source, pa.dest, "param dependency")
+          end
+          
+          case command.upcase
+          when "ADD" then
+            new_params |= params.keys
+          when "REMOVE" then
+            new_params -= params.keys
+          when "SKIP" then
+            new_params = params.keys
+          end
+          
+          puts "NEW_PARAMS == #{new_params.inspect} and PARAMS.KEYS == #{params.keys.inspect}" if $XXDEBUG
+          
+          FeatureParams.find_all.each do |fp|
+            puts "FP:  fp.feature.row_id == #{fp.feature.row_id}; self.row_id == #{self.row_id}" if $XXDEBUG
+            if (fp.feature != self || new_params.sort == params.keys.sort)
+              puts "FP: ADDING A 'sets param value' EDGE FROM #{fp.feature.name} TO #{fp.param.name}" if $XXDEBUG
+              pv_graph.add_edge(fp.feature, fp.param, "sets param value")
+            end
+          end
+          
+          if new_params.sort != params.keys.sort
+            new_params.each do |np|
+              pv_graph.add_edge(self, Parameter.find_first_by_name(np), "sets param value")
+            end
+          end
+          
+          ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
+            p_conflicts[pa.source.name] << pa.dest.name
+          end
+          
+          feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)
+          
+          if $XXDEBUG
+            pv_graph.each_edge do |from, to, label|
+              puts "WE SEE A #{label} edge:  [#{from.class}: #{from.name}] --> [#{to.class}: #{to.name}]"
+            end
+            
+            puts "HERE'S THE XC:"
+            feature_param_xc.xc.each do |source, dests|
+              dests.each do |dest|
+                puts "--- #{source.name} -*-> #{dest.name}"
+              end
+            end
+            
+            puts "P_CONFLICTS is:  #{p_conflicts.inspect}"
+          end
+          
+          
+          
+          feature_param_xc.xc.each do |source, dests|
+            # source is the feature we're looking at; dests is the set of parameters set 
+            # on this feature and all of its included/dependent features.  For each feature,
+            # we want to make sure that the set of parameters conflicted with by dests does 
+            # not intersect dests.
+            
+            if $XXDEBUG
+              puts "DESTS is #{dests.inspect}"
+            end
+            
+            dest_map = Hash[*dests.map {|d| [d.name, d]}.flatten]
+            conflict_range = dest_map.keys.inject(Set.new) {|acc,dest| acc |= p_conflicts[dest]}.to_a
+            
+            if $XXDEBUG
+              puts "SOURCE is:  #{source} (#{source.name})"
+              puts "DEST_MAP is: #{dest_map.inspect}"
+              puts "CONFLICT_RANGE is #{conflict_range.inspect}"
+            end
+            
+            intersection = dest_map.keys & conflict_range
+            
+            result << "\t * Feature #{source.name} sets the following parameters that conflict with other parameters it sets:  #{intersection.inspect}" if intersection.size > 0
+          end
+          
+          result
+        end
+        
+        def id_callbacks
+          [Proc.new do |graph, floyd, failures|
+            validate_params("SKIP", nil, graph).each do |failure|
+              failures << failure
+            end
+          end]
+        end
       end
       
       class FeatureArc
