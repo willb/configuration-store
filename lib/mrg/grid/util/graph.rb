@@ -81,6 +81,14 @@ module Mrg
             c.call(from,to,label)
           end
         end
+        
+        def each_edge
+          edges.each do |from, out_edges|
+            out_edges.each do |label, to|
+              yield(from, to, label)
+            end
+          end
+        end
 
         private
 
