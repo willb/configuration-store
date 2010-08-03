@@ -70,6 +70,32 @@ module Mrg
               feature_to_change.modifyConflicts("ADD", new_conflicts, {}) 
             }.should raise_error(SPQR::ManageableObjectError)
           end
+          
+          it "should not allow F to immediately #{what} on a feature whose param set conflicts with that of F" do
+            @feature_names.slice!(0,2)
+            features = @feature_names.map {|fn| @store.addFeature(fn)}
+            param_names = %w{FOO BAR}
+            params = param_names.map {|pn| @store.addParam(pn)}
+            
+            puts "MODIFYING CONFLICTS FOR PARAM #{param_names[0]}...before is #{params[0].conflicts.inspect}" if $XXDEBUG
+            params[0].modifyConflicts("ADD", [param_names[1]], {})
+            puts "DONE MODIFYING CONFLICTS FOR PARAM #{param_names[0]}...after is #{params[0].conflicts.inspect}" if $XXDEBUG
+            puts "MODIFYING CONFLICTS FOR PARAM #{param_names[1]}...before is #{params[1].conflicts.inspect}" if $XXDEBUG
+            params[1].modifyConflicts("ADD", [param_names[0]], {})
+            puts "DONE MODIFYING CONFLICTS FOR PARAM #{param_names[1]}...after is #{params[1].conflicts.inspect}" if $XXDEBUG
+            
+            [0,1].each do |x|
+              puts "MODIFYING PARAMS FOR FEATURE #{@feature_names[x]}...before is #{features[x].params.inspect}" if $XXDEBUG
+              features[x].modifyParams("ADD", {param_names[x]=>"example value #{x}"}, {})
+              puts "DONE MODIFYING PARAMS FOR FEATURE #{@feature_names[x]}...after is #{features[x].params.inspect}" if $XXDEBUG
+            end
+            
+            lambda {
+              puts "=====HERE'S THE GOOD PART=====" if $XXDEBUG
+              puts "sending #{how} to #{@feature_names[0]} with arg #{[@feature_names[1]].inspect}" if $XXDEBUG
+              features[0].send(how, "ADD", [@feature_names[1]], {})
+            }.should raise_error(SPQR::ManageableObjectError)
+          end
         end
       end
     end
