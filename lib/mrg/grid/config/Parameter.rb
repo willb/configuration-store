@@ -56,6 +56,10 @@ module Mrg
         qmf_property :depends, :list, :desc=>"A set of parameter names that this parameter depends on."
         qmf_property :conflicts, :list, :desc=>"A set of parameter names that this parameter conflicts with."
         
+        def eql?(other)
+          return self.class == other.class && self.row_id == other.row_id
+        end
+        
         ### Schema method declarations
         
         # setKind
@@ -193,6 +197,7 @@ module Mrg
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
           detect_inconsistencies(:depends, command, depends)
+          validate_consequences(:depends, command, depends)
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
@@ -218,6 +223,7 @@ module Mrg
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
           detect_inconsistencies(:conflicts, command, conflicts)
+          validate_consequences(:conflicts, command, conflicts)
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
@@ -309,6 +315,70 @@ module Mrg
         include InconsistencyDetecting
         
         
+        # XXX:  refactor to eliminate code duplication
+        def validate_consequences(collection, command, ls)
+          ls ||= []
+          result = []
+
+          pv_graph = ::Mrg::Grid::Util::Graph.new
+          arcs = {}
+          arcs[:conflicts] = Hash.new {|h,k| h[k] = Set.new}
+          arcs[:depends] = Hash.new {|h,k| h[k] = Set.new}
+
+          # NB:  since this graph has heterogeneous nodes, we don't use names -- we use references to actual objects
+          FeatureArc.find_by(:label=>ArcLabel.depends_on('feature')).each do |fa|
+            pv_graph.add_edge(fa.source, fa.dest, "depends on")
+          end
+
+          FeatureArc.find_by(:label=>ArcLabel.inclusion('feature')).each do |fa|
+            pv_graph.add_edge(fa.source, fa.dest, "includes")
+          end
+
+          ParameterArc.find_by(:label=>ArcLabel.depends_on('param')).each do |pa|
+            arcs[:depends][pa.source] << pa.dest
+          end
+
+          ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
+            arcs[:conflicts][pa.source] << pa.dest.name
+          end
+
+          case command.upcase
+          when "ADD" then
+            arcs[collection][self] += ls.map {|pn| Parameter.find_first_by_name(pn)}
+          when "REMOVE" then
+            arcs[collection][self] -= ls.map {|pn| Parameter.find_first_by_name(pn)}
+          when "REPLACE" then
+            arcs[collection][self] -= ls.map {|pn| Parameter.find_first_by_name(pn)}
+          end
+
+          arcs[:depends].each do |source, dests|
+            dests.each do |dest|
+              pv_graph.add_edge(source, dest, "param dependency")
+            end
+          end
+
+          FeatureParams.find_all do |fp|
+            pv_graph.add_edge(fp.feature, fp.param, "sets param value")
+          end
+
+          feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)
+
+          feature_param_xc.xc.each do |source, dests|
+            # source is the feature we're looking at; dests is the set of parameters set 
+            # on this feature and all of its included/dependent features.  For each feature,
+            # we want to make sure that the set of parameters conflicted with by dests does 
+            # not intersect dests.
+
+            conflict_range = dests.inject(Set.new) {|acc,dest| acc |= arcs[:conflicts][dest]}.to_a
+
+            intersection = dests & conflict_range
+
+            result << "\t * Feature #{source.name} sets the following parameters that would transitively conflict with other parameters it sets:  #{intersection.inspect}" if intersection.size > 0
+          end
+
+          fail(Errors::make(Errors::PARAMETER, Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "Modifying the #{collection} set of #{self.name} would affect the following features:\n" + result.join("\n")) if result.size > 0
+        end
+
         def depends=(deps)
           set_arcs(ParameterArc, ArcLabel.depends_on('param'), deps, :find_first_by_name)
         end
