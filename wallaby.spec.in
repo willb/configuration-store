@@ -162,6 +162,8 @@ fi
 
 %changelog
 
+* Tue Aug 3 2010 willb <willb@redhat> - 0.9.2-1
+- Updated to source version 0.9.2
 
 * Tue Aug 3 2010 willb <willb@redhat> - 0.9.1-1
 - Updated to source version 0.9.1
