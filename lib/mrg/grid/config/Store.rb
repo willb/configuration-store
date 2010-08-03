@@ -47,8 +47,10 @@ module Mrg
 
         ### Property method declarations
         # property APIVersionNumber uint32 The version of the API the store supports
-        attr_accessor :apiVersionNumber
         qmf_property :apiVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
+        def apiVersionNumber
+          20100804
+        end
         ### Schema method declarations
         
         def getDefaultGroup
