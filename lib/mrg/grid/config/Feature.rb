@@ -447,7 +447,7 @@ module Mrg
             end
           end
           
-          feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)
+          feature_param_xc = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(pv_graph)
           
           if $XXDEBUG
             pv_graph.each_edge do |from, to, label|

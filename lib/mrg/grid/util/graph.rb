@@ -229,6 +229,38 @@ module Mrg
           end
         end
 
+        class DagTransitiveClosure
+          attr_reader :xc
+
+          def initialize(graph)
+            @nodes = graph.nodes.to_a
+            @node_positions = {}
+            @nodes.each_with_index {|k,v| @node_positions[k] = v}
+
+            @xc = Hash.new {|h,k| h[k] = Set.new}
+
+            processed_nodes = Set.new
+
+            toposort = TopologicalSorter.sort(graph)
+
+            # by going through the graph in reverse topological order,
+            # we guarantee that we process children before parents;
+            # we can visit each node only once because it is a dag
+            while current_node = toposort.shift
+              processed_nodes << current_node
+              successors = graph.edges[current_node].map {|l,n| n}.to_a.uniq
+              
+              successors.each do |succ|
+                @xc[current_node] |= @xc[succ]
+              end
+
+              @xc[current_node] |= successors
+            end
+          end
+
+          # XXX:  add shortest path
+        end
+
         class InvariantViolation < RuntimeError ; end
       end
 

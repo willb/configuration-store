@@ -104,7 +104,7 @@ module Mrg
             fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce a circular inclusion or dependency relationship")
           end
 
-          floyd = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(g)
+          floyd = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(g)
 
           # keep track of all failures, to present a comprehensive error message at the end
           failures = []
@@ -121,15 +121,7 @@ module Mrg
 
             if intersection.size > 0
               intersection.each do |dest|
-                path = floyd.shortest_path(source, dest)
-
-                if !path
-                  failures << "\t * this change would break #{source}, which transitively #{id_requires_msg} #{name} and cannot carry #{intersection.to_a.inspect} as conflicts"
-                else
-                  path = path.map {|pelem| pelem.join(" ")}.join("; ")
-
-                  failures << "\t * #{source} cannot both transitively conflict with and #{id_require_msg} #{dest}:  #{path}"
-                end
+                failures << "\t * this change would break #{source}, which transitively #{id_requires_msg} #{name} and cannot carry #{intersection.to_a.inspect} as conflicts"
               end
             end
           end
