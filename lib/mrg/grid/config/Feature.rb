@@ -76,7 +76,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * features (map/I)
         #   A list of other feature names a feature includes
-        def modifyIncludedFeatures(command,features,options={})
+        def modifyIncludedFeatures(command,features,options=nil)
           # Print values of input parameters
           log.debug "modifyFeatures: command => #{command.inspect}"
           log.debug "modifyFeatures: features => #{features.inspect}"
@@ -85,9 +85,13 @@ module Mrg
                     
           invalid_fl = Feature.select_invalid(fl)
           
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
+          
+          
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for inclusion:  #{invalid_fl.inspect}") if invalid_fl != []
           
-          detect_inconsistencies(:includedFeatures, command, features)
+          detect_inconsistencies(:includedFeatures, command, features) unless skip_validation
           
           modify_arcs(command,fl,options,:included_features,:included_features=,:explain=>"include",:preserve_order=>true,:xc=>:x_includes)
           self_to_dirty_list
@@ -118,13 +122,15 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * params (map/I)
         #   A map(paramName, value) of parameters and their corresponding values that is specific to a group
-        def modifyParams(command,pvmap,options={})
+        def modifyParams(command,pvmap,options=nil)
           # Print values of input parameters
           log.debug "modifyParams: command => #{command.inspect}"
           log.debug "modifyParams: params => #{pvmap.inspect}"
           
           pvmap ||= {}
           
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
           # XXX: would be nice to use Parameter.select_invalid, but we don't want to look up each param twice
           invalid_params = []
           
@@ -138,10 +144,12 @@ module Mrg
           
           command = command.upcase
           
-          failures = validate_params(command, pvmap.keys) 
-          gerund = command.downcase.sub(/(E|)$/, "ing")
-          if failures.size > 0
-            fail(Errors::make(Errors::PARAMETER, Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{pvmap.inspect} to #{self.name} would introduce the following errors:\n" + failures.join("\n"))
+          unless skip_validation
+            failures = validate_params(command, pvmap.keys) 
+            gerund = command.downcase.sub(/(E|)$/, "ing")
+            if failures.size > 0
+              fail(Errors::make(Errors::PARAMETER, Errors::FEATURE, Errors::INVALID_RELATIONSHIP), "#{gerund} #{pvmap.inspect} to #{self.name} would introduce the following errors:\n" + failures.join("\n"))
+            end
           end
           
           case command
@@ -187,17 +195,20 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', 'UNION', 'INTERSECT', 'DIFF', and 'REPLACE'.
         # * conflicts (map/I)
         #   A set of other feature names that conflict with the feature
-        def modifyConflicts(command,conflicts,options={})
+        def modifyConflicts(command,conflicts,options=nil)
           # Print values of input parameters
           log.debug "modifyConflicts: command => #{command.inspect}"
           log.debug "modifyConflicts: conflicts => #{conflicts.inspect}"
           log.debug "modifyConflicts: options => #{options.inspect}"
           
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
+          
           invalid_conflicts = Feature.select_invalid(conflicts)
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
-          detect_inconsistencies(:conflicts, command, conflicts)
+          detect_inconsistencies(:conflicts, command, conflicts) unless skip_validation
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
           self_to_dirty_list
@@ -214,7 +225,7 @@ module Mrg
         #   Valid commands are 'ADD', 'REMOVE', and 'REPLACE'.
         # * depends (map/I)
         #   A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list.
-        def modifyDepends(command,depends,options={})
+        def modifyDepends(command,depends,options=nil)
           # Print values of input parameters
           log.debug "modifyDepends: command => #{command.inspect}"
           log.debug "modifyDepends: depends => #{depends.inspect}"
@@ -222,9 +233,12 @@ module Mrg
           
           invalid_deps = Feature.select_invalid(depends)
           
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
+          
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features supplied for dependency:  #{invalid_deps.inspect}") if invalid_deps != []
           
-          detect_inconsistencies(:depends, command, depends)
+          detect_inconsistencies(:depends, command, depends) unless skip_validation
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
           self_to_dirty_list

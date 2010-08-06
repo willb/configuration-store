@@ -203,8 +203,14 @@ module Mrg
           invalid_depends = Parameter.select_invalid(depends)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for dependency:  #{invalid_depends.inspect}") if invalid_depends != []
           
-          detect_inconsistencies(:depends, command, depends)
-          validate_consequences(:depends, command, depends)
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
+          
+          
+          unless skip_validation
+            detect_inconsistencies(:depends, command, depends)
+            validate_consequences(:depends, command, depends)
+          end
           
           modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend upon",:xc=>:x_depends)
           DirtyElement.dirty_parameter(self)
@@ -229,8 +235,13 @@ module Mrg
           invalid_conflicts = Parameter.select_invalid(conflicts)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Invalid parameter names for conflict:  #{invalid_conflicts.inspect}") if invalid_conflicts != []
           
-          detect_inconsistencies(:conflicts, command, conflicts)
-          validate_consequences(:conflicts, command, conflicts)
+          options ||= {}          
+          skip_validation = options["skip_validation"] && %w{true yes}.include?(options["skip_validation"].downcase)
+          
+          unless skip_validation
+            detect_inconsistencies(:conflicts, command, conflicts)
+            validate_consequences(:conflicts, command, conflicts)
+          end
           
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
