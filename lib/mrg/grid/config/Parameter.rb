@@ -388,7 +388,8 @@ module Mrg
             pv_graph.add_edge(fp.feature, fp.param, "sets param value") if parameters_of_interest.include?(fp.param)
           end
 
-          feature_param_xc = ::Mrg::Grid::Util::Graph::TransitiveClosure.new(pv_graph)
+          log.debug "validate_consequences:  checking changes to #{self.class.name}:#{self.name}; doing XC over a #{pv_graph.nodes.size}-node graph"
+          feature_param_xc = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(pv_graph)
 
           feature_param_xc.xc.each do |source, dests|
             # source is the feature we're looking at; dests is the set of parameters set 

@@ -104,6 +104,7 @@ module Mrg
             fail(Errors.make(error_kind, Errors::INVALID_RELATIONSHIP), "#{gerund} #{ls.inspect} to the #{collection} set of #{what_am_i} #{name} would introduce a circular inclusion or dependency relationship")
           end
 
+          log.debug "validating changes to #{self.class.name}:#{self.name}; doing XC over a #{g.nodes.size}-node graph"
           floyd = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(g)
 
           # keep track of all failures, to present a comprehensive error message at the end

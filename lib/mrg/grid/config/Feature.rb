@@ -461,6 +461,7 @@ module Mrg
             end
           end
           
+          log.debug "validating PARAM changes to #{self.class.name}:#{self.name}; doing XC over a #{pv_graph.nodes.size}-node graph"
           feature_param_xc = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(pv_graph)
           
           if $XXDEBUG
