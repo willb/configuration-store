@@ -317,7 +317,7 @@ module Mrg
                 @callbacks << lambda do
                   log.info "Setting #{get} for parameter #{name}"
                   log.debug "#{get.to_s.capitalize} for parameter #{name} are #{old_param.send(get).inspect}"
-                  param.send(set, "ADD", setify(old_param.send(get)), {})
+                  param.send(set, "ADD", setify(old_param.send(get)), {"skip_validation"=>"true"})
                 end
               end
             end
@@ -333,9 +333,9 @@ module Mrg
                 @callbacks << lambda do
                   log.info "Setting #{desc} for #{name}"
                   log.debug "#{desc.capitalize} for #{name} are #{old_feature.send(get).inspect}"
-                  feature.send(set, "ADD", self.send(xform, old_feature.send(get)), {})
+                  feature.send(set, "ADD", self.send(xform, old_feature.send(get)), {"skip_validation"=>"true"})
                 end
-              end              
+              end
             end
           end
         end
