@@ -1,8 +1,8 @@
-%define rel 2
+%define rel 1
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
-Version: 1.3
+Version: 1.4
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
@@ -35,6 +35,11 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Wed Aug 11 2010 rrati <rrati@redhat> - 1.4-1
+- Created BaseJobExecuter feature
+- Scheduler feature now has correct params for Local Universe
+- Fixed SCHEDD_PREEMPTION_REQUIREMENTS value in SchedulerDedicatedPreemption
+
 * Tue Jul 27 2010 rrati <rrati@redhat> - 1.3-2
 - Fixed setting of parameters that require user input
 
