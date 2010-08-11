@@ -3,11 +3,23 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
+  depends: []
+
+  included: []
+
+  name: BaseJobExecuter
+  params: 
+    STARTER_LOG: $(LOG)/StarterLog
+    STARTER_DEBUG: D_NODATE
+    MAX_STARTER_LOG: "1000000"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
   depends: 
   - Master
   - NodeAccess
-  included: []
-
+  included: 
+  - BaseJobExecuter
   name: BaseScheduler
   params: 
     SHADOW_SIZE_ESTIMATE: "1800"
@@ -22,6 +34,7 @@ features:
     START_LOCAL_UNIVERSE: "True"
     SCHEDD_DAEMON_AD_FILE: $(LOG)/.schedd_classad
     QUEUE_SUPER_USERS: root, condor
+    STARTER_LOCAL: $(SBIN)/condor_starter
     ALLOW_NEGOTIATOR_SCHEDD: $(ALLOW_NEGOTIATOR_SCHEDD), $(CONDOR_HOST), $(FLOCK_NEGOTIATOR_HOSTS)
     MAX_SCHEDD_LOG: "1000000"
     SCHEDD_ADDRESS_FILE: $(LOG)/.schedd_address
@@ -138,7 +151,9 @@ features:
   conflicts: []
 
   depends: 
+  - QMF
   - BaseScheduler
+  - ConsoleScheduler
   included: []
 
   name: ConsoleSchedulerForJobServer
@@ -224,28 +239,24 @@ features:
 
   depends: 
   - Master
-  included: []
-
+  included: 
+  - BaseJobExecuter
   name: ExecuteNode
   params: 
     RUNBENCHMARKS: (LastBenchmark == 0 ) || ($(BenchmarkTimer) >= (4 * $(HOUR)))
     KILL: $(ActivityTimer) > $(MaxVacateTime)
-    STARTER_LOG: $(LOG)/StarterLog
     STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
     STARTD: $(SBIN)/condor_startd
     START: ( (KeyboardIdle > $(StartIdleTime)) && ( $(CPUIdle) || (State != "Unclaimed" && State != "Owner")) )
     MAX_STARTD_LOG: "1000000"
     MAXJOBRETIREMENTTIME: "0"
-    STARTER_LIST: STARTER, STARTER_LOCAL
-    STARTER_DEBUG: D_NODATE
-    MAX_STARTER_LOG: "1000000"
+    STARTER_LIST: STARTER
     DAEMON_LIST: ">= STARTD"
     CONSOLE_DEVICES: mouse, console
     STARTER: $(SBIN)/condor_starter
     STARTD_DEBUG: ""
     STARTD_ADDRESS_FILE: $(LOG)/.startd_address
     PREEMPT: ( ((Activity == "Suspended") && ($(ActivityTimer) > $(MaxSuspendTime))) || (SUSPEND && (WANT_SUSPEND == False)) )
-    STARTER_LOCAL: $(SBIN)/condor_starter
     PERIODIC_CHECKPOINT: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
     WANT_SUSPEND: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
     SUSPEND: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
@@ -457,7 +468,7 @@ features:
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
     SEC_DEFAULT_INTEGRITY: REQUIRED
-    SEC_DEFAULT_AUTHENTICATION_METHODS: CLAIMTOBE
+    SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), CLAIMTOBE
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
     CONDOR_HOST: 0
     CONDOR_DEVELOPERS_COLLECTOR: NONE
@@ -532,7 +543,7 @@ features:
   name: SchedulerDedicatedPreemption
   params: 
     SCHEDD_PREEMPTION_RANK: "0"
-    SCHEDD_PREEMPTION_REQUIREMENTS: 9
+    SCHEDD_PREEMPTION_REQUIREMENTS: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -2800,10 +2811,9 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: STARTER, STARTER_LOCAL
+  default_val: STARTER
   depends: 
   - STARTER
-  - STARTER_LOCAL
   description: A list of Starters the machine supports
   kind: String
   level: 0
@@ -3365,6 +3375,7 @@ subsystems:
   - HISTORY
   - MAX_SCHEDD_LOG
   - MAX_SHADOW_LOG
+  - MAX_STARTER_LOG
   - QMF_BROKER_HOST
   - QMF_BROKER_PORT
   - QMF_DELETE_ON_SHUTDOWN
@@ -3383,6 +3394,9 @@ subsystems:
   - SHADOW_LOCK
   - SHADOW_LOG
   - SHADOW_SIZE_ESTIMATE
+  - STARTER_DEBUG
+  - STARTER_LOCAL
+  - STARTER_LOG
   - START_LOCAL_UNIVERSE
   - START_SCHEDULER_UNIVERSE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
@@ -3415,7 +3429,6 @@ subsystems:
   - STARTER
   - STARTER_DEBUG
   - STARTER_LIST
-  - STARTER_LOCAL
   - STARTER_LOG
   - SUSPEND
   - TRIGGER_DATA_GETDATA_EXECUTABLE
