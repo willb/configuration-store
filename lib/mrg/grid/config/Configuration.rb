@@ -85,7 +85,7 @@ module Mrg
       # makes a ReconfigEventMap from a map from nodes to lists of changed parameters
       module ReconfigEventMapBuilder
         def self.build(in_map)
-          tmp_table_name = "tmp_#{::Rhubarb::Util::timestamp.to_s(26)}_#{Process.pid}_#{Thread.current.object_id.to_s(26)}"
+          tmp_table_name = "\"tmp_#{::Rhubarb::Util::timestamp.to_s(26)}_#{Process.pid}_#{Thread.current.object_id.to_s(26)}\""
           # Get the config database; we want to be sure to use the same one
           # that subsystem and parameter are in
           configdb = Subsystem.db
