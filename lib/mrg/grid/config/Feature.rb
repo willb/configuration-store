@@ -162,10 +162,13 @@ module Mrg
               # Delete any prior mappings for each supplied param in either case
               FeatureParams.find_by(attributes).map {|fp| fp.delete}
               
-              if pvmap[pn].is_a? String
+              if pvmap[pn] == 0
+                attributes[:uses_default] = true
+              elsif pvmap[pn].is_a? String
                 attributes[:given_value] = pvmap[pn]
               else
-                attributes[:uses_default] = true
+                log.warn("supplied value for param #{pn} is a #{pvmap[pn].class.to_s} (#{pvmap[pn].inspect}); converting to string")
+                attributes[:given_value] = pvmap[pn].to_s
               end
               
               # Add new mappings when requested
