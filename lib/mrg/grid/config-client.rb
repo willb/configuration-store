@@ -20,8 +20,6 @@
 # alia, a much smarter method_missing that introspected over qmf method
 # results
 
-require 'mrg/grid/config'
-
 module Mrg
   module Grid
     module ConfigClient
