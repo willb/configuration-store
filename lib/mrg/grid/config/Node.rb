@@ -186,7 +186,7 @@ module Mrg
             group
           end
 
-          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Invalid groups for node #{self.name}: #{gn.inspect}") if invalid_groups != []
+          fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Invalid groups for node #{self.name}: #{invalid_groups.inspect}") if invalid_groups != []
 
           command = command.upcase
 
