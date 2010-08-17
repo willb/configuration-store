@@ -1,4 +1,4 @@
-%define rel 1
+%define rel 2
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Aug 17 2010 rrati <rrati@redhat> - 1.4-2
+- Fixed setting of DATA param in TriggerService
+- DATA no longer has a default value
+
 * Wed Aug 11 2010 rrati <rrati@redhat> - 1.4-1
 - Created BaseJobExecuter feature
 - Scheduler feature now has correct params for Local Universe
