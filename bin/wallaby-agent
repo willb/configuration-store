@@ -23,6 +23,7 @@ require 'mrg/grid/config'
 
 require 'logger'
 require 'syslog'
+require 'optparse'
 
 require 'pathname'
 

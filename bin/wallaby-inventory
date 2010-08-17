@@ -18,6 +18,7 @@
 
 require 'qmf'
 require 'ostruct'
+require 'optparse'
 
 require 'mrg/grid/config-client'
 

@@ -16,6 +16,8 @@
 # limitations under the License.
 
 require 'qmf'
+require 'optparse'
+
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 
