@@ -110,8 +110,6 @@ module Mrg
           # keep track of all failures, to present a comprehensive error message at the end
           failures = []
 
-          inverse_xc = Hash.new {|h,k| h[k] = Set.new}
-
           floyd.xc.each do |source, dests|
             conflict_range = dests.inject(arcs[:conflicts][source]) do |acc, dest|
               acc |= arcs[:conflicts][dest]
