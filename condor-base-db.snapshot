@@ -571,7 +571,7 @@ features:
     TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
     TRIGGERD_ADDRESS_FILE: $(LOG)/.triggerd_address
     TRIGGERD_LOG: $(LOG)/TriggerLog
-    DATA: $(SPOOL)
+    DATA: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -867,9 +867,8 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: $(SPOOL)
-  depends: 
-  - SPOOL
+  default_val: ""
+  depends: []
   description: Where files used by the condor_triggerd are stored
   kind: String
   level: 0
