@@ -213,26 +213,6 @@ begin
   app = SPQR::App.new(options)
   app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::NodeUpdatedNotice
   
-  console = Qmf::Console.new
-
-  settings = Qmf::ConnectionSettings.new
-  settings.username = username if username
-  settings.password = password if password
-  settings.host = host
-  settings.port = port
-
-  connection = Qmf::Connection.new(settings)
-
-  broker = console.add_connection(connection)
-
-  broker.wait_for_stable
-
-  stores = console.objects(:class=>"Store")
-
-  unless stores.size == 0
-    raise RuntimeError.new("fatal:  there #{stores.size == 1 ? "is" : "are"} already #{stores.size} wallaby agent#{stores.size == 1 ? "" : "s"} running on the specified broker (#{host}:#{port})")
-  end
-  
   app.main
 rescue Exception => ex
   Syslog.open do |s|
