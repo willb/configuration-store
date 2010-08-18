@@ -75,7 +75,7 @@ module Mrg
           
           # XXX:  I'd rather not hard-code these in, but this is fine for now.
           changed_restart.should == %w{startd}
-          changed_reconfig.should == %w{master}
+          changed_reconfig.sort.should == %w{master schedd}.sort
         end
       end
     end
