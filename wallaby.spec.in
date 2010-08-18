@@ -162,6 +162,10 @@ fi
 
 %changelog
 
+* Tue Aug 17 2010 willb <willb@redhat> - 0.9.5-1
+- Updated to source version 0.9.5
+- Improved memory performance of proactive inconsistency detection
+
 * Mon Aug 16 2010 willb <willb@redhat> - 0.9.4-1
 - Updated to source version 0.9.4
 
