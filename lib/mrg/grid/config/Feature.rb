@@ -412,7 +412,7 @@ module Mrg
             existing_graph.edges.each do |source, edges|
               sf = feature_memo[source]
               edges.each do |label, dest|
-                puts "ADDING A #{label} edge from #{source} to #{dest}" if $XXDEBUG
+                log.debug "Feature#validate_params: ADDING A #{label} edge from #{source} to #{dest}"
                 pv_graph.add_edge(sf, feature_memo[dest], label)
               end
             end
@@ -428,12 +428,14 @@ module Mrg
           end
           
           ParameterArc.find_by(:label=>ArcLabel.depends_on('param')).each do |pa|
+            log.debug "Feature#validate_params: ADDING A 'param-dependency' EDGE FROM #{pa.source.name} TO #{pa.dest.name}"
             pv_graph.add_edge(pa.source, pa.dest, "param dependency")
             parameters_of_interest << pa.source.row_id
             parameters_of_interest << pa.dest.row_id
           end
           
           ParameterArc.find_by(:label=>ArcLabel.conflicts_with('param')).each do |pa|
+            log.debug "Feature#validate_params: MARKING a parameter conflict BETWEEN #{pa.source.name} AND #{pa.dest.name}"
             p_conflicts[pa.source.name] << pa.dest.name
             parameters_of_interest << pa.source.row_id
             parameters_of_interest << pa.dest.row_id
@@ -448,19 +450,22 @@ module Mrg
             new_params = params.keys
           end
           
-          puts "NEW_PARAMS == #{new_params.inspect} and PARAMS.KEYS == #{params.keys.inspect}" if $XXDEBUG
+          log.debug "Feature#validate_params: NEW_PARAMS == #{new_params.inspect} and PARAMS.KEYS == #{params.keys.inspect}"
           
           FeatureParams.find_all.each do |fp|
-            puts "FP:  fp.feature.row_id == #{fp.feature.row_id}; self.row_id == #{self.row_id}" if $XXDEBUG
+            log.debug "Feature#validate_params: FP:  fp.feature.row_id == #{fp.feature.row_id}; self.row_id == #{self.row_id}"
             if (fp.feature != self || new_params.sort == params.keys.sort)
-              puts "FP: ADDING A 'sets param value' EDGE FROM #{fp.feature.name} TO #{fp.param.name}" if $XXDEBUG
+              log.debug "Feature#validate_params: FP: ADDING A 'sets param value' EDGE FROM #{fp.feature.name} TO #{fp.param.name}" if parameters_of_interest.include?(fp.param.row_id)
               pv_graph.add_edge(fp.feature, fp.param, "sets param value") if parameters_of_interest.include?(fp.param.row_id)
             end
           end
           
           if new_params.sort != params.keys.sort
             new_params.each do |np|
-              pv_graph.add_edge(self, Parameter.find_first_by_name(np), "sets param value")
+              log.debug "adding a 'sets-param-value' edge from #{self.name} to #{np}"
+              prm = Parameter.find_first_by_name(np)
+              pv_graph.add_edge(self, prm, "sets param value") if prm && parameters_of_interest.include?(prm.row_id)
+              
             end
           end
           
@@ -481,8 +486,6 @@ module Mrg
             
             puts "P_CONFLICTS is:  #{p_conflicts.inspect}"
           end
-          
-          
           
           feature_param_xc.xc.each do |source, dests|
             # source is the feature we're looking at; dests is the set of parameters set 

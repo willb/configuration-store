@@ -93,6 +93,7 @@ module Mrg
           id_relations_for_graph.each do |key, label|
             arcs[key].each do |source, dests|
               dests.each do |dest|
+                log.debug "InconsistencyDetecting:  adding a #{label} edge from #{source} to #{dest}"
                 g.add_edge(source, dest, label)
               end
             end
