@@ -162,6 +162,10 @@ fi
 
 %changelog
 
+* Wed Aug 25 2010 willb <willb@redhat> - 0.9.6-1
+- Improved reliability of command-line tools
+- Workarounds for BZS 612425, 613666
+
 * Tue Aug 17 2010 willb <willb@redhat> - 0.9.5-1
 - Updated to source version 0.9.5
 - Improved memory performance of proactive inconsistency detection
