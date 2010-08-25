@@ -260,6 +260,6 @@ if activate
         puts "  #{reason}: #{ls.inspect}"
       end
     end
-    exit(1)
+    exit!(1)
   end
 end

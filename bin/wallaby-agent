@@ -72,7 +72,7 @@ def daemonify
   if pid != nil
     if pid < 0
       Syslog.open {|s| s.fatal "can't fork child process"}
-      exit(1)
+      exit!(1)
     end
     exit(0)
   end
@@ -80,10 +80,10 @@ def daemonify
   sid = Process.setsid
   if sid < 0
     Syslog.open {|s| s.fatal "can't set self as session group leader"}
-    exit(1)
+    exit!(1)
   end
   
-  exit(1) if Dir.chdir("/") < 0
+  exit!(1) if Dir.chdir("/") < 0
 
   # close open FDs
   $stdin.reopen("/dev/null", "r")

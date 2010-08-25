@@ -18,6 +18,7 @@
 
 require 'qmf'
 require 'optparse'
+require 'timeout'
 
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
@@ -76,18 +77,25 @@ settings.password = password if password
 settings.host = host
 settings.port = port
 
-connection = Qmf::Connection.new(settings)
+begin
+  Timeout.timeout(15) do
+    connection = Qmf::Connection.new(settings)
 
-broker = console.add_connection(connection)
+    broker = console.add_connection(connection)
 
-broker.wait_for_stable
+    broker.wait_for_stable
+  end
+rescue Timeout::Error
+  puts "fatal:  timed out connecting to broker on #{host}:#{port}"
+  exit!(1)
+end
 
 store = console.object(:class=>"Store")
 
 unless store
   puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
   puts "use -h for help"
-  exit
+  exit!(1)
 end
 
 s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, true, console)
