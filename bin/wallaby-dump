@@ -64,6 +64,10 @@ begin
 rescue OptionParser::InvalidOption
   puts op
   exit
+rescue OptionParser::InvalidArgument => ia
+  puts ia.message
+  puts op
+  exit
 end
 
 if ARGV.size > 1
