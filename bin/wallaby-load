@@ -41,6 +41,7 @@ host = ENV['WALLABY_BROKER_HOST'] || "localhost"
 port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
 username = ENV['WALLABY_BROKER_USER']
 password = ENV['WALLABY_BROKER_PASSWORD']
+explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
 debug = :warn
 activate = false
 Mrg::Grid::SerializedConfigs::ConfigLoader.log = SimpleLog.new(:info)
@@ -67,6 +68,10 @@ op = OptionParser.new do |opts|
 
   opts.on("-P", "--password PASS", "qpid password") do |pass|
     password = pass
+  end
+
+  opts.on("-M", "--auth-mechanism PASS", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
+    explicit_mechanism = mechanism
   end
 
   opts.on("-a", "--activate", "attempt to activate config after loading") do
@@ -97,6 +102,10 @@ begin
 rescue OptionParser::InvalidOption
   puts op
   exit
+rescue OptionParser::InvalidArgument => ia
+  puts ia.message
+  puts op
+  exit
 end
 
 input = (ARGV.size > 0 ? open(ARGV[0]) : $stdin)
@@ -108,6 +117,9 @@ settings.username = username if username
 settings.password = password if password
 settings.host = host
 settings.port = port
+
+implicit_mechanism = (username || password) ? "PLAIN" : "ANONYMOUS"
+settings.mechanism = explicit_mechanism || implicit_mechanism
 
 begin
   Timeout.timeout(15) do
