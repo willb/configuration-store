@@ -35,7 +35,7 @@ op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-dump [options] outfile"
 
   opts.on("-h", "--help", "shows this message") do
-    raise OptionParser::InvalidOption
+    raise OptionParser::InvalidOption.new
   end
 
   opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
