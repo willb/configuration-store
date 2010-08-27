@@ -59,7 +59,7 @@ module Mrg
           module IM
             def collect_common_options(opts, common_options)
               opts.on("-h", "--help", "shows this message") do
-                raise OptionParser::InvalidOption
+                raise OptionParser::InvalidOption.new
               end
 
               opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
@@ -133,7 +133,7 @@ module Mrg
             opts.banner = "Usage:  wallaby [options] command [command-args]"
 
             opts.on("-h", "--help", "shows this message") do
-              raise OptionParser::InvalidOption
+              raise OptionParser::InvalidOption.new
             end
 
             opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
@@ -221,3 +221,4 @@ require 'mrg/grid/config/shell/add_param'
 require 'mrg/grid/config/shell/snapshot'
 require 'mrg/grid/config/shell/apropos'
 require 'mrg/grid/config/shell/load'
+require 'mrg/grid/config/shell/feature_import'
