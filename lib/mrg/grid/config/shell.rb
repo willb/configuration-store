@@ -137,7 +137,7 @@ module Mrg
 
           store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
-          args.cmd.new(store_client, "").main(args.for_cmd)
+          exit!(args.cmd.new(store_client, "").main(args.for_cmd) || 0)
         end
       end
     end

@@ -52,6 +52,7 @@ module Mrg
               msg = MESSAGES[option]
               param.send(msg, value)
             end
+            0
           end
           
           private

@@ -98,9 +98,12 @@ module Mrg
           end
 
           def act(kwargs=nil)
+            success = false
             @store.console.objects(:class=>"Snapshot").each do |snap|
+              success = true
               puts "#{snap.name}"
             end
+            success ? 0 : 1
           end
         end
       end

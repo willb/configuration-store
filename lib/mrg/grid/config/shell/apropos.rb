@@ -96,6 +96,7 @@ module Mrg
               puts "#{prm.name}:  #{prm.description}"
             end
 
+            params.size > 0 ? 0 : 1
           end
           
         end
