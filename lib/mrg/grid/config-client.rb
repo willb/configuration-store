@@ -331,6 +331,11 @@ module Mrg
           end
         end
 
+        def storeinit(kwargs=nil)
+          kwargs ||= {}
+          @qmfo.storeinit(kwargs)
+        end
+
         [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
           define_method "#{klass.to_s.downcase}s" do
             instances_of(klass)
