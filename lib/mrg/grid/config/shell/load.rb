@@ -21,6 +21,46 @@ module Mrg
     module Config
       module Shell
         module LoadSupport
+          class LegacyInterface
+            def self.main(args=nil)
+              args ||= ARGV
+              
+              common_options = []
+              specific_options = []
+              
+              op = OptionParser.new do |opts|
+                opts.banner = "Usage wallaby-load [options] file"
+
+                ::Mrg::Grid::Config::Shell::collect_common_options(opts, common_options)
+
+                opts.on("-a", "--activate", "attempt to activate config after loading") do
+                  specific_options << "--activate"
+                end
+
+                opts.on("-q", "--quiet", "do not provide progress on load feedback") do
+                  specific_options << "--activate"
+                end
+
+                opts.on("-v", "--verbose", "provide more progress on load feedback") do
+                  specific_options << "--verbose"
+                end
+              end
+              
+              begin
+                op.parse!(args)
+              rescue OptionParser::InvalidOption
+                puts op
+                exit
+              rescue OptionParser::InvalidArgument => ia
+                puts ia.message
+                puts op
+                exit
+              end
+              
+              Mrg::Grid::Config::Shell::main(common_options + %w{load} + specific_options + args)
+            end
+          end
+
           class SimpleLog
             def initialize(*ms)
               @accepted_messages = ms.map {|msg| msg.to_s}.uniq

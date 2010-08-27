@@ -48,6 +48,32 @@ module Mrg
           result
         end
         
+        def self.collect_common_options(opts, common_options)
+          opts.on("-h", "--help", "shows this message") do
+            common_options << "--help"
+          end
+
+          opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
+            common_options << "--host" << h
+          end
+
+          opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
+            common_options << "--port" << num
+          end
+
+          opts.on("-U", "--user NAME", "qpid username") do |name|
+            common_options << "--user" << name
+          end
+
+          opts.on("-P", "--password PASS", "qpid password") do |pass|
+            common_options << "--password" << pass
+          end
+          
+          opts.on("-M", "--auth-mechanism AUTH", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
+            common_options << "--auth-mechanism" << mechanism
+          end
+        end
+        
         def self.main(args)
           host = ENV['WALLABY_BROKER_HOST'] || "localhost"
           port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
@@ -67,7 +93,7 @@ module Mrg
               host = h
             end
 
-            opts.on("-p", "--port NUM", "qpid broker port","   (default 5672)") do |num|
+            opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
               port = num.to_i
             end
 
