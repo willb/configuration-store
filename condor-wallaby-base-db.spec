@@ -1,4 +1,4 @@
-%define rel 2
+%define rel 3
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Aug 31 2010 rrati <rrati@redhat> - 1.4-3
+- Fixed setting of CONDOR_HOST in HACentralManager feature
+
 * Tue Aug 17 2010 rrati <rrati@redhat> - 1.4-2
 - Fixed setting of DATA param in TriggerService
 - DATA no longer has a default value
