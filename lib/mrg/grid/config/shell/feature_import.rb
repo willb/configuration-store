@@ -70,7 +70,7 @@ module Mrg
               
               opname = "feature-import"
               
-              opts.banner = "Usage:  wallaby #{opname}\nImports a wallaby feature from a specially-formatted configuration file."
+              opts.banner = "Usage:  wallaby #{opname} [options] FILE\nImports a wallaby feature from a specially-formatted configuration file."
                 
               opts.on("-h", "--help", "displays this message") do
                 raise OptionParser::InvalidOption.new
