@@ -64,11 +64,6 @@ mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
 mkdir -p %{buildroot}/%{_localstatedir}/log/wallaby
 cp -f bin/wallaby %{buildroot}/%{_bindir}
-cp -f bin/wallaby-dump %{buildroot}/%{_bindir}
-cp -f bin/wallaby-load %{buildroot}/%{_bindir}
-cp -f bin/wallaby-inventory %{buildroot}/%{_bindir}
-cp -f bin/wallaby-feature-import %{buildroot}/%{_bindir}
-cp -f bin/wallaby-activate %{buildroot}/%{_bindir}
 cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
@@ -119,11 +114,6 @@ fi
 %doc LICENSE
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby
-%{_bindir}/wallaby-load
-%{_bindir}/wallaby-dump
-%{_bindir}/wallaby-inventory
-%{_bindir}/wallaby-activate
-%{_bindir}/wallaby-feature-import
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
@@ -155,12 +145,23 @@ fi
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/5.rb
 %{ruby_sitelib}/mrg/grid/util/graph.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
-%{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
 %{ruby_sitelib}/mrg/grid/config/shell/apropos.rb
+%{ruby_sitelib}/mrg/grid/config/shell/load.rb
+%{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
+%{ruby_sitelib}/mrg/grid/config/shell/feature_import.rb
 %{ruby_sitelib}/mrg/grid/config/shell/snapshot.rb
+%{ruby_sitelib}/mrg/grid/config/shell/inventory.rb
+%{ruby_sitelib}/mrg/grid/config/shell/dump.rb
+%{ruby_sitelib}/mrg/grid/config/shell/activate.rb
+%{ruby_sitelib}/mrg/grid/config/shell/skel.rb
+
 
 
 %changelog
+
+* Wed Sep 1 2010 willb <willb@redhat> - 0.9.7-1
+- Improved wallaby-shell functionality
+- Removed old-style command-line tools
 
 * Wed Aug 25 2010 willb <willb@redhat> - 0.9.6-1
 - Improved reliability of command-line tools
