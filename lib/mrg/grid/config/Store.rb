@@ -528,7 +528,6 @@ module Mrg
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || nothing_changed || results.keys.size > 0
-            puts "OHH SNAP!" if (explicit_nodelist && !validate_only && results.keys.size == 0)
             ConfigVersion[this_version].delete
             return [results, warnings]
           end
