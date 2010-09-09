@@ -21,6 +21,80 @@ module Mrg
       class ConfigVersions
       end
       
+      class DummyCache
+        attr_reader :nodes, :features, :groups, :parameters
+        
+        def initialize
+          @nodes = Hash.new {|h,k| h[k] = Node.find_first_by_name(k)}
+          @features = Hash.new {|h,k| h[k] = Feature.find_first_by_name(k)}
+          @groups = Hash.new {|h,k| h[k] = Group.find_first_by_name(k)}
+          @parameters = Hash.new {|h,k| h[k] = Parameter.find_first_by_name(k)}
+        end
+        
+        def find_instance(klass, name)
+          cname = classname(klass)
+          self.send("#{cname.downcase}s")[name]
+        end
+        
+        def features_for(klass, instance)
+          cname = classname(klass)
+          Feature.send("features_for_#{cname.downcase}", instance)
+        end
+        
+        def parameters_for(klass, instance)
+          cname = classname(klass)
+          Parameter.send("s_for_#{cname.downcase}", instance)          
+        end
+        
+        def feature_dependencies_for(klass, instance)
+          generic_dependencies_for(Feature, klass, instance)
+        end
+        
+        def parameter_dependencies_for(klass, instance)
+          generic_dependencies_for(Parameter, klass, instance)          
+        end
+        
+        private
+        
+        def generic_dependencies_for(base_class, arg_class, instance)
+          cname = classname(arg_class)
+          base_class.send("dependencies_for_#{cname.downcase}", instance)
+        end
+        
+        def classname(klass)
+          (klass.name.to_s =~ /(Node|Feature|Group|Parameter)$/ ; $~.to_s)
+        end
+      end
+
+      class ConfigDataCache
+        attr_reader :nodes, :features, :groups, :parameters
+
+        def self.reopen_proxy_class(klass)
+          # add a method_missing to klass that calls (and caches) 
+          # the results of invoking the missing method on 
+          # self.original_object
+
+          # add class-specific caching methods also
+        end
+
+        def self.cache_proxy_class_for(klass)
+          @proxy_classes ||= Hash.new do |h,k|
+            h[k] = reopen_proxy_class(Struct.new("#{klass.name.to_s}CacheProxy", *klass.colnames + [:original_object]))
+          end
+          @proxy_classes[klass]
+        end
+        
+        def self.clonePersistingObject(obj)
+          klass = cache_proxy_class_for(obj.class)
+          instance = klass.new(*obj.class.colnames.map {|msg| obj.send(msg)})
+          instance.original_object = obj
+          instance
+        end
+        
+        
+      end
+
+
       module ConfigValidating
         
         BROKEN_FEATURE_DEPS = "Unsatisfied feature dependencies"
@@ -45,8 +119,12 @@ module Mrg
         def validate(options=nil)
           options ||= {}
           save_for_version = options[:save_for_version]
+          cache = options[:cache] || DummyCache.new
           
-          my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
+          cached_class = self.class
+          cached_self = cache.find_instance(cached_class, self.name)
+          
+          my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
           if save_for_version
             updated_config = my_config.dup
@@ -54,19 +132,14 @@ module Mrg
             cv = ConfigVersion[save_for_version]
             cv[self.name] = updated_config
           end
-            
-          classname = self.class.name.split("::")[-1]
-          log.debug "in #{classname}#validate for #{self.name}..."
           
-          dependency_msg = "dependencies_for_#{classname.downcase}".to_sym
-          feature_msg = "features_for_#{classname.downcase}".to_sym
-          param_msg = "s_for_#{classname.downcase}".to_sym
+          log.debug {"in #{(self.class.name.to_s =~ /(Node|Feature|Group|Parameter)$/ ; $~.to_s)}#validate for #{self.name}..."}
           
-          dfn = Feature.send(dependency_msg, self).map {|f| f.name}
+          dfn = cache.feature_dependencies_for(cached_class, cached_self).map {|f| f.name}
           log.debug "dependencies for #{self.name} is #{dfn}"
           
-          features_for_entity = Feature.send(feature_msg, self)
-          params_for_entity = my_config.keys.map {|pn| Parameter.find_first_by_name(pn)}.compact
+          features_for_entity = cache.features_for(cached_class, cached_self)
+          params_for_entity = my_config.keys.map {|pn| cache.parameters[pn] }.compact
           
           feature_conflicts = identify_conflicts(features_for_entity)
           param_conflicts = identify_conflicts(params_for_entity)
@@ -76,8 +149,8 @@ module Mrg
           
           orphaned_deps = (dfn - ffn).reject {|f| f == nil }
           unset_params = my_unset_params(my_config)
-          my_params = Parameter.send(param_msg, self)
-          my_param_deps = Parameter.send(dependency_msg, self, my_params)
+          my_params = cache.parameters_for(cached_class, cached_self)
+          my_param_deps = cache.parameter_dependencies_for(cached_class, cached_self)
           orphaned_params = my_param_deps - my_params
           
           return true if orphaned_deps == [] && unset_params == [] && orphaned_params == [] && param_conflicts == [] && feature_conflicts == []
