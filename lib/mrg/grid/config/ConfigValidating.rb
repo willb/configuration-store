@@ -158,7 +158,7 @@ module Mrg
               def getConfig
                 return @__my_config if @__my_config
                 
-                @__my_config = containing_cache.groups[Group.DEFAULT_GROUP.name].getConfig
+                @__my_config = containing_cache.groups[Group.DEFAULT_GROUP.name].getConfig.dup
                 # strip StringSet markers from default group config
                 @__my_config.each do |(k,v)|
                   v.slice!(/^>=/) if v
@@ -370,7 +370,7 @@ module Mrg
           my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
           if save_for_version
-            updated_config = my_config.dup
+            updated_config = my_config
             updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
             cv = ConfigVersion[save_for_version]
             cv[self.name] = updated_config

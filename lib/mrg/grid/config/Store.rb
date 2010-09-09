@@ -490,6 +490,18 @@ module Mrg
         end
 
         def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
+          
+          unless ::Rhubarb::Persistence::db.transaction_active? || ConfigVersion.db.transaction_active?
+            ConfigVersion.db.transaction do |ignored|
+              return _validate_and_activate(validate_only, explicit_nodelist, this_version)
+            end
+          else
+            return _validate_and_activate(validate_only, explicit_nodelist, this_version)
+          end
+          
+        end
+
+        def _validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
           dirty_nodes = explicit_nodelist || Node.get_dirty_nodes
           dirty_elements = DirtyElement.count
           this_version ||= ::Rhubarb::Util::timestamp
