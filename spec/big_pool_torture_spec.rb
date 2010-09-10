@@ -10,6 +10,7 @@ module Mrg
         before(:each) do
           setup_rhubarb
           @store = Store.new
+          @torture_count = ((ENV['WALLABY_TORTURE_TEST_REPS'] || 1).to_i rescue 1)
         end
         
         after(:each) do
@@ -18,9 +19,11 @@ module Mrg
         
         include BigPoolFixture
         
+        TORTURE_TIMEOUT = 60 * 10
+        
         it "should handle large changes gracefully" do
           reconstitute_db
-          pending "Please set WALLABY_MARSUPIAL_TORTURE if you would like to enable torture tests" unless ENV['WALLABY_MARSUPIAL_TORTURE']
+          pending "You've set WALLABY_STOP_MARSUPIAL_ABUSE; the big torture test is disabled" if ENV['WALLABY_STOP_MARSUPIAL_ABUSE']
           
           hlw = Group.find_first_by_name("HeavyLoadWorkers")
           
@@ -36,12 +39,15 @@ module Mrg
             second_set = hlw_without
           end
           
-          1.times do |n|
-            hlw.modifyFeatures("REPLACE", first_set, {})
-            @store.activateConfiguration
-            
-            hlw.modifyFeatures("REPLACE", second_set, {})
-            @store.activateConfiguration
+          @torture_count.times do |n|
+            [first_set, second_set].each do |fset|
+              lambda do
+                Timeout::timeout(TORTURE_TIMEOUT) do
+                  @hlw.modifyFeatures("REPLACE", fset, {})
+                  @store.activateConfiguration
+                end
+              end.should_not raise_error
+            end            
           end
         end
       end

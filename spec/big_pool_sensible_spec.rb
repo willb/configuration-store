@@ -13,6 +13,8 @@ module Mrg
           reconstitute_db
           
           @hlw = Group.find_first_by_name("hLoadWorkers")
+          @torture_count = ((ENV['WALLABY_TORTURE_TEST_REPS'] || 1).to_i rescue 1)
+          
         end
         
         after(:each) do
@@ -20,6 +22,8 @@ module Mrg
         end
         
         include BigPoolFixture
+        
+        SENSIBLE_TIMEOUT = 60 * 5
         
         def dbtext
           open("#{File.dirname(__FILE__)}/big-pool-sensible.yaml", "r") {|db| db.read}
@@ -38,12 +42,15 @@ module Mrg
             second_set = hlw_without
           end
           
-          1.times do |n|
-            @hlw.modifyFeatures("REPLACE", first_set, {})
-            @store.activateConfiguration
-            
-            @hlw.modifyFeatures("REPLACE", second_set, {})
-            @store.activateConfiguration
+          @torture_count.times do |n|
+            [first_set, second_set].each do |fset|
+              lambda do
+                Timeout::timeout(SENSIBLE_TIMEOUT) do
+                  @hlw.modifyFeatures("REPLACE", fset, {})
+                  @store.activateConfiguration
+                end
+              end.should_not raise_error
+            end            
           end
         end
       end
