@@ -12,13 +12,6 @@ module Mrg
           @store = Store.new
           reconstitute_db
           
-          hlw = Group.find_first_by_name("HeavyLoadWorkers")
-          hlw.membership.each do |n_name|
-            node = Node.find_first_by_name(n_name)
-            node.modifyMemberships("REMOVE", ["HeavyLoadWorkers"], {})
-            node.modifyMemberships("ADD", ["hLoadWorkers"], {})
-          end
-          
           @hlw = Group.find_first_by_name("hLoadWorkers")
         end
         
@@ -27,6 +20,10 @@ module Mrg
         end
         
         include BigPoolFixture
+        
+        def dbtext
+          open("#{File.dirname(__FILE__)}/big-pool-sensible.yaml", "r") {|db| db.read}
+        end
         
         it "should handle sensible changes to many nodes gracefully" do          
           hlw_with = @hlw.features | ["DisablePreemption"]
@@ -40,8 +37,6 @@ module Mrg
             first_set = hlw_with
             second_set = hlw_without
           end
-          
-          @store.activateConfiguration
           
           1.times do |n|
             @hlw.modifyFeatures("REPLACE", first_set, {})

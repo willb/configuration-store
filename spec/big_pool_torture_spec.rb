@@ -36,8 +36,6 @@ module Mrg
             second_set = hlw_without
           end
           
-          @store.activateConfiguration
-          
           1.times do |n|
             hlw.modifyFeatures("REPLACE", first_set, {})
             @store.activateConfiguration
