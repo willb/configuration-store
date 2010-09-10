@@ -510,9 +510,7 @@ module Mrg
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
-          options = {:param_cache=>Hash.new {|h,k| h[k] = Parameter.find_first_by_name(k)}}
-          
-          options[:save_for_version] = this_version unless validate_only
+          options = (validate_only) ? nil : {:save_for_version=>this_version}
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           

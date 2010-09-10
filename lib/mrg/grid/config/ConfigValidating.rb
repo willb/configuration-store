@@ -45,7 +45,6 @@ module Mrg
         def validate(options=nil)
           options ||= {}
           save_for_version = options[:save_for_version]
-          param_cache = options[:param_cache] || Hash.new {|h,k| h[k] = Parameter.find_first_by_name(k)}
           
           my_config = self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
@@ -67,7 +66,7 @@ module Mrg
           log.debug "dependencies for #{self.name} is #{dfn}"
           
           features_for_entity = Feature.send(feature_msg, self)
-          params_for_entity = my_config.keys.map {|pn| param_cache[pn] }.compact
+          params_for_entity = my_config.keys.map {|pn| Parameter.find_first_by_name(pn)}.compact
           
           feature_conflicts = identify_conflicts(features_for_entity)
           param_conflicts = identify_conflicts(params_for_entity)
