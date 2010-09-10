@@ -1155,6 +1155,74 @@ features:
 
   included: []
 
+  name: NineStartd
+  params: 
+    "MASTER.PLUGINS ": $(LIB)/plugins/MgmtMasterPlugin-plugin.so
+    "STARTD.PLUGINS ": $(LIB)/plugins/MgmtStartdPlugin-plugin.so
+    ALLOW_NEGOTIATOR: "*.bigpool.com"
+    ALLOW_NEGOTIATOR_SCHEDD: "*.bigpool.com"
+    ALLOW_READ: "*.bigpool.com"
+    ALLOW_WRITE: "*.bigpool.com"
+    COLLECTOR_HOST: test27.lab.bigpool-domain.com
+    DAEMON_LIST: MASTER,STARTD_ST1,STARTD_ST2,STARTD_ST3,STARTD_ST4,STARTD_ST5,STARTD_ST6,STARTD_ST7,STARTD_ST8,STARTD_ST9
+    NUM_SLOTS: "1"
+    NUM_SLOTS_TYPE_1: "1"
+    SEC_DEFAULT_AUTHENTICATION_METHODS: CLAIMTOBE
+    SLOT_TYPE_1: cpus=100%,disk=100%,swap=100%
+    SLOT_TYPE_1_PARTITIONABLE: "TRUE"
+    STARTD.ST1.ADDRESS_FILE: $(LOG)/.startd1-address
+    STARTD.ST1.STARTD_LOG: $(LOG)/Startd1-Log
+    STARTD.ST1.STARTD_NAME: st1
+    STARTD.ST2.ADDRESS_FILE: $(LOG)/.startd2-address
+    STARTD.ST2.STARTD_LOG: $(LOG)/Startd2-Log
+    STARTD.ST2.STARTD_NAME: st2
+    STARTD.ST3.ADDRESS_FILE: $(LOG)/.startd3-address
+    STARTD.ST3.STARTD_LOG: $(LOG)/Startd3-Log
+    STARTD.ST3.STARTD_NAME: st3
+    STARTD.ST4.ADDRESS_FILE: $(LOG)/.startd4-address
+    STARTD.ST4.STARTD_LOG: $(LOG)/Startd4-Log
+    STARTD.ST4.STARTD_NAME: st4
+    STARTD.ST5.ADDRESS_FILE: $(LOG)/.startd5-address
+    STARTD.ST5.STARTD_LOG: $(LOG)/Startd5-Log
+    STARTD.ST5.STARTD_NAME: st5
+    STARTD.ST6.ADDRESS_FILE: $(LOG)/.startd6-address
+    STARTD.ST6.STARTD_LOG: $(LOG)/Startd6-Log
+    STARTD.ST6.STARTD_NAME: st6
+    STARTD.ST7.ADDRESS_FILE: $(LOG)/.startd7-address
+    STARTD.ST7.STARTD_LOG: $(LOG)/Startd7-Log
+    STARTD.ST7.STARTD_NAME: st7
+    STARTD.ST8.ADDRESS_FILE: $(LOG)/.startd8-address
+    STARTD.ST8.STARTD_LOG: $(LOG)/Startd8-Log
+    STARTD.ST8.STARTD_NAME: st8
+    STARTD.ST9.ADDRESS_FILE: $(LOG)/.startd9-address
+    STARTD.ST9.STARTD_LOG: $(LOG)/Startd9-Log
+    STARTD.ST9.STARTD_NAME: st9
+    STARTD_ST1: $(STARTD)
+    STARTD_ST1_ARGS: -f -local-name ST1
+    STARTD_ST2: $(STARTD)
+    STARTD_ST2_ARGS: -f -local-name ST2
+    STARTD_ST3: $(STARTD)
+    STARTD_ST3_ARGS: -f -local-name ST3
+    STARTD_ST4: $(STARTD)
+    STARTD_ST4_ARGS: -f -local-name ST4
+    STARTD_ST5: $(STARTD)
+    STARTD_ST5_ARGS: -f -local-name ST5
+    STARTD_ST6: $(STARTD)
+    STARTD_ST6_ARGS: -f -local-name ST6
+    STARTD_ST7: $(STARTD)
+    STARTD_ST7_ARGS: -f -local-name ST7
+    STARTD_ST8: $(STARTD)
+    STARTD_ST8_ARGS: -f -local-name ST8
+    STARTD_ST9: $(STARTD)
+    STARTD_ST9_ARGS: -f -local-name ST9
+    USE_PROCD: "FALSE"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
   name: NodeAccess
   params: 
     ALLOW_WRITE: 0
@@ -2049,7 +2117,7 @@ groups:
   - EightStartd
   - DisablePreemption
   is_identity_group: true
-  name: +++0dde794bdf208a2649ce80f55d046723
+  name: +++6d95681230a354a5782e5946b49b1203
   params: 
     MAXJOBRETIREMENTTIME: 3600 * 24
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -6221,13 +6289,6 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++592afde328df27f88185a99a1315fa2e
-  params: {}
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
-  features: []
-
-  is_identity_group: true
   name: +++595660e6b3be61acd97dff092b04ee64
   params: {}
 
@@ -6312,7 +6373,7 @@ groups:
   features: 
   - DisablePreemption
   is_identity_group: true
-  name: +++5a8d26be92a59b077907ae719ae41f37
+  name: +++c1c5dc5e85289861c35863e25ab560de
   params: 
     START: TRUE || FALSE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -6536,7 +6597,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++5eb9eb8462cb170c37ed0b97bd6c3239
+  name: +++a3a7098625d6af53cdbaa39063f9c847
   params: {}
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -6732,7 +6793,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++6342b55c6ccc78283b06f8cf65109cce
+  name: +++388c3e99448d77af6c547d42754af3fb
   params: {}
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -7103,7 +7164,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++6a01482ea77677b13cdcf175cb193b41
+  name: +++16d4fc2a4175e9df32f14671888bacc0
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -8895,7 +8956,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++8a565cf0c5c3c0221edb2d48113b9e46
+  name: +++74a0be6c0f8861ec0d827588eed7083f
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -9497,7 +9558,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++946deef4e36df8ab39eda105ee514040
+  name: +++1a23d06e0e6752c26178a1815ad56f22
   params: {}
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -10092,7 +10153,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++9f2315166eb88e88195ea268bbdd8014
+  name: +++042148d0a18ddafc3ca17eaf8398231a
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -10540,7 +10601,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++a591189fe088c4413c120593cec8041d
+  name: +++7ad7f4f981fc7ab2c6323e4ed2d8da9c
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -10701,7 +10762,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++a7f9b4190cd1ef47f16272fc76f61776
+  name: +++5088c547ec86ad1f288be629be4926f0
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -11583,7 +11644,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++ba40e4397bd47d2b3e700e8b00eb92dc
+  name: +++6dddd5f364f53c7cba33ae72b1c9f3e5
   params: {}
 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -11681,7 +11742,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++bc5ef451c443c111c112576fbef534c3
+  name: +++6c66a036c7de8d332ef25625e566aaa8
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -12171,7 +12232,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++c5a68a5175c861e60e3b3bb853186f75
+  name: +++4803ac7418462d1a2567a3e4557a0913
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -13214,7 +13275,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++d7bdf04ccbf98ee6c6ea7e376b9f3bd0
+  name: +++71150ba9cd719f7c551cc75dcda196b3
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -13459,7 +13520,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++dd171c7a2bfb12f27f46de7f516c29f5
+  name: +++67f9d96ec514e17036278f042b8c839a
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -14716,7 +14777,7 @@ groups:
   - Master
   - VMUniverse
   is_identity_group: true
-  name: +++f531a530fd6ad2891db7206e2dc9ef85
+  name: +++6a34890f63f31c66c8c2d80134240677
   params: 
     VM_TYPE: kvm
     START: "TRUE"
@@ -14897,7 +14958,7 @@ groups:
   features: []
 
   is_identity_group: true
-  name: +++f881be23e3c06a86c2bd9fa6abdb0494
+  name: +++7a613be9b4d44b675b5d3e84781d4e5f
   params: 
     START: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
@@ -15336,6 +15397,23 @@ groups:
   - DisablePreemption
   is_identity_group: false
   name: HeavyLoadWorkers
+  params: 
+    VM_TYPE: kvm
+    MAXJOBRETIREMENTTIME: 3600 * 24
+    VM_NETWORKING_DEFAULT_TYPE: bridge
+    CLAIM_WORKLIFE: "0"
+    VM_NETWORKING: "TRUE"
+    CONDOR_HOST: test27.lab.bigpool-domain.com
+    VM_NETWORKING_TYPE: nat, bridge
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: 
+  - NineStartd
+  - NodeAccess
+  - Master
+  - VMUniverse
+  - DisablePreemption
+  is_identity_group: false
+  name: hLoadWorkers
   params: 
     VM_TYPE: kvm
     MAXJOBRETIREMENTTIME: 3600 * 24
