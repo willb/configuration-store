@@ -490,6 +490,18 @@ module Mrg
         end
 
         def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
+          
+          unless ::Rhubarb::Persistence::db.transaction_active? || ConfigVersion.db.transaction_active?
+            ConfigVersion.db.transaction do |ignored|
+              return _validate_and_activate(validate_only, explicit_nodelist, this_version)
+            end
+          else
+            return _validate_and_activate(validate_only, explicit_nodelist, this_version)
+          end
+          
+        end
+
+        def _validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
           dirty_nodes = explicit_nodelist || Node.get_dirty_nodes
           dirty_elements = DirtyElement.count
           this_version ||= ::Rhubarb::Util::timestamp
@@ -510,12 +522,18 @@ module Mrg
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
           end
           
-          options = (validate_only) ? nil : {:save_for_version=>this_version}
+          options = {}
+          
+          if ENV['WALLABY_USE_VALIDATE_CACHE'] && ENV['WALLABY_USE_VALIDATE_CACHE'].downcase == "never"
+            options[:cache] = DummyCache.new
+          else
+            options[:cache] = ConfigDataCache.new(*dirty_nodes)
+          end
+          options[:save_for_version] = this_version unless validate_only
           
           results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
           
           if validate_only || nothing_changed || results.keys.size > 0
-            puts "OHH SNAP!" if (explicit_nodelist && !validate_only && results.keys.size == 0)
             ConfigVersion[this_version].delete
             return [results, warnings]
           end

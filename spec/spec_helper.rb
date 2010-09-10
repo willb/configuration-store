@@ -97,6 +97,13 @@ module BaseDBFixture
   end
 end
 
+module BigPoolFixture
+  include BaseDBFixture
+  def dbtext
+    open("#{File.dirname(__FILE__)}/big-pool.yaml", "r") {|db| db.read}
+  end
+end
+
 module SpecHelper
   module ClassMethods
     
