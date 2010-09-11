@@ -219,6 +219,7 @@ end
 
 require 'mrg/grid/config/shell/add_param'
 require 'mrg/grid/config/shell/activate'
+require 'mrg/grid/config/shell/console'
 require 'mrg/grid/config/shell/inventory'
 require 'mrg/grid/config/shell/snapshot'
 require 'mrg/grid/config/shell/apropos'
