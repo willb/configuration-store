@@ -26,6 +26,10 @@ module Wallaby
   def self.store=(ws)
     @wallaby_store = ws
   end
+  
+  def store
+    ::Wallaby::store
+  end
 end
 
 module Mrg
