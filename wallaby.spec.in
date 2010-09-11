@@ -146,6 +146,7 @@ fi
 %{ruby_sitelib}/mrg/grid/util/graph.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
 %{ruby_sitelib}/mrg/grid/config/shell/apropos.rb
+%{ruby_sitelib}/mrg/grid/config/shell/console.rb
 %{ruby_sitelib}/mrg/grid/config/shell/load.rb
 %{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
 %{ruby_sitelib}/mrg/grid/config/shell/feature_import.rb
@@ -158,6 +159,10 @@ fi
 
 
 %changelog
+
+* Fri Sep 10 2010 willb <willb@redhat> - 0.9.8-1
+- Dramatic performance enhancements in activateConfiguration (> 10x in medium-size configurations; > 21x in large configurations)
+- wallaby console tool
 
 * Wed Sep 1 2010 willb <willb@redhat> - 0.9.7-1
 - Improved wallaby-shell functionality
