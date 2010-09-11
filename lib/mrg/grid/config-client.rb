@@ -231,7 +231,7 @@ module Mrg
         end
 
         def identity_group
-          get_object(@qmfo.identity_group.group, Group)
+          get_object(@qmfo.identity_group, Group)
         end
 
         def modifyMemberships(command, groups, options)
@@ -253,6 +253,10 @@ module Mrg
       class Store < ClientObj
         def getGroup(query)
           get_object(@qmfo.getGroup(query).obj, Group)
+        end
+        
+        def getGroupByName(name)
+          getGroup("name"=>name)
         end
         
         def addExplicitGroup(name)
