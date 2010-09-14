@@ -43,7 +43,7 @@ module Mrg
             [first_set, second_set].each do |fset|
               lambda do
                 Timeout::timeout(TORTURE_TIMEOUT) do
-                  @hlw.modifyFeatures("REPLACE", fset, {})
+                  hlw.modifyFeatures("REPLACE", fset, {})
                   @store.activateConfiguration
                 end
               end.should_not raise_error
