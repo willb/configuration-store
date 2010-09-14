@@ -149,16 +149,19 @@ module Mrg
           log.debug "modifyFeatures: features => #{feats.inspect}"
           
           invalid_features = []
+          current_features = self.features
           
-          feats = feats.map do |fn|
+          command = command.upcase
+          
+          feats = feats - current_features if command == "ADD"
+          
+          feats = feats.uniq.map do |fn|
             frow = Feature.find_first_by_name(fn)
             invalid_features << fn unless frow
             frow
           end
 
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::FEATURE), "Invalid features applied to #{self.display_name}:  #{invalid_features.inspect}") if invalid_features != []
-
-          command = command.upcase
 
           case command
           when "ADD", "REMOVE" then

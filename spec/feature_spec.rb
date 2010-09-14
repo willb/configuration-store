@@ -453,7 +453,7 @@ module Mrg
           }.should raise_error
         end
         
-        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, true, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, false, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = Array
           nouns = create_dest_msg == :addFeature ? "features" : "subsystems"
@@ -487,7 +487,7 @@ module Mrg
             feature.send(inspect_msg).size.should == dep_dests.size
           end
 
-          it "should #{verb} additional #{nouns} idempotently" do
+          it "should #{verb} additional #{nouns} idempotently with respect to membership" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -497,9 +497,33 @@ module Mrg
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
             feature.send(inspect_msg).size.should == dep_dests.size
+            feature.send(inspect_msg).should == dep_dests.map {|f| f.name} if order_preserving
 
             feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
             feature.send(inspect_msg).size.should == dep_dests.size
+            feature.send(inspect_msg).should == dep_dests.map {|f| f.name} if order_preserving
+
+            observed_dests = feature.send(inspect_msg)
+            dep_dests.each do |ef| 
+              observed_dests.should include(ef.name)
+            end
+          end
+
+          it "should #{verb} additional #{nouns} idempotently with respect to ordering" do
+            dep_dests = []
+            ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+              dep_dests << @store.send(create_dest_msg, fn)
+            end
+
+            feature = @store.addFeature("Pony Accelerator")
+
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.map {|f| f.name}])
+            feature.send(inspect_msg).size.should == dep_dests.size
+            feature.send(inspect_msg).should == dep_dests.map {|f| f.name} if order_preserving
+
+            feature.send(modify_msg, "ADD", fake_collection[*dep_dests.sort_by {rand}.map {|f| f.name}])
+            feature.send(inspect_msg).size.should == dep_dests.size
+            feature.send(inspect_msg).should == dep_dests.map {|f| f.name} if order_preserving
 
             observed_dests = feature.send(inspect_msg)
             dep_dests.each do |ef| 
@@ -519,6 +543,7 @@ module Mrg
 
             feature.send(modify_msg, "ADD", fake_collection[*supplied_dests.map {|f| f.name}])
             feature.send(inspect_msg).size.should == dep_dests.size
+            feature.send(inspect_msg).should == supplied_dests.uniq.map {|f| f.name} if order_preserving
 
             observed_dests = feature.send(inspect_msg)
 

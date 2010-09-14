@@ -64,6 +64,21 @@ module Mrg
           lambda { group2.setName(@gskey) }.should raise_error
         end
         
+        [[%w{HighAvailabilityStable OatAccelerator}, ["ADD", %w{AppleManager}, {}], %w{HighAvailabilityStable OatAccelerator AppleManager}, "at the lowest priority"],
+        [%w{HighAvailabilityStable OatAccelerator}, ["ADD", %w{AppleManager AppleManager}, {}], %w{HighAvailabilityStable OatAccelerator AppleManager}, "idempotently with respect to argument duplication"],
+        [%w{HighAvailabilityStable OatAccelerator AppleManager}, ["ADD", %w{AppleManager}, {}], %w{HighAvailabilityStable OatAccelerator AppleManager}, "idempotently with respect to feature membership duplication"],
+        [%w{AppleManager HighAvailabilityStable OatAccelerator}, ["ADD", %w{AppleManager}, {}], %w{AppleManager HighAvailabilityStable OatAccelerator}, "idempotently with respect to ordering"]].each do |f_before, args, f_after, desc|
+        
+          it "should add features #{desc}" do
+            group = @store.send(@add_msg, @gskey)
+            (f_before | f_after).each {|feature| @store.addFeature(feature)}
+            group.modifyFeatures("REPLACE", f_before, {})
+            group.features.should == f_before
+            group.modifyFeatures(*args)
+            group.features.should == f_after
+          end
+        end
+        
       end
     end
   end

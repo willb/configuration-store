@@ -243,7 +243,7 @@ module Mrg
           
           detect_inconsistencies(:depends, command, depends) unless skip_validation
           
-          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>true,:xc=>:x_depends)
+          modify_arcs(command,depends,options,:depends,:depends=,:explain=>"depend on",:preserve_order=>false,:xc=>:x_depends)
           self_to_dirty_list
         end
         
