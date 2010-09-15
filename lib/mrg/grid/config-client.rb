@@ -47,7 +47,7 @@ module Mrg
       
       class Group < ClientObj
         def membership
-          @qmfo.membership
+          @qmfo.membership.nodes
         end
         
         def name

@@ -61,14 +61,16 @@ module Mrg
 
         ### Schema method declarations
         
-        qmf_property :membership, :list, :desc=>"A list of node names from the nodes that are members of this group."
-
         # membership 
         # * nodes (map/O)
         #   A list of the nodes associated with this group
         def membership()
           log.debug "membership called on group #{self.inspect}"
           NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}
+        end
+
+        expose :membership do |args|
+          args.declare :nodes, :list, :out, "A list of node names from the nodes that are members of this group."
         end
         
         qmf_property :name, :sstr, :desc=>"This group's name."
