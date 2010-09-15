@@ -51,7 +51,7 @@ module Mrg
               when /^#dependson\s+(.*)$/ then results[:depends] << $1.strip
               when /^#default\s+(.*)$/ then results[:params][$1.strip] = 0
               when /^#name\s+(.*)$/ then results[:name] = $1.strip
-              when /^([^=]*)=(.*)$/ then results[:params][$1] = ($2.strip.size > 0 ? $2.strip : 0)
+              when /^([^=]*)=(.*)$/ then results[:params][$1.strip] = ($2.strip.size > 0 ? $2.strip : 0)
               else puts "warning:  unrecognized config file line #{line}"
               end
             end
