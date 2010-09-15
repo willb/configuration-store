@@ -453,10 +453,63 @@ module Mrg
           }.should raise_error
         end
         
-        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, false, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,adjective,inspect_msg,modify_msg,order_preserving,create_dest_msg|
+        def do_set_op(op, first, second)
+          case op.downcase
+          when "intersect" then return first & second
+          when "diff" then return (first | second) - (first & second)
+          end
+          raise "unknown op:  '#{op}'"
+        end
+        
+        [["include", "inclusion", :included_features, :modifyIncludedFeatures, true, :addFeature], ["depend on", "dependence", :depends, :modifyDepends, false, :addFeature], ["conflict with", "conflict", :conflicts, :modifyConflicts, false, :addFeature]].each do |verb,relationship_kind,inspect_msg,modify_msg,order_preserving,create_dest_msg|
 
           fake_collection = Array
           nouns = create_dest_msg == :addFeature ? "features" : "subsystems"
+
+          {"INTERSECT"=>"intersection", "DIFF"=>"symmetric difference"}.each do |cmd, set_op|
+            if not order_preserving
+              it "should allow #{set_op} operations on the #{relationship_kind} set" do
+                dep_dests = []
+                ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+                  dep_dests << @store.send(create_dest_msg, fn)
+                end
+
+                feature = @store.addFeature("Pony Accelerator")
+
+                lambda { feature.send(modify_msg, cmd, fake_collection[*dep_dests.map {|f| f.name}]) }.should_not raise_error
+              end
+              
+              it "should successfully perform #{set_op} operations on the #{relationship_kind} set" do
+                dep_dests = []
+                ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning", "Column-based Oat Store", "Bridle Repository"].each do |fn|
+                  dep_dests << @store.send(create_dest_msg, fn)
+                end
+
+                feature = @store.addFeature("Pony Accelerator")
+
+                s_before = dep_dests.slice(0,3).map {|f| f.name}
+                s_after = dep_dests.slice(2,3).map {|f| f.name}
+
+                feature.send(modify_msg, "ADD", fake_collection[*s_before])
+                feature.send(inspect_msg).sort.should == s_before.sort
+                
+                feature.send(modify_msg, cmd, fake_collection[*s_after])
+                feature.send(inspect_msg).sort.should == do_set_op(cmd, s_before, s_after).sort
+              end
+              
+            else
+              it "should not allow #{set_op} operations on the #{relationship_kind} set" do
+                dep_dests = []
+                ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
+                  dep_dests << @store.send(create_dest_msg, fn)
+                end
+                
+                feature = @store.addFeature("Pony Accelerator")
+                
+                lambda { feature.send(modify_msg, cmd, fake_collection[*dep_dests.map {|f| f.name}]) }.should raise_error
+              end
+            end
+          end
 
           it "should #{verb} no other #{nouns} by default" do
             feature = @store.addFeature("Pony Accelerator")
@@ -552,7 +605,7 @@ module Mrg
             end
           end
 
-          it "should be possible to remove #{nouns} from the #{adjective} list" do
+          it "should be possible to remove #{nouns} from the #{relationship_kind} list" do
             dep_dests = []
             ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
               dep_dests << @store.send(create_dest_msg, fn)
@@ -587,7 +640,7 @@ module Mrg
               end
             end
 
-            it "should replace #{adjective}s in order" do
+            it "should replace #{relationship_kind}s in order" do
               dep_dests = []
               ["High-Availability Stable", "Peer-to-peer Oat Store", "Equine Management", "Low-Latency Saddle Provisioning", "Alpheus", "Peneus"].sort_by { rand }.each do |fn|
                 dep_dests << @store.send(create_dest_msg, fn)
@@ -603,7 +656,7 @@ module Mrg
               end
             end
 
-            it "should #{verb} additional #{nouns} after all preexisting #{adjective}s" do
+            it "should #{verb} additional #{nouns} after all preexisting #{relationship_kind}s" do
               dep_dests = []
               ["High-Availability Stable", "Equine Management", "Low-Latency Saddle Provisioning"].each do |fn|
                 dep_dests << @store.send(create_dest_msg, fn)

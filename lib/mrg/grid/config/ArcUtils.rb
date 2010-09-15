@@ -49,7 +49,7 @@ module Mrg
           end
           
           case command
-          when "ADD", "UNION" then 
+          when "ADD" then 
             old_dests = preserve_order ? self.send(getmsg) : Set[*self.send(getmsg)]
             new_dests = preserve_order ? dests : Set[*dests]
             fail(Errors.make(Errors::CIRCULAR_RELATIONSHIP, Errors::INVALID_RELATIONSHIP, errwhat), "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
@@ -63,10 +63,27 @@ module Mrg
             removed_dests = dests
             new_dests = old_dests - removed_dests
             self.send(setmsg, new_dests)
-          when "INTERSECT", "DIFF" then
-            fail(Errors.make(Errors::INTERNAL_ERROR, Errors::NOT_IMPLEMENTED, errwhat), "#{command} not implemented")
+          when "INTERSECT", "DIFF", "UNION" then
+            fail(Errors.make(Errors::INTERNAL_ERROR, Errors::NOT_IMPLEMENTED, errwhat), "#{command} not implemented for order-preserving relations") if preserve_order
+            old_dests = Set[*self.send(getmsg)]
+            supplied_dests = Set[*dests]
+            new_dests = ArcUtils.send("#{command.downcase}_collections", old_dests, supplied_dests).to_a
+            fail(Errors.make(Errors::CIRCULAR_RELATIONSHIP, Errors::INVALID_RELATIONSHIP, errwhat), "#{what} #{name} cannot #{explain} itself") if new_dests.include? self.send(keymsg)
+            self.send(setmsg, new_dests)
           else fail(Errors.make(Errors::BAD_COMMAND, errwhat), "Invalid command #{command}")
           end
+        end
+        
+        def self.intersect_collections(first, second)
+          first & second
+        end
+
+        def self.union_collections(first, second)
+          first | second
+        end
+        
+        def self.diff_collections(first, second)
+          (first | second) - (first & second)
         end
         
         def find_arcs(arc_class,label)

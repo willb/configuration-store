@@ -213,7 +213,7 @@ module Mrg
           
           detect_inconsistencies(:conflicts, command, conflicts) unless skip_validation
           
-          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>true)
+          modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with",:preserve_order=>false)
           self_to_dirty_list
         end
         

@@ -38,7 +38,7 @@ module Mrg
         end
         
         def id_valid_commands
-          %w{ADD REPLACE REMOVE}
+          %w{ADD REPLACE REMOVE UNION INTERSECT DIFF}
         end
         
         def id_callbacks
