@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -159,6 +159,11 @@ fi
 
 
 %changelog
+
+* Wed Sep 15 2010 willb <willb@redhat> - 0.9.15-2
+- fixed performance regression in querying groups
+- bumped API version number to final (1.0) version
+- fixes for relationship-maintenance issues uncovered in 0.9.8
 
 * Fri Sep 10 2010 willb <willb@redhat> - 0.9.8-1
 - Dramatic performance enhancements in activateConfiguration (> 10x in medium-size configurations; > 21x in large configurations)
