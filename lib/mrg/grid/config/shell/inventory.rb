@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# inventory:  template wallaby-shell class
+# inventory:  wallaby node inventory command
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
@@ -15,6 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+require 'ostruct'
 
 module Mrg
   module Grid
