@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -41,6 +41,7 @@ Summary: wallaby qmf api methods
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
+Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
 BuildRequires: ruby
 
@@ -159,6 +160,9 @@ fi
 
 
 %changelog
+
+* Thu Sep 16 2010 willb <willb@redhat> - 0.9.16-2
+- fixed missing RPM dependency on ruby-irb
 
 * Wed Sep 15 2010 willb <willb@redhat> - 0.9.16-1
 - fixed missing include in wallaby inventory
