@@ -107,6 +107,7 @@ fi
 %postun
 if [ "$1" -ge "1" ] ; then
     chown -R wallaby:wallaby /var/lib/wallaby /var/log/wallaby
+    /sbin/chkconfig --del wallaby
     /sbin/service wallaby condrestart >/dev/null 2>&1 || :
 fi
 
@@ -160,6 +161,9 @@ fi
 
 
 %changelog
+
+* Thu Sep 16 2010 willb <willb@redhat> - 0.9.17-1
+- fix for BZ 634625
 
 * Thu Sep 16 2010 willb <willb@redhat> - 0.9.17-1
 - fix for BZ 634625
