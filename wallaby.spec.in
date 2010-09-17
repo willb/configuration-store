@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -106,8 +106,9 @@ fi
 
 %postun
 if [ "$1" -ge "1" ] ; then
-    chown -R wallaby:wallaby /var/lib/wallaby /var/log/wallaby
     /sbin/chkconfig --del wallaby
+    /sbin/chkconfig --add wallaby
+    chown -R wallaby:wallaby /var/lib/wallaby /var/log/wallaby
     /sbin/service wallaby condrestart >/dev/null 2>&1 || :
 fi
 
@@ -162,8 +163,11 @@ fi
 
 %changelog
 
-* Thu Sep 16 2010 willb <willb@redhat> - 0.9.17-1
-- fix for BZ 634625
+* Fri Sep 17 2010 willb <willb@redhat> - 0.9.18-2
+- package upgrades should uninstall and reinstall the wallaby initscript in the appropriate runlevels
+
+* Fri Sep 17 2010 willb <willb@redhat> - 0.9.18-1
+- fix for BZ 634641
 
 * Thu Sep 16 2010 willb <willb@redhat> - 0.9.17-1
 - fix for BZ 634625
