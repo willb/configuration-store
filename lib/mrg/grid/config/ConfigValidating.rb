@@ -369,13 +369,6 @@ module Mrg
           
           my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
-          if save_for_version
-            updated_config = my_config
-            updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
-            cv = ConfigVersion[save_for_version]
-            cv[self.name] = updated_config
-          end
-          
           log.debug {"in #{(self.class.name.to_s =~ /(Node|Feature|Group|Parameter)$/ ; $~.to_s)}#validate for #{self.name}..."}
           
           dfn = cache.feature_dependencies_for(cached_class, cached_self).compact.map {|f| f.name}
@@ -398,7 +391,16 @@ module Mrg
           my_param_deps = cache.parameter_dependencies_for(cached_class, cached_self)
           orphaned_params = my_param_deps - my_params
           
-          return true if orphaned_deps == [] && unset_params == [] && orphaned_params == [] && param_conflicts == [] && feature_conflicts == []
+          if orphaned_deps == [] && unset_params == [] && orphaned_params == [] && param_conflicts == [] && feature_conflicts == []
+            if save_for_version
+              updated_config = my_config
+              updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
+              cv = ConfigVersion[save_for_version]
+              cv[self.name] = updated_config
+            end
+            
+            return true
+          end
           
           result = {}
           result[BROKEN_FEATURE_DEPS] = orphaned_deps.uniq if orphaned_deps != []
