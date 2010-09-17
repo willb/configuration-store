@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 2
+%define rel 1
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -160,6 +160,9 @@ fi
 
 
 %changelog
+
+* Thu Sep 16 2010 willb <willb@redhat> - 0.9.17-1
+- fix for BZ 634625
 
 * Thu Sep 16 2010 willb <willb@redhat> - 0.9.16-2
 - fixed missing RPM dependency on ruby-irb
