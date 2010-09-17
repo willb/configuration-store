@@ -20,7 +20,13 @@ require 'mrg/grid/config-proxies'
 
 module Mrg
   module Grid
-    module Config      
+    module Config
+      module QmfV1Kludges
+        MAX_ARG_SIZE = 65535          # QMFv1 maximum argument size
+        MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
+        OBJECT_OVERHEAD = 32
+      end
+      
       class NodeUpdatedNotice
          include ::SPQR::Raiseable
          arg :nodes, :map, "A map whose keys are the node names that must update."
@@ -32,7 +38,8 @@ module Mrg
       
       class Store
         include ::SPQR::Manageable
-
+        include QmfV1Kludges
+        
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Store'
 
@@ -531,7 +538,34 @@ module Mrg
           end
           options[:save_for_version] = this_version unless validate_only
           
-          results = Hash[*dirty_nodes.map {|node| node.validate(options)}.reject {|result| result == true}.flatten]
+          bytes_left = MAX_ARG_SIZE - MAX_SIZE_CUSHION
+          nodes_left = dirty_nodes.size
+          
+          node_pairs = dirty_nodes.inject([]) do |acc, node|
+            if bytes_left <= 0
+              acc << ["*", "More validation errors may have occured; stopped processing nodes with #{nodes_left} nodes left"]
+              break acc
+            end
+            
+            node_result = node.validate(options)
+            nodes_left -= 1
+            
+            unless node_result == true
+              acc << node_result
+              bytes_left -= OBJECT_OVERHEAD
+              bytes_left -= node_result[0].size
+              node_result[1].each do |explain_k, explain_v|
+                bytes_left -= explain_k.size
+                bytes_left -= explain_v.inject(0) {|running_total,s| running_total += s.size}
+              end
+            end
+            
+            acc
+          end
+                    
+          results = Hash[*node_pairs.flatten]
+          
+          warnings << results.delete("*") if results["*"]
           
           if validate_only || nothing_changed || results.keys.size > 0
             ConfigVersion[this_version].delete
@@ -555,8 +589,7 @@ module Mrg
         end
         
         module PullEventGenerator
-          MAX_ARG_SIZE = 65535          # QMFv1 maximum argument size
-          MAX_SIZE_CUSHION = (4096 * 4) # 4 pages is pretty arbitrary
+          include QmfV1Kludges
 
           def new_config_event(nodes, current_version)
             notice = NodeUpdatedNotice.new
