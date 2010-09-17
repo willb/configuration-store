@@ -2,7 +2,7 @@
 #
 # wallaby-agent			This script controls the Wallaby agent.
 #
-# chkconfig:   - 20 80
+# chkconfig:   345 90 10
 # description: The Wallaby configuration service.
 
 ### BEGIN INIT INFO
@@ -11,8 +11,8 @@
 # Required-Stop: $local_fs $remote_fs $network $time qpidd
 # Should-Start: 
 # Should-Stop: 
-# Default-Start: 
-# Default-Stop: 
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
 # Short-Description: 
 # Description:      
 ### END INIT INFO
