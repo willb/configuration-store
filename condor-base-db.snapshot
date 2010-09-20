@@ -150,19 +150,6 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: 
-  - QMF
-  - BaseScheduler
-  - ConsoleScheduler
-  included: []
-
-  name: ConsoleSchedulerForJobServer
-  params: 
-    QUEUE_ALL_USERS_TRUSTED: "True"
-    QMF_PUBLISH_SUBMISSIONS: "FALSE"
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
   depends: []
 
   included: 
@@ -406,6 +393,7 @@ features:
     JOB_SERVER: $(SBIN)/condor_job_server
     MAX_JOB_SERVER_LOG: "1000000"
     JOB_SERVER_LOG: $(LOG)/JobServerLog
+    QMF_PUBLISH_SUBMISSIONS: "FALSE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
