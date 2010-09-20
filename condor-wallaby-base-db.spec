@@ -1,4 +1,4 @@
-%define rel 3
+%define rel 4
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Mon Sep 20 2010 rrati <rrati@redhat> - 1.4-4
+- Removed ConsoleSchedulerForJobServer feature
+- Moved QUEUE_ALL_USERS_TRUSTED to the ConsoleScheduler feature
+
 * Tue Aug 31 2010 rrati <rrati@redhat> - 1.4-3
 - Fixed setting of CONDOR_HOST in HACentralManager feature
 
