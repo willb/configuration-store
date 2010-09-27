@@ -1,4 +1,4 @@
-%define rel 4
+%define rel 5
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Mon Sep 27 2010 willb <willb@redhat> - 1.4-5
+- BZ 637200:  All SEC_(.*) parameters now require a restart.
+
 * Mon Sep 20 2010 rrati <rrati@redhat> - 1.4-4
 - Removed ConsoleSchedulerForJobServer feature
 - Moved QUEUE_ALL_USERS_TRUSTED to the ConsoleScheduler feature
