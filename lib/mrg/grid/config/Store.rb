@@ -113,6 +113,7 @@ module Mrg
           log.debug "addExplicitGroup: name => #{name.inspect}"
           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::GROUP), "Group name #{name} is already taken") if Group.find_first_by_name(name)
           fail(Errors.make(Errors::INVALID_NAME, Errors::GROUP), "Group name #{name} is invalid; group names may not start with '+++'") if name.slice(0,3) == "+++"
+          fail(Errors.make(Errors::INVALID_NAME, Errors::GROUP), "Group names cannot be empty") if name.size == 0
           Group.create(:name=>name)
         end
         
@@ -160,6 +161,7 @@ module Mrg
           # Print values of input parameters
           log.debug "addFeature: name => #{name.inspect}"
           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::FEATURE), "Feature name #{name} is already taken") if Feature.find_first_by_name(name)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::FEATURE), "Feature names cannot be empty") if name.size == 0
           return Feature.create(:name=>name)
         end
         
@@ -265,6 +267,8 @@ module Mrg
         
         def createNode(name, is_provisioned=true)
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
+          fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node names cannot be empty") if name.size == 0
+
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
           n.last_updated_version = ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
           n
@@ -321,6 +325,8 @@ module Mrg
           # Print values of input parameters
           log.debug "addParam: name => #{name.inspect}"
            fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::PARAMETER), "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::PARAMETER), "Parameter names cannot be empty") if name.size == 0
+
           # Return value
           return Parameter.create(:name => name)
         end
@@ -354,6 +360,8 @@ module Mrg
           # Print values of input parameters
           log.debug "addSubsys: name => #{name.inspect}"
            fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::SUBSYSTEM), "Subsystem name #{name} is already taken") if Subsystem.find_first_by_name(name)
+          fail(Errors.make(Errors::INVALID_NAME, Errors::SUBSYSTEM), "Subsystem names cannot be empty") if name.size == 0
+
           # Return value
           return Subsystem.create(:name => name)
         end
