@@ -17,7 +17,7 @@ module Mrg
         end
 
         {"group"=>:addExplicitGroup, "node"=>:addNode, "feature"=>:addFeature, "node"=>:addNode, "unprovisioned node"=>:getNode, "parameter"=>:addParam, "subsystem"=>:addSubsys}.each do |what, msg|
-          it "should not allow creating a #{what} with an empty name" do
+          it "should not allow creating a#{%w{a e i o u}.include?(what.slice(0,1)) ? "n" : ""} #{what} with an empty name" do
             lambda {@store.send(msg, "")}.should raise_error
           end
         end
