@@ -23,14 +23,38 @@ module Mrg
           param.name.should == "BIOTECH"
         end
 
+
+        it "should convert parameter names to all-uppercase" do
+          param = @store.addParam("biotech")
+          param.name.should == "BIOTECH"
+        end
+
         it "disallows creating a parameter with a name already in use" do
           param = @store.addParam("BIOTECH")
           lambda { @store.addParam("BIOTECH") }.should raise_error
         end
 
+        it "disallows creating a parameter with a name identical to one already in use except in case" do
+          param = @store.addParam("BIOTECH")
+          lambda { @store.addParam("biotech") }.should raise_error
+        end
 
         it "enables finding a created parameter" do
           param = @store.addParam("BIOTECH")
+          param = @store.getParam("BIOTECH")
+          
+          param.name.should == "BIOTECH"
+        end
+        
+        it "enables finding a created parameter case-insensitively" do
+          param = @store.addParam("BIOTECH")
+          param = @store.getParam("biotech")
+          
+          param.name.should == "BIOTECH"
+        end
+        
+        it "enables finding a case-insensitively created parameter" do
+          param = @store.addParam("biotech")
           param = @store.getParam("BIOTECH")
           
           param.name.should == "BIOTECH"

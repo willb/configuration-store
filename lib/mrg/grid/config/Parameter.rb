@@ -56,6 +56,13 @@ module Mrg
         qmf_property :depends, :list, :desc=>"A set of parameter names that this parameter depends on."
         qmf_property :conflicts, :list, :desc=>"A set of parameter names that this parameter conflicts with."
         
+        # We're overriding find_first_by_name to be case-insensitive
+        declare_query :_find_first_by_name, "name = ? COLLATE NOCASE ORDER BY row_id"
+
+        def self.find_first_by_name(name)
+          return _find_first_by_name(name)[0]
+        end
+        
         def eql?(other)
           return self.class == other.class && self.row_id == other.row_id
         end
