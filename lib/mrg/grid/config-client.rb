@@ -43,6 +43,10 @@ module Mrg
           callargs = [m] + args
           @qmfo.send(*callargs)
         end
+        
+        def inspect
+          "<#{self.class.name.to_s}: #{self.name rescue self.object_id}>"
+        end
       end
       
       class Group < ClientObj
