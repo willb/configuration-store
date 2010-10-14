@@ -122,6 +122,16 @@ module Mrg
           get '/config/:node/?' do |node|
             store = settings.store
             n = store.getNode(node)
+            config = n.getConfig("version"=>(1<<61))
+            
+            config.keys.sort.map do |k|
+              "#{k} = #{config[k]}\n"
+            end
+          end
+
+          get '/unactivated-config/:node/?' do |node|
+            store = settings.store
+            n = store.getNode(node)
             config = n.getConfig
             
             config.keys.sort.map do |k|
