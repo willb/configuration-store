@@ -69,7 +69,12 @@ module Mrg
               config = node.getConfig
               
               puts "### Explaining the configuration for #{node.name}"
-              config.each do |param, value|
+              node.memberships.reverse_each do |m|
+                puts "###  -- which is a member of group #{m}"
+              end
+              
+              config.keys.sort.each do |param|
+                value = config[param]
                 puts "# #{param} #{exp[param] || "has no explanation"}"
                 puts "#{param} = #{value}"
               end
