@@ -255,6 +255,10 @@ module Mrg
       end
 
       class Store < ClientObj
+        def getDefaultGroup
+          get_object(@qmfo.getDefaultGroup().obj, Group)
+        end
+        
         def getGroup(query)
           get_object(@qmfo.getGroup(query).obj, Group)
         end
