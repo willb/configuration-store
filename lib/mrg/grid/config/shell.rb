@@ -140,10 +140,8 @@ module Mrg
         def self.install_commands(extra=nil)
           extra ||= self.USER_COMMAND_DIR
           commands = []
-          commands = commands + Dir["#{Mrg::Grid::Config::Shell::BASE_COMMAND_DIR}/*.rb"]
-          commands = commands + Dir["#{extra}/*.rb"] if extra
-          
-          puts commands.inspect
+          commands = commands + Dir["#{Mrg::Grid::Config::Shell::BASE_COMMAND_DIR}/cmd_*.rb"]
+          commands = commands + Dir["#{extra}/cmd_*.rb"] if extra
           
           commands.each do |command|
             require File.join(File.dirname(command), File.basename(command, File.extname(command)))
