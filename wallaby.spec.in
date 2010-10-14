@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 2
+%define rel 1
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -45,6 +45,23 @@ Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
 BuildRequires: ruby
 
+%if 0%{?fedora} >= 12
+%package -n wallaby-http-server
+Summary: wallaby web ervice
+Group: Applications/System
+Requires: ruby(abi) = 1.8
+Requires: ruby
+Requires: ruby-irb
+Requires: ruby-qmf >= 0.7.929717
+Requires: ruby-wallaby = %{version}-%{release}
+Requires: wallaby-utils = %{version}-%{release}
+Requires: rubygem-sinatra
+BuildRequires: ruby
+
+%description -n wallaby-http-server
+Functions to communicate with wallaby over qmf
+%endif
+
 %description -n ruby-wallaby
 Functions to communicate with wallaby over qmf
 
@@ -70,6 +87,10 @@ cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
+%if 0%{?rhel}
+# XXX: change this when Sinatra is packaged for RHEL
+rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
+%endif
 cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 cp -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
 cp -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
@@ -148,20 +169,31 @@ fi
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/5.rb
 %{ruby_sitelib}/mrg/grid/util/graph.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
-%{ruby_sitelib}/mrg/grid/config/shell/apropos.rb
-%{ruby_sitelib}/mrg/grid/config/shell/console.rb
-%{ruby_sitelib}/mrg/grid/config/shell/load.rb
-%{ruby_sitelib}/mrg/grid/config/shell/add_param.rb
-%{ruby_sitelib}/mrg/grid/config/shell/feature_import.rb
-%{ruby_sitelib}/mrg/grid/config/shell/snapshot.rb
-%{ruby_sitelib}/mrg/grid/config/shell/inventory.rb
-%{ruby_sitelib}/mrg/grid/config/shell/dump.rb
-%{ruby_sitelib}/mrg/grid/config/shell/activate.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_apropos.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_console.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_explain.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_load.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_add_param.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_feature_import.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_snapshot.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_activate.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
 
 
+%if 0%{?fedora} >= 12
+%files -n wallaby-http-server
+%defattr(-, root, root, -)
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
+%endif
 
 %changelog
+
+* Thu Oct 14 2010 willb <willb@redhat> - 0.9.19-1
+- More flexible support for user-local wallaby shell commands (no public API yet, though)
+- 'wallaby explain' shell command
+- 'wallaby http-server' shell command and package (Fedora only; requires Sinatra)
 
 * Fri Sep 17 2010 willb <willb@redhat> - 0.9.18-2
 - package upgrades should uninstall and reinstall the wallaby initscript in the appropriate runlevels
