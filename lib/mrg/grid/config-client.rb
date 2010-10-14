@@ -246,8 +246,9 @@ module Mrg
           @qmfo.memberships
         end
 
-        def getConfig
-          @qmfo.getConfig.config
+        def getConfig(options=nil)
+          options ||= {}
+          @qmfo.getConfig(options).config
         end
 
         private
