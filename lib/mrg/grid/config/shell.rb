@@ -31,6 +31,26 @@ module Mrg
         
         Args = Struct.new(:cmd, :for_wt, :for_cmd)
 
+        BASE_COMMAND_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "shell")
+
+        def self.USER_COMMAND_DIR
+          result = ENV['WALLABY_COMMAND_DIR']
+          return nil unless result
+
+          begin
+            result = Pathname.new(File.expand_path(result))
+            return result.realpath.to_s
+          rescue
+            return nil
+          end
+        end
+
+        def self.register_command(klass, name=nil)
+          # XXX:  validate registered commands
+          name ||= klass.command_name
+          COMMANDS[command_name] = klass
+        end
+
         def self.preprocess_args(args)
           result = Args.new
           pivot = 0
@@ -117,6 +137,18 @@ module Mrg
           end
         end        
         
+        def self.install_commands(extra=nil)
+          extra ||= self.USER_COMMAND_DIR
+          commands = []
+          commands = commands + Dir["#{Mrg::Grid::Config::Shell::BASE_COMMAND_DIR}/*.rb"]
+          commands = commands + Dir["#{extra}/*.rb"] if extra
+          
+          puts commands.inspect
+          
+          commands.each do |command|
+            require File.join(File.dirname(command), File.basename(command, File.extname(command)))
+          end
+        end
         
         module GenericLegacyInterface
         end
@@ -217,12 +249,4 @@ module Mrg
   end
 end
 
-require 'mrg/grid/config/shell/add_param'
-require 'mrg/grid/config/shell/activate'
-require 'mrg/grid/config/shell/console'
-require 'mrg/grid/config/shell/inventory'
-require 'mrg/grid/config/shell/snapshot'
-require 'mrg/grid/config/shell/apropos'
-require 'mrg/grid/config/shell/load'
-require 'mrg/grid/config/shell/dump'
-require 'mrg/grid/config/shell/feature_import'
+Mrg::Grid::Config::Shell.install_commands
