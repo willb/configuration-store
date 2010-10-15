@@ -305,7 +305,6 @@ module Mrg
         def getParam(name)
           # Print values of input parameters
           log.debug "getParam: name => #{name.inspect}"
-          name = name.upcase
           
           param = Parameter.find_first_by_name(name)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::PARAMETER), "Parameter named #{name} not found") unless param
@@ -325,7 +324,6 @@ module Mrg
         def addParam(name)
           # Print values of input parameters
           log.debug "addParam: name => #{name.inspect}"
-          name = name.upcase
           
            fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::PARAMETER), "Parameter name #{name} is already taken") if Parameter.find_first_by_name(name)
           fail(Errors.make(Errors::INVALID_NAME, Errors::PARAMETER), "Parameter names cannot be empty") if name.size == 0

@@ -24,9 +24,10 @@ module Mrg
         end
 
 
-        it "should convert parameter names to all-uppercase" do
-          param = @store.addParam("biotech")
-          param.name.should == "BIOTECH"
+        it "should preserve the case of parameter names" do
+          param = @store.addParam("bioTech")
+          param = @store.getParam("BIOTECH")
+          param.name.should == "bioTech"
         end
 
         it "disallows creating a parameter with a name already in use" do
@@ -47,17 +48,17 @@ module Mrg
         end
         
         it "enables finding a created parameter case-insensitively" do
-          param = @store.addParam("BIOTECH")
-          param = @store.getParam("biotech")
+          param1 = @store.addParam("BIOTECH")
+          param2 = @store.getParam("biotech")
           
-          param.name.should == "BIOTECH"
+          param1.should == param2
         end
         
         it "enables finding a case-insensitively created parameter" do
-          param = @store.addParam("biotech")
-          param = @store.getParam("BIOTECH")
+          param1 = @store.addParam("biotech")
+          param2 = @store.getParam("BIOTECH")
           
-          param.name.should == "BIOTECH"
+          param1.should == param2
         end
         
         it "should be possible to delete a parameter" do
