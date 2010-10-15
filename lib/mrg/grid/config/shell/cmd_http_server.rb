@@ -119,6 +119,43 @@ module Mrg
             end
           end
           
+          get %r{/changes-to/([^/]+)/since/([0-9]+)/?} do |node,c_old|
+            store = settings.store
+            
+            c_new = (1 << 61)
+            
+            # puts "node is '#{node}'"
+            # puts "c_when is '#{c_when}'"
+            
+            n = store.getNode(node)
+            
+            diff = n.whatChanged(c_old, c_new)
+            
+            comments = ["# Changes in the configuration to #{node} since version #{c_old}:\n"]
+            
+            diff.params.each do |param|
+              comments << "# + the value of #{param} has changed\n"
+            end
+
+            diff.affected.each do |subsys|
+              comments << "# + subsystem #{subsys} is affected\n"
+            end
+
+            diff.restart.each do |subsys|
+              comments << "# + subsystem #{subsys} must restart\n"
+            end
+            
+            comments << "# Current configuration for #{node} follows:\n"
+            
+            config = n.getConfig({"version"=>(c_old.to_i)})
+            
+            config.keys.sort.map do |k|
+              comments << "#{k} = #{config[k]}\n"
+            end
+            
+            comments
+          end
+          
           get '/config/:node/?' do |node|
             store = settings.store
             n = store.getNode(node)
@@ -130,6 +167,10 @@ module Mrg
           end
 
           get '/unactivated-config/:node/?' do |node|
+            redirect "/current-config/#{node}/", 301
+          end
+
+          get '/current-config/:node/?' do |node|
             store = settings.store
             n = store.getNode(node)
             config = n.getConfig
@@ -137,6 +178,35 @@ module Mrg
             config.keys.sort.map do |k|
               "#{k} = #{config[k]}\n"
             end
+          end
+
+          get '/help/?' do
+            <<-USAGE
+The Wallaby HTTP server provides read-only access to node 
+configurations.  It understands the following requests:
+
+GET /config/$NODENAME/
+    returns a configuration file with the last activated
+    configuration for $NODENAME.
+
+GET /config/$NODENAME/at/$VERSION/
+    returns a configuration file with the latest configuration
+    for $NODENAME that is not more recent than $VERSION.
+
+GET /current-config/$NODENAME/
+    returns a configuration file with the "current"
+    configuration for $NODENAME, possibly reflecting changes
+    made since the last activation.
+
+GET /changes-to/$NODENAME/since/$VERSION/
+    returns a configuration file for the last activated
+    configuration for $NODENAME, including comments at the
+    beginning indicating which parameters have changed since
+    $VERSION and which subsystems are affected by these changes.
+
+GET /help/
+    returns this message
+            USAGE
           end
 
         end
