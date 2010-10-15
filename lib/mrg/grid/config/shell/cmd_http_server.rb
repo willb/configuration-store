@@ -46,6 +46,54 @@ module Mrg
     module Config
       module Shell
         class HttpServer
+          def drop_privs(to_user=nil)
+            to_user ||= "wallaby"
+            if Process.euid == 0
+              begin
+                new_uid = Etc.getpwnam(to_user).uid
+                new_gid = Etc.getpwnam(to_user).gid
+
+                Process::Sys.setgid(new_gid)
+                Process::Sys.setuid(new_uid)
+              rescue ArgumentError
+                Syslog.open do |s|
+                  s.warning "can't switch to user #{to_user}; does it exist?"
+                  puts  "can't switch to user #{to_user}; does it exist?"
+                end
+              end
+            end
+          end
+
+          def daemonify
+            pid = nil
+            sid = nil
+
+            return if Process.ppid == 1
+
+            pid = fork
+
+            if pid != nil
+              if pid < 0
+                Syslog.open {|s| s.fatal "can't fork child process"}
+                exit!(1)
+              end
+              exit(0)
+            end
+
+            sid = Process.setsid
+            if sid < 0
+              Syslog.open {|s| s.fatal "can't set self as session group leader"}
+              exit!(1)
+            end
+
+            exit!(1) if Dir.chdir("/") < 0
+
+            # close open FDs
+            $stdin.reopen("/dev/null", "r")
+            $stdout.reopen("/dev/null", "w")
+            $stderr.reopen("/dev/null", "w")
+          end
+          
           def initialize(storeclient, name, op=:httpServer)
 
             @op = op
@@ -68,13 +116,32 @@ module Mrg
                 @port = num.to_i
               end
               
+              opts.on("-q", "--quiet", "do not log HTTP requests to stderr") do
+                @quiet = true
+              end
+              
+              opts.on("--run-as USER", "unix user to execute wallaby-agent as") do |user|
+                # NB:  Perhaps obviously, this only has an effect if we're running as root
+                # Also, if we're running in the foreground, we'll run as the current user
+                # unless a run-as user is explicitly specified
+                @run_as = user
+              end
+
+              opts.on("-f", "--foreground", "run HTTP server in the foreground") do
+                @do_daemonify = false
+              end
+              
             end
 
           end
           
           def main(args)
             begin
+              @do_daemonify = true
+              @run_as = nil
+              
               @oparser.parse!(args)
+              
             rescue OptionParser::InvalidOption
               puts @oparser
               return
@@ -93,7 +160,17 @@ module Mrg
               return 1
             end
             
+            daemonify if @do_daemonify
+            drop_privs(@run_as) if (@do_daemonify || @run_as)
+            
             WallabyHttpServer.set :store, @store
+            
+            if @quiet
+              WallabyHttpServer.disable :dump_errors, :logging
+            else
+              WallabyHttpServer.enable :dump_errors, :logging
+            end
+            
             WallabyHttpServer.run! :port=>(@port || 4567)
             0
           end
@@ -101,7 +178,7 @@ module Mrg
         end
 
         class WallabyHttpServer < Sinatra::Base
-          enable :lock, :dump_errors, :logging
+          enable :lock
           disable :public
 
           get %r{/config/([^/]+)/at/([0-9]+)/?} do |node,c_when|
