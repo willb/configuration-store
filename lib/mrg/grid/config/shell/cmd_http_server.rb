@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# skel:  template wallaby-shell class
+# http-server:  HTTP gateway to the wallaby agent
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
