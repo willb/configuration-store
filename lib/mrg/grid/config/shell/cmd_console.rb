@@ -48,19 +48,26 @@ module Mrg
               
               opname = "console"
               
-              opts.banner = "Usage:  wallaby #{opname}\ninteractive wallaby environment."
-                
+              opts.banner = "Usage:  wallaby #{opname} [SCRIPT...]\ninteractive wallaby environment."
+              
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
               end
+
+              opts.on("-r", "--require-file FILE", "require FILE before doing anything else") do |file|
+                @loadfiles << file
+              end
+
             end
 
           end
           
           def main(args)
             begin
+              @loadfiles = []
               @oparser.parse!(args)
+              @evalfiles = args.dup
             rescue OptionParser::InvalidOption
               puts @oparser
               return
@@ -76,7 +83,18 @@ module Mrg
           def act(kwargs=nil)
             ARGV.clear
             ::Wallaby::store = @store
-            ::IRB.start
+            @loadfiles.each {|f| require f }
+            if @evalfiles.size > 0
+              begin
+                @evalfiles.each {|f| load f }
+                0
+              rescue Exception=>e
+                puts "script failed; #{e}"
+                1
+              end
+            else
+              ::IRB.start
+            end
           end
           
         end
