@@ -190,6 +190,11 @@ fi
 
 %changelog
 
+
+* Fri Oct 15 2010 willb <willb@redhat> - 0.9.20-1
+- Parameter names are now case-preserving but case-insensitive, viz., adding "fooBar" and searching for "FOOBAR" will get you "fooBar"
+- 'wallaby http-server' improvements:  runs as daemon (and optionally as a different user); changes-to and help routes
+
 * Thu Oct 14 2010 willb <willb@redhat> - 0.9.19-1
 - More flexible support for user-local wallaby shell commands (no public API yet, though)
 - 'wallaby explain' shell command
