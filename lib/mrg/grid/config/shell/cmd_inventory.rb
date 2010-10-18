@@ -17,6 +17,7 @@
 # limitations under the License.
 
 require 'ostruct'
+require 'rhubarb/rhubarb' # need this for version numbers
 
 module Mrg
   module Grid
@@ -34,8 +35,7 @@ module Mrg
           def initialize(storeclient, name, op=:inventory)
 
             @sortby = 'name'
-            @allnodes = true
-            @nodekind = ''
+            @constraint = nil
 
             @op = op
             @store = storeclient
@@ -57,13 +57,12 @@ module Mrg
                 @sortby = sort.downcase
               end
 
-              opts.on("-a", "--all", "show all nodes (default)") do
-                @allnodes = true
-              end
-
               opts.on("-o", "--only KIND", NODEKINDS, "show only KIND nodes", "   (#{NODEKINDS.join(", ")})") do |nkind|
-                @allnodes = false
-                @nodekind = nkind.downcase
+                @constraint = "provisioned == #{nkind == 'provisioned'}"
+              end
+              
+              opts.on("-c", "--constraint EXPR", "show only nodes for which EXPR is true") do |expr|
+                @constraint = expr
               end
               
             end
@@ -88,27 +87,49 @@ module Mrg
           def act(kwargs=nil)
             nodes = @store.console.objects(:class=>"Node")
 
-            nodes = nodes.map do |node|
+            ::Fixnum.class_eval do
+              def hour_ago
+                Rhubarb::Util::timestamp(Time.now.utc - (60 * 60 * self))
+              end
+              
+              alias :hours_ago :hour_ago
+              
+              def is_never
+                self == 0
+              end
+            end
+
+            nodes = nodes.select {|node| @constraint == nil || safe_instance_eval(node,@constraint)}
+            node_structs = nodes.map do |node|
               n = OpenStruct.new
               n.name = node.name
               n.provisioned = node.provisioned
               n.checkin = node.last_checkin
-              ((@allnodes || ((@nodekind == "provisioned") == n.provisioned)) && n) || nil
-            end.compact
+              n
+            end
 
-            if nodes.size == 0
-              puts "No nodes configured."
+            if node_structs.size == 0
+              puts "No matching nodes configured."
               return 1
             end
 
             printf("%25.25s %15.15s %40.40s\n", "node name", "is provisioned?", "last checkin")
             printf("%25.25s %15.15s %40.40s\n", "---------", "---------------", "------------")
 
-            nodes.sort_by {|node| node.send(@sortby)}.each do |node|
+            node_structs.sort_by {|node| node.send(@sortby)}.each do |node|
               printf("%25.25s %15.15s %40.40s\n", node.name, node.provisioned ? "provisioned" : "unprovisioned", format_time(node.checkin))
             end
             return 0
           end
+          
+          private
+          def safe_instance_eval(obj, str)
+            Thread.start {
+              $SAFE=4
+              obj.instance_eval str
+            }.value
+          end
+          
         end
 
         Mrg::Grid::Config::Shell::COMMANDS['inventory'] = Inventory
