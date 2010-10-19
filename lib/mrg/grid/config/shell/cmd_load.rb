@@ -63,21 +63,18 @@ module Mrg
           end
         end
         
-        class Load
-          def initialize(storeclient, name, op=:skel)
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            Mrg::Grid::SerializedConfigs::ConfigLoader.log = LoadSupport::SimpleLog.new(:info)
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
-              
-              opname = "load"
-              
-              opts.banner = "Usage:  wallaby #{opname} SNAPFILE\nLoads a wallaby snapshot from SNAPFILE."
+        class Load < Command
+          def self.opname
+            "load"
+          end
+          
+          def self.description 
+            "Loads a wallaby snapshot from SNAPFILE."
+          end
+          
+          def init_option_parser
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname} SNAPFILE\n#{self.class.description}."
                 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -106,25 +103,19 @@ module Mrg
                 Mrg::Grid::SerializedConfigs::ConfigLoader.log = LoadSupport::SimpleLog.new(:info, :debug)
               end
             end
+          end
 
+          def init_log(*args)
+            Mrg::Grid::SerializedConfigs::ConfigLoader.log = LoadSupport::SimpleLog.new(:info)
           end
           
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+          register_callback :before_option_parsing, :init_log
+
+          def init_input(*args)
             @input = (args.size > 0 ? open(args[0]) : $stdin)
-            
-            act
           end
+          
+          register_callback :after_option_parsing, :init_input
           
           def act(kwargs=nil)
             
@@ -148,12 +139,8 @@ module Mrg
               end
             end
             return 0
-          end
-          
+          end          
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['load'] = Load
-        
       end
     end
   end
