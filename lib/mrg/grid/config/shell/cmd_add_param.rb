@@ -20,74 +20,78 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class ParamOps
-          MESSAGES = {:kind=>:setType, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setDefaultMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
+        class ParamOps < Command
+          MESSAGES = {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setDefaultMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
 
-          def initialize(storeclient, name, op=:addParam)
-            po_initialize(storeclient, name, op)
-          end
-          
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
-            args.each do |name|
-              @name = name
-              puts "#{@op == :addParam ? "Creating" : "Modifying"} the following param: #{@name} with #{@options.inspect}"
-              act(@options)
-            end
-          end
-          
-          def act(kwargs)
-            param = @store.send(@op, @name)
-            @options.each do |option, value|
-              msg = MESSAGES[option]
-              param.send(msg, value)
-            end
-            0
-          end
-          
-          private
-          
-          def po_initialize(storeclient, name, op)
-            @op = op
-            @store = storeclient
-            @name = name
+          def init_option_parser
             @options = {}
-            @oparser = OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{op == :addParam ? "add-param" : "modify-param"} param-name [...] [param-options]"
-                
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname == "add-param" ? "add-param" : "modify-param"} param-name [...] [param-options]"
+              
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
               end
               
               {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}.each do |option, kind|
-                opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{@op==:addParam ? "newly-created" : "modified"} parameter") do |value|
+                opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{self.class.opname=="add-param" ? "newly-created" : "modified"} parameter") do |value|
                   @options[option] = value
                 end
               end
             end
           end
+
+          def post_arg_callback(*args)
+            puts args.inspect
+            @args = args.dup
+          end
+
+          def act
+            
+            @args.each do |name|
+              puts "#{self.class.opname == "add-param" ? "Creating" : "Modifying"} the following param: #{name} with #{@options.inspect}"
+              
+              param = @store.send(storeop, name)
+              @options.each do |option, value|
+                msg = MESSAGES[option]
+                param.send(msg, value)
+              end
+            end
+            
+            0
+          end
         end
         
         class AddParam < ParamOps
-          Mrg::Grid::Config::Shell::COMMANDS['add-param'] = AddParam
+          def self.opname
+            "add-param"
+          end
+
+          def self.description
+            "Adds a parameter to the store."
+          end
+
+          def storeop
+            :addParam
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
         end
         
         class ModifyParam < ParamOps
-          Mrg::Grid::Config::Shell::COMMANDS['modify-param'] = ModifyParam
-          def initialize(storeclient, name, op=:getParam)
-            po_initialize(storeclient, name, op)
+          def self.opname
+            "modify-param"
           end
+
+          def self.description
+            "Alters a parameter in the store."
+          end
+
+          def storeop
+            :getParam
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
         end
       end
     end
