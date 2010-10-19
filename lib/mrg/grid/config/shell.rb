@@ -23,11 +23,14 @@ require 'timeout'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 
+require 'mrg/grid/config/shell/command'
+
 module Mrg
   module Grid
     module Config
       module Shell
         COMMANDS={}
+        COMMAND_LIST=[]
         
         Args = Struct.new(:cmd, :for_wt, :for_cmd)
 
@@ -47,8 +50,8 @@ module Mrg
 
         def self.register_command(klass, name=nil)
           # XXX:  validate registered commands
-          name ||= klass.command_name
-          COMMANDS[command_name] = klass
+          name ||= klass.opname
+          COMMANDS[name] = klass
         end
 
         def self.preprocess_args(args)
@@ -68,6 +71,20 @@ module Mrg
           result
         end
         
+        def self.install_commands(extra=nil)
+          extra ||= self.USER_COMMAND_DIR
+          commands = []
+          commands = commands + Dir["#{Mrg::Grid::Config::Shell::BASE_COMMAND_DIR}/cmd_*.rb"]
+          commands = commands + Dir["#{extra}/cmd_*.rb"] if extra
+          
+          commands.each do |command|
+            require File.join(File.dirname(command), File.basename(command, File.extname(command)))
+          end
+          
+          COMMAND_LIST.each do |cmd_klass|
+            register_command(cmd_klass)
+          end
+        end
         
         module GenericLegacyInterface
           module CM
@@ -134,17 +151,6 @@ module Mrg
           def self.included(receiver)
             receiver.extend         CM
             receiver.send :include, IM
-          end
-        end        
-        
-        def self.install_commands(extra=nil)
-          extra ||= self.USER_COMMAND_DIR
-          commands = []
-          commands = commands + Dir["#{Mrg::Grid::Config::Shell::BASE_COMMAND_DIR}/cmd_*.rb"]
-          commands = commands + Dir["#{extra}/cmd_*.rb"] if extra
-          
-          commands.each do |command|
-            require File.join(File.dirname(command), File.basename(command, File.extname(command)))
           end
         end
         
