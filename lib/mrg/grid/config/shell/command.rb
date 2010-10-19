@@ -81,6 +81,7 @@ module Mrg
               act
             rescue Exception=>ex
               puts "fatal:  #{ex}"
+              puts ex.backtrace.join("\n") if ENV['WALLABY_SHELL_DEBUG']
               1
             end
           end
