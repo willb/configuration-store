@@ -21,32 +21,6 @@ module Mrg
     module Config
       module Shell
         module LoadSupport
-          class LegacyInterface
-            def command
-              "load"
-            end
-            
-            def banner
-              "Usage: wallaby-load [options] file"
-            end
-            
-            def collect_specific_options(opts, specific_options)
-              opts.on("-a", "--activate", "attempt to activate config after loading") do
-                specific_options << "--activate"
-              end
-
-              opts.on("-q", "--quiet", "do not provide progress on load feedback") do
-                specific_options << "--activate"
-              end
-
-              opts.on("-v", "--verbose", "provide more progress on load feedback") do
-                specific_options << "--verbose"
-              end              
-            end
-            
-            include ::Mrg::Grid::Config::Shell::GenericLegacyInterface
-          end
-
           class SimpleLog
             def initialize(*ms)
               @accepted_messages = ms.map {|msg| msg.to_s}.uniq
