@@ -91,7 +91,7 @@ module Mrg
           
           register_callback :after_option_parsing, :init_input
           
-          def act(kwargs=nil)
+          def act
             
             @store.storeinit("resetdb"=>"yes")
 

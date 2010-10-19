@@ -50,6 +50,7 @@ module Mrg
             @op = op || self.class.opname
             @store = storeclient
             @name = name
+            @kwargs = {}
 
             @oparser = init_option_parser
 
@@ -84,7 +85,7 @@ module Mrg
             end
           end
           
-          def act(kwargs=nil)
+          def act
             0
           end
           
