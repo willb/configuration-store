@@ -76,7 +76,12 @@ module Mrg
 
             run_callbacks(:after_option_parsing, *args)
             
-            act
+            begin
+              act
+            rescue Exception=>ex
+              puts "fatal:  #{ex}"
+              1
+            end
           end
           
           def act(kwargs=nil)
