@@ -21,7 +21,7 @@ module Mrg
     module Config
       module Shell
         module ParamOps
-          MESSAGES = {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setDefaultMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
+          MESSAGES = {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
 
           def init_option_parser
             @options = {}
