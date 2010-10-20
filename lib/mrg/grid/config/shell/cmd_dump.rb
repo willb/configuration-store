@@ -20,24 +20,6 @@ module Mrg
   module Grid
     module Config
       module Shell
-        module DumpSupport
-          class LegacyInterface
-            def command
-              "dump"
-            end
-            
-            def banner
-              "Usage: wallaby-dump FILE"
-            end
-            
-            def collect_specific_options(opts, specific_options)
-
-            end
-            
-            include ::Mrg::Grid::Config::Shell::GenericLegacyInterface
-          end
-        end
-        
         class Dump < Command
           def self.opname
             "dump"
