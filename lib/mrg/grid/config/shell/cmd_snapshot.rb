@@ -32,7 +32,7 @@ module Mrg
           end
 
           def act(kwargs=nil)
-            @store.send(storeop, @name).status
+            store.send(storeop, @name).status
           end
           
           def init_option_parser
