@@ -129,9 +129,9 @@ module Mrg
           args = preprocess_args(args) unless args.is_a?(Args)
 
           unless args.cmd
-            puts "fatal:  you must specify a command (#{Mrg::Grid::Config::Shell::COMMANDS.keys.join(", ")})"
+            puts "fatal:  you must specify a command; use \"wallaby help commands\" for a list."
             puts op
-            exit
+            exit(1)
           end
 
           begin

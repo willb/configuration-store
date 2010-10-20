@@ -62,13 +62,14 @@ module Mrg
             
             begin
               oparser.parse!(args)
-            rescue OptionParser::InvalidOption
+            rescue OptionParser::InvalidOption => io
+              puts io
               puts oparser
-              return
+              return 1
             rescue OptionParser::InvalidArgument => ia
               puts ia
               puts oparser
-              return
+              return 1
             end
 
             run_callbacks(:after_option_parsing, *args)

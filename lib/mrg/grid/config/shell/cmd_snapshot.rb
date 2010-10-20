@@ -23,9 +23,7 @@ module Mrg
         module SnapshotBase
           def check_name(*args)
             if args.size != 1 && @op != :listSnapshots
-              puts "error:  you must specify exactly one snapshot name"
-              puts @oparser
-              return
+              exit!(1, "you must specify exactly one snapshot name")
             end
             
             @name = args[0]
