@@ -20,21 +20,22 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class Apropos
-          def initialize(storeclient, name, op=:apropos)
+        class Apropos < Command
+          def self.opname
+            "apropos"
+          end
 
-            @op = op
-            @store = storeclient
-            @name = name
+          def self.description
+            "Provides a list of parameters that contain KEYWORD in their descriptions."
+          end
+
+          def init_option_parser
             @use_regex = false
             @insens = nil
 
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+            OptionParser.new do |opts|
               
-              opname = "apropos KEYWORD"
-              
-              opts.banner = "Usage:  wallaby #{opname}\nProvides a list of parameters that contain KEYWORD in their descriptions."
+              opts.banner = "Usage:  wallaby #{self.class.opname} KEYWORD\nProvides a list of parameters that contain KEYWORD in their descriptions."
                 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -49,29 +50,21 @@ module Mrg
                 @insens = Regexp::IGNORECASE
               end
             end
-
           end
-          
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+
+          def check_args(*args)
             if args.size != 1
               puts "error:  you must specify a keyword"
-              puts @oparser
-              return
+              puts oparser
+              exit!(1)
             end
-            
+
             @keyword = args[0]
-            
+          end
+          
+          register_callback :after_option_parsing, :check_args
+
+          def act
             if @use_regex
               @matches = Proc.new do |name|
                 @regexp ||= Regexp.new(@keyword, @insens)
@@ -85,12 +78,7 @@ module Mrg
               end
             end
 
-            act
-          end
-          
-          def act(kwargs=nil)
-
-            params = @store.parameters.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
+            params = store.parameters.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
 
             params.each do |prm|
               puts "#{prm.name}:  #{prm.description}"
@@ -100,10 +88,6 @@ module Mrg
           end
           
         end
-        
-
-        Mrg::Grid::Config::Shell::COMMANDS['apropos'] = Apropos
-        
       end
     end
   end

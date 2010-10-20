@@ -20,23 +20,8 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class SnapshotBase
-          def initialize(storeclient, name, op=:makeSnapshot)
-            sb_initialize(storeclient, name, op)
-          end
-          
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+        module SnapshotBase
+          def check_name(*args)
             if args.size != 1 && @op != :listSnapshots
               puts "error:  you must specify exactly one snapshot name"
               puts @oparser
@@ -44,32 +29,15 @@ module Mrg
             end
             
             @name = args[0]
-            
-            act
           end
-          
+
           def act(kwargs=nil)
-            param = @store.send(@op, @name)
+            store.send(storeop, @name).status
           end
           
-          private
-          
-          def sb_initialize(storeclient, name, op)
-            @op = op
-            @store = storeclient
-            @name = name
-            @options = {}
-            @oparser = OptionParser.new do |opts|
-              
-              opname = case @op
-              when :makeSnapshot then "make-snapshot SNAPSHOT-NAME"
-              when :loadSnapshot then "load-snapshot SNAPSHOT-NAME"
-              when :listSnapshots then "list-snapshots"
-                
-              else raise "Internal error; invalid op #{@op}"
-              end
-              
-              opts.banner = "Usage:  wallaby #{opname}"
+          def init_option_parser
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname}#{self.class.opargs}\n#{self.class.description}"
                 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -79,27 +47,70 @@ module Mrg
           end
         end
         
-        class MakeSnapshot < SnapshotBase
-          Mrg::Grid::Config::Shell::COMMANDS['make-snapshot'] = MakeSnapshot
-        end
-        
-        class LoadSnapshot < SnapshotBase
-          Mrg::Grid::Config::Shell::COMMANDS['load-snapshot'] = LoadSnapshot
-          def initialize(storeclient, name, op=:loadSnapshot)
-            sb_initialize(storeclient, name, op)
+        class MakeSnapshot < Command
+          include SnapshotBase
+
+          def self.opname
+            "make-snapshot"
           end
-        end
-         
-        class ListSnapshots < SnapshotBase
-          Mrg::Grid::Config::Shell::COMMANDS['list-snapshots'] = ListSnapshots
           
-          def initialize(storeclient, name, op=:listSnapshots)
-            sb_initialize(storeclient, name, op)
+          def self.opargs
+            " SNAPNAME"
+          end
+          
+          def self.description
+            "Makes a snapshot with a given name."
           end
 
-          def act(kwargs=nil)
+          register_callback :after_option_parsing, :check_name
+
+          private
+          def storeop
+            :makeSnapshot
+          end
+        end
+        
+        class LoadSnapshot < Command
+          include SnapshotBase
+
+          def self.opname
+            "load-snapshot"
+          end
+          
+          def self.opargs
+            " SNAPNAME"
+          end
+          
+          def self.description
+            "Loads the snapshot with a given name."
+          end
+
+          register_callback :after_option_parsing, :check_name
+
+          private
+          def storeop
+            :loadSnapshot
+          end
+        end
+        
+        class ListSnapshots < Command
+          include SnapshotBase
+          
+          def self.opname
+            "list-snapshots"
+          end
+          
+          def self.opargs
+            ""
+          end
+          
+          def self.description
+            "Lists snapshots in the store."
+          end
+
+          def act
             success = false
-            @store.console.objects(:class=>"Snapshot").each do |snap|
+            store.console.objects(:class=>"Snapshot").each do |snap|
               success = true
               puts "#{snap.name}"
             end

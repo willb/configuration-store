@@ -36,15 +36,18 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class Console
-          def initialize(storeclient, name, op=:console)
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+        class Console < Command
+          def self.opname
+            "console"
+          end
+          
+          def self.description
+            "Provides an interactive wallaby environment."
+          end
+          
+          def init_option_parser
+            @loadfiles = []
+            OptionParser.new do |opts|
               
               opname = "console"
               
@@ -60,29 +63,17 @@ module Mrg
               end
 
             end
-
           end
           
-          def main(args)
-            begin
-              @loadfiles = []
-              @oparser.parse!(args)
-              @evalfiles = args.dup
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
-            act
+          def set_evalfiles(*args)
+            @evalfiles = args.dup
           end
           
-          def act(kwargs=nil)
+          register_callback :after_option_parsing, :set_evalfiles
+          
+          def act
             ARGV.clear
-            ::Wallaby::store = @store
+            ::Wallaby::store = store
             @loadfiles.each {|f| require f }
             if @evalfiles.size > 0
               begin
@@ -90,6 +81,7 @@ module Mrg
                 0
               rescue Exception=>e
                 puts "script failed; #{e}"
+                puts e.backtrace.join("\n")
                 1
               end
             else
@@ -98,9 +90,6 @@ module Mrg
           end
           
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['console'] = Console
-        
       end
     end
   end

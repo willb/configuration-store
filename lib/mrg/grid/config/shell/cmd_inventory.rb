@@ -23,7 +23,7 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class Inventory
+        class Inventory < Command
           SORTKEYS = %w{name checkin}
           NODEKINDS = %w{provisioned unprovisioned}
           
@@ -32,17 +32,19 @@ module Mrg
             Time.at(t/1000000,t%1000000).to_s
           end
           
-          def initialize(storeclient, name, op=:inventory)
-
-            @sortby = 'name'
-            @constraint = nil
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+          def self.opname
+            "inventory"
+          end
+          
+          def self.description
+            "Lists (a subset of) wallaby-managed nodes."
+          end
+          
+          def init_option_parser
+            
+            OptionParser.new do |opts|
+              @sortby = 'name'
+              @constraint = nil
               
               opname = "inventory"
               
@@ -64,28 +66,11 @@ module Mrg
               opts.on("-c", "--constraint EXPR", "show only nodes for which EXPR is true") do |expr|
                 @constraint = expr
               end
-              
             end
+          end
 
-          end
-          
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return 1
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return 1
-            end
-            
-            act
-          end
-          
-          def act(kwargs=nil)
-            nodes = @store.console.objects(:class=>"Node")
+          def act
+            nodes = store.console.objects(:class=>"Node")
 
             ::Fixnum.class_eval do
               def hour_ago
@@ -131,9 +116,6 @@ module Mrg
           end
           
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['inventory'] = Inventory
-        
       end
     end
   end

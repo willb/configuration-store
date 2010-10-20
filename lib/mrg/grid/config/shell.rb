@@ -23,11 +23,14 @@ require 'timeout'
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 
+require 'mrg/grid/config/shell/command'
+
 module Mrg
   module Grid
     module Config
       module Shell
         COMMANDS={}
+        COMMAND_LIST=[]
         
         Args = Struct.new(:cmd, :for_wt, :for_cmd)
 
@@ -47,8 +50,8 @@ module Mrg
 
         def self.register_command(klass, name=nil)
           # XXX:  validate registered commands
-          name ||= klass.command_name
-          COMMANDS[command_name] = klass
+          name ||= klass.opname
+          COMMANDS[name] = klass
         end
 
         def self.preprocess_args(args)
@@ -68,75 +71,6 @@ module Mrg
           result
         end
         
-        
-        module GenericLegacyInterface
-          module CM
-            def main(args=nil)
-              self.new.main(args)
-            end
-          end
-          
-          module IM
-            def collect_common_options(opts, common_options)
-              opts.on("-h", "--help", "shows this message") do
-                raise OptionParser::InvalidOption.new
-              end
-
-              opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
-                common_options << "--host" << h
-              end
-
-              opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
-                common_options << "--port" << num
-              end
-
-              opts.on("-U", "--user NAME", "qpid username") do |name|
-                common_options << "--user" << name
-              end
-
-              opts.on("-P", "--password PASS", "qpid password") do |pass|
-                common_options << "--password" << pass
-              end
-
-              opts.on("-M", "--auth-mechanism AUTH", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
-                common_options << "--auth-mechanism" << mechanism
-              end
-            end
-            
-            def main(args=nil)
-              args ||= ARGV
-              
-              common_options = []
-              specific_options = []
-              
-              op = OptionParser.new do |opts|
-                opts.banner = banner
-
-                collect_common_options(opts, common_options)
-                collect_specific_options(opts, specific_options)
-              end
-              
-              begin
-                op.parse!(args)
-              rescue OptionParser::InvalidOption
-                puts op
-                exit
-              rescue OptionParser::InvalidArgument => ia
-                puts ia.message
-                puts op
-                exit
-              end
-              
-              Mrg::Grid::Config::Shell::main(common_options + [command] + specific_options + args)
-            end
-          end
-          
-          def self.included(receiver)
-            receiver.extend         CM
-            receiver.send :include, IM
-          end
-        end        
-        
         def self.install_commands(extra=nil)
           extra ||= self.USER_COMMAND_DIR
           commands = []
@@ -146,11 +80,12 @@ module Mrg
           commands.each do |command|
             require File.join(File.dirname(command), File.basename(command, File.extname(command)))
           end
-        end
-        
-        module GenericLegacyInterface
-        end
           
+          COMMAND_LIST.each do |cmd_klass|
+            register_command(cmd_klass)
+          end
+        end
+
         def self.main(args)
           host = ENV['WALLABY_BROKER_HOST'] || "localhost"
           port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
@@ -206,39 +141,41 @@ module Mrg
             exit
           end
 
-          console = Qmf::Console.new
+          store_client = Proc.new do
+            console = Qmf::Console.new
 
-          settings = Qmf::ConnectionSettings.new
-          settings.username = username if username
-          settings.password = password if password
-          settings.host = host
-          settings.port = port
+            settings = Qmf::ConnectionSettings.new
+            settings.username = username if username
+            settings.password = password if password
+            settings.host = host
+            settings.port = port
 
-          implicit_mechanism = (username || password) ? "PLAIN" : "ANONYMOUS"
-          settings.mechanism = explicit_mechanism || implicit_mechanism
+            implicit_mechanism = (username || password) ? "PLAIN" : "ANONYMOUS"
+            settings.mechanism = explicit_mechanism || implicit_mechanism
 
-          begin
-            Timeout.timeout(15) do
-              connection = Qmf::Connection.new(settings)
+            begin
+              Timeout.timeout(15) do
+                connection = Qmf::Connection.new(settings)
 
-              broker = console.add_connection(connection)
+                broker = console.add_connection(connection)
 
-              broker.wait_for_stable
+                broker.wait_for_stable
+              end
+            rescue Timeout::Error
+              puts "fatal:  timed out connecting to broker on #{host}:#{port}"
+              exit!(1)
             end
-          rescue Timeout::Error
-            puts "fatal:  timed out connecting to broker on #{host}:#{port}"
-            exit!(1)
+
+            store = console.object(:class=>"Store")
+
+            unless store
+              puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
+              puts "use -h for help"
+              exit!(1)
+            end
+
+            Mrg::Grid::ConfigClient::Store.new(store, console)
           end
-
-          store = console.object(:class=>"Store")
-
-          unless store
-            puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
-            puts "use -h for help"
-            exit!(1)
-          end
-
-          store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
           exit!(args.cmd.new(store_client, "").main(args.for_cmd) || 0)
         end

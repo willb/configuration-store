@@ -45,7 +45,7 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class HttpServer
+        class HttpServer < Command
           def drop_privs(to_user=nil)
             to_user ||= "wallaby"
             if Process.euid == 0
@@ -77,7 +77,7 @@ module Mrg
                 Syslog.open {|s| s.fatal "can't fork child process"}
                 exit!(1)
               end
-              exit(0)
+              exit!(0)
             end
 
             sid = Process.setsid
@@ -93,15 +93,20 @@ module Mrg
             $stdout.reopen("/dev/null", "w")
             $stderr.reopen("/dev/null", "w")
           end
+
+          def self.opname
+            "http-server"
+          end
           
-          def initialize(storeclient, name, op=:httpServer)
+          def self.description
+            "Provides a HTTP service gateway to wallaby node configurations."
+          end
 
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+          def init_option_parser
+            @do_daemonify = true
+            @run_as = nil
+            
+            OptionParser.new do |opts|
               
               opname = "http-server"
               
@@ -130,31 +135,10 @@ module Mrg
               opts.on("-f", "--foreground", "run HTTP server in the foreground") do
                 @do_daemonify = false
               end
-              
             end
-
           end
           
-          def main(args)
-            begin
-              @do_daemonify = true
-              @run_as = nil
-              
-              @oparser.parse!(args)
-              
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
-            act
-          end
-          
-          def act(kwargs=nil)
+          def act
             unless Mrg::Grid::Config::Shell::HTTP_SERVER_DEPS_OK
               puts "fatal:  'wallaby http-server' requires rubygems and sinatra to be installed"
               return 1
@@ -163,7 +147,7 @@ module Mrg
             daemonify if @do_daemonify
             drop_privs(@run_as) if (@do_daemonify || @run_as)
             
-            WallabyHttpServer.set :store, @store
+            WallabyHttpServer.set :store, store
             
             if @quiet
               WallabyHttpServer.disable :dump_errors, :logging
@@ -287,9 +271,6 @@ GET /help/
           end
 
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['http-server'] = HttpServer
-        
       end
     end
   end

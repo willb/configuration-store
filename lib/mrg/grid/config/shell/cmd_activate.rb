@@ -20,45 +20,17 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class Activate
-          def initialize(storeclient, name, op=:activate)
+        class Activate < Command
+          def self.opname
+            "activate"
+          end
 
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
-              
-              opname = "activate"
-              
-              opts.banner = "Usage:  wallaby #{opname}\nActivates pending changes to the pool configuration."
-                
-              opts.on("-h", "--help", "displays this message") do
-                puts @oparser
-                exit
-              end
-            end
-
+          def self.description
+            "Activates pending changes to the pool configuration."
           end
           
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return 1
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return 1
-            end
-            
-            act
-          end
-          
-          def act(kwargs=nil)
-            explain = @store.activateConfig
+          def act
+            explain = store.activateConfig
             if explain != {}
               puts "Failed to activate configuration; please correct the following errors."
               explain.each do |node, node_explain|
@@ -71,11 +43,7 @@ module Mrg
             end
             0
           end
-          
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['activate'] = Activate
-        
       end
     end
   end
