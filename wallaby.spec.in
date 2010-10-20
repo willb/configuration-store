@@ -168,6 +168,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
 %{ruby_sitelib}/mrg/grid/config/dbmigrate/5.rb
 %{ruby_sitelib}/mrg/grid/util/graph.rb
+%{ruby_sitelib}/mrg/grid/util/daemon.rb
 %{ruby_sitelib}/mrg/grid/config/shell.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_apropos.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_console.rb
@@ -179,6 +180,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_activate.rb
+%{ruby_sitelib}/mrg/grid/config/shell/command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
 
 
