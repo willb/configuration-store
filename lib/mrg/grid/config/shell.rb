@@ -85,78 +85,7 @@ module Mrg
             register_command(cmd_klass)
           end
         end
-        
-        module GenericLegacyInterface
-          module CM
-            def main(args=nil)
-              self.new.main(args)
-            end
-          end
-          
-          module IM
-            def collect_common_options(opts, common_options)
-              opts.on("-h", "--help", "shows this message") do
-                raise OptionParser::InvalidOption.new
-              end
 
-              opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
-                common_options << "--host" << h
-              end
-
-              opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
-                common_options << "--port" << num
-              end
-
-              opts.on("-U", "--user NAME", "qpid username") do |name|
-                common_options << "--user" << name
-              end
-
-              opts.on("-P", "--password PASS", "qpid password") do |pass|
-                common_options << "--password" << pass
-              end
-
-              opts.on("-M", "--auth-mechanism AUTH", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
-                common_options << "--auth-mechanism" << mechanism
-              end
-            end
-            
-            def main(args=nil)
-              args ||= ARGV
-              
-              common_options = []
-              specific_options = []
-              
-              op = OptionParser.new do |opts|
-                opts.banner = banner
-
-                collect_common_options(opts, common_options)
-                collect_specific_options(opts, specific_options)
-              end
-              
-              begin
-                op.parse!(args)
-              rescue OptionParser::InvalidOption
-                puts op
-                exit
-              rescue OptionParser::InvalidArgument => ia
-                puts ia.message
-                puts op
-                exit
-              end
-              
-              Mrg::Grid::Config::Shell::main(common_options + [command] + specific_options + args)
-            end
-          end
-          
-          def self.included(receiver)
-            receiver.extend         CM
-            receiver.send :include, IM
-          end
-        end
-        
-        module GenericLegacyInterface
-        end
-          
         def self.main(args)
           host = ENV['WALLABY_BROKER_HOST'] || "localhost"
           port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
