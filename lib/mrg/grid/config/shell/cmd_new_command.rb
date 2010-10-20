@@ -133,13 +133,13 @@ module Mrg
 
           def class_template_text
             %q{class <%=@classname%> < ::Mrg::Grid::Config::Shell::Command
-  # This method returns the operation name; for "wallaby foo", it
+  # opname returns the operation name; for "wallaby foo", it
   # would return "foo".
   def self.opname
     "<%= @cmd_name %>"
   end
 
-  # This method returns a short description of this command, suitable 
+  # description returns a short description of this command, suitable 
   # for use in the output of "wallaby help commands".
   def self.description
     "<%= @description %>"
@@ -159,10 +159,12 @@ module Mrg
 <% @initializer_callbacks.each_with_index do |callback,i| %>
 
   def <%= callback %>
-    <% if i == 0 %>
+<% if i == 0 %>
     # You can define multiple callback methods for each of several
-    # events. This method will be called at the end of the initializer.
-    <% end %>
+    # events. <%= callback%> will be called at the end of the initializer.
+<% else %>
+    # <%= callback%> will be invoked at the end of the initializer.
+<% end %>
   end
 
   register_callback :initialize, :<%= callback %>
@@ -170,12 +172,14 @@ module Mrg
 <% @before_option_parsing_callbacks.each_with_index do |callback,i| %>
 
   def <%= callback%>(*args)
-    <% if i == 0 %>
-    # This method will be invoked before command-line argument
+<% if i == 0 %>
+    # <%= callback%> will be invoked before command-line argument
     # processing. args will contain every argument passed to this
     # command (before parsing, but after any changes made by prior
     # callbacks).
-    <% end %>
+<% else %>
+    # <%= callback%> will be invoked before command-line parsing.
+<% end %>
   end
 
   register_callback :before_option_parsing, :<%= callback%>
@@ -183,13 +187,15 @@ module Mrg
 <% @after_option_parsing_callbacks.each_with_index do |callback,i| %>
 
   def <%= callback%>(*args)
-    <% if i == 0 %>
-    # This method will be invoked after command-line argument
+<% if i == 0 %>
+    # <%= callback%> will be invoked after command-line argument
     # processing.  args will contain every argument passed to this
     # command (after any processed command-line options are removed),
     # minus any arguments removed by prior callbacks. It may include,
     # for example, input filenames.
-    <% end %>
+<% else %>
+    # <%= callback%> will be invoked after command-line parsing.
+<% end %>
   end
 
   register_callback :after_option_parsing, :<%= callback%>
