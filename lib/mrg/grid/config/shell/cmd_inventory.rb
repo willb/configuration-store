@@ -17,7 +17,6 @@
 # limitations under the License.
 
 require 'ostruct'
-require 'rhubarb/rhubarb' # need this for version numbers
 
 module Mrg
   module Grid
@@ -26,6 +25,11 @@ module Mrg
         class Inventory < Command
           SORTKEYS = %w{name checkin}
           NODEKINDS = %w{provisioned unprovisioned}
+          
+          def timestamp(tm=nil)
+            tm ||= Time.now.utc
+            (tm.tv_sec * 1000000) + tm.tv_usec
+          end
           
           def format_time(t)
             return "never" if t == 0
@@ -74,7 +78,7 @@ module Mrg
 
             ::Fixnum.class_eval do
               def hour_ago
-                Rhubarb::Util::timestamp(Time.now.utc - (60 * 60 * self))
+                timestamp(Time.now.utc - (60 * 60 * self))
               end
               
               alias :hours_ago :hour_ago
