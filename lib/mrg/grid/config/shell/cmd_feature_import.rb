@@ -41,7 +41,15 @@ module Mrg
           end
         end
         
-        class FeatureImport
+        class FeatureImport < Command
+          def self.opname
+            "feature-import"
+          end
+          
+          def self.description
+            "Imports a wallaby feature from a Condor configuration file."
+          end
+          
           def parse_config_file(fn)
             results = {:name=>"", :includes=>[], :depends=>[], :params=>{}}
             lines = open(fn) {|f| f.readlines }
@@ -59,14 +67,8 @@ module Mrg
             results
           end
 
-          def initialize(storeclient, name, op=:feature_import)
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+          def init_option_parser
+            OptionParser.new do |opts|
               
               opname = "feature-import"
               
@@ -81,46 +83,35 @@ module Mrg
               end
             end
           end
-          
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+
+          def parse_file(*args)
             @feature = parse_config_file(args[0])
             @feature[:name] = @feature_name if @feature_name
             
             unless @feature[:name]
-              puts "Error: No feature name supplied.  You must provide one, either\nwith a '--name' parameter on the command-line, or with\na '#name' directive in the feature file."
-              puts op
-              return 1
+              puts "fatal: No feature name supplied.  You must provide one, either\nwith a '--name' parameter on the command-line, or with\na '#name' directive in the feature file."
+              puts oparser
+              exit!(1)
             end
-            
-            act
           end
+          
+          register_callback :after_option_parsing, :parse_file
           
           def act(kwargs=nil)
             puts "Creating feature #{@feature[:name]}..."
 
             params = @feature[:params].keys
-            invalid_params = @store.checkParameterValidity(params).invalidParameters
+            invalid_params = store.checkParameterValidity(params).invalidParameters
 
             unless invalid_params == []
               puts "Creating necessary parameters..."
-              invalid_params.each {|param| puts "Creating parameter #{param}" ; @store.addParam(param)}
+              invalid_params.each {|param| puts "Creating parameter #{param}" ; store.addParam(param)}
             end
 
             f = nil
             
             begin
-              f = @store.addFeature(@feature[:name])
+              f = store.addFeature(@feature[:name])
             rescue
               nil
             end
@@ -148,8 +139,6 @@ module Mrg
             0
           end
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['feature-import'] = FeatureImport
       end
     end
   end
