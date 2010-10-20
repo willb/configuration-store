@@ -38,15 +38,17 @@ module Mrg
           end
         end
         
-        class Dump
-          def initialize(storeclient, name, op=:dump)
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+        class Dump < Command
+          def self.opname
+            "dump"
+          end
+          
+          def self.description
+            "Dumps a wallaby snapshot to a file."
+          end
+          
+          def init_option_parser
+            OptionParser.new do |opts|
               
               opname = "dump"
               
@@ -59,18 +61,7 @@ module Mrg
             end
           end
           
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+          def check_args(*args)
             if args.size > 1
               puts "wallaby dump: You must specify only one output file (or \"--\")."
               puts op
@@ -78,12 +69,12 @@ module Mrg
             end
 
             @outfile = (args[0] || "--")
-
-            act
           end
           
+          register_callback :after_option_parsing, :check_args
+          
           def act(kwargs=nil)
-            s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(@store, @store.is_a?(::Mrg::Grid::ConfigClient::Store), @store.console)
+            s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, store.is_a?(::Mrg::Grid::ConfigClient::Store), store.console)
 
             serialized = s.serialize
 
@@ -97,11 +88,7 @@ module Mrg
             
             0
           end
-          
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['dump'] = Dump
-        
       end
     end
   end
