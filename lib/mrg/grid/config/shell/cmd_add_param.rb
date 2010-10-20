@@ -95,7 +95,7 @@ module Mrg
           end
 
           def self.description
-            "Alters a parameter in the store."
+            "Alters metadata for a parameter in the store."
           end
 
           def storeop
