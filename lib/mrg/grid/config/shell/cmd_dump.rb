@@ -55,7 +55,7 @@ module Mrg
           
           register_callback :after_option_parsing, :check_args
           
-          def act(kwargs=nil)
+          def act
             s = Mrg::Grid::SerializedConfigs::ConfigSerializer.new(store, store.is_a?(::Mrg::Grid::ConfigClient::Store), store.console)
 
             serialized = s.serialize
