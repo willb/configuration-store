@@ -86,7 +86,11 @@ module Mrg
           register_callback :before_option_parsing, :init_log
 
           def init_input(*args)
-            @input = (args.size > 0 ? open(args[0]) : $stdin)
+            begin
+              @input = (args.size > 0 ? open(args[0]) : $stdin)
+            rescue SystemCallError => ex
+              exit!(1, "#{ex}")
+            end
           end
           
           register_callback :after_option_parsing, :init_input
