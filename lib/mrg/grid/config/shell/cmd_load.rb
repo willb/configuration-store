@@ -93,14 +93,14 @@ module Mrg
           
           def act
             
-            @store.storeinit("resetdb"=>"yes")
+            store.storeinit("resetdb"=>"yes")
 
-            s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(@store, @input.read)
+            s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(store, @input.read)
 
             s.load
 
             if @activate
-              explain = @store.activateConfig
+              explain = store.activateConfig
               if explain != {}
                 puts "Failed to activate configuration; please correct the following errors."
                 explain.each do |node, node_explain|

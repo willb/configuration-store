@@ -73,7 +73,7 @@ module Mrg
           
           def act
             ARGV.clear
-            ::Wallaby::store = @store
+            ::Wallaby::store = store
             @loadfiles.each {|f| require f }
             if @evalfiles.size > 0
               begin

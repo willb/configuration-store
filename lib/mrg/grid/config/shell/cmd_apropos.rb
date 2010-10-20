@@ -78,7 +78,7 @@ module Mrg
               end
             end
 
-            params = @store.parameters.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
+            params = store.parameters.select {|p| @matches.call(p.description) }.sort_by {|prm| prm.name}
 
             params.each do |prm|
               puts "#{prm.name}:  #{prm.description}"

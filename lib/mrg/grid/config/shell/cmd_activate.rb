@@ -30,7 +30,7 @@ module Mrg
           end
           
           def act
-            explain = @store.activateConfig
+            explain = store.activateConfig
             if explain != {}
               puts "Failed to activate configuration; please correct the following errors."
               explain.each do |node, node_explain|
