@@ -70,10 +70,6 @@ module Mrg
               puts oparser
               return
             end
-            
-            if @store.is_a? Proc
-              @store = @store.call
-            end
 
             run_callbacks(:after_option_parsing, *args)
             
@@ -116,6 +112,13 @@ module Mrg
             self.class.callbacks[c_when].each do |callback|
               self.send(callback, *args)
             end
+          end
+          
+          def store
+            if @store.is_a? Proc
+              @store = @store.call
+            end
+            @store
           end
         end
       end
