@@ -193,6 +193,9 @@ fi
 
 %changelog
 
+* Wed Oct 20 2010 willb <willb@redhat> - 0.9.22-1
+- re-implemented timestamp; removed rhubarb dependency from wallaby shell commands
+
 * Wed Oct 20 2010 willb <willb@redhat> - 0.9.21-1
 - Fixes for many shell-related BZs, including 635975, 636161, 636172, 636175, 636177, 636179, 636568, 636569, 636577, 636580.
 - First pass at a public shell-command API (see skel.rb for an example); this should be finalized in 0.10.x
