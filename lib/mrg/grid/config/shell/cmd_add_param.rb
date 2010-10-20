@@ -35,6 +35,9 @@ module Mrg
               
               {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}.each do |option, kind|
                 opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{self.class.opname=="add-param" ? "newly-created" : "modified"} parameter") do |value|
+                  if @options[option]
+                    exit_with(1, "You may only specify one --#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} option per invocation")
+                  end
                   @options[option] = value
                 end
               end

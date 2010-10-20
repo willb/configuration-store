@@ -36,6 +36,10 @@ module Mrg
 
         BASE_COMMAND_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "shell")
 
+        class ShellCommandFailure < RuntimeError
+          attr_accessor :status, :message
+        end
+
         def self.USER_COMMAND_DIR
           result = ENV['WALLABY_COMMAND_DIR']
           return nil unless result
@@ -177,7 +181,12 @@ module Mrg
             Mrg::Grid::ConfigClient::Store.new(store, console)
           end
 
-          exit!(args.cmd.new(store_client, "").main(args.for_cmd) || 0)
+          begin
+            exit!(args.cmd.new(store_client, "").main(args.for_cmd) || 0)
+          rescue ShellCommandFailure => scf
+            puts "fatal:  #{scf.message}" if scf.message
+            exit!(scf.status)
+          end
         end
       end
     end

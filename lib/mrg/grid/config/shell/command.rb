@@ -120,6 +120,13 @@ module Mrg
             end
             @store
           end
+          
+          def exit!(status, message=nil)
+            scf = ShellCommandFailure.new
+            scf.status = status
+            scf.message = message
+            raise scf
+          end
         end
       end
     end
