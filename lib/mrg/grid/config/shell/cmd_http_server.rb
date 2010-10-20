@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'mrg/grid/util/daemon'
+
 begin
   require 'rubygems'
   require 'sinatra/base'
@@ -46,53 +48,8 @@ module Mrg
     module Config
       module Shell
         class HttpServer < Command
-          def drop_privs(to_user=nil)
-            to_user ||= "wallaby"
-            if Process.euid == 0
-              begin
-                new_uid = Etc.getpwnam(to_user).uid
-                new_gid = Etc.getpwnam(to_user).gid
 
-                Process::Sys.setgid(new_gid)
-                Process::Sys.setuid(new_uid)
-              rescue ArgumentError
-                Syslog.open do |s|
-                  s.warning "can't switch to user #{to_user}; does it exist?"
-                  puts  "can't switch to user #{to_user}; does it exist?"
-                end
-              end
-            end
-          end
-
-          def daemonify
-            pid = nil
-            sid = nil
-
-            return if Process.ppid == 1
-
-            pid = fork
-
-            if pid != nil
-              if pid < 0
-                Syslog.open {|s| s.fatal "can't fork child process"}
-                exit!(1)
-              end
-              exit!(0)
-            end
-
-            sid = Process.setsid
-            if sid < 0
-              Syslog.open {|s| s.fatal "can't set self as session group leader"}
-              exit!(1)
-            end
-
-            exit!(1) if Dir.chdir("/") < 0
-
-            # close open FDs
-            $stdin.reopen("/dev/null", "r")
-            $stdout.reopen("/dev/null", "w")
-            $stderr.reopen("/dev/null", "w")
-          end
+          include ::Mrg::Grid::Util::Daemon
 
           def self.opname
             "http-server"
