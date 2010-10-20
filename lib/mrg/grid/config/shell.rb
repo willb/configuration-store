@@ -141,39 +141,41 @@ module Mrg
             exit
           end
 
-          console = Qmf::Console.new
+          store_client = Proc.new do
+            console = Qmf::Console.new
 
-          settings = Qmf::ConnectionSettings.new
-          settings.username = username if username
-          settings.password = password if password
-          settings.host = host
-          settings.port = port
+            settings = Qmf::ConnectionSettings.new
+            settings.username = username if username
+            settings.password = password if password
+            settings.host = host
+            settings.port = port
 
-          implicit_mechanism = (username || password) ? "PLAIN" : "ANONYMOUS"
-          settings.mechanism = explicit_mechanism || implicit_mechanism
+            implicit_mechanism = (username || password) ? "PLAIN" : "ANONYMOUS"
+            settings.mechanism = explicit_mechanism || implicit_mechanism
 
-          begin
-            Timeout.timeout(15) do
-              connection = Qmf::Connection.new(settings)
+            begin
+              Timeout.timeout(15) do
+                connection = Qmf::Connection.new(settings)
 
-              broker = console.add_connection(connection)
+                broker = console.add_connection(connection)
 
-              broker.wait_for_stable
+                broker.wait_for_stable
+              end
+            rescue Timeout::Error
+              puts "fatal:  timed out connecting to broker on #{host}:#{port}"
+              exit!(1)
             end
-          rescue Timeout::Error
-            puts "fatal:  timed out connecting to broker on #{host}:#{port}"
-            exit!(1)
+
+            store = console.object(:class=>"Store")
+
+            unless store
+              puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
+              puts "use -h for help"
+              exit!(1)
+            end
+
+            Mrg::Grid::ConfigClient::Store.new(store, console)
           end
-
-          store = console.object(:class=>"Store")
-
-          unless store
-            puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
-            puts "use -h for help"
-            exit!(1)
-          end
-
-          store_client = Mrg::Grid::ConfigClient::Store.new(store, console)
 
           exit!(args.cmd.new(store_client, "").main(args.for_cmd) || 0)
         end
