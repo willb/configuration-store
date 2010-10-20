@@ -20,7 +20,7 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class ParamOps < Command
+        module ParamOps
           MESSAGES = {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setDefaultMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}
 
           def init_option_parser
@@ -62,7 +62,9 @@ module Mrg
           end
         end
         
-        class AddParam < ParamOps
+        class AddParam < Command
+          include ParamOps
+          
           def self.opname
             "add-param"
           end
@@ -78,7 +80,9 @@ module Mrg
           register_callback :after_option_parsing, :post_arg_callback
         end
         
-        class ModifyParam < ParamOps
+        class ModifyParam < Command
+          include ParamOps
+          
           def self.opname
             "modify-param"
           end
