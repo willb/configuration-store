@@ -21,26 +21,6 @@ module Mrg
   module Grid
     module Config
       module Shell
-        module FeatureImportSupport
-          class LegacyInterface
-            def command
-              "feature-import"
-            end
-            
-            def banner
-              "Usage: wallaby-feature-import [options] file"
-            end
-            
-            def collect_specific_options(opts, specific_options)
-              opts.on("-n", "--name NAME", "name for given feature (overrides one specified in the file)") do |nm|
-                specific_options << "--name" << nm
-              end
-            end
-            
-            include ::Mrg::Grid::Config::Shell::GenericLegacyInterface
-          end
-        end
-        
         class FeatureImport < Command
           def self.opname
             "feature-import"
