@@ -173,6 +173,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_apropos.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_console.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_explain.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_help.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_load.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_add_param.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_feature_import.rb
@@ -192,6 +193,11 @@ fi
 
 %changelog
 
+* Wed Oct 20 2010 willb <willb@redhat> - 0.9.21-1
+- Fixes for many shell-related BZs, including 635975, 636161, 636172, 636175, 636177, 636179, 636568, 636569, 636577, 636580.
+- First pass at a public shell-command API (see skel.rb for an example); this should be finalized in 0.10.x
+- "wallaby help" shell command
+- Various refactorings.
 
 * Fri Oct 15 2010 willb <willb@redhat> - 0.9.20-1
 - Parameter names are now case-preserving but case-insensitive, viz., adding "fooBar" and searching for "FOOBAR" will get you "fooBar"
