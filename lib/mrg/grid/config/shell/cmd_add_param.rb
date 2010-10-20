@@ -51,10 +51,14 @@ module Mrg
             @args.each do |name|
               puts "#{self.class.opname == "add-param" ? "Creating" : "Modifying"} the following param: #{name} with #{@options.inspect}"
               
-              param = store.send(storeop, name)
-              @options.each do |option, value|
-                msg = MESSAGES[option]
-                param.send(msg, value)
+              begin
+                param = store.send(storeop, name)
+                @options.each do |option, value|
+                  msg = MESSAGES[option]
+                  param.send(msg, value)
+                end
+              rescue => ex
+                puts "warning:  couldn't #{self.class.opname == "add-param" ? "create" : "find"} parameter #{name}"
               end
             end
             
