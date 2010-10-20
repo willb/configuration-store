@@ -20,15 +20,17 @@ module Mrg
   module Grid
     module Config
       module Shell
-        class Explain
-          def initialize(storeclient, name, op=:skel)
-
-            @op = op
-            @store = storeclient
-            @name = name
-
-            @options = {}
-            @oparser = OptionParser.new do |opts|
+        class Explain < Command
+          def self.opname
+            "explain"
+          end
+          
+          def self.description
+            "Outputs an annotated display of a node's current configuration."
+          end
+          
+          def init_option_parser
+            OptionParser.new do |opts|
               
               opname = "explain"
               
@@ -39,32 +41,21 @@ module Mrg
                 exit
               end
             end
-
           end
           
-          def main(args)
-            begin
-              @oparser.parse!(args)
-            rescue OptionParser::InvalidOption
-              puts @oparser
-              return
-            rescue OptionParser::InvalidArgument => ia
-              puts ia
-              puts @oparser
-              return
-            end
-            
+          def check_args(*args)
             if args.length == 0
-              puts "fatal:  you must specify a node to explain"
+              puts "fatal:  you must specify at least one node to explain"
             end
             
-            @nodes = args
-            act
+            @nodes = args.dup
           end
           
-          def act(kwargs=nil)
+          register_callback :after_option_parsing, :check_args
+          
+          def act
             @nodes.each do |node|
-              node = @store.getNode(node)
+              node = store.getNode(node)
               exp = explain_one_node(node)
               config = node.getConfig
               
@@ -88,7 +79,7 @@ module Mrg
           def explain_one_node(node)
             explanation = {"WALLABY_CONFIG_VERSION"=>"is set automatically"}
             
-            memberships = [@store.getDefaultGroup] + node.memberships.reverse.map {|gn| @store.getGroupByName(gn)} + [node.identity_group]
+            memberships = [store.getDefaultGroup] + node.memberships.reverse.map {|gn| store.getGroupByName(gn)} + [node.identity_group]
             
             memberships.each do |group|
               group.features.each do |f|
@@ -104,7 +95,7 @@ module Mrg
           end
           
           def explain_one_feature(f, suffix, explanation)
-            f = @store.getFeature(f)
+            f = store.getFeature(f)
             
             f.included_features.reverse_each do |inc|
               explain_one_feature(inc, ", which is included by #{f.name}#{suffix}", explanation)
@@ -115,9 +106,6 @@ module Mrg
             end
           end
         end
-
-        Mrg::Grid::Config::Shell::COMMANDS['explain'] = Explain
-        
       end
     end
   end
