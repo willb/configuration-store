@@ -193,6 +193,12 @@ fi
 
 %changelog
 
+* Thu Oct 21 2010 willb <willb@redhat> - 0.9.23-1
+- "wallaby new-command" shell command
+- improved exception handling in shell commands
+- fixes for user-local commands
+- fixed BZ 635628
+
 * Wed Oct 20 2010 willb <willb@redhat> - 0.9.22-1
 - re-implemented timestamp; removed rhubarb dependency from wallaby shell commands
 
