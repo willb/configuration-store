@@ -176,6 +176,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_help.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_load.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_add_param.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_new_command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_feature_import.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_snapshot.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
