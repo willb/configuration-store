@@ -74,6 +74,8 @@ module Mrg
 
             run_callbacks(:after_option_parsing, *args)
             
+            @wallaby_command_args ||= args
+            
             begin
               act
             rescue ShellCommandFailure => scf
