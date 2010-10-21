@@ -19,6 +19,7 @@
 require 'qmf'
 require 'optparse'
 require 'timeout'
+require 'pathname'
 
 require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
@@ -47,7 +48,8 @@ module Mrg
           begin
             result = Pathname.new(File.expand_path(result))
             return result.realpath.to_s
-          rescue
+          rescue Exception=>ex
+            puts ex.inspect if ENV['WALLABY_SHELL_DEBUG']
             return nil
           end
         end
