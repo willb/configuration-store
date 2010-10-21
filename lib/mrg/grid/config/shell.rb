@@ -186,6 +186,9 @@ module Mrg
           rescue ShellCommandFailure => scf
             puts "fatal:  #{scf.message}" if scf.message
             exit!(scf.status)
+          rescue Exception => ex
+            puts "fatal:  #{ex.inspect}"
+            exit!(127)
           end
         end
       end
