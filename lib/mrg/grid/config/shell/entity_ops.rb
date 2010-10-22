@@ -21,6 +21,18 @@ module Mrg
     module Config
       module Shell
         module EntityOps
+          def verb
+            self.class.opname.split("-").shift
+          end
+          
+          def gerund
+            self.class.opname.split("-").shift.sub(/(e|)$/, "ing")
+          end
+          
+          def noun
+            self.class.opname.split("-").pop
+          end
+          
           def init_option_parser
             @options = {}
             OptionParser.new do |opts|
