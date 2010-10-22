@@ -33,18 +33,6 @@ module Mrg
             @accessor_options ||= {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}
           end
 
-          def verb
-            self.class.opname.split("-").shift
-          end
-
-          def gerund
-            self.class.opname.split("-").shift.sub(/(e|)$/, "ing")
-          end
-          
-          def noun
-            self.class.opname.split("-").pop
-          end
-
         end          
 
         class AddParam < Command
