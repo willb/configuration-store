@@ -1,4 +1,4 @@
-# add_param:  wallaby shell add-param and modify-param functionality
+# param:  wallaby shell param crud functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
