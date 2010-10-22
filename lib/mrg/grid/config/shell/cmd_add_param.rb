@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'mrg/grid/config/shell/entity_ops'
+
 module Mrg
   module Grid
     module Config
@@ -27,6 +29,10 @@ module Mrg
 
           def api_accessors
             @api_accessors ||= [:kind, :default, :description, :must_change, :requires_restart, :visibility_level, :depends, :conflicts]
+          end
+
+          def accessor_options
+            @accessor_options ||= {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}
           end
 
           def verb
@@ -41,69 +47,10 @@ module Mrg
             self.class.opname.split("-").pop
           end
 
-          def init_option_parser
-            @options = {}
-            OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} param-name [...] [param-options]"
-              
-              opts.on("-h", "--help", "displays this message") do
-                puts @oparser
-                exit
-              end
-              
-              if supports_options
-                {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}.each do |option, kind|
-                  opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{verb=="add" ? "newly-created" : "modified"} #{noun}", "   (valid values are #{kind.is_a?(Hash) ? kind.keys.map {|k| '"' + k.downcase + '"'}.sort.uniq.reverse.join(", ") : "#{kind.to_s.downcase}s"})") do |value|
-                    if @options[option]
-                      exit!(1, "You may only specify one --#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} option per invocation")
-                    end
-                    @options[option] = value
-                  end
-                end
-              end
-            end
-          end
+        end          
 
-          def post_arg_callback(*args)
-            @args = args.dup
-          end
-
-          def supports_options
-            true
-          end
-
-          def entity_callback(arg)
-            nil
-          end
-
-          def show_banner
-            true
-          end
-
-          def act
-            
-            @args.each do |name|
-              puts "#{gerund.capitalize} the following param: #{name}#{" with #{@options.inspect}" if supports_options}" if show_banner
-              
-              begin
-                param = store.send(storeop, name)
-                entity_callback(param)
-                if supports_options
-                  @options.each do |option, value|
-                    msg = api_messages[option]
-                    param.send(msg, value)
-                  end
-                end
-              rescue => ex
-                puts "warning:  couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.inspect})" : "")
-              end
-            end
-            
-            0
-          end
-        end
-        
         class AddParam < Command
+          include EntityOps
           include ParamOps
           
           def self.opname
@@ -122,6 +69,7 @@ module Mrg
         end
         
         class ModifyParam < Command
+          include EntityOps
           include ParamOps
           
           def self.opname
@@ -140,6 +88,7 @@ module Mrg
         end
         
         class RemoveParam < Command
+          include EntityOps
           include ParamOps
           
           def self.opname
@@ -162,6 +111,7 @@ module Mrg
         end
         
         class ShowParam < Command
+          include EntityOps
           include ParamOps
           
           def self.opname
