@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # http-server:  HTTP gateway to the wallaby agent
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

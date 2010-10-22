@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # feature_import:  translates a file of PARAM=VALUE pairs to a new
 # feature definition, creating parameters in the store as necessary.
 #

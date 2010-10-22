@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # command:  base class for wallaby-shell commands
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

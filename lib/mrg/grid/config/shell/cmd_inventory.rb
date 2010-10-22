@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # inventory:  wallaby node inventory command
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

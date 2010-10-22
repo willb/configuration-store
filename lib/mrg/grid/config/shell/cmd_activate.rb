@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # activate:  wallaby shell command to activate current changes to the configuration
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

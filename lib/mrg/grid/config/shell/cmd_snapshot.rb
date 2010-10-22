@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # snapshot:  wallaby shell list-, make-, and load-snapshot functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

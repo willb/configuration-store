@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # explain:  where does this node's configuration come from?
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

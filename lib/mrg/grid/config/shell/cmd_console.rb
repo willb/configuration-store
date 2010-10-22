@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # console:  interactive wallaby environment
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

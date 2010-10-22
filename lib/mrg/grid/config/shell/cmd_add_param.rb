@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # add_param:  wallaby shell add-param and modify-param functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

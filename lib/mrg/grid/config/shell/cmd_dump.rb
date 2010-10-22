@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # dump:  dump a snapshot to a file
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

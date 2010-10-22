@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # load:  load a snapshot from a file
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # apropos:  wallaby parameter apropos functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
