@@ -17,6 +17,7 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config-proxies'
+require 'socket'
 
 module Mrg
   module Grid
@@ -56,8 +57,21 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiVersionNumber, :uint32, :desc=>"The version of the API the store supports", :index=>false
         def apiVersionNumber
-          20100915
+          20101031
         end
+
+        ### Property method declarations
+        # property APIVersionNumber uint32 The version of the API the store supports
+        qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
+        def apiMinorNumber
+          1
+        end
+
+        qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
+        def host_and_pid
+          [Socket.hostname, Process.pid]
+        end
+
         ### Schema method declarations
         
         def getDefaultGroup
