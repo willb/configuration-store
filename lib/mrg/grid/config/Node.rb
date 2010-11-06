@@ -298,7 +298,14 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
           
         end
         
+        private
+        def visit_group(grp, context)
+          
+        end
         
+        def visit_feature(f, context)
+          
+        end
       end
     end
   end
