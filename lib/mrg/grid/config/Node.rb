@@ -122,7 +122,7 @@ module Mrg
         end
         
         def getCurrentConfig
-          log.debug "getConfig called on node #{self.inspect}"
+          log.debug "getCurrentConfig called on node #{self.inspect}"
           config = Group.DEFAULT_GROUP.getConfig
           # strip StringSet markers from default group config
           config.each do |(k,v)|
@@ -289,6 +289,16 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         def db_memberships
           NodeMembership.find_by(:node=>self).map{|nm| nm.grp}.select {|g| not g.is_identity_group}
         end
+        
+        
+      end
+      
+      class ConfigIterator
+        def initialize(start)
+          
+        end
+        
+        
       end
     end
   end
