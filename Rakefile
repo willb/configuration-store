@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'rake'
 
+require './lib/mrg/grid/config/version'
+
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
@@ -12,6 +14,7 @@ begin
     gem.authors = ["William Benton"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_dependency "spqr", ">= 0.0.0"
+    gem.version = ::Mrg::Grid::Config::Version.as_string
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
@@ -20,8 +23,7 @@ rescue LoadError
 end
 
 def pkg_version
-  version = File.exist?('VERSION') ? File.read('VERSION') : ""
-  return version.chomp
+  ::Mrg::Grid::Config::Version.as_string
 end
 
 def pkg_name

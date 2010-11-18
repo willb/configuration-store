@@ -291,6 +291,26 @@ module Mrg
           config
         end
 
+        def explain(context=nil, history=nil)
+          context ||= ExplanationContext.make(:group=>self.display_name, :history=>history)
+          explanation = {}
+          
+          feature_objs.reverse_each do |feature|
+            f_ctx = ExplanationContext.make(:feature=>feature.name, :how=>ExplanationContext::FEATURE_INSTALLED_ON, :whence=>context, :history=>history)
+            explanation.merge!(feature.explain(f_ctx))
+          end
+          
+          params.keys.each do |param|
+            explanation[param] = ExplanationContext.make(:param=>param, :how=>ExplanationContext::PARAM_EXPLICIT, :whence=>context, :history=>history)
+          end
+          
+          explanation
+        end
+
+        expose :explain do |args|
+          args.declare :explanation, :map, :out, "A structure representing where the parameters set on this group get their values."
+        end
+
         def getConfig
           log.debug "getConfig called for group #{self.inspect}"
           

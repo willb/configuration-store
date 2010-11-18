@@ -54,6 +54,10 @@ module Mrg
           @qmfo.membership.nodes
         end
         
+        def explain
+          @qmfo.explain.explanation
+        end
+        
         def name
           @qmfo.name
         end
@@ -168,6 +172,10 @@ module Mrg
           @qmfo.modifyIncludedFeatures(command, features, options)
         end
         
+        def explain
+          @qmfo.explain.explanation
+        end
+        
         def params()
           @qmfo.params
         end
@@ -251,6 +259,10 @@ module Mrg
           @qmfo.getConfig(options).config
         end
 
+        def explain
+          @qmfo.explain.explanation
+        end
+        
         private
         include ObjResolver
       end

@@ -122,7 +122,7 @@ module Mrg
         end
         
         def getCurrentConfig
-          log.debug "getConfig called on node #{self.inspect}"
+          log.debug "getCurrentConfig called on node #{self.inspect}"
           config = Group.DEFAULT_GROUP.getConfig
           # strip StringSet markers from default group config
           config.each do |(k,v)|
@@ -145,6 +145,27 @@ module Mrg
           config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
           
           config
+        end
+        
+        def explain
+          explanation = {}
+          history = ExplanationHistory.new
+          
+          explanation.merge!(Group.DEFAULT_GROUP.explain(nil, history))
+          
+          db_memberships.reverse_each do |grp|
+            explanation.merge!(grp.explain(nil, history))
+          end
+          
+          explanation.merge!(self.idgroup.explain(nil, history)) if self.idgroup
+          
+          log.debug("ruh roh, explanation is #{explanation.to_s.size} bytes and history.to_a is #{history.to_a.to_s.size} bytes")
+          
+          explanation
+        end
+        
+        expose :explain do |args|
+          args.declare :explanation, :map, :out, "A structure representing where the parameters set on this node get their values."
         end
         
         # checkConfigVersion 
@@ -288,6 +309,23 @@ SELECT * FROM __TABLE__ WHERE row_id IN (
         
         def db_memberships
           NodeMembership.find_by(:node=>self).map{|nm| nm.grp}.select {|g| not g.is_identity_group}
+        end
+        
+        
+      end
+      
+      class ConfigIterator
+        def initialize(start)
+          
+        end
+        
+        private
+        def visit_group(grp, context)
+          
+        end
+        
+        def visit_feature(f, context)
+          
         end
       end
     end

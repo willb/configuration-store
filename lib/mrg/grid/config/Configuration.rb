@@ -22,6 +22,51 @@ require 'set'
 module Mrg
   module Grid
     module Config
+      class ExplanationHistory
+        def initialize
+          @ordering = Hash.new {|h,k| h[k] = h.keys.size }
+        end
+        
+        def get(hash)
+          @ordering[hash]
+        end
+        
+        def to_a
+          @ordering.sort {|a,b| a[1] <=> b[1]}.map {|k,v| v}
+        end
+      end
+      
+      module ExplanationContext
+        FEATURE_INCLUDED_BY = "included-by"
+        FEATURE_INSTALLED_ON = "installed-on"
+        
+        PARAM_DEFAULT = "set-to-default"
+        PARAM_EXPLICIT = "set-explicitly"
+        
+        VALID_KEYS = [:param, :feature, :group, :how, :whence, :history]
+        
+        def self.make(args=nil)
+          args ||= {}
+          invalid_keys = args.keys - VALID_KEYS
+          nhistory = args.delete(:history)
+          
+          if invalid_keys != []
+            raise RuntimeError.new("Internal error:  invalid keys passed to Explanation.make: #{invalid_keys.inspect}")
+          endn
+          
+          result = args.inject({}) do |acc, (k,v)|
+            acc[k.to_s] = v
+            acc
+          end
+          
+          history ? history.get(result) : result
+        end
+        
+        def human_readable
+          
+        end
+      end
+      
       module ConfigUtils
         
         # Returns the symmetric difference of two hash tables, represented as an array of pairs

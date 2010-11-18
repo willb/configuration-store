@@ -253,6 +253,28 @@ module Mrg
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
+        def explain(context=nil, history=nil)
+          context ||= ExplanationContext.make(:feature=>self.name, :history=>history)
+          explanation = {}
+          
+          included_features.reverse_each do |ifname|
+            included_feature = self.class.find_first_by_name(ifname)
+            if_ctx = ExplanationContext.make(:feature=>ifname, :how=>ExplanationContext::FEATURE_INCLUDED_BY, :whence=>context, :history=>history)
+            explanation.merge!(included_feature.explain(if_ctx))
+          end
+          
+          self.param_meta.each do |param, meta_map|
+            how = meta_map['uses_default'] ? ExplanationContext::PARAM_DEFAULT : ExplanationContext::PARAM_EXPLICIT
+            explanation[param] = ExplanationContext.make(:param=>param, :how=>how, :whence=>context, :history=>history)
+          end
+          
+          explanation
+        end
+        
+        expose :explain do |args|
+          args.declare :explanation, :map, :out, "A structure representing where the parameters set on this feature get their values."
+        end
+        
         def apply_to(dict)
           included_features.reverse_each do |ifname|
             included_feature = self.class.find_first_by_name(ifname)
