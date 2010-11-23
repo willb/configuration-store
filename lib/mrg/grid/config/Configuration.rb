@@ -52,7 +52,7 @@ module Mrg
           
           if invalid_keys != []
             raise RuntimeError.new("Internal error:  invalid keys passed to Explanation.make: #{invalid_keys.inspect}")
-          endn
+          end
           
           result = args.inject({}) do |acc, (k,v)|
             acc[k.to_s] = v
