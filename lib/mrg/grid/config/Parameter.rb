@@ -57,10 +57,10 @@ module Mrg
         qmf_property :conflicts, :list, :desc=>"A set of parameter names that this parameter conflicts with."
         
         # We're overriding find_first_by_name to be case-insensitive
-        declare_query :_find_first_by_name, "name = ? COLLATE NOCASE ORDER BY row_id"
+        declare_query :_find_first_by_name_ci, "length(name) = length(?1) and upper(name) = upper(?1) ORDER BY row_id"
 
         def self.find_first_by_name(name)
-          return _find_first_by_name(name)[0]
+          return _find_first_by_name_ci(name)[0]
         end
         
         def eql?(other)
