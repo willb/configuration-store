@@ -74,7 +74,7 @@ module Mrg
         
         qmf_property :wallaby_version, :string, :desc=>"A string representation of the version of this wallaby agent.  (Introduced in API version 20101031.1)"
         def wallaby_version
-          ::Mrg::Config::Version.as_string
+          ::Mrg::Grid::Config::Version.as_string
         end
 
         ### Schema method declarations
