@@ -91,7 +91,7 @@ task :tarball => [:make_rpmdirs, :gen_spec] do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()
-  FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO', 'VERSION'], pkg_dir()
+  FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO'], pkg_dir()
   FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
   sh "tar -cf #{pkg_source} #{pkg_dir}"
   sh "tar -cf #{db_pkg_source} #{db_pkg_dir}"
@@ -166,7 +166,7 @@ task :default => :spec
 
 require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
-  version = File.exist?('VERSION') ? File.read('VERSION') : ""
+  version = File.exist?('VERSION') ? File.read('VERSION') : ::Mrg::Grid::Config::Version.as_string
 
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "wallaby #{version}"
