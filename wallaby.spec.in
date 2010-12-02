@@ -100,7 +100,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-, root, root, -)
-%doc LICENSE README.rdoc TODO VERSION
+%doc LICENSE README.rdoc TODO
 %defattr(0755,wallaby,wallaby,-)
 %dir %{_localstatedir}/lib/wallaby
 %dir %{_localstatedir}/log/wallaby
