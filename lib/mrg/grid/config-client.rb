@@ -20,6 +20,8 @@
 # alia, a much smarter method_missing that introspected over qmf method
 # results
 
+require 'yaml'
+
 module Mrg
   module Grid
     module ConfigClient
@@ -47,9 +49,42 @@ module Mrg
         def inspect
           "<#{self.class.name.to_s}: #{self.name rescue self.object_id}>"
         end
+
+        def to_hash
+          rhash = {}
+          if self.class.respond_to? :client_hash_properties
+            self.class.client_hash_properties.each do |prop|
+              rhash[prop.to_s] = self.send(prop)
+            end
+          end
+
+          if self.class.respond_to? :client_hash_methods
+            self.class.client_hash_methods.each do |m|
+              rhash[m.to_s] = self.send(m)
+            end
+          end
+          
+          if self.class.respond_to? :hash_postprocess
+            rhash = self.class.hash_postprocess(rhash)
+          end
+
+          rhash
+        end
+
+        def to_yaml
+          to_hash.to_yaml
+        end
       end
       
       class Group < ClientObj
+        def self.client_hash_properties
+          @cyp ||= %w{is_identity_group name features params}
+        end
+
+        def self.client_hash_methods
+          @cym ||= %w{membership getConfig}
+        end
+        
         def membership
           @qmfo.membership.nodes
         end
@@ -83,6 +118,14 @@ module Mrg
       end
 
       class Parameter < ClientObj
+        def self.client_hash_properties
+          @cyp ||= %w{kind default description must_change visibility_level requires_restart depends conflicts}
+        end
+
+        def self.client_hash_methods
+          @cym ||= %w{}
+        end
+
         def name
           @qmfo.name
         end
@@ -156,6 +199,14 @@ module Mrg
       end
       
       class Feature < ClientObj
+        def self.client_hash_properties
+          @cyp ||= %w{name included_features params param_meta conflicts depends}
+        end
+
+        def self.client_hash_methods
+          @cym ||= %w{}
+        end
+
         def name
           @qmfo.name
         end
@@ -213,6 +264,14 @@ module Mrg
       end
 
       class Subsystem < ClientObj
+        def self.client_hash_properties
+          @cyp ||= %w{params}
+        end
+
+        def self.client_hash_methods
+          @cym ||= %w{}
+        end
+
         def name
           @qmfo.name
         end
@@ -230,6 +289,19 @@ module Mrg
       end
 
       class Node < ClientObj
+        def self.client_hash_properties
+          @cyp ||= %w{name provisioned last_checkin last_updated_version identity_group memberships}
+        end
+
+        def self.client_hash_methods
+          @cym ||= %w{getConfig}
+        end
+
+        def self.hash_postprocess(h)
+          h["identity_group"] = h["identity_group"].name
+          h
+        end
+
         def name
           @qmfo.name
         end
