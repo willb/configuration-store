@@ -194,6 +194,9 @@ fi
 
 %changelog
 
+* Sat Dec 4 2010 willb <willb@redhat> - 0.9.24-1
+- fixes BZ 657055
+
 * Thu Oct 21 2010 willb <willb@redhat> - 0.9.23-1
 - "wallaby new-command" shell command
 - improved exception handling in shell commands
