@@ -101,9 +101,9 @@ module Mrg
                 end
 
                 self.params.each do |k,v|
-                  if (v && v.slice(/^>=/))
-                    while v.slice!(/^>=/) ;  v.strip! ; end
-                    dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v.strip}" : "#{v.strip}"
+                  if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
+                    v = md[2]
+                    dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v}" : "#{v}"
                   else
                     dict[k] = v unless (dict.has_key?(k) && (!v || v == ""))
                   end
@@ -131,7 +131,7 @@ module Mrg
                 @__my_params ||= original_object.params
               end
               
-              def apply_to(config)
+              def apply_to(config, ss_prepend="")
                 feature_objs.reverse_each do |feature|
                   config = feature.apply_to(config)
                 end
@@ -139,9 +139,9 @@ module Mrg
                 # apply group-specific param settings
                 # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
                 params.each do |k,v|
-                  if (v && v.slice!(/^>=/))
-                    while v.slice!(/^>=/) ;  v.strip! ; end
-                    config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v.strip}" : "#{ss_prepend}#{v.strip}"
+                  if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
+                    v = md[2]
+                    config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v}" : "#{ss_prepend}#{v}"
                   else
                     config[k] = v
                   end

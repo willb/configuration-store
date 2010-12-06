@@ -278,9 +278,9 @@ module Mrg
           # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
           params.each do |k,v|
             log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-            if (v && v.slice!(/^>=/))
-              while v.slice!(/^>=/) ;  v.strip! ; end
-              config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v.strip}" : "#{ss_prepend}#{v.strip}"
+            if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
+              v = md[2]
+              config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v}" : "#{ss_prepend}#{v}"
             else
               config[k] = v
             end
