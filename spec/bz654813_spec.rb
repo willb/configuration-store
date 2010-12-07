@@ -19,24 +19,26 @@ module Mrg
         
         include BaseDBFixture
         
-        it "should not spuriously require must_change params to be set on nodes when the must_change status of a param has changed since activation (BZ654813)" do
-          node = @store.addNode("barney")
-          clog = @store.getParam("COLLECTOR_LOG")
-          Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{CentralManager Master NodeAccess}, {})
-          Group.DEFAULT_GROUP.modifyParams("ADD", {"ALLOW_WRITE"=>"SURE", "ALLOW_READ"=>"WHYNOT", "CONDOR_HOST"=>"barney-laptop.local."}, {})
-          @store.activateConfiguration.should == [{}, []]
-          
-          node.getConfig("version"=>node.last_updated_version)["COLLECTOR_LOG"].should_not == nil
-          node.getConfig["COLLECTOR_LOG"].should_not == nil
-          
-          node.idgroup.modifyParams("ADD", {"COLLECTOR_LOG"=>"/tmp/CollectorLog"}, {})
-          
-          @store.activateConfiguration.should == [{}, []]
-
-          node.idgroup.modifyParams("REPLACE", {}, {})
-          
-          @store.activateConfiguration.should == [{}, []]
-          
+        [["REPLACE", {}, {}], ["REMOVE", {"COLLECTOR_LOG"=>0}, {}]].each do |second|
+        
+          it "should not spuriously require must_change params to be set on nodes when the must_change status of a param has changed since activation and the param set on the idgroup is #{second[0]}D (BZ654813)" do
+            node = @store.addNode("barney")
+            clog = @store.getParam("COLLECTOR_LOG")
+            Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{CentralManager Master NodeAccess}, {})
+            Group.DEFAULT_GROUP.modifyParams("ADD", {"ALLOW_WRITE"=>"SURE", "ALLOW_READ"=>"WHYNOT", "CONDOR_HOST"=>"barney-laptop.local."}, {})
+            @store.activateConfiguration.should == [{}, []]
+            
+            node.getConfig("version"=>node.last_updated_version)["COLLECTOR_LOG"].should_not == nil
+            node.getConfig["COLLECTOR_LOG"].should_not == nil
+            
+            node.idgroup.modifyParams("ADD", {"COLLECTOR_LOG"=>"/tmp/CollectorLog"}, {})
+            
+            @store.activateConfiguration.should == [{}, []]
+            
+            node.idgroup.modifyParams(*second)
+            
+            @store.activateConfiguration.should == [{}, []]
+          end
         end
       end
     end
