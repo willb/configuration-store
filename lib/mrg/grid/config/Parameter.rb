@@ -140,9 +140,13 @@ module Mrg
         # * mustChange (bool/I)
         def setMustChange(mustChange)
           # Print values of input parameters
-          log.debug "setDefaultMustChange: mustChange => #{mustChange.inspect}"
+          log.debug "setting mustChange for #{self.name} => #{mustChange.inspect}"
           DirtyElement.dirty_parameter(self)
           self.must_change = mustChange
+          if mustChange
+            log.info "param #{self.name} set to mustChange; removing default value"
+            self.default_val = ""
+          end
         end
         
         expose :setMustChange do |args|
