@@ -31,6 +31,13 @@ module Mrg
             node.getConfig("version"=>node.last_updated_version)["COLLECTOR_LOG"].should_not == nil
             node.getConfig["COLLECTOR_LOG"].should_not == nil
             
+            clog.setMustChange(true)
+
+            # this is a hack to force reconfig to work
+            Group.DEFAULT_GROUP.modifyParams("ADD", Group.DEFAULT_GROUP.params, {})
+
+            @store.activateConfiguration.should == [{}, []]
+
             node.idgroup.modifyParams("ADD", {"COLLECTOR_LOG"=>"/tmp/CollectorLog"}, {})
             
             @store.activateConfiguration.should == [{}, []]
