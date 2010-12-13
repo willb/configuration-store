@@ -486,7 +486,7 @@ module Mrg
         end
         
         expose :getMustChangeParams do |args|
-          args.declare :params, :map, :out, "Parameters that must change; a map from names to default values"
+          args.declare :params, :map, :out, "Parameters that must change; a map from names to (empty) default values"
         end
         
         [Feature, Group, Node, Parameter, Subsystem].each do |klass|
