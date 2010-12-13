@@ -31,6 +31,12 @@ module Mrg
         include ::SPQR::Manageable
         include DataValidating
 
+        def self.s_are_permissive_by_default 
+          !!(ENV['WALLABY_PERMISSIVE_PARAMETERS']) 
+        end
+        
+        attr_accessor :permissive
+
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Parameter'
         ### Property method declarations
@@ -142,11 +148,15 @@ module Mrg
           # Print values of input parameters
           log.debug "setting mustChange for #{self.name} => #{mustChange.inspect}"
           DirtyElement.dirty_parameter(self)
-          self.must_change = mustChange
-          if mustChange
+          
+          if permissive || Parameter.s_are_permissive_by_default
             log.info "param #{self.name} set to mustChange; removing default value"
             self.default_val = ""
+          elsif mustChange && self.default != ""
+            fail(Errors.make(Errors::PARAMETER), "Can't set must_change on a parameter with a default value (remove it first):  #{name}")
           end
+
+          self.must_change = mustChange
         end
         
         expose :setMustChange do |args|
