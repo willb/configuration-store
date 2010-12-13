@@ -24,6 +24,9 @@ module Mrg
           it "should not spuriously require must_change params to be set on nodes when the must_change status of a param has changed since activation and the param set on the idgroup is #{second[0]}D (BZ654813)" do
             node = @store.addNode("barney")
             clog = @store.getParam("COLLECTOR_LOG")
+            
+            clog.permissive = true
+            
             Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{CentralManager Master NodeAccess}, {})
             Group.DEFAULT_GROUP.modifyParams("ADD", {"ALLOW_WRITE"=>"SURE", "ALLOW_READ"=>"WHYNOT", "CONDOR_HOST"=>"barney-laptop.local."}, {})
             @store.activateConfiguration.should == [{}, []]
