@@ -306,7 +306,7 @@ module Mrg
             
             param = @store.addParam(name)
             param.setKind(old_param.kind)
-            param.setDefault(old_param.default_val)
+            param.setDefault(old_param.default_val) unless old_param.must_change
             param.setDescription(old_param.description)
             param.setMustChange(old_param.must_change)
             param.setVisibilityLevel(old_param.level)
