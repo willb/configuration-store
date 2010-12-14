@@ -22,22 +22,22 @@ for arg in argv[1:]:
     print "## %s:%s ##" % (klass.pname, klass.cname)
     schema = s.getSchema(klass)
     for prop in schema.getProperties():
-      print "  * <tt>%s</tt> (<tt>%s</tt> property)" % (prop.name, qmftypes[prop.type])
+      print "  * `%s` (`%s` property)" % (prop.name, qmftypes[prop.type])
       if prop.desc != None:
         print ""
         print "    %s" % prop.desc
     for stat in schema.getStatistics():
-      print "  * <tt>%s</tt> (<tt>%s</tt> statistic)" % (stat.name, qmftypes[stat.type])
+      print "  * `%s` (`%s` statistic)" % (stat.name, qmftypes[stat.type])
       if stat.desc != None:
         print ""
         print "    %s" % stat.desc
     for meth in schema.getMethods():
-      print "  * <tt>%s</tt>" % repr(meth)
+      print "  * `%s`" % repr(meth)
       if meth.desc != None:
         print ""
         print "    %s" % meth.desc
       for arg in meth.arguments:
-        print "    * <tt>%s</tt> (<tt>%s</tt>/%s)" % (arg.name, qmftypes[arg.type], qmfdirs[arg.dir])
+        print "    * `%s` (`%s`/%s)" % (arg.name, qmftypes[arg.type], qmfdirs[arg.dir])
         if arg.desc != None:
           print ""
           print "      %s" % arg.desc
