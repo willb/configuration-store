@@ -27,6 +27,9 @@ class ClientObject:
       obj = self.console.getObjects(_objectId=obj_id)[0]
       return klass and klass(obj, self.console) or obj
    
+   def __repr__(self):
+      repr(self.obj)
+   
 class ClientError(Exception):
    def __init__(self, code, text):
       self.code = code
@@ -34,7 +37,6 @@ class ClientError(Exception):
    
    def __str__(self):
       return(repr((self.code, self.text)))
-   
 """
 
 qmftypes = {12:'float', 6:'sstr', 15:'map', 3:'uint32', 17:'int16', 8:'abstime', 19:'int64', 10:'ref', 2:'uint16', 16:'int8', 13:'double', 21:'list', 11:'bool', 4:'uint64', 22:'array', 1:'uint8', 9:'deltatime', 7:'lstr', 18:'int32', 14:'uuid', 20:'object'}
@@ -50,30 +52,50 @@ def dump_method(method, indent=0):
 	current_method = method.name
 	in_args = ["self"]
 	out_args = []
+	in_arg_docs = []
+	out_arg_docs = []	
+	
 	for arg in method.arguments:
-		comment = "# %s (%s/%s)" % (arg.name, qmftypes[arg.type], qmfdirs[arg.dir])
+		comment = "(%s:%s)" % (arg.name, qmftypes[arg.type])
 		if arg.desc != None:
-			comment += " %s" % arg.desc
-		
-		pp(comment, indent)
+			comment = arg.desc
 		
 		if arg.dir == "I":
 			in_args.append(arg.name)
+			in_arg_docs.append(comment)
 		
 		if arg.dir == "O":
 			out_args.append(arg)
+			out_arg_docs.append(comment)
 		
 		if arg.dir == "IO":
 			in_args.append(arg.name)
 			out_args.append(arg)
-	
+			in_arg_docs.append(comment)
+			out_arg_docs.append(comment)
+		
 	in_arg_list = ", ".join(in_args)
 	if in_arg_list.endswith("options"):
 		in_arg_list += "={}"
 	
 	pp("def %s(%s):" % (method.name, in_arg_list), indent)
+	pp(r'"""', indent+1)
 	if method.desc != None:
-		pp("# %s" % method.desc, indent)
+		desc_lines = string.split(method.desc, "\n")
+		for line in desc_lines:
+			pp("%s" % line, indent + 1)
+	if len(in_arg_docs) > 0:
+		pp("Parameters:", indent + 1)
+		for line in in_arg_docs:
+			pp("* %s" % line, indent + 1)
+	if len(out_arg_docs) == 1:
+		retdoc = out_arg_docs[0]
+		pp("Returns %s" % retdoc[0].lower() + retdoc[1:], indent + 1)
+	elif len(out_arg_docs) > 1:
+		pp("Returns a tuple consisting of:", indent + 1)
+		for line in out_arg_docs:
+			pp("* %s" % line, indent + 1)
+	pp(r'"""', indent + 1)	
 	
 	pp("result = self.obj.%s(%s)" % (method.name, ", ".join(in_args[1:])), indent + 1)
 	
