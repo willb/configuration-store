@@ -198,6 +198,18 @@ fi
 
 %changelog
 
+* Tue Dec 14 2010 willb <willb@redhat> - 0.10.0-1
+- verification for BZs 654810, 654813
+- minor contract change:  Parameter#setMustChange will fail if the parameter has a default value unless WALLABY_PERMISSIVE_PARAMETERS is set
+- optimizations to config validation (~7% faster in test suite)
+- fixes BZ 660509
+- config client objects now support to_hash and to_yaml methods
+- new api methods and properties
+- wallaby shell support for feature CRUD operations
+
+* Sat Dec 4 2010 willb <willb@redhat> - 0.9.24-1
+- fixes BZ 657055
+
 * Thu Oct 21 2010 willb <willb@redhat> - 0.9.23-1
 - "wallaby new-command" shell command
 - improved exception handling in shell commands
