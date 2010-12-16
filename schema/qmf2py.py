@@ -21,11 +21,16 @@ class ClientObject:
       self.obj = obj
    
    def __getattr__(self, name):
+      if name.startswith("__"):
+         return self.__dict__[name]
       return self.obj.__getattr__(name)
    
    def get_object(self, obj_id, klass=None):
       obj = self.console.getObjects(_objectId=obj_id)[0]
-      return klass and klass(obj, self.console) or obj
+      if klass is None:
+         return obj
+      else:
+         return klass(obj, self.console)
    
    def __repr__(self):
       repr(self.obj)
