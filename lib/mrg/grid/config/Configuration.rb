@@ -156,7 +156,7 @@ module Mrg
             (SELECT node, parameter.row_id AS pid, 
                     needsRestart, subsystem.name AS subsys 
                 FROM #{tmp_table_name}, parameter, subsystemparams, subsystem 
-                WHERE parameter.name = #{tmp_table_name}.param COLLATE NOCASE AND 
+                WHERE parameter.name = #{tmp_table_name}.param AND 
                       subsystemparams.dest = pid AND 
                       subsystem.row_id = subsystemparams.source
             ) GROUP BY node, subsys
