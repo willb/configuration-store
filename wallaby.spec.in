@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -197,6 +197,9 @@ fi
 %endif
 
 %changelog
+
+* Thu Dec 23 2010 willb <willb@redhat> - 0.10.0-2
+- Fix for a stray SQLite 3.3 incompatibility
 
 * Tue Dec 14 2010 willb <willb@redhat> - 0.10.0-1
 - verification for BZs 654810, 654813
