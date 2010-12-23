@@ -35,6 +35,11 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Thu Dec 23 2010 rrati <rrati@redhat> - 1.5-1
+- Removed SEC_DEFAULT_INTEGRITY and SEC_DEFAULT_ENCRYPTION from the Master
+  feature
+- Added BaseDBVersion feature and parameter
+
 * Mon Sep 27 2010 willb <willb@redhat> - 1.4-5
 - BZ 637200:  All SEC_(.*) parameters now require a restart.
 
