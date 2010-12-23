@@ -1,5 +1,16 @@
+Console Connection Established...
 --- !ruby/object:Mrg::Grid::SerializedConfigs::Store 
 features: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: BaseDBVersion
+  params: 
+    BaseDBVersion: BASE_DB_VERSION
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -106,8 +117,8 @@ features:
   conflicts: []
 
   depends: 
-  - QMF
   - ExecuteNode
+  - QMF
   included: []
 
   name: ConsoleExecuteNode
@@ -117,8 +128,8 @@ features:
   conflicts: []
 
   depends: 
-  - QMF
   - Master
+  - QMF
   included: []
 
   name: ConsoleMaster
@@ -128,8 +139,8 @@ features:
   conflicts: []
 
   depends: 
-  - QMF
   - Negotiator
+  - QMF
   included: []
 
   name: ConsoleNegotiator
@@ -380,8 +391,8 @@ features:
 
   depends: 
   - Master
-  - QMF
   - JobQueueLocation
+  - QMF
   included: []
 
   name: JobServer
@@ -391,9 +402,9 @@ features:
     DAEMON_LIST: ">= JOB_SERVER"
     JOB_SERVER_ADDRESS_FILE: $(LOG)/.job_server_address
     JOB_SERVER: $(SBIN)/condor_job_server
+    QMF_PUBLISH_SUBMISSIONS: "FALSE"
     MAX_JOB_SERVER_LOG: "1000000"
     JOB_SERVER_LOG: $(LOG)/JobServerLog
-    QMF_PUBLISH_SUBMISSIONS: "FALSE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -455,13 +466,11 @@ features:
     DAEMON_LIST: ">= MASTER"
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
-    SEC_DEFAULT_INTEGRITY: REQUIRED
     SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), CLAIMTOBE
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
     CONDOR_HOST: 0
     CONDOR_DEVELOPERS_COLLECTOR: NONE
     CONDOR_DEVELOPERS: NONE
-    SEC_DEFAULT_ENCRYPTION: REQUIRED
     MASTER_ADDRESS_FILE: $(LOG)/.master_address
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -687,6 +696,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "0"
+  depends: []
+
+  description: The version of the base database
+  kind: String
+  level: 0
+  must_change: false
+  name: BaseDBVersion
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: $(SBIN)/condor_collector
   depends: []
 
@@ -857,6 +878,7 @@ params:
 
   default_val: ""
   depends: []
+
   description: Where files used by the condor_triggerd are stored
   kind: String
   level: 0

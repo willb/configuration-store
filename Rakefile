@@ -51,7 +51,7 @@ def rpm_dirs
 end
 
 def db_pkg_version
-  return '1.4'
+  return `cat DB_VERSION`.chomp()
 end
 
 def db_pkg_name
@@ -86,8 +86,18 @@ task :gen_spec do
   sh "cat #{pkg_spec}" + ".in" + "| sed 's/WALLABY_VERSION/#{pkg_version}/' > #{pkg_spec}"
 end
 
+desc "Generate the db specfile"
+task :gen_db_file do
+  sh "cat condor-base-db.snapshot.in | sed 's/BASE_DB_VERSION/#{db_pkg_version}/' > condor-base-db.snapshot"
+end
+
+desc "Generate the db snapshot file"
+task :gen_db_spec do
+  sh "cat #{db_pkg_spec}" + ".in" + "| sed 's/BASE_DB_VERSION/#{db_pkg_version}/' > #{db_pkg_spec}"
+end
+
 desc "Create a tarball"
-task :tarball => [:make_rpmdirs, :gen_spec] do
+task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file] do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()
@@ -110,7 +120,7 @@ desc "Cleanup after an RPM build"
 task :clean do
   require 'fileutils'
   FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec"], :force => true
-  FileUtils.rm_r db_pkg_dir(), :force => true
+  FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), 'condor-base-db.snapshot'], :force => true
 end
 
 task :copy_db do
