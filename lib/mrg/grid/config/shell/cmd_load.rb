@@ -41,12 +41,12 @@ module Mrg
           end
           
           def self.description 
-            "Loads a wallaby snapshot from SNAPFILE."
+            "Loads a wallaby snapshot from SNAPFILE or standard input if no filename is given"
           end
           
           def init_option_parser
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} SNAPFILE\n#{self.class.description}."
+              opts.banner = "Usage:  wallaby #{self.class.opname} [SNAPFILE]\n#{self.class.description}."
                 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
