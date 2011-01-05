@@ -1,4 +1,3 @@
-Console Connection Established...
 --- !ruby/object:Mrg::Grid::SerializedConfigs::Store 
 features: 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
