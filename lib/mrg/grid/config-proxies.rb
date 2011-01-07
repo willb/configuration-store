@@ -227,15 +227,25 @@ module Mrg
             end
           end
           
-          yrepr = YAML::parse(ymltxt).transform
+          yrepr = nil
           
-          @nodes = dictify(yrepr.nodes)
-          @groups = dictify(yrepr.groups)
-          @params = dictify(yrepr.params)
-          @features = dictify(yrepr.features)
-          @subsystems = dictify(yrepr.subsystems)
+          begin
+            yrepr = YAML::parse(ymltxt).transform
+
+            raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Store)
+
+            @nodes = dictify(yrepr.nodes)
+            @groups = dictify(yrepr.groups)
+            @params = dictify(yrepr.params)
+            @features = dictify(yrepr.features)
+            @subsystems = dictify(yrepr.subsystems)
+            
+            @callbacks = []
+          rescue Exception=>ex
+            raise RuntimeError.new("Invalid snapshot file; #{ex.message}")
+          end
           
-          @callbacks = []
+
         end
         
         def load
