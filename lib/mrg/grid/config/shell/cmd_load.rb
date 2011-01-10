@@ -41,7 +41,7 @@ module Mrg
           end
           
           def self.description 
-            "Loads a wallaby snapshot from SNAPFILE or standard input if no filename is given"
+            "Loads a wallaby snapshot from a file or from standard input"
           end
           
           def init_option_parser
