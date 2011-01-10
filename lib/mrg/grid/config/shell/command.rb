@@ -79,6 +79,8 @@ module Mrg
             rescue ShellCommandFailure => scf
               puts "fatal:  #{scf.message}" if scf.message
               scf.status
+            rescue SystemExit=>ex
+              ex.status
             rescue Exception=>ex
               puts "fatal:  #{ex}"
               puts ex.backtrace.join("\n") if ENV['WALLABY_SHELL_DEBUG']

@@ -60,7 +60,7 @@ module Mrg
 
         def self.preprocess_args(args)
           result = Args.new
-          pivot = 0
+          pivot = args.size
 
           args.each_with_index do |arg,idx|
             if (result.cmd = Mrg::Grid::Config::Shell::COMMANDS[arg]; result.cmd)
@@ -98,11 +98,12 @@ module Mrg
           explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
           debug = :warn
 
-          op = OptionParser.new do |opts|
-            opts.banner = "Usage:  wallaby [options] command [command-args]"
+          @op = OptionParser.new do |opts|
+            opts.banner = "Usage:  wallaby [options] command [command-args]\nUse \"wallaby help commands\" for a list of commands"
 
             opts.on("-h", "--help", "shows this message") do
-              raise OptionParser::InvalidOption.new
+              puts @op
+              exit
             end
 
             opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
@@ -128,21 +129,21 @@ module Mrg
 
           args = preprocess_args(args) unless args.is_a?(Args)
 
-          unless args.cmd
-            puts "fatal:  you must specify a command; use \"wallaby help commands\" for a list."
-            puts op
-            exit(1)
-          end
-
           begin
-            op.parse!(args.for_wt)
+            @op.parse!(args.for_wt)
           rescue OptionParser::InvalidOption
-            puts op
+            puts @op
             exit
           rescue OptionParser::InvalidArgument => ia
             puts ia
-            puts op
+            puts @op
             exit
+          end
+
+          unless args.cmd
+            puts "fatal:  you must specify a command; use \"wallaby help commands\" for a list."
+            puts @op
+            exit(1)
           end
 
           store_client = Proc.new do
@@ -186,6 +187,8 @@ module Mrg
           rescue ShellCommandFailure => scf
             puts "fatal:  #{scf.message}" if scf.message
             exit!(scf.status)
+          rescue SystemExit => ex
+            exit!(ex.status)
           rescue Exception => ex
             puts "fatal:  #{ex.inspect}"
             exit!(127)
