@@ -52,8 +52,20 @@ module Mrg
           register_callback :after_option_parsing, :check_args
           
           def act
+            result = 0
+            
+            invalid_nodes = store.checkNodeValidity(@nodes)
+            if invalid_nodes.size > 0
+              invalid_nodes.each do |n|
+                puts "warning:  node #{n} does not exist"
+                @nodes.delete(n)
+                result = 1
+              end
+            end
+            
             @nodes.each do |node|
               node = store.getNode(node)
+              
               exp = explain_one_node(node)
               config = node.getConfig
               
@@ -70,7 +82,7 @@ module Mrg
               
             end
             
-            0
+            result
           end
           
           private
