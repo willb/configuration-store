@@ -105,12 +105,11 @@ module Mrg
           end
 
           def act
-            success = false
+            success = 1
             store.console.objects(:class=>"Snapshot").each do |snap|
-              success = true
               puts "#{snap.name}"
             end
-            success ? 0 : 1
+            success
           end
         end
       end
