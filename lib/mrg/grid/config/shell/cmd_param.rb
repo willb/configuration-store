@@ -34,7 +34,7 @@ module Mrg
           end
 
           def noun
-            "Parameter"
+            "parameter"
           end
 
         end          
