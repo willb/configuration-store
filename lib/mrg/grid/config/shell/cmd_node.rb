@@ -94,10 +94,6 @@ module Mrg
             :getNode
           end
           
-          def custom_act(arg=nil)
-            store.nodes.find {|n| n.name == arg}
-          end
-          
           def show_banner
             false
           end
