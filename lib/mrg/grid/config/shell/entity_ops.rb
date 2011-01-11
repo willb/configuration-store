@@ -73,12 +73,16 @@ module Mrg
           end
 
           def act
+            if @args.size < 1
+              puts "You must specify at least one #{noun} to #{verb}."
+            end
             
             @args.each do |name|
               puts "#{gerund.capitalize} the following #{noun}: #{name}#{" with #{@options.inspect}" if supports_options}" if show_banner
               
               begin
-                ent = store.send(storeop, name)
+                ent = self.respond_to?(:custom_act) ? self.custom_act(name) : store.send(storeop, name)
+                raise "#{name} does not exist" unless ent
                 entity_callback(ent)
                 if supports_options
                   @options.each do |option, value|
@@ -87,7 +91,7 @@ module Mrg
                   end
                 end
               rescue => ex
-                puts "warning:  couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.inspect})" : "")
+                puts "Couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.message rescue ex.inspect})" : "")
               end
             end
             
