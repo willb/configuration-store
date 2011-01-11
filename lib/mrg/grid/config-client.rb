@@ -340,6 +340,13 @@ module Mrg
       end
 
       class Store < ClientObj
+        [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
+          mname = "check#{klass}Validity".to_sym
+          define_method mname.to_sym do |fset|
+            @qmfo.send(mname, fset).send("invalid#{klass}s")
+          end
+        end
+        
         def getDefaultGroup
           get_object(@qmfo.getDefaultGroup().obj, Group)
         end
