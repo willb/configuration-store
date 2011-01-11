@@ -33,6 +33,10 @@ module Mrg
             @accessor_options ||= {:kind=>String, :default_val=>String, :description=>String, :must_change=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}, :level=>Integer, :needsRestart=>{"yes"=>true, "no"=>false, "YES"=>true, "NO"=>false}}
           end
 
+          def noun
+            "Parameter"
+          end
+
         end          
 
         class AddParam < Command
