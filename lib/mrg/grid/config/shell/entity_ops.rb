@@ -73,8 +73,11 @@ module Mrg
           end
 
           def act
+            result = 0
+            
             if @args.size < 1
               puts "You must specify at least one #{noun} to #{verb}."
+              result = 1
             end
             
             @args.each do |name|
@@ -92,10 +95,11 @@ module Mrg
                 end
               rescue => ex
                 puts "Couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.message rescue ex.inspect})" : "")
+                result = 1
               end
             end
             
-            0
+            result
           end
         end        
       end
