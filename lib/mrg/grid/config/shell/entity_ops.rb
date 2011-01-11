@@ -80,12 +80,20 @@ module Mrg
               result = 1
             end
             
+            invalid_entities = store.send("check#{noun.capitalize}Validity", @args)
+            if invalid_entities.size > 0
+              invalid_entities.each do |ent|
+                puts "warning:  #{noun} #{ent} does not exist"
+                @args.delete(ent)
+                result = 1
+              end
+            end
+            
             @args.each do |name|
               puts "#{gerund.capitalize} the following #{noun}: #{name}#{" with #{@options.inspect}" if supports_options}" if show_banner
               
               begin
-                ent = self.respond_to?(:custom_act) ? self.custom_act(name) : store.send(storeop, name)
-                raise "#{name} does not exist" unless ent
+                ent = store.send(storeop, name)
                 entity_callback(ent)
                 if supports_options
                   @options.each do |option, value|
