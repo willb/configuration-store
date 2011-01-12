@@ -80,7 +80,8 @@ module Mrg
               result = 1
             end
             
-            invalid_entities = store.send("check#{noun.capitalize}Validity", @args)
+            invalid_entities = []
+            invalid_entities = store.send("check#{noun.capitalize}Validity", @args) unless verb == "add"
             if invalid_entities.size > 0
               invalid_entities.each do |ent|
                 puts "warning:  #{noun} #{ent} does not exist"
