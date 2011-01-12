@@ -198,6 +198,9 @@ fi
 
 %changelog
 
+* Tue Jan 11 2011 willb <willb@redhat> - 0.10.2-1
+- Fixes a small regression introduced in 0.10.1
+
 * Tue Jan 11 2011 willb <willb@redhat> - 0.10.1-1
 - Fixes BZs 668459, 668797, 668798, 668799, 668800, 668802, 668803.
 
