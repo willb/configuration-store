@@ -44,7 +44,7 @@ module Mrg
             @store = nil
           end
           
-          register_callback :initialize, :initializer_callback
+          register_callback :initializer, :initializer_callback
           
           def after_option_parsing_callback(*args)
             @args = args.dup

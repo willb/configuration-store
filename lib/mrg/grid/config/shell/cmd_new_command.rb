@@ -208,7 +208,7 @@ module Mrg
 <% end %>
   end
 
-  register_callback :initialize, :<%= callback %>
+  register_callback :initializer, :<%= callback %>
 <% end %>
 <% @before_option_parsing_callbacks.each_with_index do |callback,i| %>
 

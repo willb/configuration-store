@@ -54,7 +54,7 @@ module Mrg
           # This call registers "initializer_callback" to be called at the end of the
           # initializer.  You can define multiple callback methods; they will be called
           # in the order that they are registered.
-          register_callback :initialize, :initializer_callback
+          register_callback :initializer, :initializer_callback
           
           def before_option_parsing_callback(*args)
             # This call will be invoked before command-line argument processing.  args
