@@ -49,14 +49,15 @@ module DescribeGetterAndSetter
 end
 
 module BaseDBFixture
-  def reconstitute_db
-    
+  def reconstitute_db(text=nil)
     pending "You've disabled tests involving the full database for this run" if ENV['WALLABY_SKIP_EXPENSIVE_TESTS']
+
+    text ||= dbtext
 
     $wallaby_skip_inconsistency_detection = true
     
     @store.storeinit("resetdb"=>"yes")
-    s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(@store, dbtext)
+    s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(@store, text)
     s.load
     
     $wallaby_skip_inconsistency_detection = false
