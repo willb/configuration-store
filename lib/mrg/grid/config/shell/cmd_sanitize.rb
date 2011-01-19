@@ -79,6 +79,9 @@ module Mrg
             # command-line options).  It may include, for example, input filenames.
             @args = args.dup
             @input_filename, @output_filename = @args
+            if @exps.size > 0
+              @value_matcher = Regexp.union(*@exps.map {|e| Regexp.new(e)})
+            end
           end
 
           register_callback :after_option_parsing, :after_option_parsing_callback
@@ -95,6 +98,8 @@ module Mrg
               message = "ob_#{entity}s"
               self.send(message) if instance_variable_get("@#{message}")
             end
+            
+            ob_values
             
             dump_proxies
             0
@@ -147,20 +152,20 @@ module Mrg
           end
 
           def ob_features
-            fobs = lambda {|f| obfuscate(f, "-feature")}
+            feature_obfuscate = lambda {|f| obfuscate(f, "-feature")}
             
             @proxy_store.features.each do |feature|
               puts "obfuscating feature name for #{feature.name}" if @verbose
               
               feature.name = obfuscate(feature.name, "-feature")
               
-              feature.included.map! &fobs
-              feature.conflicts.map! &fobs
-              feature.depends.map! &fobs
+              feature.included.map! &feature_obfuscate
+              feature.conflicts.map! &feature_obfuscate
+              feature.depends.map! &feature_obfuscate
             end
             
             @proxy_store.groups.each do |group|
-              group.features.map! &fobs
+              group.features.map! &feature_obfuscate
             end
           end
           
@@ -171,6 +176,47 @@ module Mrg
                 group.name = obfuscate(group.name, "-group")
               end
             end
+          end
+          
+          def ob_parameters
+            param_obfuscate = lambda {|p| p.name = obfuscate(p.name, "-param")}
+            
+            key_obfuscate = lambda do |entity|
+              entity.params = entity.params.inject({}) do |acc,(k,v)|
+                acc[obfuscate(k,"-param")] = v
+                acc
+              end
+            end
+            
+            set_obfuscate = lambda {|p| p = obfuscate(p, "-param")}
+            
+            @proxy_store.params.each &param_obfuscate
+            @proxy_store.features.each &key_obfuscate
+            @proxy_store.groups.each &key_obfuscate
+            @proxy_store.subsystems.each do |s|
+              s.params.map! &set_obfuscate
+            end
+            
+          end
+          
+          def ob_values
+            puts "obfuscating values that match #{@value_matcher.inspect}"
+            return unless @value_matcher
+            
+            value_obfuscate = lambda do |entity|
+              entity.params = entity.params.inject({}) do |acc, (k,v)|
+                if v =~ @value_matcher
+                  acc[k] = obfuscate(v, "-value")
+                else
+                  acc[k] = v
+                end
+                
+                acc
+              end
+            end
+            
+            @proxy_store.groups.each &value_obfuscate
+            @proxy_store.features.each &value_obfuscate
           end
           
         end
