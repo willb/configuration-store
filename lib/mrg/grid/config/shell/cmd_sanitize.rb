@@ -200,12 +200,13 @@ module Mrg
           end
           
           def ob_values
-            puts "obfuscating values that match #{@value_matcher.inspect}"
+            puts "obfuscating values that match #{@value_matcher.inspect}" if @verbose
             return unless @value_matcher
             
             value_obfuscate = lambda do |entity|
               entity.params = entity.params.inject({}) do |acc, (k,v)|
                 if v =~ @value_matcher
+                  puts "changing value for #{k}=#{v} in config for #{entity.name}" if @verbose
                   acc[k] = obfuscate(v, "-value")
                 else
                   acc[k] = v
