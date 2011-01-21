@@ -399,6 +399,7 @@ module Mrg
         def self_to_dirty_list
           DirtyElement.dirty_feature(self)
           included_by.each {|feature| feature.send(:self_to_dirty_list)}
+          DirtyElement.dirty_default_group if Group.default_has_feature?(self)
         end
         
         def included_by

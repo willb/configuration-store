@@ -56,6 +56,10 @@ module Mrg
         def self.dirty_subsystem(subsystem)
           self.create(:kind=>KIND_SUBSYSTEM, :subsystem=>subsystem) unless self.find_first_by_subsystem(subsystem)
         end
+        
+        def self.dirty_default_group
+          self.create(:kind=>KIND_EVERYTHING) unless self.find_first_by_kind(KIND_EVERYTHING)
+        end
       end
     end
   end

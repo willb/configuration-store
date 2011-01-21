@@ -323,6 +323,10 @@ module Mrg
           args.declare :config, :map, :out, "Current parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings."
         end
         
+        declare_query :default_has_feature?, <<-QUERY
+        row_id IN (SELECT grp FROM groupfeatures WHERE feature = ?) AND name = '+++DEFAULT'
+        QUERY
+        
         def feature_objs
           GroupFeatures.find_by(:grp=>self).map{|gf| gf.feature}
         end
