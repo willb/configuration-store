@@ -181,6 +181,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_node.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_new_command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_feature_import.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_sanitize.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_snapshot.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
@@ -197,6 +198,11 @@ fi
 %endif
 
 %changelog
+
+* Fri Jan 21 2011 willb <willb@redhat> - 0.10.3-1
+- Added "wallaby sanitize" shell command (for ease of submitting bug reports)
+- Fixes for "wallaby new-command" code generation
+- Fixes BZ 671185
 
 * Tue Jan 11 2011 willb <willb@redhat> - 0.10.2-1
 - Fixes a small regression introduced in 0.10.1
