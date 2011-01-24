@@ -291,6 +291,11 @@ module Mrg
           internal_get_node_config(node)
         end
         
+        expose :getNodeConfig do |args|
+          args.declare :node, :in, :lstr, "The node name to inspect."
+          args.declare :config, :out, :map, "This node's configuration."
+        end
+        
         def setNodeConfig(node, config, dofail=true)
           internal_set_node_config(node, config)
         end
