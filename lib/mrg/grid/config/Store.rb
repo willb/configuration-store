@@ -289,7 +289,8 @@ module Mrg
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node names cannot be empty") if name.size == 0
 
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
-          n.last_updated_version = ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
+          # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
+          n.last_updated_version = ConfigVersion.hasVersionedNodeConfig(name) || ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
           n
         end
         
@@ -458,7 +459,7 @@ module Mrg
           
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::SNAPSHOT), "Invalid snapshot name #{name}") unless snap
           snaptext = snap.snaptext
-          
+
           storeinit("RESETDB"=>true)
           
           ::Mrg::Grid::SerializedConfigs::ConfigLoader.log = log

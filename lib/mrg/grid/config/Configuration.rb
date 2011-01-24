@@ -233,6 +233,12 @@ module Mrg
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
             end
+
+            def hasVersionedNodeConfig(node, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
+              vnc && vnc.version.version
+            end
             
             def dupVersionedNodeConfig(from, to, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
