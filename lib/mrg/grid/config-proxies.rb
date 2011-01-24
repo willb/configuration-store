@@ -266,7 +266,7 @@ module Mrg
           @nodes.each do |name, old_node|
             log.info("Creating node '#{name}'")
             options = {}
-            options["seek_versioned_config"] = old_node.last_updated_version if old_node.last_updated_version > 0
+            options["seek_versioned_config"] = old_node.last_updated_version if old_node.last_updated_version && old_node.last_updated_version > 0
             node = @store.addNode(name, options)
             node.makeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
