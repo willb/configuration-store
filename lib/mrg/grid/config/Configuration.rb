@@ -270,7 +270,7 @@ module Mrg
         end
 
         qmf_package_name 'com.redhat.grid.config'
-        qmf_class_name 'Configuration'
+        qmf_class_name 'ConfigVersion'
         
         declare_column :version, :integer
         qmf_property :version, :uint64, :index=>true
@@ -292,8 +292,8 @@ module Mrg
         end
         
         expose :getNodeConfig do |args|
-          args.declare :node, :in, :lstr, "The node name to inspect."
-          args.declare :config, :out, :map, "This node's configuration."
+          args.declare :node, :lstr, :in, "The node name to inspect."
+          args.declare :config, :map, :out, "This node's configuration."
         end
         
         def setNodeConfig(node, config, dofail=true)
