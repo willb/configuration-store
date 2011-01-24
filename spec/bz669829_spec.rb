@@ -6,6 +6,55 @@ module Mrg
   module Grid
     module Config
 
+      describe ConfigVersion do
+        before(:each) do
+          setup_rhubarb
+          @store = Store.new
+          reconstitute_db
+        end
+        
+        after(:each) do
+          teardown_rhubarb
+        end
+        
+        include BaseDBFixture
+        
+        it "should not add spurious versioned configs when loading a new snapshot" do
+          feature = @store.getFeature("Master")
+          node = @store.addNode("foo")
+
+          Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{Master NodeAccess}, {})
+          Group.DEFAULT_GROUP.modifyParams("ADD", {"CONDOR_HOST"=>"localhost", "ALLOW_WRITE"=>"localhost", "ALLOW_READ"=>"localhost"}, {})
+          
+          @store.makeSnapshot("pre")
+
+          @store.addFeature("TestFeature").modifyIncludedFeatures("ADD", %w{ExecuteNode}, {})
+          
+          node.identity_group.modifyFeatures("ADD", %w{TestFeature}, {})
+          
+          @store.activateConfiguration.should == [{}, []]
+
+          @store.makeSnapshot("post")
+
+          nv = node.last_updated_version
+          config_post = node.getConfig("version"=>nv+1)
+
+          @store.loadSnapshot("pre")
+
+          node = @store.getNode("foo")
+
+          config_pre = node.getConfig("version"=>nv)
+
+          config_pre["WALLABY_CONFIG_VERSION"].should == config_post["WALLABY_CONFIG_VERSION"]
+
+          config_post.keys.sort.should == config_pre.keys.sort
+
+          config_post.keys.each do |k|
+            config_post[k].should == config_pre[k]
+          end
+        end
+      end
+
       describe Node do
         before(:each) do
           setup_rhubarb
@@ -28,8 +77,9 @@ module Mrg
         
         {"first->second"=>[:first_dbtext, :second_dbtext], "second->first"=>[:second_dbtext,:first_dbtext]}.each do |order,msgs|
         
-          it "should restart the master when DAEMON_LIST changes after a snapshot load and activate (#{order})" do
+          it "should not copy over versioned configs from +++DEFAULT upon snapshot load and activate (#{order})" do
             reconstitute_db(self.send(msgs[0]))
+            Group.DEFAULT_GROUP.modifyParams("REPLACE", Group.DEFAULT_GROUP.params, {})
 
             @store.activateConfiguration
 
@@ -60,6 +110,8 @@ module Mrg
             end
           end
         end
+
+        
       end
     end
   end
