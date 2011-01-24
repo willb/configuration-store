@@ -330,6 +330,12 @@ module Mrg
           options ||= {}
           @qmfo.getConfig(options).config
         end
+        
+        def whatChanged(old_version, new_version)
+          result = @qmfo.whatChanged(old_version, new_version)
+          raise result.message if result.status != 0
+          [result.params, result.restart, result.affected]
+        end
 
         def explain
           @qmfo.explain.explanation
@@ -385,8 +391,9 @@ module Mrg
           nil
         end
 
-        def addNode(name)
-          get_object(@qmfo.addNode(name).obj, Node)
+        def addNode(name, options=nil)
+          options ||= {}
+          get_object(@qmfo.addNode(name, options).obj, Node)
         end
 
         def getNode(name)
