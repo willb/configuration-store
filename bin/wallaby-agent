@@ -177,5 +177,6 @@ begin
 rescue Exception => ex
   Syslog.open do |s|
     s.crit "agent exiting with exception #{ex.inspect}"
+    puts "agent exiting with exception #{ex.inspect}" unless do_daemonify
   end
 end
