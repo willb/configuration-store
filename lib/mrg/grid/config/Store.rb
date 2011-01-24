@@ -64,7 +64,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          1
+          2
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
@@ -233,9 +233,10 @@ module Mrg
         # addNode 
         # * name (sstr/I)
         # * obj (objId/O)
-        def addNode(name)
+        def addNode(name, options=nil)
           # Print values of input parameters
-          log.debug "addNode: name => #{name.inspect}"
+          log.debug "addNode: name => #{name.inspect}; options => #{options.inspect}"
+          options ||= {}
 
           n = Node.find_first_by_name(name)
           
@@ -244,7 +245,7 @@ module Mrg
             n.provisioned = true
           else
             # Return a newly-created node 
-            n = createNode(name)
+            n = createNode(name, true, options)
           end
           
           # Mark the new node as "dirty" so it will get an updated configuration
@@ -258,6 +259,7 @@ module Mrg
         expose :addNode do |args|
           args.declare :obj, :objId, :out, "The object ID of the newly-created Node object."
           args.declare :name, :sstr, :in, "The name of the node to create."
+          args.declare :options, :map, :in, "Optional arguments. (Introduced in 20101031.2)"
         end
 
         # getNode 
@@ -284,13 +286,17 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name."
         end
         
-        def createNode(name, is_provisioned=true)
+        def createNode(name, is_provisioned=true, options=nil)
+          options ||= {}
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node name #{name} is invalid; node names may not start with '+++'") if name.slice(0,3) == "+++"
           fail(Errors.make(Errors::INVALID_NAME, Errors::NODE), "Node names cannot be empty") if name.size == 0
 
-          n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>0)
+          seek_version = options["seek_versioned_config"]
+          seek_version = (seek_version && ConfigVersion.hasVersionedNodeConfig(name, seek_version)) || nil
+
+          n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>seek_version || 0)
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
-          n.last_updated_version = ConfigVersion.hasVersionedNodeConfig(name) || ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
+          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
           n
         end
         

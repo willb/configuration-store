@@ -169,6 +169,7 @@ module Mrg
         field :idgroup, String
         field :membership, Array
         field :provisioned, true
+        field :last_updated_version, 0
       end        
       
       class Subsystem
@@ -245,7 +246,6 @@ module Mrg
             raise RuntimeError.new("Invalid snapshot file; #{ex.message}")
           end
           
-
         end
         
         def load
@@ -265,7 +265,9 @@ module Mrg
         def create_nodes
           @nodes.each do |name, old_node|
             log.info("Creating node '#{name}'")
-            node = @store.addNode(name)
+            options = {}
+            options["seek_versioned_config"] = old_node.last_updated_version if old_node.last_updated_version > 0
+            node = @store.addNode(name, options)
             node.makeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0
@@ -443,6 +445,7 @@ module Mrg
             out.name = node.name
             out.provisioned = node.provisioned
             out.membership = fl_normalize(node.memberships)
+            out.last_updated_version = node.last_updated_version
             out
           end
         end
