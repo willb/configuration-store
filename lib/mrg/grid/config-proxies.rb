@@ -267,7 +267,7 @@ module Mrg
             log.info("Creating node '#{name}'")
             options = {}
             options["seek_versioned_config"] = old_node.last_updated_version if old_node.last_updated_version && old_node.last_updated_version > 0
-            node = @store.addNode(name, options)
+            node = @store.addNodeWithOptions(name, options)
             node.makeUnprovisioned unless (old_node.provisioned)
             memberships = old_node.membership
             if memberships.size > 0

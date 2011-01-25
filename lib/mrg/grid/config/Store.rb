@@ -255,11 +255,18 @@ module Mrg
           n.identity_group
           n
         end
+
+        alias addNodeWithOptions addNode
+
+        expose :addNodeWithOptions do |args|
+          args.declare :obj, :objId, :out, "The object ID of the newly-created Node object."
+          args.declare :name, :sstr, :in, "The name of the node to create."
+          args.declare :options, :map, :in, "Optional arguments. (Introduced in 20101031.2)"
+        end
         
         expose :addNode do |args|
           args.declare :obj, :objId, :out, "The object ID of the newly-created Node object."
           args.declare :name, :sstr, :in, "The name of the node to create."
-          args.declare :options, :map, :in, "Optional arguments. (Introduced in 20101031.2)"
         end
 
         # getNode 

@@ -393,8 +393,10 @@ module Mrg
 
         def addNode(name, options=nil)
           options ||= {}
-          get_object(@qmfo.addNode(name, options).obj, Node)
+          get_object(@qmfo.addNodeWithOptions(name, options).obj, Node)
         end
+
+        alias addNodeWithOptions addNode
 
         def getNode(name)
           get_object(@qmfo.getNode(name).obj, Node)
