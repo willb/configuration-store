@@ -359,7 +359,36 @@ module Mrg
         
         declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
         declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
-        
+      
+        #  select row_id, version, node, text from (select version as dup_v, node as dup_n, count(version) as versions from argh group by version, node) join (select row_id, version, node, text from argh) on dup_v = version and node = dup_n join (select version as default_v, node as default_n, text as default_text from argh) on default_v = dup_v and default_text = text where default_n = "+++default" and versions > 1;
+
+        declare_custom_query :find_spurious, <<-QUERY
+        SELECT row_id, version, node, config FROM
+            (SELECT version AS dup_v, 
+                    node AS dup_n,
+                    config AS dup_c,
+                    count(version) AS versions 
+             FROM __TABLE__
+             GROUP BY version, node)
+          JOIN
+            (SELECT row_id, 
+                    version,
+                    node,
+                    config
+             FROM __TABLE__)
+          ON dup_v = version AND
+             dup_n = node
+          JOIN
+            (SELECT version AS default_v,
+                    node AS default_n,
+                    config AS default_c
+             FROM __TABLE__)
+          ON default_v = dup_v AND
+             default_config = config
+        WHERE default_n = "+++default" AND
+              versions > 1
+        QUERY
+
         declare_index_on :node
         declare_index_on :version
 
