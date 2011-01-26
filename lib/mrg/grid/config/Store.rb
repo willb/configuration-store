@@ -479,7 +479,7 @@ module Mrg
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::SNAPSHOT), "Invalid snapshot name #{name}") unless snap
           snaptext = snap.snaptext
 
-          storeinit("RESETDB"=>true, "REMOVE-SPURIOUS"=>true)
+          storeinit("RESETDB"=>true)
           
           ::Mrg::Grid::SerializedConfigs::ConfigLoader.log = log
           
@@ -545,7 +545,10 @@ module Mrg
         end
 
         def remove_spurious_configs
+          old_count = VersionedNodeConfig.count
           VersionedNodeConfig.delete_spurious
+          new_count = VersionedNodeConfig.count
+          log.info(new_count == old_count ? "Inspected #{old_count} versioned configs" :  "Inspected #{old_count} versioned configs and removed #{old_count - new_count} spurious ones")
         end
 
         def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)
