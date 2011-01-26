@@ -199,6 +199,11 @@ fi
 
 %changelog
 
+
+* Tue Jan 25 2011 willb <willb@redhat> - 0.10.4-1
+- Fixes BZ 669829
+- Automatic cleanup for spuriously-generated versioned snapshots
+
 * Fri Jan 21 2011 willb <willb@redhat> - 0.10.3-1
 - Added "wallaby sanitize" shell command (for ease of submitting bug reports)
 - Fixes for "wallaby new-command" code generation
