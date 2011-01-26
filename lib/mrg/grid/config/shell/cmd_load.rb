@@ -95,7 +95,7 @@ module Mrg
           
           def act
             
-            store.storeinit("resetdb"=>"yes")
+            store.storeinit("resetdb"=>"yes", "remove-spurious"=>"yes")
 
             s = Mrg::Grid::SerializedConfigs::ConfigLoader.new(store, @input.read)
 

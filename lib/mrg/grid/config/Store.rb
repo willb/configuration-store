@@ -436,8 +436,14 @@ module Mrg
         
         def storeinit(kwargs=nil)
           kwargs ||= {}
-          if kwargs.keys.map {|k| k.upcase}.include? "RESETDB"
+          options = kwargs.keys.map {|k| k.upcase}
+          
+          if options.include? "RESETDB"
             clear_db
+          end
+          
+          if options.include? "REMOVE-SPURIOUS"
+            remove_spurious_configs
           end
           
           Group.DEFAULT_GROUP
@@ -473,7 +479,7 @@ module Mrg
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::SNAPSHOT), "Invalid snapshot name #{name}") unless snap
           snaptext = snap.snaptext
 
-          storeinit("RESETDB"=>true)
+          storeinit("RESETDB"=>true, "REMOVE-SPURIOUS"=>true)
           
           ::Mrg::Grid::SerializedConfigs::ConfigLoader.log = log
           
@@ -536,6 +542,10 @@ module Mrg
           MAIN_DB_TABLES.each do |table|
             table.delete_all rescue table.find_all.each {|row| row.delete}
           end
+        end
+
+        def remove_spurious_configs
+          VersionedNodeConfig.delete_spurious
         end
 
         def validate_and_activate(validate_only=false, explicit_nodelist=nil, this_version=nil)

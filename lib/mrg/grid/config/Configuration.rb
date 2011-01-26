@@ -48,7 +48,7 @@ module Mrg
         def self.make(args=nil)
           args ||= {}
           invalid_keys = args.keys - VALID_KEYS
-          nhistory = args.delete(:history)
+          history = args.delete(:history)
           
           if invalid_keys != []
             raise RuntimeError.new("Internal error:  invalid keys passed to Explanation.make: #{invalid_keys.inspect}")
@@ -240,6 +240,7 @@ module Mrg
               vnc && vnc.version.version
             end
             
+            # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
@@ -359,8 +360,6 @@ module Mrg
         
         declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
         declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
-      
-        #  select row_id, version, node, text from (select version as dup_v, node as dup_n, count(version) as versions from argh group by version, node) join (select row_id, version, node, text from argh) on dup_v = version and node = dup_n join (select version as default_v, node as default_n, text as default_text from argh) on default_v = dup_v and default_text = text where default_n = "+++default" and versions > 1;
 
         declare_custom_query :find_spurious, <<-QUERY
         SELECT row_id, version, node, config FROM
@@ -376,18 +375,49 @@ module Mrg
                     node,
                     config
              FROM __TABLE__)
-          ON dup_v = version AND
-             dup_n = node
+            ON dup_v = version AND
+               dup_n = node
           JOIN
             (SELECT version AS default_v,
                     node AS default_n,
                     config AS default_c
              FROM __TABLE__)
-          ON default_v = dup_v AND
-             default_config = config
-        WHERE default_n = "+++default" AND
+            ON default_v = dup_v AND
+               default_c = config
+        WHERE default_n in (SELECT row_id FROM #{VersionedNode.table_name} WHERE name = #{VersionedNode::DEFAULT_NODE.inspect}) AND
               versions > 1
         QUERY
+
+        def self.delete_spurious
+          db.execute <<-QUERY
+          DELETE FROM #{table_name} WHERE row_id IN (
+            SELECT row_id FROM
+                (SELECT version AS dup_v, 
+                        node AS dup_n,
+                        config AS dup_c,
+                        count(version) AS versions 
+                 FROM #{table_name}
+                 GROUP BY version, node)
+              JOIN
+                (SELECT row_id, 
+                        version,
+                        node,
+                        config
+                 FROM #{table_name})
+                ON dup_v = version AND
+                   dup_n = node
+              JOIN
+                (SELECT version AS default_v,
+                        node AS default_n,
+                        config AS default_c
+                 FROM #{table_name})
+                ON default_v = dup_v AND
+                   default_c = config
+            WHERE default_n in (SELECT row_id FROM #{VersionedNode.table_name} WHERE name = #{VersionedNode::DEFAULT_NODE.inspect}) AND
+                  versions > 1
+          )
+          QUERY
+        end
 
         declare_index_on :node
         declare_index_on :version
