@@ -71,7 +71,7 @@ module Mrg
             
             if cklass
               puts cklass.new(nil, nil, nil).oparser
-              return 1
+              return 0
             else
               puts "#{command} is not a recognized command." unless command == "commands"
               puts "Use \"wallaby help COMMAND\" to get help on COMMAND."
