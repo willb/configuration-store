@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 2
+%define rel 3
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -198,6 +198,9 @@ fi
 %endif
 
 %changelog
+
+* Fri Jan 28 2011 willb <willb@redhat> - 0.10.4-3
+- Fixes BZs 635628 (was bounced), 673502
 
 * Thu Jan 27 2011 willb <willb@redhat> - 0.10.4-2
 - Fixes BZs 668798, 668799
