@@ -53,7 +53,8 @@ module Mrg
               opts.banner = "Usage:  wallaby #{opname} [options] FILE\nImports a wallaby feature from a specially-formatted configuration file."
                 
               opts.on("-h", "--help", "displays this message") do
-                raise OptionParser::InvalidOption.new
+                puts opts
+                exit
               end
               
               opts.on("-n", "--name NAME", "name for given feature (overrides one specified in the file)") do |nm|
@@ -63,13 +64,24 @@ module Mrg
           end
 
           def parse_file(*args)
-            @feature = parse_config_file(args[0])
+            unless args.size == 1 && args[0]
+              puts "fatal:  you must specify exactly one file name (use --help for more information)"
+              exit(1)
+            end
+            
+            begin
+              @feature = parse_config_file(args[0])
+            rescue SystemCallError => sce
+              puts "fatal: #{sce.message}"
+              exit(1)
+            end
+            
             @feature[:name] = @feature_name if @feature_name
             
             unless @feature[:name]
               puts "fatal: No feature name supplied.  You must provide one, either\nwith a '--name' parameter on the command-line, or with\na '#name' directive in the feature file."
               puts oparser
-              exit!(1)
+              exit(1)
             end
           end
           
