@@ -1,4 +1,4 @@
-%define rel 2
+%define rel 1
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Feb  8 2011 rrati <rrati@redhat> - 1.6-1
+- Updated TriggerService to set DC_DAEMON_LIST
+- Fixed setting of CONDOR_HOST in HACentralManager feature
+
 * Wed Jan  5 2011 rrati <rrati@redhat> - 1.5-2
 - Removed garbage at beginning of snapshot file
 
