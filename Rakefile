@@ -123,7 +123,7 @@ task :clean do
   FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), 'condor-base-db.snapshot'], :force => true
 end
 
-task :copy_db do
+task :copy_db => [:gen_db_file] do
   src = 'condor-base-db.snapshot'
   target = 'spec/base-db.yaml'
   unless uptodate?(target, src)
