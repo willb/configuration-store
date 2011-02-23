@@ -87,6 +87,9 @@ cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
 cp -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
 cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
+# These aren't packaged
+rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
+rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
 %if 0%{?rhel}
 # XXX: change this when Sinatra is packaged for RHEL
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb

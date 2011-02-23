@@ -33,23 +33,23 @@ features:
   name: BaseScheduler
   params: 
     SHADOW_SIZE_ESTIMATE: "1800"
+    SHADOW_LOG: $(LOG)/ShadowLog
     SHADOW_LIST: SHADOW
+    SHADOW_DEBUG: ""
     SHADOW: $(SBIN)/condor_shadow
-    SCHEDD_LOG: $(LOG)/SchedLog
-    MAX_SHADOW_LOG: "1000000"
     SCHEDD_DEBUG: D_PID
     SCHEDD: $(SBIN)/condor_schedd
+    QUEUE_SUPER_USERS: root, condor
+    MAX_SHADOW_LOG: "1000000"
     SHADOW_LOCK: $(LOCK)/ShadowLock
     DAEMON_LIST: ">= SCHEDD"
+    ALLOW_NEGOTIATOR_SCHEDD: $(ALLOW_NEGOTIATOR_SCHEDD), $(CONDOR_HOST), $(FLOCK_NEGOTIATOR_HOSTS)
     START_LOCAL_UNIVERSE: "True"
     SCHEDD_DAEMON_AD_FILE: $(LOG)/.schedd_classad
-    QUEUE_SUPER_USERS: root, condor
-    STARTER_LOCAL: $(SBIN)/condor_starter
-    ALLOW_NEGOTIATOR_SCHEDD: $(ALLOW_NEGOTIATOR_SCHEDD), $(CONDOR_HOST), $(FLOCK_NEGOTIATOR_HOSTS)
     MAX_SCHEDD_LOG: "1000000"
+    STARTER_LOCAL: $(SBIN)/condor_starter
     SCHEDD_ADDRESS_FILE: $(LOG)/.schedd_address
-    SHADOW_LOG: $(LOG)/ShadowLog
-    SHADOW_DEBUG: ""
+    SCHEDD_LOG: $(LOG)/SchedLog
     START_SCHEDULER_UNIVERSE: "True"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -72,15 +72,15 @@ features:
 
   name: Collector
   params: 
-    COLLECTOR_NAME: Wallaby Configured Pool
-    COLLECTOR_LOG: $(LOG)/CollectorLog
-    COLLECTOR_DEBUG: ""
-    COLLECTOR: $(SBIN)/condor_collector
-    DAEMON_LIST: ">= COLLECTOR"
-    COLLECTOR_ADDRESS_FILE: $(LOG)/.collector_address
     FLOCK_COLLECTOR_HOSTS: $(FLOCK_TO)
     MAX_COLLECTOR_LOG: "1000000"
+    DAEMON_LIST: ">= COLLECTOR"
+    COLLECTOR_DEBUG: ""
+    COLLECTOR: $(SBIN)/condor_collector
+    COLLECTOR_ADDRESS_FILE: $(LOG)/.collector_address
     COLLECTOR_HOST: $(CONDOR_HOST)
+    COLLECTOR_NAME: Wallaby Configured Pool
+    COLLECTOR_LOG: $(LOG)/CollectorLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -110,8 +110,8 @@ features:
   - Collector
   name: ConsoleCollector
   params: 
-    QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
     COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
+    QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -168,12 +168,12 @@ features:
   params: 
     RANK: SCHEDULER =?= $(DEDICATEDSCHEDULER) * $(RANK_FACTOR)
     KILL: "False"
-    START: (SCHEDULER =?= $(DEDICATEDSCHEDULER)) || ($(START))
     RANK_FACTOR: "1000000"
-    PREEMPT: SCHEDULER =!= $(DEDICATEDSCHEDULER) && ($(PREEMPT))
     DEDICATEDSCHEDULER: 0
-    WANT_SUSPEND: "False"
     SUSPEND: SCHEDULER =!= $(DEDICATEDSCHEDULER)) || ($(SUSPEND))
+    START: (SCHEDULER =?= $(DEDICATEDSCHEDULER)) || ($(START))
+    PREEMPT: SCHEDULER =!= $(DEDICATEDSCHEDULER) && ($(PREEMPT))
+    WANT_SUSPEND: "False"
     CONTINUE: "True"
     WANT_VACATE: "False"
     STARTD_ATTRS: $(STARTD_ATTRS), DEDICATEDSCHEDULER
@@ -223,14 +223,14 @@ features:
   name: EC2Enhanced
   params: 
     NEED_SET_EC2E_ROUTES: "TRUE"
+    EC2E_HOOK_JOB_CLEANUP: $(LIBEXEC)/hooks/hook_cleanup.py
     JOB_ROUTER_HOOK_KEYWORD: EC2E
-    EC2E_HOOK_TRANSLATE_JOB: $(LIBEXEC)/hooks/hook_translate.py
-    JOB_ROUTER_DEFAULTS: $(JOB_ROUTER_DEFAULTS) [ MaxIdleJobs = 10; MaxJobs = 200; set_PeriodicRemove = (JobStatus == 5 && HoldReason =!= "Spooling input data files") || (JobStatus == 1 && (CurrentTime - QDate) > 3600*6); set_requirements = true; set_WantAWS = false; ]
     EC2E_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_retrieve_status.py
     EC2E_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_finalize.py
     EC2E_ATTRS_TO_COPY: EC2RunAttempts, EC2JobSuccessful
-    EC2E_HOOK_JOB_CLEANUP: $(LIBEXEC)/hooks/hook_cleanup.py
+    JOB_ROUTER_DEFAULTS: $(JOB_ROUTER_DEFAULTS) [ MaxIdleJobs = 10; MaxJobs = 200; set_PeriodicRemove = (JobStatus == 5 && HoldReason =!= "Spooling input data files") || (JobStatus == 1 && (CurrentTime - QDate) > 3600*6); set_requirements = true; set_WantAWS = false; ]
     JOB_ROUTER_ENTRIES: 0
+    EC2E_HOOK_TRANSLATE_JOB: $(LIBEXEC)/hooks/hook_translate.py
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -240,24 +240,24 @@ features:
   - BaseJobExecuter
   name: ExecuteNode
   params: 
+    STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
     RUNBENCHMARKS: (LastBenchmark == 0 ) || ($(BenchmarkTimer) >= (4 * $(HOUR)))
     KILL: $(ActivityTimer) > $(MaxVacateTime)
-    STARTD_JOB_EXPRS: ImageSize, ExecutableSize, JobUniverse, NiceUser
-    STARTD: $(SBIN)/condor_startd
-    START: ( (KeyboardIdle > $(StartIdleTime)) && ( $(CPUIdle) || (State != "Unclaimed" && State != "Owner")) )
-    MAX_STARTD_LOG: "1000000"
     MAXJOBRETIREMENTTIME: "0"
     STARTER_LIST: STARTER
+    PERIODIC_CHECKPOINT: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
     DAEMON_LIST: ">= STARTD"
     CONSOLE_DEVICES: mouse, console
+    SUSPEND: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
     STARTER: $(SBIN)/condor_starter
     STARTD_DEBUG: ""
-    STARTD_ADDRESS_FILE: $(LOG)/.startd_address
+    STARTD: $(SBIN)/condor_startd
+    START: ( (KeyboardIdle > $(StartIdleTime)) && ( $(CPUIdle) || (State != "Unclaimed" && State != "Owner")) )
     PREEMPT: ( ((Activity == "Suspended") && ($(ActivityTimer) > $(MaxSuspendTime))) || (SUSPEND && (WANT_SUSPEND == False)) )
-    PERIODIC_CHECKPOINT: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
-    WANT_SUSPEND: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
-    SUSPEND: ( $(KeyboardBusy) || ( (CpuBusyTime > 2 * $(MINUTE)) && $(ActivationTimer) > 90 ) )
+    MAX_STARTD_LOG: "1000000"
     STARTD_LOG: $(LOG)/StartLog
+    WANT_SUSPEND: ( $(SmallJob) || $(KeyboardNotBusy) || $(IsVanilla) ) && ( $(SUSPEND) )
+    STARTD_ADDRESS_FILE: $(LOG)/.startd_address
     CONTINUE: ( $(CPUIdle) && ($(ActivityTimer) > 10) && (KeyboardIdle > $(ContinueIdleTime)) )
     BENCHMARKTIMER: (CurrentTime - LastBenchmark)
     WANT_VACATE: ( $(ActivationTimer) > 10 * $(MINUTE) || $(IsVanilla) )
@@ -282,10 +282,10 @@ features:
   name: ExecuteNodeTriggerData
   params: 
     TRIGGER_DATA_GETDATA_PERIOD: 5m
-    TRIGGER_DATA_GETDATA_EXECUTABLE: $(BIN)/get_trigger_data
     STARTD_CRON_AUTOPUBLISH: If_Changed
     TRIGGER_DATA_JOBLIST: GetData
     TRIGGER_DATA_GETDATA_RECONFIG: "FALSE"
+    TRIGGER_DATA_GETDATA_EXECUTABLE: $(BIN)/get_trigger_data
     TRIGGER_DATA_GETDATA_PREFIX: Triggerd
     STARTD_CRON_NAME: TRIGGER_DATA
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -297,33 +297,33 @@ features:
   - CentralManager
   name: HACentralManager
   params: 
-    TRANSFERER_LOG: $(LOG)/TransfererLog
+    MASTER_NEGOTIATOR_CONTROLLER: HAD
+    HAD: $(SBIN)/condor_had
+    MAX_TRANSFERER_LIFETIME: "300"
+    MAX_HAD_LOG: "640000"
+    MASTER_HAD_BACKOFF_CONSTANT: "360"
+    REPLICATION_PORT: "41450"
     MAX_REPLICATION_LOG: "640000"
     HAD_USE_REPLICATION: "true"
     HAD_USE_PRIMARY: "true"
-    HAD: $(SBIN)/condor_had
-    ALLOW_NEGOTIATOR: $(ALLOW_NEGOTIATOR), $(COLLECTOR_HOST)
-    MASTER_HAD_BACKOFF_CONSTANT: "360"
-    REPLICATION_PORT: "41450"
-    MASTER_NEGOTIATOR_CONTROLLER: HAD
     HAD_CONNECTION_TIMEOUT: "2"
-    DAEMON_LIST: ">= HAD REPLICATION"
-    REPLICATION_ARGS: -p $(REPLICATION_PORT)
+    ALLOW_NEGOTIATOR: $(ALLOW_NEGOTIATOR), $(COLLECTOR_HOST)
     REPLICATION: $(SBIN)/condor_replication
-    HAD_LOG: $(LOG)/HADLog
+    DAEMON_LIST: ">= HAD REPLICATION"
     ALLOW_NEGOTIATOR_SCHEDD: $(FLOCK_NEGOTIATOR_HOSTS), $(COLLECTOR_HOST)
+    REPLICATION_ARGS: -p $(REPLICATION_PORT)
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR), $(COLLECTOR_HOST)
-    REPLICATION_LOG: $(LOG)/ReplicationLog
     REPLICATION_LIST: 0
     REPLICATION_INTERVAL: "300"
-    HAD_ARGS: -p $(HAD_PORT)
     CONDOR_HOST: 0
+    COLLECTOR_HOST: $(CONDOR_HOST)
+    HAD_LOG: $(LOG)/HADLog
+    STATE_FILE: $(SPOOL)/Accountantnew.log
+    REPLICATION_LOG: $(LOG)/ReplicationLog
+    HAD_ARGS: -p $(HAD_PORT)
+    TRANSFERER_LOG: $(LOG)/TransfererLog
     HAD_UPDATE_INTERVAL: "300"
     HAD_LIST: 0
-    COLLECTOR_HOST: $(CONDOR_HOST)
-    STATE_FILE: $(SPOOL)/Accountantnew.log
-    MAX_TRANSFERER_LIFETIME: "300"
-    MAX_HAD_LOG: "640000"
     HAD_PORT: "51450"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
@@ -335,12 +335,12 @@ features:
   - BaseScheduler
   name: HAScheduler
   params: 
-    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
+    HA_LOCK_HOLD_TIME: "300"
     HA_LOCK_URL: 0
-    SCHEDD_NAME: 0
+    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
     MASTER_HA_LIST: $(MASTER_HA_LIST), SCHEDD
     HA_POLL_PERIOD: "60"
-    HA_LOCK_HOLD_TIME: "300"
+    SCHEDD_NAME: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -376,11 +376,11 @@ features:
   name: JobRouter
   params: 
     MAX_JOB_ROUTER_LOG: "1000000"
-    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
     JOB_ROUTER_DEBUG: ""
-    DAEMON_LIST: ">= JOB_ROUTER"
-    MAX_HISTORY_ROTATIONS: "20"
     JOB_ROUTER: $(LIBEXEC)/condor_job_router
+    DAEMON_LIST: ">= JOB_ROUTER"
+    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    MAX_HISTORY_ROTATIONS: "20"
     JOB_ROUTER_LOG: $(LOG)/JobRouterLog
     JOB_ROUTER_ADDRESS_FILE: $(LOG)/.job_router_address
     JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
@@ -396,14 +396,14 @@ features:
 
   name: JobServer
   params: 
-    JOB_SERVER_DEBUG: ""
+    JOB_SERVER_LOG: $(LOG)/JobServerLog
+    JOB_SERVER: $(SBIN)/condor_job_server
     DC_DAEMON_LIST: ">= JOB_SERVER"
     DAEMON_LIST: ">= JOB_SERVER"
+    JOB_SERVER_DEBUG: ""
     JOB_SERVER_ADDRESS_FILE: $(LOG)/.job_server_address
-    JOB_SERVER: $(SBIN)/condor_job_server
     QMF_PUBLISH_SUBMISSIONS: "FALSE"
     MAX_JOB_SERVER_LOG: "1000000"
-    JOB_SERVER_LOG: $(LOG)/JobServerLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -413,11 +413,11 @@ features:
 
   name: KeyboardMonitor
   params: 
-    DAEMON_LIST: ">= KBDD"
     KBDD_DEBUG: ""
-    KBDD_ADDRESS_FILE: $(LOG)/.kbdd_address
     MAX_KBDD_LOG: "1000000"
+    DAEMON_LIST: ">= KBDD"
     KBDD: $(SBIN)/condor_kbdd
+    KBDD_ADDRESS_FILE: $(LOG)/.kbdd_address
     KBDD_LOG: $(LOG)/KbdLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -428,27 +428,27 @@ features:
   - ExecuteNode
   name: LowLatency
   params: 
-    LL_DAEMON_PORT: "10000"
-    LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
     JOB_HOOKS_PORT: $(LL_DAEMON_PORT)
-    LL_DAEMON_LOG: $(LOG)/CaroLog
-    LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
-    FETCHWORKDELAY: 10 * (Activity == "Idle")
+    LL_BROKER_QUEUE: 0
     LOW_LATENCY_JOB_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_exit.py
     LOW_LATENCY_HOOK_REPLY_FETCH: $(LIBEXEC)/hooks/hook_reply_fetch.py
+    DAEMON_LIST: ">= LL_DAEMON"
+    STARTER_UPDATE_INTERVAL: "30"
+    LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
+    FETCHWORKDELAY: 10 * (Activity == "Idle")
+    STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
+    LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
     LL_DAEMON_LEASE_TIME: "35"
     LL_DAEMON_IP: 127.0.0.1
     LL_DAEMON: $(SBIN)/carod
-    LL_BROKER_QUEUE: 0
-    DAEMON_LIST: ">= LL_DAEMON"
-    STARTER_UPDATE_INTERVAL: "30"
-    STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
-    LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
     MAX_LL_DAEMON_LOG: "1000000"
-    LL_BROKER_IP: 0
-    LL_BROKER_PORT: "5672"
     LL_DAEMON_QUEUED_CONNECTIONS: "5"
+    LL_BROKER_IP: 0
+    LL_DAEMON_PORT: "10000"
+    LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
     LOW_LATENCY_HOOK_FETCH_WORK: $(LIBEXEC)/hooks/hook_fetch_work.py
+    LL_DAEMON_LOG: $(LOG)/CaroLog
+    LL_BROKER_PORT: "5672"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -458,19 +458,19 @@ features:
 
   name: Master
   params: 
-    COLLECTOR_NAME: ""
-    MASTER: $(SBIN)/condor_master
     SEC_DEFAULT_NEGOTIATION: OPTIONAL
-    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    MASTER: $(SBIN)/condor_master
     DAEMON_LIST: ">= MASTER"
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
-    SEC_DEFAULT_AUTHENTICATION: OPTIONAL
     SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), CLAIMTOBE
+    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    CONDOR_DEVELOPERS: NONE
     ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
+    SEC_DEFAULT_AUTHENTICATION: OPTIONAL
+    MASTER_ADDRESS_FILE: $(LOG)/.master_address
     CONDOR_HOST: 0
     CONDOR_DEVELOPERS_COLLECTOR: NONE
-    CONDOR_DEVELOPERS: NONE
-    MASTER_ADDRESS_FILE: $(LOG)/.master_address
+    COLLECTOR_NAME: ""
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -481,20 +481,20 @@ features:
 
   name: Negotiator
   params: 
-    PREEMPTION_RANK: (RemoteUserPrio * 1000000) - TARGET.ImageSize
-    ALLOW_NEGOTIATOR: $(ALLOW_NEGOTIATOR), $(CONDOR_HOST)
-    NEGOTIATOR_DEBUG: D_MATCH
     NEGOTIATOR_PRE_JOB_RANK: RemoteOwner =?= UNDEFINED
-    NEGOTIATOR: $(SBIN)/condor_negotiator
     MAX_NEGOTIATOR_LOG: "1000000"
-    DAEMON_LIST: ">= NEGOTIATOR"
     PREEMPTION_REQUIREMENTS: ( $(StateTimer) > (1 * $(HOUR)) && RemoteUserPrio > SubmittorPrio * 1.2 ) || (MY.NiceUser == True)
+    ALLOW_NEGOTIATOR: $(ALLOW_NEGOTIATOR), $(CONDOR_HOST)
+    NEGOTIATOR: $(SBIN)/condor_negotiator
+    DAEMON_LIST: ">= NEGOTIATOR"
     NEGOTIATOR_LOG: $(LOG)/NegotiatorLog
+    NEGOTIATOR_INTERVAL: "20"
     MAX_NEGOTIATOR_MATCH_LOG: "1000000"
     NEGOTIATOR_ADDRESS_FILE: $(LOG)/.negotiator_address
-    NEGOTIATOR_INTERVAL: "20"
     FLOCK_NEGOTIATOR_HOSTS: $(FLOCK_TO)
+    PREEMPTION_RANK: (RemoteUserPrio * 1000000) - TARGET.ImageSize
     NEGOTIATOR_MATCH_LOG: $(LOG)/MatchLog
+    NEGOTIATOR_DEBUG: D_MATCH
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -515,9 +515,9 @@ features:
 
   name: QMF
   params: 
-    QMF_BROKER_PORT: "5672"
     QMF_BROKER_HOST: 0
     QMF_DELETE_ON_SHUTDOWN: "TRUE"
+    QMF_BROKER_PORT: "5672"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
   - HAScheduler
@@ -560,15 +560,15 @@ features:
 
   name: TriggerService
   params: 
-    TRIGGERD: $(SBIN)/condor_triggerd
     MAX_TRIGGERD_LOG: "1000000"
-    DAEMON_LIST: ">= TRIGGERD"
+    TRIGGERD: $(SBIN)/condor_triggerd
     DC_DAEMON_LIST: ">= TRIGGERD"
+    DAEMON_LIST: ">= TRIGGERD"
     TRIGGERD.QMF_STOREFILE: $(DATA)/.triggerd_storefile
-    TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
     TRIGGERD_ADDRESS_FILE: $(LOG)/.triggerd_address
-    TRIGGERD_LOG: $(LOG)/TriggerLog
     DATA: 0
+    TRIGGERD_LOG: $(LOG)/TriggerLog
+    TRIGGERD_DEFAULT_EVAL_PERIOD: "10"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -578,14 +578,14 @@ features:
   - ExecuteNode
   name: VMUniverse
   params: 
-    VM_TYPE: 0
     VM_MEMORY: $(DETECTED_MEMORY)
-    VM_NETWORKING: 0
+    VM_TYPE: 0
     VM_GAHP_SERVER: $(SBIN)/condor_vm-gahp
     LIBVIRT_XML_SCRIPT: 0
-    VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
     VM_GAHP_LOG: $(LOG)/VMGahpLog
+    VM_NETWORKING: 0
     MAX_VM_GAHP_LOG: "1000000"
+    VM_SCRIPT: $(SBIN)/condor_vm_xen.sh
 groups: 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
   features: []
@@ -921,6 +921,30 @@ params:
   must_change: false
   name: DEDICATED_SCHEDULER_USE_FIFO
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A dummy param used to force a configuration pull
+  kind: string
+  level: 0
+  must_change: false
+  name: WALLABY_FORCE_CONFIG_PULL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A dummy param used to force all daemons to restart
+  kind: string
+  level: 0
+  must_change: false
+  name: WALLABY_FORCE_RESTART
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3332,6 +3356,8 @@ subsystems:
   - CONDOR_HOST
   - DAEMON_LIST
   - DC_DAEMON_LIST
+  - WALLABY_FORCE_CONFIG_PULL
+  - WALLABY_FORCE_RESTART
   - MASTER
   - MASTER.PLUGINS
   - MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
