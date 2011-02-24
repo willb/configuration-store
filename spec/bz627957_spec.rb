@@ -26,7 +26,7 @@ module Mrg
         include BaseDBFixture
         
         it "should require values for parameters in included features" do
-          params = @purple.params
+          params = @purple.explain()
           params.keys.should include("RED")
         end
       end
