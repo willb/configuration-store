@@ -511,6 +511,51 @@ features:
 
   depends: []
 
+  included: 
+  - Collector
+  name: PowerManagementCollector
+  params: 
+    OFFLINE_LOG: $(SPOOL)/OfflineLog
+    OFFLINE_EXPIRE_ADS_AFTER: "28800"
+    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), $(OFFLINE_LOG)
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: 
+  - Collector
+  - Negotiator
+  - Scheduler
+  depends: []
+
+  included: 
+  - ExecuteNode
+  name: PowerManagementNode
+  params: 
+    ShouldHibernate: ( (KeyboardIdle > $(StartIdleTime)) && $(CPUIdle) && ($(StateTimer) > $(TimeToWait)) )
+    HIBERNATE_CHECK_INTERVAL: "300"
+    HIBERNATE: ifThenElse( $(ShouldHibernate), "RAM", "NONE" )
+    TimeToWait: (2 * $(HOUR))
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: 
+  - PowerManagementNode
+  depends: []
+
+  included: []
+
+  name: PowerManagementSubnetManager
+  params: 
+    ROOSTER_MAX_UNHIBERNATE: "0"
+    ROOSTER: $(LIBEXEC)/condor_rooster
+    UNHIBERNATE: MachineLastMatchTime =!= UNDEFINED
+    DAEMON_LIST: ">= ROOSTER"
+    ROOSTER_UNHIBERNATE_RANK: Mips*Cpus
+    ROOSTER_UNHIBERNATE: Offline && Unhibernate
+    ROOSTER_SUBNET_MASK: 0
+    ROOSTER_INTERVAL: "300"
+    ROOSTER_WAKEUP_CMD: "\"$(BIN)/condor_power -d -i $(ROOSTER_SUBNET_MASK)\""
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
   included: []
 
   name: QMF
@@ -561,6 +606,7 @@ features:
   name: TriggerService
   params: 
     MAX_TRIGGERD_LOG: "1000000"
+    ENABLE_ABSENT_NODES_DETECTION: "True"
     TRIGGERD: $(SBIN)/condor_triggerd
     DC_DAEMON_LIST: ">= TRIGGERD"
     DAEMON_LIST: ">= TRIGGERD"
@@ -924,30 +970,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
-
-  description: A dummy param used to force a configuration pull
-  kind: string
-  level: 0
-  must_change: false
-  name: WALLABY_FORCE_CONFIG_PULL
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: A dummy param used to force all daemons to restart
-  kind: string
-  level: 0
-  must_change: false
-  name: WALLABY_FORCE_RESTART
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: EC2RunAttempts, EC2JobSuccessful
   depends: []
 
@@ -1004,6 +1026,18 @@ params:
   level: 0
   must_change: false
   name: EC2E_HOOK_UPDATE_JOB_INFO
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "TRUE"
+  depends: []
+
+  description: Determines whether the condor_triggerd will look for absent nodes
+  kind: boolean
+  level: 0
+  must_change: false
+  name: ENABLE_ABSENT_NODES_DETECTION
   needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1208,6 +1242,30 @@ params:
   level: 0
   must_change: false
   name: HA_POLL_PERIOD
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ifThenElse( $(ShouldHibernate), "RAM", "NONE" )
+  depends: []
+
+  description: An expression that represents a lower power state. When this state name evaluates to a valid non-NONE state, the machine will be put into the specified low power state
+  kind: string
+  level: 0
+  must_change: false
+  name: HIBERNATE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "0"
+  depends: []
+
+  description: The number of seconds specifying how often the condor_startd checks to see if the machine is ready to enter a low power state
+  kind: integer
+  level: 0
+  must_change: false
+  name: HIBERNATE_CHECK_INTERVAL
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2124,6 +2182,30 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "28800"
+  depends: []
+
+  description: The number of seconds specifying the lifetime of the persistent machine ClassAd representing a hibernating machine
+  kind: integer
+  level: 0
+  must_change: false
+  name: OFFLINE_EXPIRE_ADS_AFTER
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SPOOL)/OfflineLog
+  depends: []
+
+  description: The full path and file name of a file that stores machine ClassAds for every hibernating machine
+  kind: string
+  level: 0
+  must_change: false
+  name: OFFLINE_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: $(LastCkpt) > (3 * $(HOUR) + $RANDOM_INTEGER(-30,30,1) * $(MINUTE) )
   depends: []
 
@@ -2175,11 +2257,35 @@ params:
   default_val: ""
   depends: []
 
+  description: The mechanism to use when authenticating with a QMF broker
+  kind: string
+  level: 0
+  must_change: true
+  name: QMF_BROKER_AUTH_MECH
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
   description: The hostname where a QMF broker is running
   kind: String
   level: 0
   must_change: true
   name: QMF_BROKER_HOST
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The location of a file containing a password to use when authenticating with a QMF broker
+  kind: string
+  level: 0
+  must_change: true
+  name: QMF_BROKER_PASSWORD_FILE
   needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2192,6 +2298,18 @@ params:
   level: 0
   must_change: false
   name: QMF_BROKER_PORT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The username to use when authenticating with a QMF broker
+  kind: string
+  level: 0
+  must_change: true
+  name: QMF_BROKER_USERNAME
   needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2348,6 +2466,90 @@ params:
   level: 0
   must_change: false
   name: REPLICATION_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LIBEXEC)/condor_rooster
+  depends: []
+
+  description: The location of the Rooster binary
+  kind: string
+  level: 0
+  must_change: false
+  name: ROOSTER
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "300"
+  depends: []
+
+  description: The number of seconds between checks for offline machines that should be woken up
+  kind: integer
+  level: 0
+  must_change: false
+  name: ROOSTER_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "0"
+  depends: []
+
+  description: The maximum number of machines to wake up per cycle.  A value of 0 means unlimited
+  kind: integer
+  level: 0
+  must_change: false
+  name: ROOSTER_MAX_UNHIBERNATE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The subnet used by condor_rooster when waking up a machine
+  kind: string
+  level: 0
+  must_change: true
+  name: ROOSTER_SUBNET_MASK
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: Offline && Unhibernate
+  depends: []
+
+  description: A boolean expression that specifies which machines should be woken up
+  kind: string
+  level: 0
+  must_change: false
+  name: ROOSTER_UNHIBERNATE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: Mips*Cpus
+  depends: []
+
+  description: A ClassAd expression specifying which machines should be woken up first in a given cycle. Higher ranked machines are woken first
+  kind: string
+  level: 0
+  must_change: false
+  name: ROOSTER_UNHIBERNATE_RANK
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "\"$(BIN)/condor_power -d -i -s 255.255.255.255\""
+  depends: []
+
+  description: A string representing the command line to invoke by condor_rooster in order to wake up a machine
+  kind: string
+  level: 0
+  must_change: false
+  name: ROOSTER_WAKEUP_CMD
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -2940,6 +3142,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: ( (KeyboardIdle > $(StartIdleTime)) && $(CPUIdle) && ($(StateTimer) > $(TimeToWait)) )
+  depends: []
+
+  description: Expression used to determine if the machine should hibernate due to inactivity
+  kind: string
+  level: 0
+  must_change: false
+  name: ShouldHibernate
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: $(LOG)/TransfererLog
   depends: []
 
@@ -3096,6 +3310,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: (2 * $(HOUR))
+  depends: []
+
+  description: Expression used to indicate the time since the last job was run
+  kind: string
+  level: 0
+  must_change: false
+  name: TimeToWait
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -3104,6 +3330,18 @@ params:
   level: 0
   must_change: true
   name: UID_DOMAIN
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: MachineLastMatchTime =!= UNDEFINED
+  depends: []
+
+  description: A boolean expression that specifies when an offline machine should be woken up
+  kind: string
+  level: 0
+  must_change: false
+  name: UNHIBERNATE
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -3225,6 +3463,30 @@ params:
   must_change: true
   name: VM_TYPE
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A dummy param used to force a configuration pull
+  kind: string
+  level: 0
+  must_change: false
+  name: WALLABY_FORCE_CONFIG_PULL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: A dummy param used to force all daemons to restart
+  kind: string
+  level: 0
+  must_change: false
+  name: WALLABY_FORCE_RESTART
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3356,8 +3618,6 @@ subsystems:
   - CONDOR_HOST
   - DAEMON_LIST
   - DC_DAEMON_LIST
-  - WALLABY_FORCE_CONFIG_PULL
-  - WALLABY_FORCE_RESTART
   - MASTER
   - MASTER.PLUGINS
   - MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
@@ -3371,6 +3631,8 @@ subsystems:
   - SEC_DEFAULT_ENCRYPTION
   - SEC_DEFAULT_INTEGRITY
   - SEC_DEFAULT_NEGOTIATION
+  - WALLABY_FORCE_CONFIG_PULL
+  - WALLABY_FORCE_RESTART
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: negotiator
   params: 
@@ -3402,6 +3664,15 @@ subsystems:
   - REPLICATION_LIST
   - REPLICATION_LOG
   - REPLICATION_PORT
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: rooster
+  params: 
+  - ROOSTER
+  - ROOSTER_INTERVAL
+  - ROOSTER_MAX_UNHIBERNATE
+  - ROOSTER_UNHIBERNATE
+  - ROOSTER_UNHIBERNATE_RANK
+  - ROOSTER_WAKEUP_CMD
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: schedd
   params: 
@@ -3482,6 +3753,7 @@ subsystems:
   name: triggerd
   params: 
   - DATA
+  - ENABLE_ABSENT_NODES_DETECTION
   - QMF_BROKER_HOST
   - QMF_BROKER_PORT
   - QMF_DELETE_ON_SHUTDOWN
