@@ -1,4 +1,4 @@
-%define rel 1
+%define rel 2
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,17 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Mar  8 2011 rrati <rrati@redhat> - 1.7-2
+- Fixed changelog
+
+* Tue Mar  8 2011 rrati <rrati@redhat> - 1.7-1
+- Added features PowerManagementNode, PowerManagementCollector,
+  PowerManagementSubnetManager
+- Added params related to new features
+- Added QMF authentication params
+- Updated TriggerService feature to enable absent node detection
+- Added ENABLE_ABSENT_NODES_DETECTION param
+
 * Tue Feb  8 2011 rrati <rrati@redhat> - 1.6-1
 - Updated TriggerService to set DC_DAEMON_LIST
 - Fixed setting of CONDOR_HOST in HACentralManager feature
