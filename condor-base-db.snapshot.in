@@ -210,7 +210,11 @@ features:
   - ExecuteNode
   name: EC2
   params: 
+    EC2_GAHP_LOG: /tmp/EC2GahpLog.$(USERNAME)
     AMAZON_GAHP_LOG: /tmp/AmazonGahpLog.$(USERNAME)
+    GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2: "20"
+    EC2_GAHP: $(SBIN)/ec2_gahp
+    GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON: "20"
     GRIDMANAGER_JOB_PROBE_INTERVAL: "300"
     AMAZON_GAHP: $(SBIN)/amazon_gahp
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
@@ -1030,6 +1034,30 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(SBIN)/ec2_gahp
+  depends: []
+
+  description: The location of the EC2 Gahp binary
+  kind: String
+  level: 0
+  must_change: false
+  name: EC2_GAHP
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: /tmp/EC2GahpLog.$(USERNAME)
+  depends: []
+
+  description: Location of the EC2 Gahp log files
+  kind: String
+  level: 0
+  must_change: false
+  name: EC2_GAHP_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "TRUE"
   depends: []
 
@@ -1098,6 +1126,30 @@ params:
   level: 0
   must_change: false
   name: GRIDMANAGER_JOB_PROBE_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "20"
+  depends: []
+
+  description: Amazon EC2 has a hard limit of 20 concurrently running instances.  This parameter limits the number of amazon resources
+  kind: string
+  level: 0
+  must_change: false
+  name: GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "20"
+  depends: []
+
+  description: Amazon EC2 has a hard limit of 20 concurrently running instances.  This parameter limits the number of EC2 resources
+  kind: string
+  level: 0
+  must_change: false
+  name: GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
