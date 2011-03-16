@@ -1,4 +1,4 @@
-%define rel 2
+%define rel 1
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -35,6 +35,12 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Wed Mar 16 2011 rrati <rrati@redhat> - 1.8-1
+- Added params EC2_GAHP_LOG, GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2
+  EC2_GAHP, GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON
+- Updated EC2 Feature to add above features
+- Changed AMAZON_GAHP to not require restart
+
 * Tue Mar  8 2011 rrati <rrati@redhat> - 1.7-2
 - Fixed changelog
 
