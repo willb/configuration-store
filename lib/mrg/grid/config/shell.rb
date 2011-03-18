@@ -23,6 +23,9 @@ require 'mrg/grid/config-client'
 require 'mrg/grid/config-proxies'
 
 require 'mrg/grid/config/shell/command'
+require 'mrg/grid/config/version'
+
+Version = ::Mrg::Grid::Config::Version.as_string
 
 module Mrg
   module Grid
