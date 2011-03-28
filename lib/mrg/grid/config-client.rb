@@ -315,7 +315,7 @@ module Mrg
         end
 
         def identity_group
-          get_object(@qmfo.identity_group, Group)
+          get_object(@qmfo.identity_group, Group) rescue nil
         end
 
         def modifyMemberships(command, groups, options)
@@ -354,23 +354,23 @@ module Mrg
         end
         
         def getDefaultGroup
-          get_object(@qmfo.getDefaultGroup().obj, Group)
+          get_object(@qmfo.getDefaultGroup().obj, Group) rescue nil
         end
         
         def getGroup(query)
-          get_object(@qmfo.getGroup(query).obj, Group)
+          get_object(@qmfo.getGroup(query).obj, Group) rescue nil
         end
         
         def getGroupByName(name)
-          getGroup("name"=>name)
+          getGroup("name"=>name) rescue nil
         end
         
         def addExplicitGroup(name)
-          get_object(@qmfo.addExplicitGroup(name).obj, Group)
+          get_object(@qmfo.addExplicitGroup(name).obj, Group) rescue nil
         end
 
         def getExplicitGroup(name)
-          get_object(@qmfo.getGroup({"NAME"=>name}).obj, Group)
+          get_object(@qmfo.getGroup({"NAME"=>name}).obj, Group) rescue nil
         end
 
         def removeGroup(uid)
@@ -379,11 +379,11 @@ module Mrg
         end
 
         def getFeature(name)
-          get_object(@qmfo.getFeature(name).obj, Feature)
+          get_object(@qmfo.getFeature(name).obj, Feature) rescue nil
         end
 
         def addFeature(name)
-          get_object(@qmfo.addFeature(name).obj, Feature)
+          get_object(@qmfo.addFeature(name).obj, Feature) rescue nil
         end
 
         def removeFeature(name)
@@ -393,13 +393,13 @@ module Mrg
 
         def addNode(name, options=nil)
           options ||= {}
-          get_object(@qmfo.addNodeWithOptions(name, options).obj, Node)
+          get_object(@qmfo.addNodeWithOptions(name, options).obj, Node) rescue nil
         end
 
         alias addNodeWithOptions addNode
 
         def getNode(name)
-          get_object(@qmfo.getNode(name).obj, Node)
+          get_object(@qmfo.getNode(name).obj, Node) rescue nil
         end
 
         def removeNode(name)
@@ -408,11 +408,11 @@ module Mrg
         end
 
         def addParam(name)
-          get_object(@qmfo.addParam(name).obj, Parameter)
+          get_object(@qmfo.addParam(name).obj, Parameter) rescue nil
         end
 
         def getParam(name)
-          get_object(@qmfo.getParam(name).obj, Parameter)
+          get_object(@qmfo.getParam(name).obj, Parameter) rescue nil
         end
 
         def removeParam(name)
@@ -421,11 +421,11 @@ module Mrg
         end
 
         def addSubsys(name)
-          get_object(@qmfo.addSubsys(name).obj, Subsystem)
+          get_object(@qmfo.addSubsys(name).obj, Subsystem) rescue nil
         end
 
         def getSubsys(name)
-          get_object(@qmfo.getSubsys(name).obj, Subsystem)
+          get_object(@qmfo.getSubsys(name).obj, Subsystem) rescue nil
         end
 
         def removeSubsys(name)
