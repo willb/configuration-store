@@ -602,6 +602,20 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
+  depends: []
+
+  included: []
+
+  name: SharedPort
+  params: 
+    SHARED_PORT: $(LIBEXEC)/condor_shared_port
+    DAEMON_LIST: ">= SHARED_PORT"
+    USE_SHARED_PORT: "True"
+    SHARED_PORT_DEBUG: ""
+    DAEMON_SOCKET_DIR: $(RUN)
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
   depends: 
   - Master
   - QMF
@@ -926,6 +940,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(RUN)
+  depends: []
+
+  description: Specifies the directory where Unix versions of condor daemons will create named sockets so that incoming connections can be forwarded to them by the Shared Port.  Write access to this directory grants permission to receive connections through the Shared Port
+  kind: String
+  level: 0
+  must_change: false
+  name: DAEMON_SOCKET_DIR
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -1062,7 +1088,7 @@ params:
   depends: []
 
   description: Determines whether the condor_triggerd will look for absent nodes
-  kind: boolean
+  kind: Boolean
   level: 0
   must_change: false
   name: ENABLE_ABSENT_NODES_DETECTION
@@ -1134,7 +1160,7 @@ params:
   depends: []
 
   description: Amazon EC2 has a hard limit of 20 concurrently running instances.  This parameter limits the number of amazon resources
-  kind: string
+  kind: Integer
   level: 0
   must_change: false
   name: GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON
@@ -1146,7 +1172,7 @@ params:
   depends: []
 
   description: Amazon EC2 has a hard limit of 20 concurrently running instances.  This parameter limits the number of EC2 resources
-  kind: string
+  kind: Integer
   level: 0
   must_change: false
   name: GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2
@@ -1302,7 +1328,7 @@ params:
   depends: []
 
   description: An expression that represents a lower power state. When this state name evaluates to a valid non-NONE state, the machine will be put into the specified low power state
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: HIBERNATE
@@ -1314,7 +1340,7 @@ params:
   depends: []
 
   description: The number of seconds specifying how often the condor_startd checks to see if the machine is ready to enter a low power state
-  kind: integer
+  kind: Integer
   level: 0
   must_change: false
   name: HIBERNATE_CHECK_INTERVAL
@@ -2238,7 +2264,7 @@ params:
   depends: []
 
   description: The number of seconds specifying the lifetime of the persistent machine ClassAd representing a hibernating machine
-  kind: integer
+  kind: Integer
   level: 0
   must_change: false
   name: OFFLINE_EXPIRE_ADS_AFTER
@@ -2250,7 +2276,7 @@ params:
   depends: []
 
   description: The full path and file name of a file that stores machine ClassAds for every hibernating machine
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: OFFLINE_LOG
@@ -2310,7 +2336,7 @@ params:
   depends: []
 
   description: The mechanism to use when authenticating with a QMF broker
-  kind: string
+  kind: String
   level: 0
   must_change: true
   name: QMF_BROKER_AUTH_MECH
@@ -2334,7 +2360,7 @@ params:
   depends: []
 
   description: The location of a file containing a password to use when authenticating with a QMF broker
-  kind: string
+  kind: String
   level: 0
   must_change: true
   name: QMF_BROKER_PASSWORD_FILE
@@ -2358,7 +2384,7 @@ params:
   depends: []
 
   description: The username to use when authenticating with a QMF broker
-  kind: string
+  kind: String
   level: 0
   must_change: true
   name: QMF_BROKER_USERNAME
@@ -2526,7 +2552,7 @@ params:
   depends: []
 
   description: The location of the Rooster binary
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: ROOSTER
@@ -2538,7 +2564,7 @@ params:
   depends: []
 
   description: The number of seconds between checks for offline machines that should be woken up
-  kind: integer
+  kind: Integer
   level: 0
   must_change: false
   name: ROOSTER_INTERVAL
@@ -2550,7 +2576,7 @@ params:
   depends: []
 
   description: The maximum number of machines to wake up per cycle.  A value of 0 means unlimited
-  kind: integer
+  kind: Integer
   level: 0
   must_change: false
   name: ROOSTER_MAX_UNHIBERNATE
@@ -2562,7 +2588,7 @@ params:
   depends: []
 
   description: The subnet used by condor_rooster when waking up a machine
-  kind: string
+  kind: String
   level: 0
   must_change: true
   name: ROOSTER_SUBNET_MASK
@@ -2574,7 +2600,7 @@ params:
   depends: []
 
   description: A boolean expression that specifies which machines should be woken up
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: ROOSTER_UNHIBERNATE
@@ -2586,7 +2612,7 @@ params:
   depends: []
 
   description: A ClassAd expression specifying which machines should be woken up first in a given cycle. Higher ranked machines are woken first
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: ROOSTER_UNHIBERNATE_RANK
@@ -2598,7 +2624,7 @@ params:
   depends: []
 
   description: A string representing the command line to invoke by condor_rooster in order to wake up a machine
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: ROOSTER_WAKEUP_CMD
@@ -2906,6 +2932,30 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(LIBEXEC)/condor_shared_port
+  depends: []
+
+  description: The Shared Port binary
+  kind: String
+  level: 0
+  must_change: false
+  name: SHARED_PORT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The debugging output that the Shared Port will produce in its log
+  kind: String
+  level: 0
+  must_change: false
+  name: SHARED_PORT_DEBUG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: ""
   depends: []
 
@@ -3198,7 +3248,7 @@ params:
   depends: []
 
   description: Expression used to determine if the machine should hibernate due to inactivity
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: ShouldHibernate
@@ -3366,7 +3416,7 @@ params:
   depends: []
 
   description: Expression used to indicate the time since the last job was run
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: TimeToWait
@@ -3390,7 +3440,7 @@ params:
   depends: []
 
   description: A boolean expression that specifies when an offline machine should be woken up
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: UNHIBERNATE
@@ -3406,6 +3456,18 @@ params:
   level: 0
   must_change: false
   name: UNUSED_CLAIM_TIMEOUT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "False"
+  depends: []
+
+  description: Specifies whether a condor process should rely on the Shared Port for receiving incoming connections
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: USE_SHARED_PORT
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -3522,7 +3584,7 @@ params:
   depends: []
 
   description: A dummy param used to force a configuration pull
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: WALLABY_FORCE_CONFIG_PULL
@@ -3534,7 +3596,7 @@ params:
   depends: []
 
   description: A dummy param used to force all daemons to restart
-  kind: string
+  kind: String
   level: 0
   must_change: false
   name: WALLABY_FORCE_RESTART
@@ -3589,8 +3651,11 @@ subsystems:
   - COLLECTOR_LOG
   - FLOCK_COLLECTOR_HOSTS
   - MAX_COLLECTOR_LOG
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
   - QMF_IGNORE_UPDATE_STARTD_AD
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
@@ -3635,8 +3700,11 @@ subsystems:
   - JOB_SERVER_DEBUG
   - JOB_SERVER_LOG
   - MAX_JOB_SERVER_LOG
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: kbdd
@@ -3674,8 +3742,11 @@ subsystems:
   - MASTER.PLUGINS
   - MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
   - MASTER_ADDRESS_FILE
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
   - SEC_DEFAULT_AUTHENTICATION
   - SEC_DEFAULT_AUTHENTICATION_METHODS
@@ -3702,8 +3773,11 @@ subsystems:
   - NEGOTIATOR_PRE_JOB_RANK
   - PREEMPTION_RANK
   - PREEMPTION_REQUIREMENTS
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: replication
@@ -3734,8 +3808,11 @@ subsystems:
   - MAX_SCHEDD_LOG
   - MAX_SHADOW_LOG
   - MAX_STARTER_LOG
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
   - QMF_PUBLISH_SUBMISSIONS
   - QUEUE_ALL_USERS_TRUSTED
@@ -3758,6 +3835,13 @@ subsystems:
   - START_LOCAL_UNIVERSE
   - START_SCHEDULER_UNIVERSE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: shared_port
+  params: 
+  - DAEMON_SOCKET_DIR
+  - SHARED_PORT
+  - SHARED_PORT_DEBUG
+  - USE_SHARED_PORT
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: startd
   params: 
   - ALLOW_READ
@@ -3771,8 +3855,11 @@ subsystems:
   - MAX_STARTER_LOG
   - PERIODIC_CHECKPOINT
   - PREEMPT
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
   - RUNBENCHMARKS
   - START
@@ -3806,8 +3893,11 @@ subsystems:
   params: 
   - DATA
   - ENABLE_ABSENT_NODES_DETECTION
+  - QMF_BROKER_AUTH_MECH
   - QMF_BROKER_HOST
+  - QMF_BROKER_PASSWORD_FILE
   - QMF_BROKER_PORT
+  - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
   - TRIGGERD.QMF_STOREFILE
   - TRIGGERD.QMF_UPDATE_INTERVAL
