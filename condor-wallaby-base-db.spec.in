@@ -6,7 +6,7 @@ Version: BASE_DB_VERSION
 Release: %{rel}%{?dist}
 Group: Applications/System
 License: ASL 2.0
-URL: http://git.fedorahosted.org/git/grid/wallaby-base-db.git
+URL: http://git.fedorahosted.org/git/grid/wallaby.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: wallaby-utils
@@ -42,6 +42,7 @@ rm -rf %{buildroot}
 - Added Subsystems: shared_port
 - Updated Subsystems to include new QMF params
 - Minor fixes to kind/type metadata: capitalization & fixed types
+- Fix URL location
 
 * Wed Mar 16 2011 rrati <rrati@redhat> - 1.8-1
 - Added params EC2_GAHP_LOG, GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2
