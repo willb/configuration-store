@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 1
+%define rel 2
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -47,7 +47,7 @@ BuildRequires: ruby
 
 %if 0%{?fedora} >= 12
 %package -n wallaby-http-server
-Summary: wallaby web ervice
+Summary: wallaby web service
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby
@@ -90,7 +90,7 @@ cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/confi
 # These aren't packaged
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
-%if 0%{?rhel}
+%if 0%{?fedora} < 12
 # XXX: change this when Sinatra is packaged for RHEL
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
@@ -201,6 +201,10 @@ fi
 %endif
 
 %changelog
+
+* Wed Mar 30 2011 willb <willb@redhat> - 0.10.5-2
+- Minor cleanups to Ruby client library
+- "wallaby" and shell commands now understand "-v"
 
 * Fri Feb 4 2011 willb <willb@redhat> - 0.10.5
 - Fixes BZ 675324
