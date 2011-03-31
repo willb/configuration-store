@@ -1,5 +1,5 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 2
+%define rel 3
 
 Summary: Configuration store via QMF
 Name: wallaby
@@ -201,6 +201,9 @@ fi
 %endif
 
 %changelog
+
+* Thu Mar 31 2011 willb <willb@redhat> - 0.10.5-3
+- Changes to default broker authentication
 
 * Wed Mar 30 2011 willb <willb@redhat> - 0.10.5-2
 - Minor cleanups to Ruby client library
