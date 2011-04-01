@@ -22,6 +22,22 @@ require 'set'
 module Mrg
   module Grid
     module Config
+      module Util
+        # some config values can start with something like '>=',
+        # indicating that a value is to be appended to the preexisting
+        # config value (if one exists).  This hash contains the kinds
+        # of appending we can support, mapping from the character or
+        # characters before value to the string used to delimit joined values.
+        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
+        
+        APPEND_MATCHER = /^((#{APPENDS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
+
+        # applies the value supplied to the config, appending if necessary
+        def self.apply!(config, param, value)
+          # XXX
+        end
+      end
+
       class ExplanationHistory
         def initialize
           @ordering = Hash.new {|h,k| h[k] = h.keys.size }
