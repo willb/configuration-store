@@ -123,12 +123,7 @@ module Mrg
         
         def getCurrentConfig
           log.debug "getCurrentConfig called on node #{self.inspect}"
-          config = Group.DEFAULT_GROUP.getConfig
-          # strip StringSet markers from default group config
-          config.each do |(k,v)|
-            v.slice!(/^>=/) if v
-            config[k] = v && v.strip
-          end
+          config = Group.DEFAULT_GROUP.getRawConfig
           
           log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
 

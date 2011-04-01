@@ -100,13 +100,8 @@ module Mrg
                   dict = included_feature.apply_to(dict)
                 end
 
-                self.params.each do |k,v|
-                  if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
-                    v = md[2]
-                    dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v}" : "#{v}"
-                  else
-                    dict[k] = v unless (dict.has_key?(k) && (!v || v == ""))
-                  end
+                self.params.each do |param,val|
+                  ValueUtil.apply!(dict, param, val)
                 end
                 dict
               end
@@ -115,6 +110,10 @@ module Mrg
           
           if klass.name =~ /GroupCacheProxy$/
             klass.class_eval do
+              def getRawConfig
+                @__my_raw_config ||= original_object.getRawConfig
+              end
+
               def getConfig
                 @__my_config ||= original_object.getConfig
               end
@@ -131,20 +130,15 @@ module Mrg
                 @__my_params ||= original_object.params
               end
               
-              def apply_to(config, ss_prepend="")
+              def apply_to(config, ss_prepend=false)
                 feature_objs.reverse_each do |feature|
                   config = feature.apply_to(config)
                 end
 
                 # apply group-specific param settings
                 # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
-                params.each do |k,v|
-                  if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
-                    v = md[2]
-                    config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v}" : "#{ss_prepend}#{v}"
-                  else
-                    config[k] = v
-                  end
+                params.each do |param,val|
+                  ValueUtil.apply!(config, param, val, ss_prepend)
                 end
 
                 config
@@ -158,12 +152,7 @@ module Mrg
               def getConfig
                 return @__my_config if @__my_config
                 
-                @__my_config = containing_cache.groups[Group.DEFAULT_GROUP.name].getConfig.dup
-                # strip StringSet markers from default group config
-                @__my_config.each do |(k,v)|
-                  v.slice!(/^>=/) if v
-                  @__my_config[k] = v && v.strip
-                end
+                @__my_config = containing_cache.groups[Group.DEFAULT_GROUP.name].getRawConfig.dup
 
                 db_memberships.reverse_each do |grp|
                   @__my_config = grp.apply_to(@__my_config)

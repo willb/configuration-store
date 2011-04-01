@@ -267,7 +267,7 @@ module Mrg
           args.declare :options, :map, :in, "No options are supported at this time."
         end
         
-        def apply_to(config, ss_prepend="")
+        def apply_to(config, ss_prepend=false)
           feature_objs.reverse_each do |feature|
             log.debug("applying config for #{feature.name}")
             config = feature.apply_to(config)
@@ -276,14 +276,9 @@ module Mrg
           
           # apply group-specific param settings
           # XXX: doesn't check for null-v; is this a problem (not in practice, maybe in theory)
-          params.each do |k,v|
-            log.debug("applying config params #{k.inspect} --> #{v.inspect}")
-            if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
-              v = md[2]
-              config[k] = (config.has_key?(k) && config[k]) ? "#{ss_prepend}#{config[k]}, #{v}" : "#{ss_prepend}#{v}"
-            else
-              config[k] = v
-            end
+          params.each do |param,val|
+            log.debug("applying config params #{param.inspect} --> #{val.inspect}")
+            ValueUtil.apply!(config, param, val, ss_prepend)
             
             log.debug("config is #{config.inspect}")
           end
@@ -311,12 +306,20 @@ module Mrg
           args.declare :explanation, :map, :out, "A structure representing where the parameters set on this group get their values."
         end
 
+        def getRawConfig
+          log.debug "getConfig called for group #{self.inspect}"
+          
+          # prepend an append-value marker to stringset-valued params, because 
+          # we're going to print out the config for this group.
+          apply_to({}, false) 
+        end
+
         def getConfig
           log.debug "getConfig called for group #{self.inspect}"
           
-          # prepend ">= " to stringset-valued params, because 
+          # prepend an append-value marker to stringset-valued params, because 
           # we're going to print out the config for this group.
-          apply_to({}, ">= ") 
+          apply_to({}, true) 
         end
         
         expose :getConfig do |args|
