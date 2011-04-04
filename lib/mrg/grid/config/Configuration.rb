@@ -22,6 +22,50 @@ require 'set'
 module Mrg
   module Grid
     module Config
+      module ValueUtil
+        # some config values can start with something like '>=',
+        # indicating that a value is to be appended to the preexisting
+        # config value (if one exists).  This hash contains the kinds
+        # of appending we can support, mapping from the character or
+        # characters before value to the string used to delimit joined values.
+        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
+        
+        APPEND_MATCHER = /^(?:(#{APPENDS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
+
+        def self.append_match(value)
+          return value.match(APPEND_MATCHER)
+        end
+
+        def self.join_string(match)
+          APPENDS[match[1]]
+        end
+
+        def self.strip_prefix(value)
+          match = value && value.match(APPEND_MATCHER)
+          match ? value_string(match) : value
+        end
+
+        def self.prefix_string(match)
+          match[1]
+        end
+
+        def self.value_string(match)
+          match[2]
+        end
+
+        # applies the value supplied to the config, appending if necessary
+        def self.apply!(config, param, value, use_ssp=false)
+          if (value && match = append_match(value))
+            value = value_string(match)
+            js = join_string(match)
+            ssp = use_ssp ? prefix_string(match) : ""
+            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{js}#{value}" : "#{ssp}#{value}"
+          else
+            config[param] = value unless (config.has_key?(param) && (!value || value == ""))
+          end
+        end
+      end
+
       class ExplanationHistory
         def initialize
           @ordering = Hash.new {|h,k| h[k] = h.keys.size }

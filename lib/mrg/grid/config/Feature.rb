@@ -282,12 +282,7 @@ module Mrg
           end
           
           self.params.each do |k,v|
-            if (v && md = v.match(/^(>=\s*)+(.*?)\s*$/))
-              v = md[2]
-              dict[k] = dict.has_key?(k) ? "#{dict[k]}, #{v}" : "#{v}"
-            else
-              dict[k] = v unless (dict.has_key?(k) && (!v || v == ""))
-            end
+            ValueUtil.apply!(dict, k, v)
           end
           dict
         end
