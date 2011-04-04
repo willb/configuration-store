@@ -270,175 +270,178 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
         end
       
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |nodekind, node_find_msg|
-          [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
-
-            it "should, if it is #{nodekind}, include StringSet parameter values from #{from}" do
-              node = @store.send(node_find_msg, "guineapig.local.")
-              group = group_locator.call(@store)
-
-              param = @store.addParam("STRINGSET")
-
-              group.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-
-              modify_memberships.call(node, group)
-              config = node.getConfig
-
-              config.should have_key("STRINGSET")
-              config["STRINGSET"].should match(/FOO/)
+          ::Mrg::Grid::Config::ValueUtil::APPENDS.each do |indicator, comma|
+          
+            [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
+  
+              it "should, if it is #{nodekind}, include StringSet parameter values from #{from} (using #{indicator})" do
+                node = @store.send(node_find_msg, "guineapig.local.")
+                group = group_locator.call(@store)
+  
+                param = @store.addParam("STRINGSET")
+  
+                group.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+  
+                modify_memberships.call(node, group)
+                config = node.getConfig
+  
+                config.should have_key("STRINGSET")
+                config["STRINGSET"].should match(/FOO/)
+              end
+  
+              it "should, if it is #{nodekind}, not include commas after single StringSet parameter values from #{from} (using #{indicator})" do
+                node = @store.send(node_find_msg, "guineapig.local.")
+                group = group_locator.call(@store)
+  
+                param = @store.addParam("STRINGSET")
+  
+                group.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+  
+                modify_memberships.call(node, group)
+                config = node.getConfig
+  
+                config.should have_key("STRINGSET")
+                config["STRINGSET"].should_not match(/#{Regexp.quote(comma)}/)
+              end
+  
+              it "should, if it is #{nodekind}, not include whitespace after single StringSet parameter values from #{from} (using #{indicator})" do
+                node = @store.send(node_find_msg, "guineapig.local.")
+                group = group_locator.call(@store)
+  
+                param = @store.addParam("STRINGSET")
+  
+                group.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+  
+                modify_memberships.call(node, group)
+                config = node.getConfig
+  
+                config.should have_key("STRINGSET")
+                config["STRINGSET"].should match(/FOO$/)
+              end
+  
+              it "should, if it is #{nodekind}, not include StringSet append indicators in parameter values from #{from} (using #{indicator})" do
+                node = @store.send(node_find_msg, "guineapig.local.")
+                group = group_locator.call(@store)
+  
+                param = @store.addParam("STRINGSET")
+  
+                group.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+  
+                modify_memberships.call(node, group)
+                config = node.getConfig
+  
+                config.should have_key("STRINGSET")
+                config["STRINGSET"].should_not match(/^#{Regexp.quote(indicator)}/)
+              end
             end
-
-            it "should, if it is #{nodekind}, not include commas after single StringSet parameter values from #{from}" do
+  
+            it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and parameters from the identity group (using #{indicator})" do
               node = @store.send(node_find_msg, "guineapig.local.")
-              group = group_locator.call(@store)
-
+              feature1 = @store.addFeature("FOOFEATURE")
+              feature2 = @store.addFeature("BARFEATURE")
+  
               param = @store.addParam("STRINGSET")
-
-              group.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-
-              modify_memberships.call(node, group)
+  
+              feature1.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+              feature2.modifyParams("ADD", {"STRINGSET" => "#{indicator} BAR"}, {})
+  
+              Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
+              node.identity_group.modifyParams("ADD", {"STRINGSET"=>"#{indicator} BLAH"}, {})
               config = node.getConfig
-
+  
               config.should have_key("STRINGSET")
-              config["STRINGSET"].should_not match(/,/)
+              stringset_values = config["STRINGSET"].split(/#{Regexp.quote(comma)}/).map{|s| s.strip}
+              stringset_values.size.should == 3
+              %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+              %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
             end
-
-            it "should, if it is #{nodekind}, not include whitespace after single StringSet parameter values from #{from}" do
+  
+            it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and features from the identity group (using #{indicator})" do
               node = @store.send(node_find_msg, "guineapig.local.")
-              group = group_locator.call(@store)
-
+              feature1 = @store.addFeature("FOOFEATURE")
+              feature2 = @store.addFeature("BARFEATURE")
+              feature3 = @store.addFeature("BLAHFEATURE")
+  
               param = @store.addParam("STRINGSET")
-
-              group.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-
-              modify_memberships.call(node, group)
+  
+              feature1.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+              feature2.modifyParams("ADD", {"STRINGSET" => "#{indicator} BAR"}, {})
+              feature3.modifyParams("ADD", {"STRINGSET" => "#{indicator} BLAH"}, {})
+  
+              Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
+              node.identity_group.modifyFeatures("ADD", Array[feature3.name], {})
               config = node.getConfig
-
+  
               config.should have_key("STRINGSET")
-              config["STRINGSET"].should match(/FOO$/)
+              stringset_values = config["STRINGSET"].split(/#{Regexp.quote(comma)}/).map{|s| s.strip}
+  
+              stringset_values.size.should == 3
+              %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
+              %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
             end
-
-            it "should, if it is #{nodekind}, not include StringSet append indicators in parameter values from #{from}" do
+  
+            it "should, if it is #{nodekind}, properly append all StringSet parameter values from a default group and an explicit group (using #{indicator})" do
               node = @store.send(node_find_msg, "guineapig.local.")
-              group = group_locator.call(@store)
-
+              group = @store.addExplicitGroup("SETNODES")
+  
               param = @store.addParam("STRINGSET")
-
-              group.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-
-              modify_memberships.call(node, group)
+  
+              Group.DEFAULT_GROUP.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+              group.modifyParams("ADD", {"STRINGSET" => "#{indicator} BAR"}, {})
+  
+              node.modifyMemberships("ADD", Array[group.name], {})
               config = node.getConfig
-
+  
               config.should have_key("STRINGSET")
-              config["STRINGSET"].should_not match(/^>=/)
+              stringset_values = config["STRINGSET"].split(/#{Regexp.quote(comma)}/).map{|s| s.strip}
+  
+              stringset_values.size.should == 2
+              %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+              %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+            end
+  
+            it "should, if it is #{nodekind}, properly append all StringSet parameter values from two features (using #{indicator})" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              feature1 = @store.addFeature("FOOFEATURE")
+              feature2 = @store.addFeature("BARFEATURE")
+  
+              param = @store.addParam("STRINGSET")
+  
+              feature1.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+              feature2.modifyParams("ADD", {"STRINGSET" => "#{indicator} BAR"}, {})
+  
+              node.identity_group.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
+              config = node.getConfig
+  
+              config.should have_key("STRINGSET")
+              stringset_values = config["STRINGSET"].split(/#{Regexp.quote(comma)}/).map{|s| s.strip}
+              stringset_values.size.should == 2
+              %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+              %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
+            end
+  
+  
+            it "should, if it is #{nodekind}, properly append all StringSet parameter values from two explicit groups (using #{indicator})" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group2 = @store.addExplicitGroup("FOONODES")
+              group1 = @store.addExplicitGroup("BARNODES")
+  
+              param = @store.addParam("STRINGSET")
+  
+              group1.modifyParams("ADD", {"STRINGSET" => "#{indicator} FOO"}, {})
+              group2.modifyParams("ADD", {"STRINGSET" => "#{indicator} BAR"}, {})
+  
+              node.modifyMemberships("ADD", Array[group2.name, group1.name], {})
+              config = node.getConfig
+  
+              config.should have_key("STRINGSET")
+              stringset_values = config["STRINGSET"].split(/#{Regexp.quote(comma)}/).map{|s| s.strip}
+              stringset_values.size.should == 2
+              %w{FOO BAR}.each {|val| stringset_values.should include(val)}
+              %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
             end
           end
-
-          it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and parameters from the identity group" do
-            node = @store.send(node_find_msg, "guineapig.local.")
-            feature1 = @store.addFeature("FOOFEATURE")
-            feature2 = @store.addFeature("BARFEATURE")
-
-            param = @store.addParam("STRINGSET")
-
-            feature1.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-            feature2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-
-            Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
-            node.identity_group.modifyParams("ADD", {"STRINGSET"=>">= BLAH"}, {})
-            config = node.getConfig
-
-            config.should have_key("STRINGSET")
-            stringset_values = config["STRINGSET"].split(/, |,| /)
-            stringset_values.size.should == 3
-            %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
-            %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
-          end
-
-          it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and features from the identity group" do
-            node = @store.send(node_find_msg, "guineapig.local.")
-            feature1 = @store.addFeature("FOOFEATURE")
-            feature2 = @store.addFeature("BARFEATURE")
-            feature3 = @store.addFeature("BLAHFEATURE")
-
-            param = @store.addParam("STRINGSET")
-
-            feature1.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-            feature2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-            feature3.modifyParams("ADD", {"STRINGSET" => ">= BLAH"}, {})
-
-            Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
-            node.identity_group.modifyFeatures("ADD", Array[feature3.name], {})
-            config = node.getConfig
-
-            config.should have_key("STRINGSET")
-            stringset_values = config["STRINGSET"].split(/, |,| /)
-
-            stringset_values.size.should == 3
-            %w{FOO BAR BLAH}.each {|val| stringset_values.should include(val)}
-            %w{FOO BAR BLAH}.each_with_index {|val,i| stringset_values[i].should == val}         
-          end
-
-          it "should, if it is #{nodekind}, properly append all StringSet parameter values from a default group and an explicit group" do
-            node = @store.send(node_find_msg, "guineapig.local.")
-            group = @store.addExplicitGroup("SETNODES")
-
-            param = @store.addParam("STRINGSET")
-
-            Group.DEFAULT_GROUP.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-            group.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-
-            node.modifyMemberships("ADD", Array[group.name], {})
-            config = node.getConfig
-
-            config.should have_key("STRINGSET")
-            stringset_values = config["STRINGSET"].split(/, |,| /)
-
-            stringset_values.size.should == 2
-            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-          end
-
-          it "should, if it is #{nodekind}, properly append all StringSet parameter values from two features" do
-            node = @store.send(node_find_msg, "guineapig.local.")
-            feature1 = @store.addFeature("FOOFEATURE")
-            feature2 = @store.addFeature("BARFEATURE")
-
-            param = @store.addParam("STRINGSET")
-
-            feature1.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-            feature2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-
-            node.identity_group.modifyFeatures("ADD", Array[feature2.name, feature1.name], {})
-            config = node.getConfig
-
-            config.should have_key("STRINGSET")
-            stringset_values = config["STRINGSET"].split(/, |,| /)
-            stringset_values.size.should == 2
-            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-          end
-
-
-          it "should, if it is #{nodekind}, properly append all StringSet parameter values from two explicit groups" do
-            node = @store.send(node_find_msg, "guineapig.local.")
-            group2 = @store.addExplicitGroup("FOONODES")
-            group1 = @store.addExplicitGroup("BARNODES")
-
-            param = @store.addParam("STRINGSET")
-
-            group1.modifyParams("ADD", {"STRINGSET" => ">= FOO"}, {})
-            group2.modifyParams("ADD", {"STRINGSET" => ">= BAR"}, {})
-
-            node.modifyMemberships("ADD", Array[group2.name, group1.name], {})
-            config = node.getConfig
-
-            config.should have_key("STRINGSET")
-            stringset_values = config["STRINGSET"].split(/, |,| /)
-            stringset_values.size.should == 2
-            %w{FOO BAR}.each {|val| stringset_values.should include(val)}
-            %w{FOO BAR}.each_with_index {|val,i| stringset_values[i].should == val}
-          end
-
+          
           it "should, if it is #{nodekind}, not validate configurations that do not provide features depended upon by enabled features (in the default group)" do
             features = %w{FooFeature BarFeature}.map {|fname| @store.addFeature(fname)}
             features[0].modifyDepends("ADD", Array[features[1].name], {})
