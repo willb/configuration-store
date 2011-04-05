@@ -17,10 +17,6 @@
 module Mrg
   module Grid
     module Config
-      # forward declaration
-      class ConfigVersions
-      end
-      
       class DummyCache
         attr_reader :nodes, :features, :groups, :parameters
         
@@ -385,12 +381,12 @@ module Mrg
               updated_config = my_config
               updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
               cv = ConfigVersion[save_for_version]
-              cv[self.name] = updated_config
+              cv[self.name] = save_config(cv, cached_self, cached_class, updated_config)
             end
             
             return true
           end
-          
+
           result = {}
           result[BROKEN_FEATURE_DEPS] = orphaned_deps.uniq if orphaned_deps != []
           result[UNSET_MUSTCHANGE_PARAMS] = unset_params.uniq if unset_params != []
@@ -399,6 +395,11 @@ module Mrg
           result[FEATURE_CONFLICTS] = feature_conflicts if feature_conflicts != []
           
           [self.name, result]
+        end
+          
+        def save_config(cv, instance, klass, cfg=nil)
+          cfg ||= {}
+          cfg
         end
 
         def my_unset_params(my_config = nil)
