@@ -5,6 +5,27 @@ features:
 
   depends: []
 
+  included: 
+  - Axis2Home
+  name: AviaryScheduler
+  params: 
+    SCHEDD.PLUGINS: ">= $(LIB)/plugins/AviaryScheddPlugin-plugin.so"
+    SCHEDD.HTTP_PORT: "9090"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: Axis2Home
+  params: 
+    WSFCPP_HOME: /usr
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
   included: []
 
   name: BaseDBVersion
@@ -567,6 +588,22 @@ features:
     QMF_BROKER_HOST: 0
     QMF_DELETE_ON_SHUTDOWN: "TRUE"
     QMF_BROKER_PORT: "5672"
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - Axis2Home
+  name: QueryServer
+  params: 
+    QUERY_SERVER.QUERY_SERVER_LOG: $(LOG)/QueryServerLog
+    DAEMON_LIST: ">= QUERY_SERVER"
+    QUERY_SERVER.QUERY_SERVER_DEBUG: D_ALWAYS
+    QUERY_SERVER.HTTP_PORT: "9091"
+    QUERY_SERVER_ARGS: -f
+    QUERY_SERVER: $(SBIN)/aviary_query_server
+    QUERY_SERVER.HISTORY_INTERVAL: "120"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
   - HAScheduler
@@ -2428,6 +2465,90 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: $(SBIN)/aviary_query_server
+  depends: []
+
+  description: The location of the Aviary Query Server binary
+  kind: String
+  level: 0
+  must_change: false
+  name: QUERY_SERVER
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "120"
+  depends: []
+
+  description: The number of seconds between polls of the HISTORY file
+  kind: Integer
+  level: 0
+  must_change: false
+  name: QUERY_SERVER.HISTORY_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "9091"
+  depends: []
+
+  description: The port the QueryServer listens on
+  kind: Integer
+  level: 0
+  must_change: false
+  name: QUERY_SERVER.HTTP_PORT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: D_ALWAYS
+  depends: []
+
+  description: The debugging output the Aviary Query Server will produce in its log file
+  kind: String
+  level: 0
+  must_change: false
+  name: QUERY_SERVER.QUERY_SERVER_DEBUG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/QueryServerLog
+  depends: []
+
+  description: The location of the Aviary Query Server log file
+  kind: String
+  level: 0
+  must_change: false
+  name: QUERY_SERVER.QUERY_SERVER_LOG
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The name of the Scehduler that the Aviary Query Server is working with
+  kind: String
+  level: 0
+  must_change: true
+  name: QUERY_SERVER.SCHEDD_NAME
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Args to append to the Aviary Query Server on daemon startup
+  kind: String
+  level: 0
+  must_change: false
+  name: QUERY_SERVER_ARGS
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "FALSE"
   depends: []
 
@@ -2653,6 +2774,18 @@ params:
   must_change: false
   name: SCHEDD
   needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "9090"
+  depends: []
+
+  description: Port the Aviary Schedd plugin listens on
+  kind: Integer
+  level: 0
+  must_change: false
+  name: SCHEDD.HTTP_PORT
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3628,6 +3761,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: /usr
+  depends: []
+
+  description: The root of the axis2 deployment
+  kind: String
+  level: 0
+  must_change: false
+  name: WSFCPP_HOME
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: /usr/bin/pygrub
   depends: []
 
@@ -3706,6 +3851,7 @@ subsystems:
   - QMF_BROKER_PORT
   - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
+  - SPOOL
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: kbdd
   params: 
@@ -3779,6 +3925,18 @@ subsystems:
   - QMF_BROKER_PORT
   - QMF_BROKER_USERNAME
   - QMF_DELETE_ON_SHUTDOWN
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: query_server
+  params: 
+  - HISTORY
+  - QUERY_SERVER
+  - QUERY_SERVER.HISTORY_INTERVAL
+  - QUERY_SERVER.HTTP_PORT
+  - QUERY_SERVER.QUERY_SERVER_DEBUG
+  - QUERY_SERVER.QUERY_SERVER_LOG
+  - QUERY_SERVER.SCHEDD_NAME
+  - QUERY_SERVER_ARGS
+  - SPOOL
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: replication
   params: 
