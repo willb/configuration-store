@@ -131,7 +131,7 @@ features:
   - Collector
   name: ConsoleCollector
   params: 
-    COLLECTOR.PLUGINS: $(LIB)/plugins/MgmtCollectorPlugin-plugin.so
+    COLLECTOR.PLUGINS: ">= $(LIB)/plugins/MgmtCollectorPlugin-plugin.so"
     QMF_IGNORE_UPDATE_STARTD_AD: "TRUE"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -143,7 +143,7 @@ features:
 
   name: ConsoleExecuteNode
   params: 
-    STARTD.PLUGINS: $(LIB)/plugins/MgmtStartdPlugin-plugin.so
+    STARTD.PLUGINS: ">= $(LIB)/plugins/MgmtStartdPlugin-plugin.so"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -154,7 +154,7 @@ features:
 
   name: ConsoleMaster
   params: 
-    MASTER.PLUGINS: $(LIB)/plugins/MgmtMasterPlugin-plugin.so
+    MASTER.PLUGINS: ">= $(LIB)/plugins/MgmtMasterPlugin-plugin.so"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -165,7 +165,7 @@ features:
 
   name: ConsoleNegotiator
   params: 
-    NEGOTIATOR.PLUGINS: $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so
+    NEGOTIATOR.PLUGINS: ">= $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -176,7 +176,7 @@ features:
 
   name: ConsoleScheduler
   params: 
-    SCHEDD.PLUGINS: $(LIB)/plugins/MgmtScheddPlugin-plugin.so
+    SCHEDD.PLUGINS: ">= $(LIB)/plugins/MgmtScheddPlugin-plugin.so"
     SCHEDD.QMF_STOREFILE: $(SPOOL)/.schedd_storefile
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
