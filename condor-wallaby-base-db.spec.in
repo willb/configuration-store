@@ -35,6 +35,15 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Apr  5 2011 rrati <rrati@redhat> - 1.10-1
+- Added Features: AviaryScheduler, Axis2Home, QueryServer
+- Added Parameters: QUERY_SERVER.QUERY_SERVER_LOG, QUERY_SERVER.SCHEDD_NAME
+                    QUERY_SERVER.QUERY_SERVER_DEBUG, QUERY_SERVER.HTTP_PORT,
+                    QUERY_SERVER_ARGS, QUERY_SERVER, SCHEDD.HTTP_PORT
+                    QUERY_SERVER.HISTORY_INTERVAL, WSFCPP_HOME
+- Added Subsystems: query_server
+- Updated job_server subsystem to care about SPOOL parameter
+
 * Tue Mar 29 2011 rrati <rrati@redhat> - 1.9-1
 - Added Features: SharedPort
 - Added Parameters: DAEMON_SOCKET_DIR,SHARED_PORT,SHARED_PORT_DEBUG,
