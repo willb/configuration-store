@@ -35,6 +35,9 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Tue Apr  5 2011 rrati <rrati@redhat> - 1.11-1
+- All plugin definitions in features now append
+
 * Tue Apr  5 2011 rrati <rrati@redhat> - 1.10-1
 - Added Features: AviaryScheduler, Axis2Home, QueryServer
 - Added Parameters: QUERY_SERVER.QUERY_SERVER_LOG, QUERY_SERVER.SCHEDD_NAME
