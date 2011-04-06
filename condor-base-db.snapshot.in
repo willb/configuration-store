@@ -591,8 +591,9 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - Master
+  - JobQueueLocation
   included: 
   - Axis2Home
   name: QueryServer
