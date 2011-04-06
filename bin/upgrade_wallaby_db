@@ -71,7 +71,7 @@ module Mrg
             db_ver = 0
           end
 
-          if db_ver >= 1.11
+          if db_ver >= 1.12
             puts "The database is up to date"
           else
             t = Time.now.utc
@@ -217,10 +217,10 @@ module Mrg
                          ["Axis2Home"], ["Master", "JobQueueLocation"], [])
 
             if fobj == nil
-              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.11"}, [], [], [""])
+              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.12"}, [], [], [""])
             else
               obj = store.getFeature("BaseDBVersion")
-              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.11"}, {})
+              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.12"}, {})
             end
 
             # Add new subsystems
