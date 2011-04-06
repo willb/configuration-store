@@ -51,7 +51,17 @@ module Mrg
                             "TriggerService"=>{"cmd"=>"ADD",
                                                "params"=>{"ENABLE_ABSENT_NODES_DETECTION"=>"True", "DC_DAEMON_LIST"=>">= TRIGGERD"}},
                             "EC2"=>{"cmd"=>"ADD",
-                                    "params"=>{"EC2_GAHP_LOG"=>"/tmp/EC2GahpLog.$(USERNAME)", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2"=>"20", "EC2_GAHP"=>"$(SBIN)/ec2_gahp", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON"=>"20"}}
+                                    "params"=>{"EC2_GAHP_LOG"=>"/tmp/EC2GahpLog.$(USERNAME)", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2"=>"20", "EC2_GAHP"=>"$(SBIN)/ec2_gahp", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON"=>"20"}},
+                            "ConsoleCollector"=>{"cmd"=>"ADD",
+                                                 "params"=>{"COLLECTOR.PLUGINS"=>">= $(LIB)/plugins/MgmtCollectorPlugin-plugin.so"}},
+                            "ConsoleExecuteNode"=>{"cmd"=>"ADD",
+                                                   "params"=>{"STARTD.PLUGINS"=>">= $(LIB)/plugins/MgmtStartdPlugin-plugin.so"}},
+                            "ConsoleMaster"=>{"cmd"=>"ADD",
+                                              "params"=>{"MASTER.PLUGINS"=>">= $(LIB)/plugins/MgmtMasterPlugin-plugin.so"}},
+                            "ConsoleNegotiator"=>{"cmd"=>"ADD",
+                                                  "params"=>{"NEGOTIATOR.PLUGINS"=>">= $(LIB)/plugins/MgmtNegotiatorPlugin-plugin.so"}},
+                            "ConsoleScheduler"=>{"cmd"=>"ADD",
+                                                  "params"=>{"SCHEDD.PLUGINS"=>">= $(LIB)/plugins/MgmtScheddPlugin-plugin.so"}},
           }
 
           fobj = store.getFeature("BaseDBVersion")
@@ -61,7 +71,7 @@ module Mrg
             db_ver = 0
           end
 
-          if db_ver >= 1.9
+          if db_ver >= 1.11
             puts "The database is up to date"
           else
             t = Time.now.utc
@@ -132,6 +142,24 @@ module Mrg
 
             add_param("DAEMON_SOCKET_DIR", 0, false, "Specifies the directory where Unix versions of condor daemons will create named sockets so that incoming connections can be forwarded to them by the Shared Port.  Write access to this directory grants permission to receive connections through the Shared Port", "String", false, "$(RUN)")
 
+            add_param("QUERY_SERVER.QUERY_SERVER_LOG", 0, false, "The location of the Aviary Query Server log file", "String", false, "$(LOG)/QueryServerLog")
+
+            add_param("QUERY_SERVER.SCHEDD_NAME", 0, false, "The name of the Scehduler that the Aviary Query Server is working with", "String", true, "")
+
+            add_param("QUERY_SERVER.QUERY_SERVER_DEBUG", 0, false, "The debugging output the Aviary Query Server will produce in its log file", "String", false, "D_ALWAYS")
+
+            add_param("QUERY_SERVER.HTTP_PORT", 0, true, "The port the QueryServer listens on", "Integer", false, "9091")
+
+            add_param("QUERY_SERVER_ARGS", 0, true, "Args to append to the Aviary Query Server on daemon startup", "String", false, "")
+
+            add_param("QUERY_SERVER", 0, true, "The location of the Aviary Query Server binary", "String", false, "$(SBIN)/aviary_query_server")
+
+            add_param("SCHEDD.HTTP_PORT", 0, false, "Port the Aviary Schedd plugin listens on", "Integer", false, "9090")
+
+            add_param("QUERY_SERVER.HISTORY_INTERVAL", 0, false, "The number of seconds between polls of the HISTORY file", "Integer", false, "120")
+
+            add_param("WSFCPP_HOME", 0, false, "The root of the axis2 deployment", "String", false, "/usr")
+
             if db_ver < 1.5
               add_param("BaseDBVersion", 0, false, "The version of the base database", "String", false, "0")
             end
@@ -171,17 +199,36 @@ module Mrg
                          "SHARED_PORT_DEBUG"=>""},
                          [], [], [])
 
+            add_feature("Axis2Home", {"WSFCPP_HOME"=>"/usr"}, [], [], [])
+
+            add_feature("AviaryScheduler",
+                        {"SCHEDD.PLUGINS"=>">= $(LIB)/plugins/AviaryScheddPlugin-plugin.so",
+                         "SCHEDD.HTTP_PORT"=>"9090"},
+                         ["Axis2Home"], [], [])
+
+            add_feature("QueryServer",
+                        {"QUERY_SERVER.QUERY_SERVER_LOG"=>"$(LOG)/QueryServerLog",
+                         "DAEMON_LIST"=>">= QUERY_SERVER",
+                         "QUERY_SERVER.QUERY_SERVER_DEBUG"=>"D_ALWAYS",
+                         "QUERY_SERVER.HTTP_PORT"=>"9091",
+                         "QUERY_SERVER_ARGS"=>"-f",
+                         "QUERY_SERVER"=>"$(SBIN)/aviary_query_server",
+                         "QUERY_SERVER.HISTORY_INTERVAL"=>"120"},
+                         ["Axis2Home"], ["Master", "JobQueueLocation"], [])
+
             if fobj == nil
-              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.9"}, [], [], [""])
+              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.11"}, [], [], [""])
             else
               obj = store.getFeature("BaseDBVersion")
-              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.9"}, {})
+              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.11"}, {})
             end
 
             # Add new subsystems
             puts "Adding new Subsystems"
             add_subsystem("rooster", ["ROOSTER", "ROOSTER_INTERVAL", "ROOSTER_MAX_UNHIBERNATE", "ROOSTER_UNHIBERNATE", "ROOSTER_UNHIBERNATE_RANK", "ROOSTER_WAKEUP_CMD"])
             add_subsystem("shared_port", ["SHARED_PORT", "USE_SHARED_PORT", "SHARED_PORT_DEBUG", "DAEMON_SOCKET_DIR"])
+
+            add_subsystem("query_server", ["HISTORY", "QUERY_SERVER", "QUERY_SERVER.HISTORY_INTERVAL", "QUERY_SERVER.HTTP_PORT", "QUERY_SERVER.QUERY_SERVER_DEBUG", "QUERY_SERVER.QUERY_SERVER_LOG", "QUERY_SERVER.SCHEDD_NAME", "QUERY_SERVER_ARGS", "SPOOL"])
 
             # Update existing features
             puts "Updating existing Features"
@@ -232,6 +279,8 @@ module Mrg
                   obj.modifyParams("ADD", %w{QMF_BROKER_AUTH_MECH QMF_BROKER_USERNAME QMF_BROKER_PASSWORD_FILE ENABLE_ABSENT_NODES_DETECTION}, {})
                 elsif sn == "master"
                   obj.modifyParams("ADD", %w{QMF_BROKER_AUTH_MECH QMF_BROKER_USERNAME QMF_BROKER_PASSWORD_FILE WALLABY_FORCE_CONFIG_PULL WALLABY_FORCE_RESTART}, {})
+                elsif sn == "job_server"
+                  obj.modifyParams("ADD", %w{QMF_BROKER_AUTH_MECH QMF_BROKER_USERNAME QMF_BROKER_PASSWORD_FILE SPOOL}, {})
                 else
                   obj.modifyParams("ADD", %w{QMF_BROKER_AUTH_MECH QMF_BROKER_USERNAME QMF_BROKER_PASSWORD_FILE}, {})
                 end
