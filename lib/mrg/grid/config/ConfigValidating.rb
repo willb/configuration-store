@@ -18,13 +18,30 @@ module Mrg
   module Grid
     module Config
       class DummyCache
-        attr_reader :nodes, :features, :groups, :parameters
+        attr_reader :nodes, :features, :groups, :parameters, :saved_groups
         
         def initialize
           @nodes = Hash.new {|h,k| h[k] = Node.find_first_by_name(k)}
           @features = Hash.new {|h,k| h[k] = Feature.find_first_by_name(k)}
           @groups = Hash.new {|h,k| h[k] = Group.find_first_by_name(k)}
           @parameters = Hash.new {|h,k| h[k] = Parameter.find_first_by_name(k)}
+          @saved_groups = Hash.new do |h,grp| 
+            h[grp] = Hash.new do |gh,ver| 
+              gnm = VersionedNode.name_for_group(self[:grp])
+              cnf = nil
+              if ConfigVersion.hasVersionedNodeConfig(gnm, ver)
+                cnf = ConfigVersion.getVersionedNodeConfig(gnm, ver)
+              else
+                cv = ConfigVersion[ver]
+                cnf = groups[self[:grp]].getConfig
+                cv[gnm] = cnf
+              end
+              
+              h[grp][:grp] = grp
+              
+              gh[ver] = true
+            end
+          end
         end
         
         def find_instance(klass, name)
@@ -63,7 +80,7 @@ module Mrg
       end
 
       class ConfigDataCache
-        attr_reader :nodes, :features, :groups, :parameters
+        attr_reader :nodes, :features, :groups, :parameters, :saved_groups
 
         def self.reopen_proxy_class(klass)
           # add class-specific caching methods
@@ -209,12 +226,32 @@ module Mrg
           cname = classname(klass)
           self.send("#{cname.downcase}s")[name]
         end
+
+        def sg_hash_maker(grp)
+          Hash.new do |gh,ver| 
+            gnm = VersionedNode.name_for_group(grp)
+            cnf = nil
+            if ConfigVersion.hasVersionedNodeConfig(gnm, ver) == ver
+              cnf = ConfigVersion.getVersionedNodeConfig(gnm, ver)
+            else
+              cv = ConfigVersion[ver]
+              # puts "CDC: looking up group object for #{grp}@#{ver}; it is #{groups[grp] ? 'not nil' : 'nil'}"
+              cnf = groups[grp].getConfig
+              cv[gnm] = cnf
+            end
+            
+            gh[ver] = true
+          end
+        end
         
         def initialize(*nodelist)
           @parameters = Hash.new {|h,k| h[k] = clone_persisting_object(Parameter.find_first_by_name(k))}
           @features = Hash.new {|h,k| h[k] = clone_persisting_object(Feature.find_first_by_name(k))}
           @groups = Hash.new {|h,k| h[k] = clone_persisting_object(Group.find_first_by_name(k))}
           @nodes = Hash.new {|h,k| h[k] = clone_persisting_object(Node.find_first_by_name(k))}
+          @saved_groups = Hash.new do |h,grp| 
+            h[grp] = sg_hash_maker(grp)
+          end
           
           features_of_interest = Set.new
           parameters_of_interest = Set.new
@@ -381,7 +418,7 @@ module Mrg
               updated_config = my_config
               updated_config["WALLABY_CONFIG_VERSION"] = save_for_version.to_s
               cv = ConfigVersion[save_for_version]
-              cv[self.name] = save_config(cv, cached_self, cached_class, updated_config)
+              cv[self.name] = save_config(cv, cache, cached_self, cached_class, updated_config)
             end
             
             return true
@@ -397,8 +434,23 @@ module Mrg
           [self.name, result]
         end
           
-        def save_config(cv, instance, klass, cfg=nil)
+        def save_config(cv, cache, instance, klass, cfg=nil)
           cfg ||= {}
+
+          if ConfigVersion::STORAGE_PLAN == :lw_serialized && klass.to_s =~ /Node$/
+            # save versioned configs for each group, if these do not already exist
+            all_memberships = ["+++DEFAULT"] + instance.memberships + [instance.idgroup.name]
+
+            all_memberships.each do |g|
+              cache.saved_groups[g][cv.version]
+            end
+            
+            result = LightweightConfig.new
+            result.groups = all_memberships
+            result.version = cv.version
+            return result
+          end
+
           cfg
         end
 

@@ -22,6 +22,30 @@ require 'set'
 module Mrg
   module Grid
     module Config
+      class LightweightConfig
+        attr_accessor :groups, :version
+        
+        def init
+          self.groups = []
+        end
+        
+        def to_hash
+          result = self.groups.inject({}) do |config, group|
+            gname = VersionedNode.name_for_group(group)
+            gconfig = ConfigVersion.getVersionedNodeConfig(gname, version)
+            
+            gconfig.each do |param, value|
+              ValueUtil::apply!(config, param, value)
+            end
+            
+            config
+          end
+          
+          result["WALLABY_CONFIG_VERSION"] = version.to_s
+          result
+        end
+      end
+      
       module ValueUtil
         # some config values can start with something like '>=',
         # indicating that a value is to be appended to the preexisting
@@ -227,7 +251,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = :lw_serialized
+        STORAGE_PLAN = ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS'] ? :serialized : :lw_serialized
 
         def self.whatchanged(node, old_version, new_version)
           ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
@@ -291,6 +315,7 @@ module Mrg
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc && vnc.version.version
             end
+
             
             # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
