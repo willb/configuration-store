@@ -20,7 +20,7 @@ features:
 
   name: Axis2Home
   params: 
-    WSFCPP_HOME: /usr
+    WSFCPP_HOME: /var/lib/condor/aviary/axis2.xml
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -3762,7 +3762,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: /usr
+  default_val: /var/lib/condor/aviary/axis2.xml
   depends: []
 
   description: The root of the axis2 deployment
