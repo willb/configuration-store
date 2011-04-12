@@ -158,7 +158,7 @@ module Mrg
 
             add_param("QUERY_SERVER.HISTORY_INTERVAL", 0, false, "The number of seconds between polls of the HISTORY file", "Integer", false, "120")
 
-            add_param("WSFCPP_HOME", 0, false, "The root of the axis2 deployment", "String", false, "/usr")
+            add_param("WSFCPP_HOME", 0, false, "The root of the axis2 deployment", "String", false, "/var/lib/condor/aviary/axis2.xml")
 
             if db_ver < 1.5
               add_param("BaseDBVersion", 0, false, "The version of the base database", "String", false, "0")
@@ -199,7 +199,7 @@ module Mrg
                          "SHARED_PORT_DEBUG"=>""},
                          [], [], [])
 
-            add_feature("Axis2Home", {"WSFCPP_HOME"=>"/usr"}, [], [], [])
+            add_feature("Axis2Home", {"WSFCPP_HOME"=>"/var/lib/condor/aviary/axis2.xml"}, [], [], [])
 
             add_feature("AviaryScheduler",
                         {"SCHEDD.PLUGINS"=>">= $(LIB)/plugins/AviaryScheddPlugin-plugin.so",
