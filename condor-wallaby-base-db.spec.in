@@ -35,6 +35,10 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Wed Apr 13 2011 rrati <rrati@redhat> - 1.12-1
+- Updated WSFCPP_HOME location
+- Added deps of Master, JobQueueLocation to QueryServer feature
+
 * Tue Apr  5 2011 rrati <rrati@redhat> - 1.11-1
 - All plugin definitions in features now append
 
