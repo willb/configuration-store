@@ -66,12 +66,16 @@ module Mrg
 
           fobj = store.getFeature("BaseDBVersion")
           if fobj != nil:
-            db_ver = (fobj.params["BaseDBVersion"].to_f rescue 0)
+            db_ver = (fobj.params["BaseDBVersion"].to_s rescue 0)
+            temp = db_ver.split('.')
+            db_major = temp[0].to_i
+            db_minor = temp[1].to_i
           else
-            db_ver = 0
+            db_major = 0
+            db_minor = 0
           end
 
-          if db_ver >= 1.12
+          if db_major > 1 or (db_major <= 1 and db_minor >= 12)
             puts "The database is up to date"
           else
             t = Time.now.utc
@@ -160,7 +164,7 @@ module Mrg
 
             add_param("WSFCPP_HOME", 0, false, "The root of the axis2 deployment", "String", false, "/var/lib/condor/aviary/axis2.xml")
 
-            if db_ver < 1.5
+            if db_minor <= 1 and db_minor < 5
               add_param("BaseDBVersion", 0, false, "The version of the base database", "String", false, "0")
             end
 
