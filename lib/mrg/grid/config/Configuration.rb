@@ -23,25 +23,70 @@ module Mrg
   module Grid
     module Config
       module ValueUtil
+        def self.join_apply_func(join_string) 
+          Proc.new do |config, param, value, ssp|
+            (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{join_string}#{value}" : "#{ssp}#{value}"
+          end
+        end
+
+        def self.regex_apply_func
+          Proc.new do |config, param, value, ssp|
+            sub_msg = :sub
+            options = 0
+
+            %r{^s(.)((?:(?:\\\1)|[^\1])+)\1((?:(?:\\\1)|[^\1])+)\1([igox]*)$}
+            ignored, value_matcher_exp, replacement_exp, option_str = value.match(%r{^s(.)((?:(?:\\\1)|[^\1])+)\1((?:(?:\\\1)|[^\1])+)\1([igox]*)$})
+            
+            if option_str =~ /i/
+              options |= Regexp::IGNORECASE
+            end
+            if option_str =~ /m/
+              options |= Regexp::MULTILINE
+            end
+            if option_str =~ /x/
+              options |= Regexp::EXTENDED
+            end
+            if option_str =~ /g/
+              sub_msg = :gsub
+            end
+              
+            raise "invalid transformation value '#{value}'" unless value_matcher_exp && replacement_exp
+            
+            result = nil
+
+            begin
+              if config.has_key?(param) && config[param]
+                result = config[param].send(sub_msg, re.compile(value_matcher_exp, options)) do |match|
+                  replacement_exp.gsub(/\$([0-9]+)/) {|m| match[m[1].to_i]}
+                end
+              end
+            rescue RegexpError => rerr
+              raise "invalid transformation regexp '#{value_matcher_exp}' (#{rerr.inspect})"
+            end
+            
+            result
+          end
+        end
+
         # some config values can start with something like '>=',
         # indicating that a value is to be appended to the preexisting
         # config value (if one exists).  This hash contains the kinds
         # of appending we can support, mapping from the character or
         # characters before value to the string used to delimit joined values.
-        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
+        APPLY_SPECIALS = {'>='=>::Mrg::Grid::Config::ValueUtil::join_apply_func(', '), '&&='=>::Mrg::Grid::Config::ValueUtil::join_apply_func(' && '), '||='=>::Mrg::Grid::Config::ValueUtil::join_apply_func(' || '), '~='=>::Mrg::Grid::Config::ValueUtil::regex_apply_func}
         
-        APPEND_MATCHER = /^(?:(#{APPENDS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
+        APPLY_SPECIAL_MATCHER = /^(?:(#{APPLY_SPECIALS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
 
         def self.append_match(value)
-          return value.match(APPEND_MATCHER)
+          return value.match(APPLY_SPECIAL_MATCHER)
         end
 
-        def self.join_string(match)
-          APPENDS[match[1]]
+        def self.apply_func(match)
+          APPLY_SPECIALS[match[1]]
         end
 
         def self.strip_prefix(value)
-          match = value && value.match(APPEND_MATCHER)
+          match = value && value.match(APPLY_SPECIAL_MATCHER)
           match ? value_string(match) : value
         end
 
@@ -57,9 +102,9 @@ module Mrg
         def self.apply!(config, param, value, use_ssp=false)
           if (value && match = append_match(value))
             value = value_string(match)
-            js = join_string(match)
+            af = apply_func(match)
             ssp = use_ssp ? prefix_string(match) : ""
-            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{js}#{value}" : "#{ssp}#{value}"
+            config[param] = af.call(config, param, value, ssp)
           else
             config[param] = value unless (config.has_key?(param) && (!value || value == ""))
           end

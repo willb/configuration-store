@@ -6,6 +6,8 @@ module Mrg
   module Grid
     module Config
 
+      JOIN_SPECIALS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
+
       describe Node do
         before(:each) do
           setup_rhubarb
@@ -270,7 +272,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
         end
       
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |nodekind, node_find_msg|
-          ::Mrg::Grid::Config::ValueUtil::APPENDS.each do |indicator, comma|
+          JOIN_SPECIALS.each do |indicator, comma|
           
             [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
   
