@@ -114,6 +114,7 @@ rm -rf %{buildroot}
 
 %pre
 getent group wallaby >/dev/null || groupadd -r wallaby
+getent group condor >/dev/null || groupadd -r condor
 getent passwd wallaby >/dev/null || \
   useradd -r -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
     -c "Owner of Wallaby service" wallaby
