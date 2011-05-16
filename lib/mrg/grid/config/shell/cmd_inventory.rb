@@ -24,11 +24,6 @@ module Mrg
           SORTKEYS = %w{name checkin}
           NODEKINDS = %w{provisioned unprovisioned}
           
-          def timestamp(tm=nil)
-            tm ||= Time.now.utc
-            (tm.tv_sec * 1000000) + tm.tv_usec
-          end
-          
           def format_time(t)
             return "never" if t == 0
             Time.at(t/1000000,t%1000000).to_s
@@ -76,7 +71,8 @@ module Mrg
 
             ::Fixnum.class_eval do
               def hour_ago
-                timestamp(Time.now.utc - (60 * 60 * self))
+                tm = Time.now.utc - (60 * 60 * self)
+                (tm.tv_sec * 1000000) + tm.tv_usec
               end
               
               alias :hours_ago :hour_ago
