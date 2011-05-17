@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# upgrade_wallaby_db:  
+# upgrade-wallaby-db:  
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ module Mrg
         # opname returns the operation name; for "wallaby foo", it
         # would return "foo".
         def self.opname
-          "upgrade_wallaby_db"
+          "upgrade-wallaby-db"
         end
       
         # description returns a short description of this command, suitable 
@@ -32,7 +32,6 @@ module Mrg
         end
       
         def init_option_parser
-          # Edit this method to generate a method that parses your command-line options.
           @force = false
           OptionParser.new do |opts|
             opts.banner = "Usage:  wallaby #{self.class.opname}\n#{self.class.description}"
@@ -363,15 +362,15 @@ wallaby_opts = []
 cmd_opts = []
 op = OptionParser.new do |opts|
   opts.on("-h", "--help", "shows this message") do
-    wallaby_opts << "--help"
-    cmd_opts << "--help"
+    puts op
+    exit
   end
 
   opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
     wallaby_opts << "--host" << h
   end
 
-  opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
+  opts.on("-p", "--port NUM", "qpid broker port (default 5672)") do |num|
     wallaby_opts << "--port" << num
   end
 
@@ -405,4 +404,4 @@ rescue OptionParser::InvalidArgument => ia
 end
 
 ::Mrg::Grid::Config::Shell::register_command(::Mrg::Grid::Config::UpgradeWallabyDb)
-::Mrg::Grid::Config::Shell::main(wallaby_opts + ["upgrade_wallaby_db"] + cmd_opts + args)
+::Mrg::Grid::Config::Shell::main(wallaby_opts + ["upgrade-wallaby-db"] + cmd_opts + args)
