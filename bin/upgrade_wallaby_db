@@ -28,17 +28,22 @@ module Mrg
         # description returns a short description of this command, suitable 
         # for use in the output of "wallaby help commands".
         def self.description
-          ""
+          "Upgrade the wallaby database"
         end
       
         def init_option_parser
           # Edit this method to generate a method that parses your command-line options.
+          @force = false
           OptionParser.new do |opts|
             opts.banner = "Usage:  wallaby #{self.class.opname}\n#{self.class.description}"
       
             opts.on("-h", "--help", "displays this message") do
               puts @oparser
               exit
+            end
+
+            opts.on("-f", "--force", "force upgrade") do
+              @force = true
             end
           end
         end
@@ -241,27 +246,14 @@ module Mrg
               if obj != nil
                 obj.modifyParams(value["cmd"], value["params"], {})
               else
-                puts "Error updating Feature #{key}"
-                upgrade_failed
+                if @force == true
+                  puts "Warning: Failed to update Feature #{key}"
+                else
+                  puts "Error updating Feature #{key}"
+                  upgrade_failed
+                end
               end
             end
-
-#            obj = store.getFeature("Master")
-#            if obj != nil
-#              obj.modifyParams("REMOVE", {"SEC_DEFAULT_INTEGRITY"=>0, "SEC_DEFAULT_ENCRYPTION"=>0}, {})
-#            else
-#              puts "Error updating Feature Master"
-#              upgrade_failed
-#            end
-#
-#            obj = store.getFeature("HACentralManager")
-#            obj.modifyParams("ADD", {"CONDOR_HOST"=>0}, {})
-#
-#            obj = store.getFeature("TriggerService")
-#            obj.modifyParams("ADD", {"ENABLE_ABSENT_NODES_DETECTION"=>"True", "DC_DAEMON_LIST"=>">= TRIGGERD"}, {})
-#
-#            obj = store.getFeature("EC2")
-#            obj.modifyParams("ADD", {"EC2_GAHP_LOG"=>"/tmp/EC2GahpLog.$(USERNAME)", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_EC2"=>"20", "EC2_GAHP"=>"$(SBIN)/ec2_gahp", "GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_AMAZON"=>"20"}, {})
 
             # Update existing params
             puts "Updating existing Parameters"
@@ -269,8 +261,12 @@ module Mrg
             if obj != nil
               obj.setRequiresRestart(false)
             else
+              if @force == true
+                puts "Warning: Failed to update Parameter AMAZON_GAHP"
+              else
                 puts "Error updating Parameter AMAZON_GAHP"
                 upgrade_failed
+              end
             end
 
             # Update existing subsystems
@@ -289,8 +285,12 @@ module Mrg
                   obj.modifyParams("ADD", %w{QMF_BROKER_AUTH_MECH QMF_BROKER_USERNAME QMF_BROKER_PASSWORD_FILE}, {})
                 end
               else
-                puts "Error updating Subsystem #{sn}"
-                upgrade_failed
+                if @force == true
+                  puts "Warning: Failed to update Subsystem #{sn}"
+                else
+                  puts "Error updating Subsystem #{sn}"
+                  upgrade_failed
+                end
               end
             end
             puts "Database upgraded successfully"
@@ -309,8 +309,12 @@ module Mrg
             obj.setMustChange(change)
             obj.setDefault(default)
           else
-            puts "Error adding Parameter #{name}.  Reverting database"
-            upgrade_failed
+            if @force == true
+              puts "Warning: Failed to add Parameter #{name}"
+            else
+              puts "Error adding Parameter #{name}.  Reverting database"
+              upgrade_failed
+            end
           end
         end
 
@@ -322,8 +326,12 @@ module Mrg
             obj.modifyDepends('REPLACE', dep, {})
             obj.modifyConflicts('REPLACE', con, {})
           else
-            puts "Error adding Feature #{name}.  Reverting database"
-            upgrade_failed
+            if @force == true
+              puts "Warning: Failed to add Feature #{name}"
+            else
+              puts "Error adding Feature #{name}.  Reverting database"
+              upgrade_failed
+            end
           end
         end
 
@@ -332,8 +340,12 @@ module Mrg
           if obj != nil
             obj.modifyParams('REPLACE', params, {})
           else
-            puts "Error adding Subsystem #{name}.  Reverting database"
-            upgrade_failed
+            if @force == true
+              puts "Warning: Failed to add Subsystem #{name}"
+            else
+              puts "Error adding Subsystem #{name}.  Reverting database"
+              upgrade_failed
+            end
           end
         end
 
@@ -346,5 +358,51 @@ module Mrg
   end
 end
 
+# Process args
+wallaby_opts = []
+cmd_opts = []
+op = OptionParser.new do |opts|
+  opts.on("-h", "--help", "shows this message") do
+    wallaby_opts << "--help"
+    cmd_opts << "--help"
+  end
+
+  opts.on("-H", "--host HOSTNAME", "qpid broker host (default localhost)") do |h|
+    wallaby_opts << "--host" << h
+  end
+
+  opts.on("-p", "--port NUM", Integer, "qpid broker port (default 5672)") do |num|
+    wallaby_opts << "--port" << num
+  end
+
+  opts.on("-U", "--user NAME", "qpid username") do |name|
+    wallaby_opts << "--user" << name
+  end
+
+  opts.on("-P", "--password PASS", "qpid password") do |pass|
+    wallaby_opts << "--password" << pass
+  end
+
+  opts.on("-M", "--auth-mechanism PASS", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
+    wallaby_opts << "--auth-mechanism" << mechanism
+  end
+
+  opts.on("-f", "--force", "force the upgrade to proceed") do
+    cmd_opts << "--force"
+  end
+end
+
+args = ARGV
+begin
+  op.parse!(args)
+rescue OptionParser::InvalidOption
+  puts op
+  exit
+rescue OptionParser::InvalidArgument => ia
+  puts ia.message
+  puts op
+  exit
+end
+
 ::Mrg::Grid::Config::Shell::register_command(::Mrg::Grid::Config::UpgradeWallabyDb)
-::Mrg::Grid::Config::Shell::main(ARGV + ["upgrade_wallaby_db"])
+::Mrg::Grid::Config::Shell::main(wallaby_opts + ["upgrade_wallaby_db"] + cmd_opts + args)
