@@ -79,7 +79,7 @@ module Mrg
             db_minor = 0
           end
 
-          if db_major > 1 or (db_major <= 1 and db_minor >= 12)
+          if db_major > 1 or (db_major <= 1 and db_minor >= 13)
             puts "The database is up to date"
           else
             t = Time.now.utc
@@ -184,7 +184,7 @@ module Mrg
             add_feature("PowerManagementCollector",
                         {"OFFLINE_LOG"=>"$(SPOOL)/OfflineLog",
                          "OFFLINE_EXPIRE_ADS_AFTER"=>"28800",
-                         "VALID_SPOOL_FILES"=>"$(VALID_SPOOL_FILES), $(OFFLINE_LOG)"},
+                         "VALID_SPOOL_FILES"=>"$(VALID_SPOOL_FILES), OfflineLog"},
                          ["Collector"], [], [])
 
             add_feature("PowerManagementSubnetManager",
@@ -196,7 +196,7 @@ module Mrg
                          "ROOSTER_UNHIBERNATE"=>"Offline && Unhibernate",
                          "ROOSTER_SUBNET_MASK"=>0,
                          "ROOSTER_INTERVAL"=>"300",
-                         "ROOSTER_WAKEUP_CMD"=>"\"$(BIN)/condor_power -d -i $(ROOSTER_SUBNET_MASK)\""},
+                         "ROOSTER_WAKEUP_CMD"=>"\"$(BIN)/condor_power -d -i -s $(ROOSTER_SUBNET_MASK)\""},
                          [], [], ["PowerManagementNode"])
 
             add_feature("SharedPort",
@@ -225,10 +225,10 @@ module Mrg
                          ["Axis2Home"], ["Master", "JobQueueLocation"], [])
 
             if fobj == nil
-              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.12"}, [], [], [""])
+              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.13"}, [], [], [""])
             else
               obj = store.getFeature("BaseDBVersion")
-              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.12"}, {})
+              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.13"}, {})
             end
 
             # Add new subsystems
