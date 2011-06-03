@@ -542,7 +542,7 @@ features:
   params: 
     OFFLINE_LOG: $(SPOOL)/OfflineLog
     OFFLINE_EXPIRE_ADS_AFTER: "28800"
-    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), $(OFFLINE_LOG)
+    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), OfflineLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
   - Collector
@@ -575,7 +575,7 @@ features:
     ROOSTER_UNHIBERNATE: Offline && Unhibernate
     ROOSTER_SUBNET_MASK: 0
     ROOSTER_INTERVAL: "300"
-    ROOSTER_WAKEUP_CMD: "\"$(BIN)/condor_power -d -i $(ROOSTER_SUBNET_MASK)\""
+    ROOSTER_WAKEUP_CMD: "\"$(BIN)/condor_power -d -i -s $(ROOSTER_SUBNET_MASK)\""
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
