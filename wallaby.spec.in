@@ -1,7 +1,7 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 5
+%define rel 6
 
-Summary: Configuration store via QMF
+Summary: Condor pool configuration service with QMF interface
 Name: wallaby
 Version: WALLABY_VERSION
 Release: %{rel}%{?dist}
@@ -81,12 +81,12 @@ mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
 mkdir -p %{buildroot}/%{_localstatedir}/log/wallaby
-cp -f bin/wallaby %{buildroot}/%{_bindir}
-cp -f bin/wallaby-agent %{buildroot}/%{_bindir}
-cp -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
-cp -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
-cp -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
-cp -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
+cp -p -f bin/wallaby %{buildroot}/%{_bindir}
+cp -p -f bin/wallaby-agent %{buildroot}/%{_bindir}
+cp -p -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
+cp -p -f lib/mrg/grid/util/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/util
+cp -p -f lib/mrg/grid/config/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config
+cp -p -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 # These aren't packaged
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
@@ -94,9 +94,9 @@ rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
 # XXX: change this when Sinatra is packaged for RHEL
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
-cp -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
-cp -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
-cp -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
+cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
+cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
+cp -p -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
 
 %clean
 rm -rf %{buildroot}
@@ -202,6 +202,9 @@ fi
 %endif
 
 %changelog
+
+* Mon Jun 6 2011 willb <willb@redhat> - 0.10.5-6
+- Mode, ownership, and timestamps now preserved for installed files
 
 * Thu Apr 28 2011 willb <willb@redhat> - 0.10.5-5
 - Preinstall script fixes
