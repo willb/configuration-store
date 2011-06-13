@@ -3,8 +3,8 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - BaseScheduler
   included: 
   - Axis2Home
   name: AviaryScheduler
@@ -31,6 +31,17 @@ features:
   name: BaseDBVersion
   params: 
     BaseDBVersion: BASE_DB_VERSION
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: 
+  - Scheduler
+  depends: []
+
+  included: 
+  - JobQueueLocation
+  - BaseScheduler
+  name: BaseHAScheduler
+  params: 
+    SCHEDD_NAME: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -63,7 +74,6 @@ features:
     QUEUE_SUPER_USERS: root, condor
     MAX_SHADOW_LOG: "1000000"
     SHADOW_LOCK: $(LOCK)/ShadowLock
-    DAEMON_LIST: ">= SCHEDD"
     ALLOW_NEGOTIATOR_SCHEDD: $(ALLOW_NEGOTIATOR_SCHEDD), $(CONDOR_HOST), $(FLOCK_NEGOTIATOR_HOSTS)
     START_LOCAL_UNIVERSE: "True"
     SCHEDD_DAEMON_AD_FILE: $(LOG)/.schedd_classad
@@ -351,13 +361,13 @@ features:
     HAD_LIST: 0
     HAD_PORT: "51450"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: 
-  - Scheduler
+  conflicts: []
+
   depends: []
 
   included: 
-  - JobQueueLocation
-  - BaseScheduler
+  - BaseHAScheduler
+  - SchedulerInDL
   name: HAScheduler
   params: 
     HA_LOCK_HOLD_TIME: "300"
@@ -365,7 +375,6 @@ features:
     VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
     MASTER_HA_LIST: $(MASTER_HA_LIST), SCHEDD
     HA_POLL_PERIOD: "60"
-    SCHEDD_NAME: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -404,11 +413,9 @@ features:
     JOB_ROUTER_DEBUG: ""
     JOB_ROUTER: $(LIBEXEC)/condor_job_router
     DAEMON_LIST: ">= JOB_ROUTER"
-    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
     MAX_HISTORY_ROTATIONS: "20"
     JOB_ROUTER_LOG: $(LOG)/JobRouterLog
     JOB_ROUTER_ADDRESS_FILE: $(LOG)/.job_router_address
-    JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
     JOB_ROUTER_POLLING_PERIOD: "10"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -487,10 +494,9 @@ features:
     MASTER: $(SBIN)/condor_master
     DAEMON_LIST: ">= MASTER"
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
-    SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), CLAIMTOBE
-    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS, NTLM, CLAIMTOBE
     CONDOR_DEVELOPERS: NONE
-    ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
+    ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR), $(CONDOR_HOST)
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
     MASTER_ADDRESS_FILE: $(LOG)/.master_address
     CONDOR_HOST: 0
@@ -613,6 +619,7 @@ features:
   included: 
   - JobQueueLocation
   - BaseScheduler
+  - SchedulerInDL
   name: Scheduler
   params: 
     SPOOL: $(LOCAL_DIR)/spool
@@ -627,6 +634,16 @@ features:
   params: 
     SCHEDD_PREEMPTION_RANK: "0"
     SCHEDD_PREEMPTION_REQUIREMENTS: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: SchedulerInDL
+  params: 
+    DAEMON_LIST: ">= SCHEDD"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -1458,15 +1475,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Job Router
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1878,15 +1895,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Master
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2814,15 +2831,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Scheduler
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2930,7 +2947,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_AUTHENTICATION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2942,7 +2959,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2954,7 +2971,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_CRYPTO_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2966,7 +2983,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_ENCRYPTION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2978,7 +2995,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_INTEGRITY
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2990,7 +3007,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_NEGOTIATION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3590,6 +3607,18 @@ params:
   level: 0
   must_change: false
   name: UNUSED_CLAIM_TIMEOUT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "300"
+  depends: []
+
+  description: The number of seconds specifying how often the condor_startd should send a ClassAd update to the condor_collector
+  kind: Integer
+  level: 0
+  must_change: false
+  name: UPDATE_INTERVAL
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
