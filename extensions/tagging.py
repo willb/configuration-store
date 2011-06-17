@@ -42,12 +42,10 @@ class Blah(object):
     """
     def do_calculated_attribute(target):
         def default_fallback(self, name):
-            raise AttributeError("%r has no attribute %r") % (self,name)
+            raise AttributeError("%r has no attribute named %r") % (self,name)
         fallback = None
         
-        if "__getattribute__" in dir(klass):
-            fallback = klass.__getattribute__
-        elif "__getattr__" in dir(klass):
+        if "__getattr__" in dir(klass):
             fallback = klass.__getattr__
         else:
             fallback = default_fallback
@@ -58,7 +56,7 @@ class Blah(object):
             else:
                 return fallback(self, name)
         
-        klass.__getattribute__ = calc_attr
+        klass.__getattr__ = calc_attr
         
         return target
     
@@ -77,11 +75,11 @@ def uniq(ls):
 class StorePatches(object):
     @patch_to(wallaby.Store)
     def getPartitionGroup(self):
-        valid = len(self.checkGroupValidity([PARTITION_GROUP])) > 0
+        valid = len(self.checkGroupValidity([PARTITION_GROUP])) == 0
         if valid:
             return self.getGroup({"name": PARTITION_GROUP})
         else:
-            return self.addGroup(PARTITION_GROUP)
+            return self.addExplicitGroup(PARTITION_GROUP)
 
 class NodePatches(object):
     @patch_to(wallaby.Node)
@@ -97,7 +95,7 @@ class NodePatches(object):
     def modifyTags(self, op, tags, **options):
         global store
         memberships = self.memberships
-        current_tags = self.tags
+        current_tags = self.getTags()
         tag_set = set(current_tags + [PARTITION_GROUP])
         new_tags = []
         
@@ -124,7 +122,7 @@ class NodePatches(object):
             if store is None:
                 raise RuntimeError("You must call tagging.setup(store) before using the create_missing_tags option")
             for missing_tag in store.checkGroupValidity(new_tags):
-                store.addGroup(missing_tag)
+                store.addExplicitGroup(missing_tag)
         
         return self.modifyMemberships("REPLACE", new_memberships, {})
 
