@@ -82,6 +82,7 @@ class StorePatches(object):
             return self.addExplicitGroup(PARTITION_GROUP)
 
 class NodePatches(object):
+    @calculated_attribute(wallaby.Node, "tags")
     @patch_to(wallaby.Node)
     def getTags(self):
         memberships = self.memberships
