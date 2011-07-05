@@ -35,10 +35,12 @@ module Mrg
 
           sss = expected_diff.map {|prm| Subsystem.s_for_param(prm).map {|ss| ss.name}}.flatten.sort.uniq
 
+          collection = @store.getParam("SEC_DEFAULT_AUTHENTICATION_METHODS").requires_restart ? restart : reconfig
+
           (params.sort - %w{WALLABY_CONFIG_VERSION}).should == expected_diff.sort
           
-          restart.size.should == 1
-          restart.sort.uniq.should == sss
+          collection.size.should == 1
+          collection.sort.uniq.should == sss
         end
       end
     end
