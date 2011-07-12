@@ -48,6 +48,199 @@ module Mrg
         end
       
         def act
+          @db_fobj = store.getFeature("BaseDBVersion")
+          if @db_fobj != nil:
+            db_ver = (@db_fobj.params["BaseDBVersion"].to_s rescue 0)
+            temp = db_ver.split('.')
+            db_major = temp[0].to_i
+            db_minor = temp[1].to_i
+          else
+            db_major = 0
+            db_minor = 0
+          end
+
+          if db_major > 1 or (db_major <= 1 and db_minor >= 14)
+            puts "The database is up to date"
+          else
+            t = Time.now.utc
+            @snap_name = "Database upgrade automatically generated snapshot at #{t} -- #{((t.tv_sec * 1000000) + t.tv_usec).to_s(16)}"
+
+            puts "Creating pre-upgrade snapshot named #{@snap_name}"
+            if store.makeSnapshot(@snap_name) == nil
+               exit!(1, "Failed to create pre-upgrade snapshot.  Database upgrade aborted")
+            end
+
+            puts "Upgrading database"
+            upgrade_1_13(db_major, db_minor)
+            upgrade_1_14(db_major, db_minor)
+
+            # Add new params
+            puts "Database upgraded successfully"
+          end
+    
+          return 0
+        end
+
+        def upgrade_1_14(major, minor)
+          update_features = {"Master"=>{"ADD"=>{"params"=>{"ALLOW_ADMINISTRATOR"=>"$(ALLOW_ADMINISTRATOR), $(CONDOR_HOST)", "SEC_DEFAULT_AUTHENTICATION_METHODS"=>"$(SEC_DEFAULT_AUTHENTICATION_METHODS), FS, NTLM, CLAIMTOBE"}},
+                                        "REMOVE"=>{"params"=>{"MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS"=>0}}},
+                             "AviaryScheduler"=>{"ADD"=>{"deps"=>["BaseScheduler"]}},
+                             "JobRouter"=>{"REMOVE"=>{"params"=>{"SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS"=>0, "JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS"=>0}}},
+          }
+
+          if major <= 1 and minor < 14
+            puts "Upgrading to DB version 1.14"
+
+            puts "Adding new Parameters"
+            add_param("UPDATE_INTERVAL", 0, false, "The number of seconds specifying how often the condor_startd should send a ClassAd update to the condor_collector", "Integer", false, "300")
+
+            puts "Updating existing Features"
+            update_features.each_pair do |key, value|
+              obj = store.getFeature(key)
+              if obj != nil
+                value.each_pair do |cmd, targets|
+                  if targets.has_key?("params")
+                    obj.modifyParams(cmd, targets["params"], {})
+                  end
+                  if targets.has_key?("deps")
+                    obj.modifyDepends(cmd, targets["deps"], {})
+                  end
+                end
+              else
+                if @force == true
+                  puts "Warning: Failed to update Feature #{key}"
+                else
+                  puts "Error updating Feature #{key}"
+                  upgrade_failed
+                end
+              end
+            end
+
+            puts "Updating existing Parameters"
+            obj = store.getParam("JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS")
+            if obj != nil
+              obj.setRequiresRestart(false)
+              obj.setMustChange(false)
+              obj.setDefault("$(SEC_DEFAULT_AUTHENTICATION_METHODS)")
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS"
+              else
+                puts "Error updating Parameter JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS")
+            if obj != nil
+              obj.setRequiresRestart(false)
+              obj.setMustChange(false)
+              obj.setDefault("$(SEC_DEFAULT_AUTHENTICATION_METHODS)")
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS"
+              else
+                puts "Error updating Parameter MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS")
+            if obj != nil
+              obj.setRequiresRestart(false)
+              obj.setMustChange(false)
+              obj.setDefault("$(SEC_DEFAULT_AUTHENTICATION_METHODS)")
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS"
+              else
+                puts "Error updating Parameter SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_AUTHENTICATION")
+            if obj != nil
+              obj.setRequiresRestart(false)
+              obj.setDefault("OPTIONAL")
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_AUTHENTICATION"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_AUTHENTICATION"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_AUTHENTICATION_METHODS")
+            if obj != nil
+              obj.setRequiresRestart(false)
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_AUTHENTICATION_METHODS"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_AUTHENTICATION_METHODS"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_CRYPTO_METHODS")
+            if obj != nil
+              obj.setRequiresRestart(false)
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_CRYPTO_METHODS"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_CRYPTO_METHODS"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_ENCRYPTION")
+            if obj != nil
+              obj.setRequiresRestart(false)
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_ENCRYPTION"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_ENCRYPTION"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_INTEGRITY")
+            if obj != nil
+              obj.setRequiresRestart(false)
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_INTEGRITY"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_INTEGRITY"
+                upgrade_failed
+              end
+            end
+
+            obj = store.getParam("SEC_DEFAULT_NEGOTIATION")
+            if obj != nil
+              obj.setRequiresRestart(false)
+            else
+              if @force == true
+                puts "Warning: Failed to update Parameter SEC_DEFAULT_NEGOTIATION"
+              else
+                puts "Error updating Parameter SEC_DEFAULT_NEGOTIATION"
+                upgrade_failed
+              end
+            end
+          end
+
+          if @db_fobj == nil
+            @db_fobj = add_feature("BaseDBVersion", {"BaseDBVersion"=>1.14}, [], [], [""])
+          else
+            @db_fobj.modifyParams("REPLACE", {"BaseDBVersion"=>1.14}, {})
+          end
+        end
+
+        def upgrade_1_13(major, minor)
           update_features = {"Master"=>{"cmd"=>"REMOVE",
                                         "params"=>{"SEC_DEFAULT_INTEGRITY"=>0, "SEC_DEFAULT_ENCRYPTION"=>0}},
                             "HACentralManager"=>{"cmd"=>"ADD",
@@ -68,31 +261,9 @@ module Mrg
                                                   "params"=>{"SCHEDD.PLUGINS"=>">= $(LIB)/plugins/MgmtScheddPlugin-plugin.so"}},
           }
 
-          fobj = store.getFeature("BaseDBVersion")
-          if fobj != nil:
-            db_ver = (fobj.params["BaseDBVersion"].to_s rescue 0)
-            temp = db_ver.split('.')
-            db_major = temp[0].to_i
-            db_minor = temp[1].to_i
-          else
-            db_major = 0
-            db_minor = 0
-          end
+          if major <= 1 and minor < 13
+            puts "Upgrading to DB version 1.13"
 
-          if db_major > 1 or (db_major <= 1 and db_minor >= 13)
-            puts "The database is up to date"
-          else
-            t = Time.now.utc
-            @snap_name = "Database upgrade automatically generated snapshot at #{t} -- #{((t.tv_sec * 1000000) + t.tv_usec).to_s(16)}"
-
-            puts "Creating pre-upgrade snapshot named #{@snap_name}"
-            if store.makeSnapshot(@snap_name) == nil
-               exit!(1, "Failed to create pre-upgrade snapshot.  Database upgrade aborted")
-            end
-
-            puts "Upgrading database"
-
-            # Add new params
             puts "Adding new Parameters"
             add_param("EC2_GAHP_LOG", 0, false, "Location of the EC2 Gahp log files", "String", false, "/tmp/EC2GahpLog.$(USERNAME)")
 
@@ -168,7 +339,7 @@ module Mrg
 
             add_param("WSFCPP_HOME", 0, false, "The root of the axis2 deployment", "String", false, "/var/lib/condor/aviary/axis2.xml")
 
-            if db_minor <= 1 and db_minor < 5
+            if minor <= 1 and minor < 5
               add_param("BaseDBVersion", 0, false, "The version of the base database", "String", false, "0")
             end
 
@@ -223,13 +394,6 @@ module Mrg
                          "QUERY_SERVER"=>"$(SBIN)/aviary_query_server",
                          "QUERY_SERVER.HISTORY_INTERVAL"=>"120"},
                          ["Axis2Home"], ["Master", "JobQueueLocation"], [])
-
-            if fobj == nil
-              add_feature("BaseDBVersion", {"BaseDBVersion"=>"1.13"}, [], [], [""])
-            else
-              obj = store.getFeature("BaseDBVersion")
-              obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.13"}, {})
-            end
 
             # Add new subsystems
             puts "Adding new Subsystems"
@@ -292,10 +456,13 @@ module Mrg
                 end
               end
             end
-            puts "Database upgraded successfully"
+
+            if @db_fobj == nil
+              @db_fobj = add_feature("BaseDBVersion", {"BaseDBVersion"=>1.13}, [], [], [""])
+            else
+              @db_fobj.modifyParams("REPLACE", {"BaseDBVersion"=>1.13}, {})
+            end
           end
-    
-          return 0
         end
 
         def add_param(name, level, restart, desc, kind, change, default)
@@ -315,6 +482,7 @@ module Mrg
               upgrade_failed
             end
           end
+          obj
         end
 
         def add_feature(name, params, inc, dep, con)
@@ -332,6 +500,7 @@ module Mrg
               upgrade_failed
             end
           end
+          obj
         end
 
         def add_subsystem(name, params)
@@ -346,6 +515,7 @@ module Mrg
               upgrade_failed
             end
           end
+          obj
         end
 
         def upgrade_failed
