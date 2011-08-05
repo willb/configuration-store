@@ -19,7 +19,7 @@ module Mrg
         
         include BaseDBFixture
 
-        [["int", "0001234567890"], ["float", "1.100"]].each do |kind, expected_val|
+        [["octal int", "017"], ["hexadecimal int", "0xdefaced"], ["int", "0001234567890"], ["float", "1.100"], ["bizarre intlike substance", "01.10.01.10"]].each do |kind, expected_val|
           it "should not convert string parameter values to #{kind}s, even if they look like #{kind}s" do
             @store.addParam("FOO")
             ff = @store.addExplicitGroup("Foo Floaters")
