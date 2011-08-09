@@ -43,11 +43,15 @@ module Mrg
               opts.on("-f", "--force", "force upgrade") do
                 @force = true
               end
+
+              opts.on("-d", "--directory", "directory containing patch files") do |dir|
+                @patch_dir = dir
+              end
             end
           end
         
           def init_patch_dir(*args)
-             @patch_dir = "/var/lib/wallaby/patches"
+            @patch_dir = "/var/lib/wallaby/patches"
           end
 
           register_callback :before_option_parsing, :init_patch_dir
@@ -59,41 +63,31 @@ module Mrg
           register_callback :before_option_parsing, :init_log
 
           def act
-#            fobj = store.getFeature("BaseDBVersion")
-#            if fobj != nil:
-#              db_ver = (fobj.params["BaseDBVersion"].to_s rescue 0)
-#              temp = db_ver.split('.')
-#              db_major = temp[0].to_i
-#              db_minor = temp[1].to_i
-#            else
-#              db_major = 0
-#              db_minor = 0
-#            end
-#  
-#            if db_major > 1 or (db_major <= 1 and db_minor >= 14)
-#              puts "The database is up to date"
-#            else
-#              t = Time.now.utc
-#              @snap_name = "Database upgrade automatically generated snapshot at #{t} -- #{((t.tv_sec * 1000000) + t.tv_usec).to_s(16)}"
-#  
-#              puts "Creating pre-upgrade snapshot named #{@snap_name}"
-#              if store.makeSnapshot(@snap_name) == nil
-#                 exit!(1, "Failed to create pre-upgrade snapshot.  Database upgrade aborted")
-#              end
+            patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(store, @force)
 
-            patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(store, "")
-
-            Dir.foreach(@patch_dir) do |file|
+            files = Dir.entries(@patch_dir)
+            files.delete(".")
+            files.delete("..")
+            files.sort! {|x, y| split = y.split(".")
+                                y_maj = split[0].to_i
+                                y_min = split[1].to_i
+                                split = x.split(".")
+                                x_maj = split[0].to_i
+                                x_min = split[1].to_i
+                                (x_maj > y_maj) or (x_maj <=> y_maj and x_min <=> y_min)}
+            files.each do |file|
               if not File.directory?(file)
-                patcher.init_from_yaml(file.read)
+                fhdl = open("#{@patch_dir}/#{file}")
+                patcher.init_from_yaml(fhdl.read)
                 begin
                   patcher.load
                 rescue Exception=>ex
-                  patch.revert_db
+                  patcher.revert_db
                   exit!(1, "Database upgrade failed. #{ex.message}")
                 end
               end
             end
+            puts "Database upgrade completed successfully"
           end
         end
       end

@@ -118,6 +118,18 @@ module Mrg
         end
       end
       
+      module DBHelpers
+        def create_relationships
+          log.info("Creating relationships between store entities")
+          @callbacks.each {|cb| cb.call}
+          @callbacks = []
+        end
+        
+        def dictify(ls)
+          Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
+        end
+      end
+
       class Configuration 
         def initialize
           raise "Configuration proxy not implemented"
@@ -140,13 +152,6 @@ module Mrg
         field :updates, Set
       end
 
-      class PatchData
-        include DefaultStruct
-        field :params, Set
-        field :features, Set
-        field :subsystems, Set
-      end
-      
       class Feature
         include DefaultStruct
         field :name, String
@@ -193,6 +198,8 @@ module Mrg
       end
       
       class ConfigLoader
+        include DBHelpers
+
         module InternalHelpers
           def listify(ls)
             ls
@@ -230,23 +237,20 @@ module Mrg
           
           if @store.class.to_s == "Mrg::Grid::Config::Store"
             # "internal" -- not operating over qmf
-            log.debug "#{self.class.name} IS NOT operating over QMF"
+            log.debug "ConfigLoader IS NOT operating over QMF"
             class << self
               include InternalHelpers
             end
           else
             # operating over QMF via the config-client lib
-            log.debug "#{self.class.name} IS operating over QMF"
+            log.debug "ConfigLoader IS operating over QMF"
             class << self
               include QmfHelpers
             end
           end
           
           yrepr = nil
-          init_from_yaml(ymltxt)
-        end
-        
-        def init_from_yaml(ymltxt)
+
           begin
             yrepr = YAML::parse(ymltxt).transform
 
@@ -383,66 +387,60 @@ module Mrg
           end
         end
         
-        def create_relationships
-          log.info("Creating relationships between store entities")
-          @callbacks.each {|cb| cb.call}
-          @callbacks = []
-        end
-        
-        def dictify(ls)
-          Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
-        end
-        
         def skk(x)
           x
         end
       end
 
-      class PatchLoader < ConfigLoader
+      class PatchLoader
+        include DBHelpers
+
+        def initialize(store, force_upgrade=false)
+          @store = store
+          @force = force_upgrade
+        end
+
         def init_from_yaml(ymltxt)
-          if ymltxt != ""
-            begin
-              yrepr = YAML::parse(ymltxt).transform
+          begin
+            yrepr = YAML::parse(ymltxt).transform
   
-              raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Patch)
+            raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Patch)
   
-              @snapshot = ""
-              @db_version = yrepr.db_version
+            @snapshot = nil
+            @db_obj = nil
+            @db_version = yrepr.db_version
 
-              @old_nodes = dictify(yrepr.expected.nodes)
-              @old_groups = dictify(yrepr.expected.groups)
-              @old_params = dictify(yrepr.expected.params)
-              @old_features = dictify(yrepr.expected.features)
-              @old_subsystems = dictify(yrepr.expected.subsystems)
-  
-              @new_nodes = dictify(yrepr.updates.nodes)
-              @new_groups = dictify(yrepr.updates.groups)
-              @new_params = dictify(yrepr.updates.params)
-              @new_features = dictify(yrepr.updates.features)
-              @new_subsystems = dictify(yrepr.updates.subsystems)
+            @expected = yrepr.expected
+            @updates = yrepr.updates
 
-              @nodes = {}
-              @groups = {}
-              @params = {}
-              @features = {}
-              @subsystems = {}
-              
-              @callbacks = []
-            rescue Exception=>ex
-              raise RuntimeError.new("Invalid Patch file; #{ex.message}")
-            end
+            @callbacks = []
+          rescue Exception=>ex
+            raise RuntimeError.new("Invalid Patch file; #{ex.message}")
           end
+        end
+
+        def PatchLoader.log
+          @log ||= MsgSink.new
+        end
+        
+        def PatchLoader.log=(lg)
+          @log = lg
+        end
+        
+        def log
+          self.class.log
         end
 
         def load
           if valid_db_version 
+            log.info "Updating database to version #{@db_version}"
             snap_db
             update_entities
-            super
           end
         end
 
         def revert_db
+          log.info "Reverting database to state before patching attempt"
           @store.loadSnapshot(@snapshot)
         end
  
@@ -450,181 +448,108 @@ module Mrg
         def snap_db
           t = Time.now.utc
           @snapshot = "Database upgrade to #{@db_version} automatic pre-upgrade snapshot at #{t} -- #{((t.tv_sec * 1000000) + t.tv_usec).to_s(16)}"
+          log.info "Creating snapshot named '#{@snapshot}'"
           if @store.makeSnapshot(@snapshot) == nil
             raise RuntimeError.new("Failed to create snapshot")
           end
         end
 
         def valid_db_version
-          fobj = @store.getFeature("BaseDBVersion")
-          if fobj != nil
-            db_ver = (fobj.params["BaseDBVersion"].to_s rescue "0.0")
+          @db_obj = @store.getFeature("BaseDBVersion")
+          if @db_obj != nil
+            db_ver = (@db_obj.params["BaseDBVersion"].to_s rescue "1.4")
             temp = db_ver.split('.')
-            db_major = temp[0].to_i
+            db_major = temp[0].delete("v").to_i
             db_minor = temp[1].to_i
           else
-            db_minor = 0
-            db_major = 0
+            db_major = 1
+            db_minor = 4
           end
-          temp = @db_version.split('.')
+          temp = @db_version.to_s.split('.')
           patch_major = temp[0].to_i
           patch_minor = temp[1].to_i
 
-          (patch_major > db_major) or ((patch_major <= db_major) and (patch_minor < patch_minor))
+          (patch_major > db_major) or ((patch_major <= db_major) and (patch_minor > db_minor))
         end
 
         def update_entities
-          update_nodes
-          update_groups
-          update_params
-          update_features
-          update_subsystems
-        end
-
-        def update_nodes
-          @new_nodes.each do |name, new_node|
-            if @old_nodes.exists?(name)
-              log.info "Updating node '#{name}'"
-              node = @store.getNode(name)
-              if node.memberships != old_nodes[name].memberships
-               raise RuntimeError.new("Node #{name} has unexpected group memberhsip list.  Expected '#{old_nodes[name].memberships}' got '#{node.memberships}'")
-              end
-              memberships = new_nodes[name].memberships
-              if node.memberships != new_nodes[name].memberships
-                @callbacks << lambda do
-                  log.info "Updating '#{name}' memeberships"
-                  node.modifyMemberships("REPLACE", listify(memberships), {})
+          translate = {:nodes=>{:short=>:Node, :long=>:Node}, :groups=>{:short=>:Group, :long=>:Group}, :params=>{:short=>:Param, :long=>:Parameter}, :features=>{:short=>:Feature, :long=>:Feature}, :subsystems=>{:short=>:Subsys, :long=>:Subsystem}}
+          entities = [:nodes, :groups, :params, :features, :subsystems]
+          entities.each do |type|
+            @updates.send(type).keys.each do |name|
+              added = false
+              if @store.send("check#{translate[type][:long]}Validity", [name]) != []
+                log.info "Adding #{translate[type][:long]} '#{name}'"
+                if type == :Group
+                  obj = @store.send("addExplicitGroup", name)
+                else
+                  obj = @store.send("add#{translate[type][:short]}", name)
                 end
+                added = true
+              else
+                log.info "Retrieving #{translate[type][:long]} '#{name}'"
+                obj = @store.send("get#{translate[type][:short]}", name)
               end
-            else
-              @nodes[name] = new_node
-            end
-          end
 
-          @old_nodes.each do |name, old_node|
-            if not @new_nodes.exists?(name)
-              log.info "Removing node '#{name}'"
-              @store.removeNode(name)
-            end
-          end 
-        end
+              if obj == nil
+                raise RuntimeError.new("Failed to retrieve #{translate[type][:long]} '#{name}'")
+              end
 
-        def update_groups
-          @new_groups.each do |name, new_group|
-            if not @old_groups.exists?(name)
-              @groups[name] = new_group
-            end
-          end
-
-          @old_groups.each do |name, old_group|
-            if not @new_groups.exists?(name)
-              log.info "Removing group '#{name}'"
-              @store.removeGroup(name)
-            end
-          end 
-        end
-
-        def update_params
-          @new_params.each do |name, new_param|
-            if @old_params.exists?(name)
-              log.info "Updating parameter '#{name}'"
-              param = @store.getParam(name)
-
-              [[:kind, :setKind, "type"], [:default, :setDefault, "default value"], [:description, :setDescription, "Description"], [:must_change, :setMustChange, "must_change"], [:visibility_level, :setVisibilityLevel, "visibility level"], [:needsRestart, :setRequiresRestart, "needs_restart"], [:depends, :modifyDepends, "dependencies"], [:conflicts, :modifyConflicts, "conflicts"]].each do |get, set, desc|
-                cur = param.send(get)
-                old = @old_params[name].send(get)
-                new = @new_params[name].send(get)
-                if cur != old
-                  raise RuntimeError.new("Parameter #{name} has unexpected #{desc}.  Expected '#{old}' got '#{cur}'")
-                end
-                if cur != new
-                  log.info "Updating '#{name}' #{desc}"
-                  if get == :depends or get == :conflicts
-                    @callbacks << lamda do
-                      param.send(set, "REPLACE", listify(new), {"skip_validation"=>"true"})
-                    end
-                  else
-                    param.send(set, new)
+              if added == false and not @force
+                @expected.send(type)[name].keys.each do |get|
+                  log.info "Verifying #{translate[type][:long]} '#{name}##{get}'"
+                  current_val = obj.send(get)
+                  if name == "BaseDBVersion"
+                    current_val["BaseDBVersion"].delete!("v")
+                  end
+                  if type == :features
+                    default_params = obj.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+                    default_params.each {|dp_key| current_val[dp_key] = 0}
+                  end
+                  expected_val = @expected.send(type)[name][get]
+                  begin
+                    current_adj = current_val.sort
+                    expected_adj = expected_val.sort
+                  rescue
+                    current_adj = current_val
+                    expected_adj = expected_val
+                  end
+                  if current_adj != expected_adj
+                    raise RuntimeError.new("#{translate[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
                   end
                 end
               end
-            else
-              @params[name] = new_param
-            end
-          end
 
-          @old_params.each do |name, old_param|
-            if not @new_params.exists?(name)
-              log.info "Removing parameter '#{name}'"
-              @store.removeParam(name)
-            end
-          end 
-        end
-
-        def update_features
-          @new_features.each do |name, new_feature|
-            if @old_features.exists?(name)
-              log.info "Updating Feature '#{name}'"
-              feature = @store.getFeature(name)
-
-              [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyIncludedFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
-                cur = feature.send(get)
-                old = @old_features[name].send(get)
-                new = @new_features[name].send(get)
-                if cur != old
-                  raise RuntimeError.new("Feature #{name} has unexpected #{desc}.  Expected '#{old}' got '#{cur}'")
-                end
-                if cur != new
+              log.info "Updating #{translate[type][:long]} '#{name}'"
+              commands = @updates.send(type)[name].keys
+              if commands.include?("setMustChange")
+                commands.delete("setMustChange")
+                commands.insert(0, "setMustChange")
+              end
+              commands.each do |set|
+                val = @updates.send(type)[name][set]
+                if set.to_s =~ /^modify/
                   @callbacks << lambda do
-                    log.info "Updating '#{name}' #{desc}"
-                    feature.send(set, "REPLACE", self.send(xform, new), {"skip_validation"=>"true"})
+                    obj.send(set, *val)
                   end
+                else
+                  obj.send(set, val)
                 end
               end
-            else
-              @features[name] = new_feature
             end
           end
 
-          @old_features.each do |name, old_feature|
-            if not @new_features.exists?(name)
-              log.info "Removing feature '#{name}'"
-              @store.removeFeature(name)
-            end
-          end 
-        end
-
-        def update_features
-          @new_subsystems.each do |name, new_subsys|
-            if @old_subsystems.exists?(name)
-              log.info "Updating Subsystem '#{name}'"
-              subsys = @store.getSubsys(name)
-
-              cur = subsys.params
-              old = @old_subsystems[name].params
-              new = @new_subsystems[name].params
-              if cur != old
-                raise RuntimeError.new("Subsystem #{name} has unexpected parameter list.  Expected '#{old}' got '#{cur}'")
+          entities.each do |type|
+            @expected.send(type).keys.each do |name|
+              if not @updates.send(type).has_key?(name)
+                log.info "Removing #{translate[type][:long]} '#{name}'"
+                @store.send("remove#{translate[type][:short]}", [name])
               end
-              if cur != new
-                @callbacks << lambda do
-                  log.info "Updating '#{name}' parameters"
-                  subsys.modifyParams("REPLACE", setify(new), {})
-                end
-              end
-            else
-              @subsystems[name] = new_subsys
             end
           end
 
-          @old_subsystems.each do |name, old_subsys|
-            if not @new_subsystems.exists?(name)
-              log.info "Removing subsystem '#{name}'"
-              @store.removeSubsys(name)
-            end
-          end 
+          create_relationships
         end
-
       end
       
       class ConfigSerializer
