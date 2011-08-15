@@ -1,0 +1,218 @@
+--- !ruby/object:Mrg::Grid::SerializedConfigs::Patch 
+db_version: "1.7"
+expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    BaseDBVersion: 
+      params: 
+        BaseDBVersion: v1.6
+    ModiFeature: 
+      conflicts: 
+      - ConflictFeature
+      included_features: 
+      - IncludeFeature
+      params: 
+        MOD_PARAM: VALUE
+      depends: 
+      - DepFeature
+  groups: {}
+
+  nodes: 
+    modi_node: 
+      memberships: 
+      - ModiGroup
+  params: 
+    MOD_PARAM: 
+      kind: string
+      conflicts: 
+      - CONFLICT_PARAM
+      visibility_level: 0
+      requires_restart: false
+      description: CHANGE ME
+      depends: 
+      - DEP_PARAM
+  subsystems: 
+    ModiSubsys: 
+      params: 
+      - MOD_PARAM
+updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    BaseDBVersion: 
+      modifyParams: 
+      - REPLACE
+      - BaseDBVersion: v1.7
+      - {}
+
+    IncludeFeature2: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyDepends: 
+      - REPLACE
+      - []
+
+      - {}
+
+      modifyConflicts: 
+      - REPLACE
+      - []
+
+      - {}
+
+      modifyIncludedFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+    ConflictFeature2: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyDepends: 
+      - REPLACE
+      - []
+
+      - {}
+
+      modifyConflicts: 
+      - REPLACE
+      - []
+
+      - {}
+
+      modifyIncludedFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+    ModiFeature: 
+      modifyParams: 
+      - REPLACE
+      - EXTRA_PARAM: VALUE
+      - {}
+
+      modifyDepends: 
+      - REPLACE
+      - []
+
+      - {}
+
+      modifyConflicts: 
+      - REPLACE
+      - - ConflictFeature2
+      - {}
+
+      modifyIncludedFeatures: 
+      - REPLACE
+      - - IncludeFeature
+        - IncludeFeature2
+      - {}
+
+  groups: 
+    ModiGroup2: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+    +++29306130b5e05dbc6196397d140b1eb4: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+  nodes: 
+    modi_node2: 
+      modifyMemberships: 
+      - REPLACE
+      - - ModiGroup
+      - {}
+
+    modi_node: 
+      modifyMemberships: 
+      - REPLACE
+      - - ModiGroup2
+      - {}
+
+  params: 
+    CONFLICT_PARAM2: 
+      setDefault: ""
+      setKind: string
+      modifyDepends: 
+      - REPLACE
+      - []
+
+      - {}
+
+      setDescription: ""
+      setVisibilityLevel: 0
+      modifyConflicts: 
+      - REPLACE
+      - []
+
+      - {}
+
+      setRequiresRestart: false
+      setMustChange: false
+    DEP_PARAM2: 
+      setDefault: ""
+      setKind: string
+      modifyDepends: 
+      - REPLACE
+      - []
+
+      - {}
+
+      setDescription: ""
+      setVisibilityLevel: 0
+      modifyConflicts: 
+      - REPLACE
+      - []
+
+      - {}
+
+      setRequiresRestart: false
+      setMustChange: false
+    MOD_PARAM: 
+      setKind: Integer
+      modifyDepends: 
+      - REPLACE
+      - - DEP_PARAM2
+      - {}
+
+      setDescription: A Description
+      setVisibilityLevel: 1
+      modifyConflicts: 
+      - REPLACE
+      - - CONFLICT_PARAM2
+      - {}
+
+      setRequiresRestart: true
+  subsystems: 
+    ModiSubsys: 
+      modifyParams: 
+      - REPLACE
+      - - EXTRA_PARAM
+      - {}
+

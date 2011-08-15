@@ -1,0 +1,135 @@
+--- !ruby/object:Mrg::Grid::SerializedConfigs::Patch 
+db_version: "1.6"
+expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    DelFeature: 
+      conflicts: []
+
+      included_features: []
+
+      params: {}
+
+      depends: []
+
+    BaseDBVersion: 
+      params: 
+        BaseDBVersion: v1.5
+  groups: 
+    DelGroup: 
+      features: []
+
+      params: {}
+
+    +++576335d8883cbe8850723a1c17e359f8: 
+      features: []
+
+      params: {}
+
+  nodes: 
+    del_node: 
+      memberships: []
+
+  params: 
+    DEL_PARAM: 
+      kind: string
+      conflicts: []
+
+      default: ""
+      visibility_level: 0
+      requires_restart: false
+      description: ""
+      depends: []
+
+      must_change: false
+  subsystems: 
+    DelSubsys: 
+      params: []
+
+updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    AddFeature: 
+      modifyParams: 
+      - REPLACE
+      - ADD_PARAM: ADD VALUE
+      - {}
+
+      modifyDepends: 
+      - REPLACE
+      - - DepFeature
+      - {}
+
+      modifyConflicts: 
+      - REPLACE
+      - - ConflictFeature
+      - {}
+
+      modifyIncludedFeatures: 
+      - REPLACE
+      - - IncludeFeature
+      - {}
+
+    BaseDBVersion: 
+      modifyParams: 
+      - REPLACE
+      - BaseDBVersion: v1.6
+      - {}
+
+  groups: 
+    +++d6140eacb7a6763bac6e62fbf3a64f3f: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+    AddGroup: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+  nodes: 
+    add_node: 
+      modifyMemberships: 
+      - REPLACE
+      - - AddGroup
+      - {}
+
+  params: 
+    ADD_PARAM: 
+      setDefault: ""
+      setKind: integer
+      modifyDepends: 
+      - REPLACE
+      - - DEP_PARAM
+      - {}
+
+      setDescription: Added Param
+      setVisibilityLevel: 1
+      modifyConflicts: 
+      - REPLACE
+      - - CONFLICT_PARAM
+      - {}
+
+      setRequiresRestart: true
+      setMustChange: true
+  subsystems: 
+    AddSubsys: 
+      modifyParams: 
+      - REPLACE
+      - - ADD_PARAM
+      - {}
+
