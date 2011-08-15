@@ -1,4 +1,4 @@
-# feature:  wallaby shell feature crud functionality
+# subsys:  wallaby shell subsys crud functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
@@ -20,131 +20,110 @@ module Mrg
   module Grid
     module Config
       module Shell
-        module FeatureOps
+        module SubsysOps
           def api_messages
-            @api_messages ||= {:name=>:setName}.freeze
+            @api_messages ||= {}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :params, :depends, :conflicts, :included_features]
+            @api_accessors ||= [:name, :params]
           end
 
           def accessor_options
-            @accessor_options ||= {:name=>String}
+            @accessor_options ||= {}
           end
         end
 
-        class AddFeature < Command
+        class AddSubsys < Command
           include EntityOps
-          include FeatureOps
+          include SubsysOps
           
           def self.opname
-            "add-feature"
+            "add-subsystem"
           end
 
           def self.description
-            "Adds a feature to the store."
+            "Adds a subsystem to the store."
           end
 
           def storeop
-            :addFeature
+            :addSubsys
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
+        end
+
+        # Note that there is no modify-subsystem class
+        
+        class RemoveSubsys < Command
+          include EntityOps
+          include SubsysOps
+          
+          def self.opname
+            "remove-subsystem"
+          end
+          
+          def self.description
+            "Deletes a subsystem from the store."
+          end
+          
+          def storeop
+            :removeSubsys
           end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
         
-        class ModifyFeature < Command
+        class ShowSubsys < Command
           include EntityOps
-          include FeatureOps
+          include SubsysOps
           
           def self.opname
-            "modify-feature"
+            "show-subsystem"
           end
-
+          
           def self.description
-            "Alters metadata for a feature in the store."
+            "Displays the properties of a subsystem."
           end
-
+          
           def storeop
-            :getFeature
-          end
-
-          register_callback :after_option_parsing, :post_arg_callback
-        end
-        
-        class RemoveFeature < Command
-          include EntityOps
-          include FeatureOps
-          
-          def self.opname
-            "remove-feature"
-          end
-          
-          def self.description
-            "Deletes a feature from the store."
+            :getSubsys
           end
           
           def supports_options
             false
           end
-          
-          def storeop
-            :removeFeature
-          end
 
-          register_callback :after_option_parsing, :post_arg_callback
-        end
-        
-        class ShowFeature < Command
-          include EntityOps
-          include FeatureOps
-          
-          def self.opname
-            "show-feature"
-          end
-          
-          def self.description
-            "Displays the properties of a feature."
-          end
-          
-          def supports_options
-            false
-          end
-          
-          def storeop
-            :getFeature
-          end
-          
-          def show_banner
-            false
-          end
-
-          def entity_callback(param)
-            puts "#{param.name}"
+          def entity_callback(subsys)
+            puts "#{subsys.name}"
             api_accessors.each do |k|
-              puts "  #{k}:  #{param.send(k).inspect}"
+              puts "  #{k}:  #{subsys.send(k).inspect}"
             end
           end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
 
-        class ListFeatures < Command
+        class ListSubsys < Command
           def self.opname
-            "list-features"
+            "list-subsystems"
           end
-          
+
+          def self.opargs
+            ""
+          end
+
           def self.description
-            "Lists all the feature names in the store."
+            "Lists all the subsystem names in the store."
           end
-          
+
           def supports_options
             false
           end
 
           def act
-            store.console.objects(:class=>"Feature").each do |feature|
-              puts "#{feature.name}"
+            store.console.objects(:class=>"Subsystem").each do |subsys|
+              puts "#{subsys.name}"
             end
             0
           end
