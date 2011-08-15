@@ -398,9 +398,11 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
+          @entities = [:nodes, :groups, :params, :features, :subsystems]
+          @translator = {:nodes=>{:short=>:Node, :long=>:Node}, :groups=>{:short=>:Group, :long=>:Group}, :params=>{:short=>:Param, :long=>:Parameter}, :features=>{:short=>:Feature, :long=>:Feature}, :subsystems=>{:short=>:Subsys, :long=>:Subsystem}}
         end
 
-        def init_from_yaml(ymltxt)
+        def load_yaml(ymltxt)
           begin
             yrepr = YAML::parse(ymltxt).transform
   
@@ -443,6 +445,45 @@ module Mrg
           log.info "Reverting database to state before patching attempt"
           @store.loadSnapshot(@snapshot)
         end
+
+        def affected_entities
+          changes = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = [] } }
+          @entities.each do |type|
+            @updates.send(type).keys.each do |name|
+              if @expected.send(type).has_key?(name)
+                changes["modify"][@translator[type][:short]].push(name)
+              else
+                changes["add"][@translator[type][:short]].push(name)
+              end
+            end
+          end
+
+          @entities.each do |type|
+            @expected.send(type).keys.each do |name|
+              if not @updates.send(type).has_key?(name)
+                changes["delete"][@translator[type][:short]].push(name)
+              end
+            end
+          end
+          changes
+        end
+
+        def entity_details(type, name)
+          accessors = {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}
+          swap = {:Node=>:nodes, :Group=>:groups, :Feature=>:features, :Parameter=>:params, :Subsystem=>:subsystems}
+          details = {"expected"=>{}, "updates"=>{}}
+          t = swap[type]
+          if @updates.send(t).has_key?(name)
+            @updates.send(t)[name].keys.each do |set|
+              details["updates"][accessors[set]] = @updates.send(t)[name][set]
+            end
+          end
+
+          if @expected.send(t).has_key?(name)
+            details["expected"] = @expected.send(t)[name]
+          end
+          details
+        end
  
         private
         def snap_db
@@ -473,31 +514,29 @@ module Mrg
         end
 
         def update_entities
-          translate = {:nodes=>{:short=>:Node, :long=>:Node}, :groups=>{:short=>:Group, :long=>:Group}, :params=>{:short=>:Param, :long=>:Parameter}, :features=>{:short=>:Feature, :long=>:Feature}, :subsystems=>{:short=>:Subsys, :long=>:Subsystem}}
-          entities = [:nodes, :groups, :params, :features, :subsystems]
-          entities.each do |type|
+          @entities.each do |type|
             @updates.send(type).keys.each do |name|
               added = false
-              if @store.send("check#{translate[type][:long]}Validity", [name]) != []
-                log.info "Adding #{translate[type][:long]} '#{name}'"
+              if @store.send("check#{@translator[type][:long]}Validity", [name]) != []
+                log.info "Adding #{@translator[type][:long]} '#{name}'"
                 if type == :Group
                   obj = @store.send("addExplicitGroup", name)
                 else
-                  obj = @store.send("add#{translate[type][:short]}", name)
+                  obj = @store.send("add#{@translator[type][:short]}", name)
                 end
                 added = true
               else
-                log.info "Retrieving #{translate[type][:long]} '#{name}'"
-                obj = @store.send("get#{translate[type][:short]}", name)
+                log.info "Retrieving #{@translator[type][:long]} '#{name}'"
+                obj = @store.send("get#{@translator[type][:short]}", name)
               end
 
               if obj == nil
-                raise RuntimeError.new("Failed to retrieve #{translate[type][:long]} '#{name}'")
+                raise RuntimeError.new("Failed to retrieve #{@translator[type][:long]} '#{name}'")
               end
 
               if added == false and not @force
                 @expected.send(type)[name].keys.each do |get|
-                  log.info "Verifying #{translate[type][:long]} '#{name}##{get}'"
+                  log.info "Verifying #{@translator[type][:long]} '#{name}##{get}'"
                   current_val = obj.send(get)
                   if name == "BaseDBVersion"
                     current_val["BaseDBVersion"].delete!("v")
@@ -507,6 +546,9 @@ module Mrg
                     default_params.each {|dp_key| current_val[dp_key] = 0}
                   end
                   expected_val = @expected.send(type)[name][get]
+                  if name == "BaseDBVersion"
+                    expected_val["BaseDBVersion"].delete!("v")
+                  end
                   begin
                     current_adj = current_val.sort
                     expected_adj = expected_val.sort
@@ -515,12 +557,12 @@ module Mrg
                     expected_adj = expected_val
                   end
                   if current_adj != expected_adj
-                    raise RuntimeError.new("#{translate[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
+                    raise RuntimeError.new("#{@translator[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
                   end
                 end
               end
 
-              log.info "Updating #{translate[type][:long]} '#{name}'"
+              log.info "Updating #{@translator[type][:long]} '#{name}'"
               commands = @updates.send(type)[name].keys
               if commands.include?("setMustChange")
                 commands.delete("setMustChange")
@@ -539,11 +581,11 @@ module Mrg
             end
           end
 
-          entities.each do |type|
+          @entities.each do |type|
             @expected.send(type).keys.each do |name|
-              if not @updates.send(type).has_key?(name)
-                log.info "Removing #{translate[type][:long]} '#{name}'"
-                @store.send("remove#{translate[type][:short]}", [name])
+              if not @updates.send(type).has_key?(name) and not name =~ /^\+\+\+/
+                log.info "Removing #{@translator[type][:long]} '#{name}'"
+                @store.send("remove#{@translator[type][:short]}", [name])
               end
             end
           end

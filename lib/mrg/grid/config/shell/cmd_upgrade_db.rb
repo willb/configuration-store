@@ -29,6 +29,10 @@ module Mrg
             "Upgrade the wallaby database."
           end
         
+          def supports_options
+            true
+          end
+
           def init_option_parser
             # Edit this method to generate a method that parses your command-line options.
             @force = false
@@ -44,7 +48,7 @@ module Mrg
                 @force = true
               end
 
-              opts.on("-d", "--directory", "directory containing patch files") do |dir|
+              opts.on("-d", "--directory VALUE", "directory containing patch files") do |dir|
                 @patch_dir = dir
               end
             end
@@ -78,7 +82,7 @@ module Mrg
             files.each do |file|
               if not File.directory?(file)
                 fhdl = open("#{@patch_dir}/#{file}")
-                patcher.init_from_yaml(fhdl.read)
+                patcher.load_yaml(fhdl.read)
                 begin
                   patcher.load
                 rescue Exception=>ex

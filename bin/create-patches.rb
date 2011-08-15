@@ -88,7 +88,7 @@ class Database
   end
 
   def diff_nodes(old_nodes)
-    @patch.updates.nodes, @patch.expected.nodes = make_patch_entity(@nodes, old_nodes, [[:memberships, :memberships, :modifyMemberships]])
+    @patch.updates.nodes, @patch.expected.nodes = make_patch_entity(@nodes, old_nodes, [[:membership, :memberships, :modifyMemberships]])
   end
 
   def diff_groups(old_groups)
@@ -172,4 +172,13 @@ db_tags.each do |t|
     end
     count += 1
   end
+end
+
+f = open("../spec/db-patching-basedb.yaml", 'r') {|c| c.read}
+old = Database.new(f, "1.0")
+f = open("../spec/update.yaml", 'r') {|c| c.read}
+new = Database.new(f, "1.7")
+patch = new.generate_patch(old)
+File.open("upgrade-patch.yaml", "w") do |of|
+  of.write(patch.to_yaml)
 end
