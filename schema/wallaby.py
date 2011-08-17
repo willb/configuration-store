@@ -14,10 +14,11 @@
 # limitations under the License.
 
 
-class ClientObject:
+class ClientObject(object):
    def __init__(self, obj, console):
       self.console = console
       self.obj = obj
+      self.__lazy_properties = {}
       self.__update_properties()
    
    def get_object(self, obj_id, klass=None):
@@ -28,9 +29,12 @@ class ClientObject:
          return klass(obj, self.console)
    
    def __getattr__(self, name):
-      if name.startswith("__"):
-         return self.__dict__[name]
-      return self.obj.__getattr__(name)
+       if name.startswith("__"):
+           return self.__dict__[name]
+       elif name in self.__lazy_properties:
+           return self.__lazy_properties[name]()
+       else:
+           return self.obj.__getattr__(name)
    
    def __repr__(self):
       name = ""
@@ -44,9 +48,21 @@ class ClientObject:
    
    def __update_properties(self):
       for n,v in self.obj.getProperties():
+         attr_name = n.name
          if n.type in [10,20]:
-            v = objectify(self.console, v)
-         setattr(self, n.name, v)
+            if attr_name in self.__dict__:
+               delattr(self, attr_name)
+            self.__lazy_properties[attr_name] = self.__make_updater(attr_name, v)
+         else:
+            setattr(self, attr_name, v)
+   
+   def __make_updater(self, attr_name, v):
+      def do_update():
+         o = objectify(self.console, v)
+         setattr(self, attr_name, o)
+         del self.__lazy_properties[attr_name]
+         return o
+      return do_update
    
 class ClientError(Exception):
    def __init__(self, code, text):
