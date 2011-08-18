@@ -64,7 +64,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          2
+          3
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
@@ -79,12 +79,14 @@ module Mrg
 
         ### Schema method declarations
         
-        def getDefaultGroup
-          return Group.DEFAULT_GROUP
-        end
+        ["default", "skeleton"].each do |special_group|
+          define_method "get#{special_group.capitalize}Group".to_sym do
+            return Group.send("#{special_group.upcase}_GROUP")
+          end
         
-        expose :getDefaultGroup do |args|
-          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the default group."
+          expose "get#{special_group.capitalize}Group".to_sym do |args|
+            args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the #{special_group} group."
+          end
         end
         
         # getGroup 

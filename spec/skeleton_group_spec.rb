@@ -33,6 +33,10 @@ module Mrg
           n = @store.addNode("fake")
           n.memberships.should_not include(Group::SKELETON_GROUP_NAME)
         end
+
+        it "should publish the skeleton group over the API" do
+          @store.getSkeletonGroup.name.should == Group::SKELETON_GROUP_NAME
+        end
       end
     end
   end
