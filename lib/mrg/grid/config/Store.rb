@@ -302,8 +302,12 @@ module Mrg
           seek_version = (seek_version && ConfigVersion.hasVersionedNodeConfig(name, seek_version)) || nil
 
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>seek_version || 0)
+
+          # add to the skeleton group
+          n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {})
+
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
-          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
+          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, name)
           n
         end
         
@@ -447,6 +451,7 @@ module Mrg
           end
           
           Group.DEFAULT_GROUP
+          Group.SKELETON_GROUP
           nil
         end
         
