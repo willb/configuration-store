@@ -35,6 +35,22 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1
+- Added BaseScheduler dependency to AviaryScheduler
+- Edited dependencies on Scheduler/HAScheduler
+- Removed all SEC_* params from all features except Master
+- Added FS, NTLM to SEC_DEFAULT_AUTHENTICATION_METHODS on Master
+- All SEC_* params now are neither must_change or needs_restart
+- New Param: UPDATE_INTERVAL
+
+* Fri Jun  3 2011 rrati <rrati@redhat> - 1.13-1
+- Updated VALID_SPOOL_FILES on PowerManagementCollector Feature
+- Updated ROOSTER_WAKEUP_CMD on PowerManagementSubnetManager
+
+* Wed Apr 13 2011 rrati <rrati@redhat> - 1.12-1
+- Updated WSFCPP_HOME location
+- Added deps of Master, JobQueueLocation to QueryServer feature
+
 * Tue Apr  5 2011 rrati <rrati@redhat> - 1.11-1
 - All plugin definitions in features now append
 

@@ -701,7 +701,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                Group.DEFAULT_GROUP.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                Group.DEFAULT_GROUP.modifyFeatures("ADD", features.map{|f| f.name}, {})
 
                 node.identity_group.modifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
@@ -729,7 +729,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", features.map{|f| f.name}, {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BAR"=>"BARGH", "BLAH"=>"BLARGH"}, {})
 
@@ -757,7 +757,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", features.map{|f| f.name}, {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
                 node.identity_group.modifyParams("ADD", {"BAR"=>"BARGH"}, {})
@@ -786,7 +786,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 features[1].modifyParams("ADD", {"BLAH"=>0}, {})
 
                 node = @store.send(node_find_msg, "blah.local.")
-                node.identity_group.modifyFeatures("ADD", Array[features.map{|f| f.name}], {})
+                node.identity_group.modifyFeatures("ADD", features.map{|f| f.name}, {})
 
                 Group.DEFAULT_GROUP.modifyParams("ADD", {"FOO"=>"ARGH", "BLAH"=>"BLARGH"}, {})
                 node.identity_group.modifyParams("ADD", {"BAR"=>"BARGH", "BLAH"=>"blargh"}, {})

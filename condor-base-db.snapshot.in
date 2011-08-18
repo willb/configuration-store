@@ -3,8 +3,8 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - BaseScheduler
   included: 
   - Axis2Home
   name: AviaryScheduler
@@ -20,7 +20,7 @@ features:
 
   name: Axis2Home
   params: 
-    WSFCPP_HOME: /usr
+    WSFCPP_HOME: /var/lib/condor/aviary/axis2.xml
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -404,11 +404,9 @@ features:
     JOB_ROUTER_DEBUG: ""
     JOB_ROUTER: $(LIBEXEC)/condor_job_router
     DAEMON_LIST: ">= JOB_ROUTER"
-    SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
     MAX_HISTORY_ROTATIONS: "20"
     JOB_ROUTER_LOG: $(LOG)/JobRouterLog
     JOB_ROUTER_ADDRESS_FILE: $(LOG)/.job_router_address
-    JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS: FS
     JOB_ROUTER_POLLING_PERIOD: "10"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
@@ -487,10 +485,9 @@ features:
     MASTER: $(SBIN)/condor_master
     DAEMON_LIST: ">= MASTER"
     SEC_DEFAULT_CRYPTO_METHODS: 3DES
-    SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), CLAIMTOBE
-    MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS
+    SEC_DEFAULT_AUTHENTICATION_METHODS: $(SEC_DEFAULT_AUTHENTICATION_METHODS), FS, NTLM, CLAIMTOBE
     CONDOR_DEVELOPERS: NONE
-    ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR)
+    ALLOW_ADMINISTRATOR: $(ALLOW_ADMINISTRATOR), $(CONDOR_HOST)
     SEC_DEFAULT_AUTHENTICATION: OPTIONAL
     MASTER_ADDRESS_FILE: $(LOG)/.master_address
     CONDOR_HOST: 0
@@ -542,7 +539,7 @@ features:
   params: 
     OFFLINE_LOG: $(SPOOL)/OfflineLog
     OFFLINE_EXPIRE_ADS_AFTER: "28800"
-    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), $(OFFLINE_LOG)
+    VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), OfflineLog
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
   - Collector
@@ -575,7 +572,7 @@ features:
     ROOSTER_UNHIBERNATE: Offline && Unhibernate
     ROOSTER_SUBNET_MASK: 0
     ROOSTER_INTERVAL: "300"
-    ROOSTER_WAKEUP_CMD: "\"$(BIN)/condor_power -d -i $(ROOSTER_SUBNET_MASK)\""
+    ROOSTER_WAKEUP_CMD: "\"$(BIN)/condor_power -d -i -s $(ROOSTER_SUBNET_MASK)\""
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -591,8 +588,9 @@ features:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
-  depends: []
-
+  depends: 
+  - Master
+  - JobQueueLocation
   included: 
   - Axis2Home
   name: QueryServer
@@ -1457,15 +1455,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Job Router
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: JOB_ROUTER.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -1877,15 +1875,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Master
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: MASTER.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2813,15 +2811,15 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
+  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
   depends: []
 
   description: The default authentication methods used by the Scheduler
   kind: String
   level: 0
-  must_change: true
+  must_change: false
   name: SCHEDD.SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2929,7 +2927,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_AUTHENTICATION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2941,7 +2939,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_AUTHENTICATION_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2953,7 +2951,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_CRYPTO_METHODS
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2965,7 +2963,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_ENCRYPTION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2977,7 +2975,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_INTEGRITY
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2989,7 +2987,7 @@ params:
   level: 1
   must_change: false
   name: SEC_DEFAULT_NEGOTIATION
-  needs_restart: true
+  needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -3593,6 +3591,18 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "300"
+  depends: []
+
+  description: The number of seconds specifying how often the condor_startd should send a ClassAd update to the condor_collector
+  kind: Integer
+  level: 0
+  must_change: false
+  name: UPDATE_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "False"
   depends: []
 
@@ -3761,7 +3771,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: /usr
+  default_val: /var/lib/condor/aviary/axis2.xml
   depends: []
 
   description: The root of the axis2 deployment

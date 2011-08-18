@@ -24,11 +24,6 @@ module Mrg
           SORTKEYS = %w{name checkin}
           NODEKINDS = %w{provisioned unprovisioned}
           
-          def timestamp(tm=nil)
-            tm ||= Time.now.utc
-            (tm.tv_sec * 1000000) + tm.tv_usec
-          end
-          
           def format_time(t)
             return "never" if t == 0
             Time.at(t/1000000,t%1000000).to_s
@@ -64,6 +59,18 @@ module Mrg
               opts.on("-o", "--only KIND", NODEKINDS, "show only KIND nodes", "   (#{NODEKINDS.join(", ")})") do |nkind|
                 @constraint = "provisioned == #{nkind == 'provisioned'}"
               end
+
+              opts.on("-l", "--long", "don't truncate long node names") do
+                @long = true
+              end
+
+              opts.on("-J", "--json", "output node list as a JSON object") do
+                @json = true
+              end
+
+              opts.on("-p", "--plain", "omit column headings") do
+                @plain = true
+              end
               
               opts.on("-c", "--constraint EXPR", "show only nodes for which EXPR is true") do |expr|
                 @constraint = expr
@@ -76,7 +83,8 @@ module Mrg
 
             ::Fixnum.class_eval do
               def hour_ago
-                timestamp(Time.now.utc - (60 * 60 * self))
+                tm = Time.now.utc - (60 * 60 * self)
+                (tm.tv_sec * 1000000) + tm.tv_usec
               end
               
               alias :hours_ago :hour_ago
@@ -92,21 +100,21 @@ module Mrg
               n.name = node.name
               n.provisioned = node.provisioned
               n.checkin = node.last_checkin
+              n.formatted_checkin = format_time(node.last_checkin)
               n
             end
-
-            if node_structs.size == 0
-              puts "No matching nodes configured."
-              return 1
+            
+            if @json
+              class << self
+                include JsonNodePrinter
+              end              
+            else
+              class << self
+                include TabularNodePrinter
+              end
             end
 
-            printf("%25.25s %15.15s %40.40s\n", "node name", "is provisioned?", "last checkin")
-            printf("%25.25s %15.15s %40.40s\n", "---------", "---------------", "------------")
-
-            node_structs.sort_by {|node| node.send(@sortby)}.each do |node|
-              printf("%25.25s %15.15s %40.40s\n", node.name, node.provisioned ? "provisioned" : "unprovisioned", format_time(node.checkin))
-            end
-            return 0
+            return dump_nodes(node_structs)
           end
           
           private
@@ -119,6 +127,44 @@ module Mrg
           
         end
       end
+      
+      module TabularNodePrinter
+        def dump_nodes(node_structs)
+          if node_structs.size == 0
+            puts "No matching nodes configured."
+            return 1
+          end
+          
+          namelength,checkinlength = @long ? node_structs.inject(["node name".size, "last checkin".size]) {|acc, node| [[node.name.size, acc[0]].max, [node.formatted_checkin.size, acc[1]].max]} : [42, 28]
+          
+          format_str = "%1.1s %#{namelength}.#{namelength}s %#{checkinlength}.#{checkinlength}s\n"
+          
+          unless @plain
+            printf(format_str, "P", "Node name", "Last checkin")
+            printf(format_str, "-", "---------", "------------")
+          end
+          
+          node_structs.sort_by {|node| node.send(@sortby)}.each do |node|
+            printf(format_str, node.provisioned ? "+" : "-", node.name, node.formatted_checkin)
+          end
+          return 0
+        end
+      end
+
+      module JsonNodePrinter
+        def dump_nodes(node_structs)
+          result = {"nodes"=>node_structs.map {|ns| hashify_one_node(ns)}}
+          puts result.inspect.gsub('"=>', '" : ')
+          return 0
+        end
+        
+        def hashify_one_node(ns)
+          result = {}
+          %w{name provisioned checkin}.each {|msg| result[msg] = ns.send(msg)}
+          result
+        end
+      end
     end
   end
 end
+

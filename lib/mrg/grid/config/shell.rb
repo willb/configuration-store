@@ -136,11 +136,11 @@ module Mrg
             @op.parse!(args.for_wt)
           rescue OptionParser::InvalidOption
             puts @op
-            exit
+            exit(1)
           rescue OptionParser::InvalidArgument => ia
             puts ia
             puts @op
-            exit
+            exit(1)
           end
 
           unless args.cmd
