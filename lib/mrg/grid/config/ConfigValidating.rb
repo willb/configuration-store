@@ -439,7 +439,7 @@ module Mrg
 
           if ConfigVersion::STORAGE_PLAN == :lw_serialized && klass.to_s =~ /Node$/
             # save versioned configs for each group, if these do not already exist
-            all_memberships = ["+++DEFAULT"] + instance.memberships + [instance.idgroup.name]
+            all_memberships = ["+++DEFAULT"] + instance.memberships.reverse + [instance.idgroup.name]
 
             all_memberships.each do |g|
               cache.saved_groups[g][cv.version]

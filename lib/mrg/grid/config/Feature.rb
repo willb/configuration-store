@@ -275,14 +275,14 @@ module Mrg
           args.declare :explanation, :map, :out, "A structure representing where the parameters set on this feature get their values."
         end
         
-        def apply_to(dict)
+        def apply_to(dict, ssp=false)
           included_features.reverse_each do |ifname|
             included_feature = self.class.find_first_by_name(ifname)
-            dict = included_feature.apply_to(dict)
+            dict = included_feature.apply_to(dict, ssp)
           end
           
           self.params.each do |k,v|
-            ValueUtil.apply!(dict, k, v)
+            ValueUtil.apply!(dict, k, v, ssp)
           end
           dict
         end
