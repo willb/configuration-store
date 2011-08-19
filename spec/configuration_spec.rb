@@ -198,7 +198,7 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 1
           
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
           
           version = config_versions[old_size].version
@@ -227,26 +227,26 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 2
           
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
           
-          config = config_versions[old_size + 1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."].to_hash
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
           
           version = config_versions[old_size].version
           version_prime = config_versions[old_size + 1].version - 1
           
-          config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version)
+          config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version).to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version_prime)
+          config = ConfigVersion.getVersionedNodeConfig("nodely.local.", version_prime).to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = ConfigVersion.getVersionedNodeConfig("nodely.local.")
+          config = ConfigVersion.getVersionedNodeConfig("nodely.local.").to_hash
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
         end
@@ -268,11 +268,11 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 2
           
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
           
-          config = config_versions[old_size + 1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."].to_hash
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
           
@@ -306,7 +306,7 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 1
 
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
 
           version = config_versions[old_size].version
@@ -334,11 +334,11 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 2
 
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = config_versions[old_size + 1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."].to_hash
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
 
@@ -374,11 +374,11 @@ module Mrg
           config_versions = ConfigVersion.find_all
           config_versions.size.should == old_size + 2
 
-          config = config_versions[old_size]["nodely.local."]
+          config = config_versions[old_size]["nodely.local."].to_hash
           config["BIOTECH"].should == "true"
           config["PONY_COUNTER"].should == nil
 
-          config = config_versions[old_size + 1]["nodely.local."]
+          config = config_versions[old_size + 1]["nodely.local."].to_hash
           config["BIOTECH"].should == "false"
           config["PONY_COUNTER"].should == "37"
 

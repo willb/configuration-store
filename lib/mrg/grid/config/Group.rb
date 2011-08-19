@@ -278,7 +278,7 @@ module Mrg
         def apply_to(config, ss_prepend=false)
           feature_objs.reverse_each do |feature|
             log.debug("applying config for #{feature.name}")
-            config = feature.apply_to(config)
+            config = feature.apply_to(config, ss_prepend)
             log.debug("config is #{config.inspect}")
           end
           

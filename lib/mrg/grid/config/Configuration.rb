@@ -22,6 +22,30 @@ require 'set'
 module Mrg
   module Grid
     module Config
+      class LightweightConfig
+        attr_accessor :groups, :version
+        
+        def init
+          self.groups = []
+        end
+        
+        def to_hash
+          result = self.groups.inject({}) do |config, group|
+            gname = VersionedNode.name_for_group(group)
+            gconfig = ConfigVersion.getVersionedNodeConfig(gname, version)
+            
+            gconfig.each do |param, value|
+              ValueUtil::apply!(config, param, value)
+            end
+            
+            config
+          end
+          
+          result["WALLABY_CONFIG_VERSION"] = version.to_s
+          result
+        end
+      end
+      
       module ValueUtil
         # some config values can start with something like '>=',
         # indicating that a value is to be appended to the preexisting
@@ -227,47 +251,10 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = :serialized
+        STORAGE_PLAN = ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS'] ? :serialized : :lw_serialized
 
         def self.whatchanged(node, old_version, new_version)
           ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
-        end
-
-        module NormalizedVersionedConfigLookup
-          module ClassMethods
-            def getVersionedNodeConfig(node, ver=nil)
-              version_row = VersionedNodeParamMapping.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              cv = (version_row[0].version rescue nil)
-              VersionedNodeParamMapping.find_by(:node=>VersionedNode[node], :version=>cv).inject({"WALLABY_CONFIG_VERSION"=>0}) do |acc, row|
-                acc[row.param.name] = row.val
-                acc
-              end
-            end
-          end
-
-          module InstanceMethods          
-            def internal_get_node_config(node)
-              node_obj = VersionedNode[node]
-              VersionedNodeParamMapping.find_by(:version=>self, :node=>node_obj).inject({}) do |acc, row|
-                acc[row.param.name] = row.val
-                acc
-              end
-            end
-
-            def internal_set_node_config(node, config)
-              node_obj = VersionedNode[node]
-              config.each do |param,value|
-                param_obj = VersionedParam[param]
-                vnpm = VersionedNodeParamMapping.create(:version=>self, :node=>node_obj, :param=>param_obj, :val=>value)
-          #              vnpm.send(:update, :created, self.version)
-              end
-            end
-          end
-
-          def self.included(receiver)
-            receiver.extend         ClassMethods
-            receiver.send :include, InstanceMethods
-          end
         end
 
         module SerializedVersionedConfigLookup
@@ -283,6 +270,52 @@ module Mrg
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
               vnc && vnc.version.version
             end
+            
+            # NB: this will refuse to copy over an existing versioned config
+            def dupVersionedNodeConfig(from, to, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
+              return 0 unless vnc
+              toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
+              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
+              toc.version.version
+            end
+          end
+
+          module InstanceMethods
+           def internal_get_node_config(node)
+             node_obj = VersionedNode[node]
+             cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
+             (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
+           end
+          
+           def internal_set_node_config(node, config)
+             node_obj = VersionedNode[node]
+             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+             # vnc.send(:update, :created, self.version)
+           end
+          end
+
+          def self.included(receiver)
+            receiver.extend         ClassMethods
+            receiver.send :include, InstanceMethods
+          end
+        end
+
+        module LWSerializedVersionedConfigLookup
+          module ClassMethods
+            def getVersionedNodeConfig(node, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
+              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config.to_hash
+            end
+
+            def hasVersionedNodeConfig(node, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
+              vnc && vnc.version.version
+            end
+
             
             # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
@@ -349,8 +382,8 @@ module Mrg
         private
         
         case STORAGE_PLAN
-        when :normalized then include NormalizedVersionedConfigLookup
         when :serialized then include SerializedVersionedConfigLookup
+        when :lw_serialized then include LWSerializedVersionedConfigLookup
         end
       end
       
@@ -361,6 +394,22 @@ module Mrg
         
         DEFAULT_NODE = "+++DEFAULT"
         
+        def self.name_for_group(gn)
+          gn == DEFAULT_NODE ? gn : "+++#{gn}"
+        end
+
+        def is_group?
+          name.slice(0,3) == "+++"
+        end
+
+        def realname
+          if is_group? && name != DEFAULT_NODE
+            name.slice(3,name.size)
+          else
+            name
+          end
+        end
+
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end

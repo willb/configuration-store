@@ -46,7 +46,7 @@ module Mrg
                   hlw.modifyFeatures("REPLACE", fset, {})
                   @store.activateConfiguration
                 end
-              end.should_not raise_error
+              end.should_not raise_error(Timeout::Error)
             end            
           end
         end
