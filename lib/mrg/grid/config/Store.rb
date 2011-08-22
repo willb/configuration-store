@@ -72,7 +72,7 @@ module Mrg
           [Socket.gethostname, Process.pid]
         end
         
-        qmf_property :wallaby_version, :string, :desc=>"A string representation of the version of this wallaby agent.  (Introduced in API version 20101031.1)"
+        qmf_property :wallaby_version, :sstr, :desc=>"A string representation of the version of this wallaby agent.  (Introduced in API version 20101031.1)"
         def wallaby_version
           ::Mrg::Grid::Config::Version.as_string
         end

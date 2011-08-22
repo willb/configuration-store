@@ -24,7 +24,7 @@ module Mrg
       # *conflicts with* param/feature Y)
       class ArcLabel
         include ::Rhubarb::Persisting
-        declare_column :label, :string
+        declare_column :label, :text
 
         # Returns an ArcLabel that represents a conflict with a kind of
         # thing (e.g. ArcLabel.conflicts(:param) or ArcLabel.conflicts(:feature))

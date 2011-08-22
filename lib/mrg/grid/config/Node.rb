@@ -50,10 +50,10 @@ module Mrg
         ### Property method declarations
         # property name sstr 
 
-        declare_column :name, :string, :not_null
+        declare_column :name, :text, :not_null
         declare_index_on :name
 
-        declare_column :pool, :string
+        declare_column :pool, :text
 
         declare_column :idgroup, :integer, references(Group)
         

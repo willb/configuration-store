@@ -390,7 +390,7 @@ module Mrg
       class VersionedNode
         include ::Rhubarb::Persisting
         
-        declare_column :name, :string
+        declare_column :name, :text
         
         DEFAULT_NODE = "+++DEFAULT"
         
@@ -418,7 +418,7 @@ module Mrg
       class VersionedParam
         include ::Rhubarb::Persisting
         
-        declare_column :name, :string
+        declare_column :name, :text
         
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
@@ -432,7 +432,7 @@ module Mrg
         declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
         declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
         declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
-        declare_column :val, :string
+        declare_column :val, :text
 
         declare_index_on :node
         declare_index_on :version
