@@ -4,7 +4,7 @@ expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store
   features: 
     BaseDBVersion: 
       params: 
-        BaseDBVersion: v1.6
+        BaseDBVersion: v1.0
     ModiFeature: 
       conflicts: 
       - ConflictFeature

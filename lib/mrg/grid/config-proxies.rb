@@ -409,7 +409,6 @@ module Mrg
             raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Patch)
   
             @snapshot = nil
-            @db_obj = nil
             @db_version = yrepr.db_version
 
             @expected = yrepr.expected
@@ -433,6 +432,10 @@ module Mrg
           self.class.log
         end
 
+        def db_version
+          @db_version
+        end
+
         def load
           if valid_db_version 
             log.info "Updating database to version #{@db_version}"
@@ -451,9 +454,9 @@ module Mrg
           @entities.each do |type|
             @updates.send(type).keys.each do |name|
               if @expected.send(type).has_key?(name)
-                changes["modify"][@translator[type][:short]].push(name)
+                changes[:modify][@translator[type][:long]].push(name)
               else
-                changes["add"][@translator[type][:short]].push(name)
+                changes[:add][@translator[type][:long]].push(name)
               end
             end
           end
@@ -461,7 +464,7 @@ module Mrg
           @entities.each do |type|
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name)
-                changes["delete"][@translator[type][:short]].push(name)
+                changes[:delete][@translator[type][:long]].push(name)
               end
             end
           end
@@ -471,16 +474,24 @@ module Mrg
         def entity_details(type, name)
           accessors = {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}
           swap = {:Node=>:nodes, :Group=>:groups, :Feature=>:features, :Parameter=>:params, :Subsystem=>:subsystems}
-          details = {"expected"=>{}, "updates"=>{}}
+          details = {:expected=>{}, :updates=>{}}
           t = swap[type]
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
-              details["updates"][accessors[set]] = @updates.send(t)[name][set]
+              if set.to_s =~ /^modify/
+                if type == :Group and set.intern == :modifyMemberships
+                  details[:updates][:membership] = @updates.send(t)[name][set][1]
+                else
+                  details[:updates][accessors[set.intern]] = @updates.send(t)[name][set][1]
+                end
+              else
+                details[:updates][accessors[set.intern]] = @updates.send(t)[name][set]
+              end
             end
           end
 
           if @expected.send(t).has_key?(name)
-            details["expected"] = @expected.send(t)[name]
+            details[:expected] = @expected.send(t)[name]
           end
           details
         end
@@ -495,17 +506,26 @@ module Mrg
           end
         end
 
-        def valid_db_version
-          @db_obj = @store.getFeature("BaseDBVersion")
-          if @db_obj != nil
-            db_ver = (@db_obj.params["BaseDBVersion"].to_s rescue "1.4")
-            temp = db_ver.split('.')
-            db_major = temp[0].delete("v").to_i
-            db_minor = temp[1].to_i
-          else
-            db_major = 1
-            db_minor = 4
+        def get_db_ver_from_store
+          default_ver = "1.4"
+          db_ver = default_ver
+          db_obj = @store.getFeature("BaseDBVersion")
+          if db_obj != nil
+            puts db_obj.params.inspect
+            ver = (db_obj.params["BaseDBVersion"].to_s rescue default_ver)
+            if ver != ""
+              db_ver = ver
+            end
           end
+          db_ver
+        end
+
+        def valid_db_version
+          ver = get_db_ver_from_store
+          temp = ver.split('.')
+          puts temp.inspect
+          db_major = temp[0].delete("v").to_i
+          db_minor = temp[1].to_i
           temp = @db_version.to_s.split('.')
           patch_major = temp[0].to_i
           patch_minor = temp[1].to_i
@@ -519,47 +539,22 @@ module Mrg
               added = false
               if @store.send("check#{@translator[type][:long]}Validity", [name]) != []
                 log.info "Adding #{@translator[type][:long]} '#{name}'"
-                if type == :Group
+                if type == :groups
                   obj = @store.send("addExplicitGroup", name)
                 else
                   obj = @store.send("add#{@translator[type][:short]}", name)
                 end
                 added = true
               else
-                log.info "Retrieving #{@translator[type][:long]} '#{name}'"
-                obj = @store.send("get#{@translator[type][:short]}", name)
+                obj = get_entity(type, name)
               end
 
               if obj == nil
                 raise RuntimeError.new("Failed to retrieve #{@translator[type][:long]} '#{name}'")
               end
 
-              if added == false and not @force
-                @expected.send(type)[name].keys.each do |get|
-                  log.info "Verifying #{@translator[type][:long]} '#{name}##{get}'"
-                  current_val = obj.send(get)
-                  if name == "BaseDBVersion"
-                    current_val["BaseDBVersion"].delete!("v")
-                  end
-                  if type == :features
-                    default_params = obj.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
-                    default_params.each {|dp_key| current_val[dp_key] = 0}
-                  end
-                  expected_val = @expected.send(type)[name][get]
-                  if name == "BaseDBVersion"
-                    expected_val["BaseDBVersion"].delete!("v")
-                  end
-                  begin
-                    current_adj = current_val.sort
-                    expected_adj = expected_val.sort
-                  rescue
-                    current_adj = current_val
-                    expected_adj = expected_val
-                  end
-                  if current_adj != expected_adj
-                    raise RuntimeError.new("#{@translator[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
-                  end
-                end
+              if (added == false and @expected.send(type).has_key?(name)) and not @force
+                verify_entity(obj, type, name)
               end
 
               log.info "Updating #{@translator[type][:long]} '#{name}'"
@@ -584,6 +579,7 @@ module Mrg
           @entities.each do |type|
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name) and not name =~ /^\+\+\+/
+                verify_entity(get_entity(type, name), type, name)
                 log.info "Removing #{@translator[type][:long]} '#{name}'"
                 @store.send("remove#{@translator[type][:short]}", [name])
               end
@@ -591,6 +587,44 @@ module Mrg
           end
 
           create_relationships
+        end
+
+        def verify_entity(obj, type, name)
+          @expected.send(type)[name].keys.each do |get|
+            log.info "Verifying #{@translator[type][:long]} '#{name}##{get}'"
+            current_val = obj.send(get)
+            if name == "BaseDBVersion" and current_val.has_key?("BaseDBVersion")
+              current_val["BaseDBVersion"].delete!("v")
+            end
+            if type == :features
+              default_params = obj.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
+              default_params.each {|dp_key| current_val[dp_key] = 0}
+            end
+            expected_val = @expected.send(type)[name][get]
+            if name == "BaseDBVersion" and expected_val.has_key?("BaseDBVersion")
+              expected_val["BaseDBVersion"].delete!("v")
+            end
+            begin
+              current_adj = current_val.sort
+              expected_adj = expected_val.sort
+            rescue
+              current_adj = current_val
+              expected_adj = expected_val
+            end
+            if current_adj != expected_adj
+              raise RuntimeError.new("#{@translator[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
+            end
+          end
+        end
+
+        def get_entity(type, name)
+          log.info "Retrieving #{@translator[type][:long]} '#{name}'"
+          if type == :groups
+            obj = @store.send("getGroupByName", name)
+          else
+            obj = @store.send("get#{@translator[type][:short]}", name)
+          end
+          obj
         end
       end
       

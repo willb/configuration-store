@@ -88,10 +88,13 @@ module Mrg
                 rescue Exception=>ex
                   patcher.revert_db
                   exit!(1, "Database upgrade failed. #{ex.message}")
+                ensure
+                  fhdl.close
                 end
               end
             end
             puts "Database upgrade completed successfully"
+            return 0
           end
         end
       end

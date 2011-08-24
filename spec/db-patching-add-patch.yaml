@@ -2,48 +2,17 @@
 db_version: "1.6"
 expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
   features: 
-    DelFeature: 
-      conflicts: []
-
-      included_features: []
-
-      params: {}
-
-      depends: []
-
     BaseDBVersion: 
       params: 
-        BaseDBVersion: v1.5
-  groups: 
-    DelGroup: 
-      features: []
+        BaseDBVersion: v1.0
 
-      params: {}
+  groups: {}
 
-    +++576335d8883cbe8850723a1c17e359f8: 
-      features: []
+  nodes: {}
 
-      params: {}
+  params: {}
 
-  nodes: 
-    del_node: 
-      memberships: []
-
-  params: 
-    DEL_PARAM: 
-      kind: string
-      conflicts: []
-
-      default: ""
-      visibility_level: 0
-      requires_restart: false
-      description: ""
-      depends: []
-
-      must_change: false
-  subsystems: 
-    DelSubsys: 
-      params: []
+  subsystems: {}
 
 updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
   features: 
@@ -91,13 +60,12 @@ updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store
     AddGroup: 
       modifyParams: 
       - REPLACE
-      - {}
-
+      - DEP_PARAM: value
       - {}
 
       modifyFeatures: 
       - REPLACE
-      - []
+      - - AddFeature
 
       - {}
 
