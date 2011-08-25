@@ -128,6 +128,22 @@ module Mrg
         def dictify(ls)
           Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
         end
+
+        def setter_from_getter(method)
+          {:memberships=>:modifyMemberships, :features=>:modifyFeatures, :params=>:modifyParams, :kind=>:setKind, :default=>:setDefault, :description=>:setDescription, :must_change=>:setMustChange, :visibility_level=>:setVisibilityLevel, :requires_restart=>:setRequiresRestart, :depends=>:modifyDepends, :conflicts=>:modifyConflicts, :included_features=>:modifyIncludedFeatures}[method]
+        end
+
+        def getter_from_setter(method)
+          {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}[method]
+        end
+
+        def store_class_attr_to_obj_type(type)
+          {:nodes=>:Node, :groups=>:Group, :params=>:Parameter, :features=>:Feature, :subsystems=>:Subsystem}[type]
+        end
+
+        def long_to_short(name)
+          {:Node=>:Node, :Group=>:Group, :Parameter=>:Param, :Feature=>:Feature, :Subsystem=>:Subsys}[name]
+        end
       end
 
       class Configuration 
@@ -398,8 +414,7 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = [:nodes, :groups, :params, :features, :subsystems]
-          @translator = {:nodes=>{:short=>:Node, :long=>:Node}, :groups=>{:short=>:Group, :long=>:Group}, :params=>{:short=>:Param, :long=>:Parameter}, :features=>{:short=>:Feature, :long=>:Feature}, :subsystems=>{:short=>:Subsys, :long=>:Subsystem}}
+          @entities = Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
         end
 
         def load_yaml(ymltxt)
@@ -452,19 +467,23 @@ module Mrg
         def affected_entities
           changes = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = [] } }
           @entities.each do |type|
+            type = type.intern
+            otype = store_class_attr_to_obj_type(type)
             @updates.send(type).keys.each do |name|
               if @expected.send(type).has_key?(name)
-                changes[:modify][@translator[type][:long]].push(name)
+                changes[:modify][otype].push(name)
               else
-                changes[:add][@translator[type][:long]].push(name)
+                changes[:add][otype].push(name)
               end
             end
           end
 
           @entities.each do |type|
+            type = type.intern
+            otype = store_class_attr_to_obj_type(type)
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name)
-                changes[:delete][@translator[type][:long]].push(name)
+                changes[:delete][otype].push(name)
               end
             end
           end
@@ -472,13 +491,12 @@ module Mrg
         end
 
         def entity_details(type, name)
-          @getter_from_setter = {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}
           swap = {:Node=>:nodes, :Group=>:groups, :Feature=>:features, :Parameter=>:params, :Subsystem=>:subsystems}
           details = {:expected=>{}, :updates=>{}}
           t = swap[type]
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
-              cmd = @getter_from_setter[set.intern]
+              cmd = getter_from_setter(set.intern)
               if set.to_s =~ /^modify/
                 details[:updates][cmd] = @updates.send(t)[name][set][1]
               else
@@ -530,14 +548,16 @@ module Mrg
 
         def update_entities
           @entities.each do |type|
+            type = type.intern
+            otype = store_class_attr_to_obj_type(type)
             @updates.send(type).keys.each do |name|
               added = false
-              if @store.send("check#{@translator[type][:long]}Validity", [name]) != []
-                log.info "Adding #{@translator[type][:long]} '#{name}'"
+              if @store.send("check#{otype}Validity", [name]) != []
+                log.info "Adding #{otype} '#{name}'"
                 if type == :groups
                   obj = @store.send("addExplicitGroup", name)
                 else
-                  obj = @store.send("add#{@translator[type][:short]}", name)
+                  obj = @store.send("add#{long_to_short(otype)}", name)
                 end
                 added = true
               else
@@ -545,14 +565,14 @@ module Mrg
               end
 
               if obj == nil
-                raise RuntimeError.new("Failed to retrieve #{@translator[type][:long]} '#{name}'")
+                raise RuntimeError.new("Failed to retrieve #{otype} '#{name}'")
               end
 
               if (added == false and @expected.send(type).has_key?(name)) and not @force
                 verify_entity(obj, type, name)
               end
 
-              log.info "Updating #{@translator[type][:long]} '#{name}'"
+              log.info "Updating #{otype} '#{name}'"
               commands = @updates.send(type)[name].keys
               if commands.include?("setMustChange")
                 commands.delete("setMustChange")
@@ -572,11 +592,13 @@ module Mrg
           end
 
           @entities.each do |type|
+            type = type.intern
+            otype = store_class_attr_to_obj_type(type)
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name) and name.index("+++") == nil
                 verify_entity(get_entity(type, name), type, name)
-                log.info "Removing #{@translator[type][:long]} '#{name}'"
-                @store.send("remove#{@translator[type][:short]}", [name])
+                log.info "Removing #{otype} '#{name}'"
+                @store.send("remove#{long_to_short(otype)}", [name])
               end
             end
           end
@@ -585,8 +607,9 @@ module Mrg
         end
 
         def verify_entity(obj, type, name)
+          otype = store_class_attr_to_obj_type(type)
           @expected.send(type)[name].keys.each do |get|
-            log.info "Verifying #{@translator[type][:long]} '#{name}##{get}'"
+            log.info "Verifying #{otype} '#{name}##{get}'"
             current_val = obj.send(get)
             if name == "BaseDBVersion" and current_val.has_key?("BaseDBVersion")
               current_val["BaseDBVersion"].delete!("v")
@@ -607,17 +630,18 @@ module Mrg
               expected_adj = expected_val
             end
             if current_adj != expected_adj
-              raise RuntimeError.new("#{@translator[type][:long]} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
+              raise RuntimeError.new("#{otype} '#{name}' has a current value of '#{current_val.inspect}' but expected '#{expected_val.inspect}'")
             end
           end
         end
 
         def get_entity(type, name)
-          log.info "Retrieving #{@translator[type][:long]} '#{name}'"
+          otype = store_class_attr_to_obj_type(type)
+          log.info "Retrieving #{otype} '#{name}'"
           if type == :groups
             obj = @store.send("getGroupByName", name)
           else
-            obj = @store.send("get#{@translator[type][:short]}", name)
+            obj = @store.send("get#{long_to_short(otype)}", name)
           end
           obj
         end
