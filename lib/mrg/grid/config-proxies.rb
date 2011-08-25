@@ -472,20 +472,17 @@ module Mrg
         end
 
         def entity_details(type, name)
-          accessors = {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}
+          @getter_from_setter = {:modifyMemberships=>:memberships, :modifyFeatures=>:features, :modifyParams=>:params, :setKind=>:kind, :setDefault=>:default, :setDescription=>:description, :setMustChange=>:must_change, :setVisibilityLevel=>:visibility_level, :setRequiresRestart=>:requires_restart, :modifyDepends=>:depends, :modifyConflicts=>:conflicts, :modifyIncludedFeatures=>:included_features}
           swap = {:Node=>:nodes, :Group=>:groups, :Feature=>:features, :Parameter=>:params, :Subsystem=>:subsystems}
           details = {:expected=>{}, :updates=>{}}
           t = swap[type]
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
+              cmd = @getter_from_setter[set.intern]
               if set.to_s =~ /^modify/
-                if type == :Group and set.intern == :modifyMemberships
-                  details[:updates][:membership] = @updates.send(t)[name][set][1]
-                else
-                  details[:updates][accessors[set.intern]] = @updates.send(t)[name][set][1]
-                end
+                details[:updates][cmd] = @updates.send(t)[name][set][1]
               else
-                details[:updates][accessors[set.intern]] = @updates.send(t)[name][set]
+                details[:updates][cmd] = @updates.send(t)[name][set]
               end
             end
           end
@@ -509,9 +506,8 @@ module Mrg
         def get_db_ver_from_store
           default_ver = "1.4"
           db_ver = default_ver
-          db_obj = @store.getFeature("BaseDBVersion")
+          db_obj = @store.getFeature("BaseDBVersion") rescue nil
           if db_obj != nil
-            puts db_obj.params.inspect
             ver = (db_obj.params["BaseDBVersion"].to_s rescue default_ver)
             if ver != ""
               db_ver = ver
@@ -523,7 +519,6 @@ module Mrg
         def valid_db_version
           ver = get_db_ver_from_store
           temp = ver.split('.')
-          puts temp.inspect
           db_major = temp[0].delete("v").to_i
           db_minor = temp[1].to_i
           temp = @db_version.to_s.split('.')
@@ -578,7 +573,7 @@ module Mrg
 
           @entities.each do |type|
             @expected.send(type).keys.each do |name|
-              if not @updates.send(type).has_key?(name) and not name =~ /^\+\+\+/
+              if not @updates.send(type).has_key?(name) and name.index("+++") == nil
                 verify_entity(get_entity(type, name), type, name)
                 log.info "Removing #{@translator[type][:long]} '#{name}'"
                 @store.send("remove#{@translator[type][:short]}", [name])
