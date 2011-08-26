@@ -23,8 +23,11 @@ options for a condor pool
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{_var}/lib/condor-wallaby-base-db
-cp condor-base-db.snapshot %{buildroot}/%{_var}/lib/condor-wallaby-base-db
+mkdir -p %{buildroot}/%{_localstatedir}/lib/condor-wallaby-base-db
+mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
+mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby/patches
+cp condor-base-db.snapshot %{buildroot}/%{_localstatedir}/lib/condor-wallaby-base-db
+cp -r patches %{buildroot}/%{_localstatedir}/lib/wallaby
 
 %clean
 rm -rf %{buildroot}
@@ -32,7 +35,22 @@ rm -rf %{buildroot}
 %files
 %defattr(-, root, root, -)
 %doc LICENSE
-%{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
+%{_localstatedir}/lib/condor-wallaby-base-db/condor-base-db.snapshot
+%{_localstatedir}/lib/wallaby/patches/1.5
+%{_localstatedir}/lib/wallaby/patches/1.6
+%{_localstatedir}/lib/wallaby/patches/1.7
+%{_localstatedir}/lib/wallaby/patches/1.8
+%{_localstatedir}/lib/wallaby/patches/1.9
+%{_localstatedir}/lib/wallaby/patches/1.10
+%{_localstatedir}/lib/wallaby/patches/1.11
+%{_localstatedir}/lib/wallaby/patches/1.12
+%{_localstatedir}/lib/wallaby/patches/1.13
+%{_localstatedir}/lib/wallaby/patches/1.14
+
+%changelog
+* Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1
+- Added BaseScheduler dependency to AviaryScheduler
+- Edited dependencies on Scheduler/HAScheduler
 
 %changelog
 * Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1

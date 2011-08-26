@@ -125,8 +125,17 @@ class Database
   end
 end
 
-#repo = Repo.new("git://git.fedorahosted.org/git/grid/wallaby.git")
-repo = Repo.new("..")
+def find_repo
+  dir = "."
+  while not File.exists?("#{dir}/.git")
+    dir += "/.."
+  end
+  dir
+end
+
+repo_dir = find_repo
+patch_dir = "#{repo_dir}/patches"
+repo = Repo.new(repo_dir)
 tags = repo.tags()
 db_tags = []
 tags.each do |t|
@@ -147,6 +156,7 @@ old = nil
 new = nil
 diffs = {}
 count = 0
+Dir.mkdir(patch_dir) rescue nil
 db_tags.each do |t|
 #  puts t.name
 #  puts t.commit.id
@@ -166,19 +176,10 @@ db_tags.each do |t|
     new = Database.new(content.data, ver)
     if count > 0
       patch = new.generate_patch(old)
-      File.open(ver, "w") do |of|
+      File.open("#{patch_dir}/#{ver}", "w") do |of|
         of.write(patch.to_yaml)
       end
     end
     count += 1
   end
-end
-
-f = open("../spec/db-patching-basedb.yaml", 'r') {|c| c.read}
-old = Database.new(f, "1.0")
-f = open("../spec/update.yaml", 'r') {|c| c.read}
-new = Database.new(f, "1.7")
-patch = new.generate_patch(old)
-File.open("upgrade-patch.yaml", "w") do |of|
-  of.write(patch.to_yaml)
 end

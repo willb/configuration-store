@@ -77,6 +77,7 @@ mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 mkdir -p %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
+mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby/patches
 mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
@@ -142,6 +143,7 @@ fi
 %doc LICENSE
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby
+%dir %{_localstatedir}/lib/wallaby/patches
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
@@ -190,6 +192,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_activate.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_upgrade_db.rb
 %{ruby_sitelib}/mrg/grid/config/shell/entity_ops.rb
 %{ruby_sitelib}/mrg/grid/config/shell/command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
