@@ -32,6 +32,17 @@ features:
   params: 
     BaseDBVersion: BASE_DB_VERSION
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: 
+  - Scheduler
+  depends: []
+
+  included: 
+  - JobQueueLocation
+  - BaseScheduler
+  name: BaseHAScheduler
+  params: 
+    SCHEDD_NAME: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
   depends: []
@@ -63,7 +74,6 @@ features:
     QUEUE_SUPER_USERS: root, condor
     MAX_SHADOW_LOG: "1000000"
     SHADOW_LOCK: $(LOCK)/ShadowLock
-    DAEMON_LIST: ">= SCHEDD"
     ALLOW_NEGOTIATOR_SCHEDD: $(ALLOW_NEGOTIATOR_SCHEDD), $(CONDOR_HOST), $(FLOCK_NEGOTIATOR_HOSTS)
     START_LOCAL_UNIVERSE: "True"
     SCHEDD_DAEMON_AD_FILE: $(LOG)/.schedd_classad
@@ -351,13 +361,13 @@ features:
     HAD_LIST: 0
     HAD_PORT: "51450"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: 
-  - Scheduler
+  conflicts: []
+
   depends: []
 
   included: 
-  - JobQueueLocation
-  - BaseScheduler
+  - BaseHAScheduler
+  - SchedulerInDL
   name: HAScheduler
   params: 
     HA_LOCK_HOLD_TIME: "300"
@@ -365,7 +375,6 @@ features:
     VALID_SPOOL_FILES: $(VALID_SPOOL_FILES), SCHEDD.lock
     MASTER_HA_LIST: $(MASTER_HA_LIST), SCHEDD
     HA_POLL_PERIOD: "60"
-    SCHEDD_NAME: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -610,6 +619,7 @@ features:
   included: 
   - JobQueueLocation
   - BaseScheduler
+  - SchedulerInDL
   name: Scheduler
   params: 
     SPOOL: $(LOCAL_DIR)/spool
@@ -624,6 +634,16 @@ features:
   params: 
     SCHEDD_PREEMPTION_RANK: "0"
     SCHEDD_PREEMPTION_REQUIREMENTS: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: SchedulerInDL
+  params: 
+    DAEMON_LIST: ">= SCHEDD"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
