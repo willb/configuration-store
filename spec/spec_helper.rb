@@ -174,18 +174,22 @@ end
 module PatchTester
   include Mrg::Grid::SerializedConfigs::DBHelpers
 
-  def patch_db(expected_exit=0, cmd_args=[])
+  def patch_db(args)
     @versions = []
     affected = {}
+    args ||= {}
+    defaults = {:files=>[], :dir=>"/var/lib/wallaby/patches", :exit_code=>0, :cmd_args=>[]}
+    args = defaults.merge(args)
+    dir = args[:dir]
 
     details = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = {} } }
     patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
-    Dir.mkdir(@patch_dir) rescue nil
+    Dir.mkdir(dir) rescue nil
     prev_f = ""
-    @patch_files.each do |f|
+    args[:files].each do |f|
       if f != "." and f != ".."
-        FileUtils.cp(f, @patch_dir)
-        filename = "#{@patch_dir}/#{File.basename(f)}"
+        FileUtils.cp(f, dir)
+        filename = "#{dir}/#{File.basename(f)}"
         if prev_f != ""
           prev_v, next_v = setup_to_trail(prev_f, filename)
           @versions = @versions + ([prev_v, next_v] - @versions)
@@ -193,9 +197,9 @@ module PatchTester
         prev_f = filename
       end
     end
-    Mrg::Grid::Config::Shell::Upgrade_db.new(@store, "").main(["-d", "#{@patch_dir}"] + cmd_args).should == expected_exit
-    @patch_files.each do |f|
-      patcher.load_yaml(open("#{f}", "r") {|db| db.read})
+    Mrg::Grid::Config::Shell::Upgrade_db.new(@store, "").main(["-d", "#{dir}"] + args[:cmd_args]).should == args[:exit_code]
+    args[:files].each do |f|
+      patcher.load_yaml(open("#{dir}/#{File.basename(f)}", "r") {|db| db.read})
       new = patcher.affected_entities
       affected.merge!(new)
       new.keys.each do |changed|
@@ -281,7 +285,10 @@ module PatchTester
     end
   end
 
-  def change_expectations_then_patch(skip_patterns=[])
+  def change_expectations_then_patch(args)
+    args ||= {}
+    defaults = {:skip_patterns=>[]}
+    args = defaults.merge(args)
     patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
     snap_name = "Pre-Change"
     extra_feat = "ExtraFeature"
@@ -292,13 +299,13 @@ module PatchTester
     @store.addExplicitGroup(extra_group)
     @store.makeSnapshot(snap_name)
 
-    patcher.load_yaml(open("#{@patch_files[0]}", "r") {|db| db.read})
+    patcher.load_yaml(open("#{args[:files][0]}", "r") {|db| db.read})
     affected = patcher.affected_entities
     [:modify, :delete].each do |changed|
       affected[changed].each do |type, names|
         names.each do |n|
           skip = false
-          skip_patterns.each do |s|
+          args[:skip_patterns].each do |s|
             if n.index(s) != nil
               skip = true
               break
@@ -338,7 +345,7 @@ module PatchTester
             end
 
             state = get_store_contents
-            patch_db(1)
+            patch_db(args)
             verify_store(state)
             @store.loadSnapshot(snap_name)
           end

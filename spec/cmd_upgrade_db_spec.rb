@@ -15,16 +15,17 @@ module Mrg
           yaml_text = open("#{File.dirname(__FILE__)}/db-patching-basedb.yaml", "r") {|db| db.read}
           reconstitute_db(yaml_text)
 
-          @patch_dir = "/tmp/db_patches"
+          @args = {:dir=>"/tmp/db_patches"}
         end
         
         after(:each) do
-          Dir.foreach(@patch_dir) do |f|
+          dir = @args[:dir]
+          Dir.foreach(dir) do |f|
             if f != "." and f != ".."
-              FileUtils.rm("#{@patch_dir}/#{f}")
+              FileUtils.rm("#{dir}/#{f}")
             end
           end
-          Dir.delete(@patch_dir)
+          Dir.delete(dir)
           teardown_rhubarb
         end
         
@@ -32,24 +33,24 @@ module Mrg
         include PatchTester
         
         it "should remove entities from the store" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
-          verify_changes(*patch_db)
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          verify_changes(*patch_db(@args))
         end
 
         it "should add entities to the store" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
-          verify_changes(*patch_db)
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
+          verify_changes(*patch_db(@args))
         end
 
         it "should update entities in the store" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
-          verify_changes(*patch_db)
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
+          verify_changes(*patch_db(@args))
         end
 
         it "should create a snapshot for each patch file from the db version in the file" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml", "#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml", "#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
           Snapshot.count.should == 0
-          verify_changes(*patch_db)
+          verify_changes(*patch_db(@args))
           Snapshot.count.should == 2
           found_all = true
           @versions.each do |v|
@@ -65,20 +66,24 @@ module Mrg
         end
 
         it "should fail on unexpected db changes when deleting" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
-          change_expectations_then_patch(["+++"])
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:skip_patterns] = ["+++"]
+          @args[:exit_code] = 1
+          change_expectations_then_patch(@args)
         end
 
         it "should fail on unexpected db changes when updating" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
-          change_expectations_then_patch
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
+          @args[:exit_code] = 1
+          change_expectations_then_patch(@args)
         end
 
         it "should rollback the database on failure" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:exit_code] = 1
           patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
 
-          patcher.load_yaml(open("#{@patch_files[0]}", "r") {|db| db.read})
+          patcher.load_yaml(open("#{@args[:files][0]}", "r") {|db| db.read})
           dets = patcher.entity_details(:Feature, "BaseDBVersion")
           expected_ver_str = dets[:expected]["params"]["BaseDBVersion"]
           tmp = expected_ver_str.split(".")
@@ -87,41 +92,44 @@ module Mrg
           obj = @store.getFeature("BaseDBVersion")
           obj.modifyParams("REPLACE", {"BaseDBVersion"=>"#{major}.#{minor+1}"}, {})
           @store.should_receive(:loadSnapshot)
-          patch_db(1)
+          patch_db(@args)
         end
 
         it "should handle missing DB version feature" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
           @store.removeFeature("BaseDBVersion")
-          verify_changes(*patch_db)
+          verify_changes(*patch_db(@args))
         end
 
         it "should handle malformed DB version" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:cmd_args] = ["-f"]
           bad_versions = ["invalid string", "1111111", ".1111", 11111, 0.1111]
+
           @store.makeSnapshot("Pre")
           obj = @store.getFeature("BaseDBVersion")
 
           bad_versions.each do |ver|
             @store.loadSnapshot("Pre")
             obj.modifyParams("REPLACE", {"BaseDBVersion"=>ver}, {})
-            verify_changes(*patch_db(0, ["-f"]))
+            verify_changes(*patch_db(@args))
           end
 
           @store.loadSnapshot("Pre")
           obj.modifyParams("REPLACE", {}, {})
-          verify_changes(*patch_db(0, ["-f"]))
+          verify_changes(*patch_db(@args))
         end
 
         it "should handle DB versions with and without a v" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:cmd_args] = ["-f"]
           @store.makeSnapshot("Pre")
           obj = @store.getFeature("BaseDBVersion")
 
           ver = obj.params["BaseDBVersion"]
           ver.delete!("v")
           obj.modifyParams("REPLACE", {"BaseDBVersion"=>ver}, {})
-          verify_changes(*patch_db(0, ["-f"]))
+          verify_changes(*patch_db(@args))
 
           @store.loadSnapshot("Pre")
           ver = obj.params["BaseDBVersion"]
@@ -129,36 +137,39 @@ module Mrg
             ver.insert(0, "v")
             obj.modifyParams("REPLACE", {"BaseDBVersion"=>ver}, {})
           end 
-          verify_changes(*patch_db(0, ["-f"]))
+          verify_changes(*patch_db(@args))
         end
 
         it "should patch anyway if force option used" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:exit_code] = 1
+
           obj = @store.getFeature("BaseDBVersion")
           obj.modifyParams("REPLACE", {"BaseDBVersion"=>"1.1"}, {})
-          patch_db(1)
-          verify_changes(*patch_db(0, ["-f"]))
+          patch_db(@args)
+          @args[:exit_code] = 0
+          @args[:cmd_args] = ["-f"]
+          verify_changes(*patch_db(@args))
         end
 
         it "should not patch if the db version is >= patch verion" do
-          @patch_files = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
           patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
 
-          patcher.load_yaml(open("#{@patch_files[0]}", "r") {|db| db.read})
+          patcher.load_yaml(open("#{@args[:files][0]}", "r") {|db| db.read})
           tmp = patcher.db_version.to_s.split(".")
           major = tmp[0].delete("v").to_i
           minor = tmp[1].to_i
           @store.should_not_receive(:makeSnapshot)
 
           obj = @store.getFeature("BaseDBVersion")
-          obj.modifyParams("REPLACE", {"BaseDBVersion"=>"#{major+1}.#{minor}"}, {})
-          patch_db(0)
 
-          obj.modifyParams("REPLACE", {"BaseDBVersion"=>"#{major}.#{minor}"}, {})
-          patch_db(0)
-
-          obj.modifyParams("REPLACE", {"BaseDBVersion"=>"#{major}.#{minor+1}"}, {})
-          patch_db(0)
+          [[major+1, minor], [major, minor], [major, minor+1]].each do |ma, mi|
+            obj.modifyParams("REPLACE", {"BaseDBVersion"=>"#{ma}.#{mi}"}, {})
+            contents = get_store_contents
+            patch_db(@args)
+            verify_store(contents)
+          end
         end
       end
     end
