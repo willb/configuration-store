@@ -35,6 +35,14 @@ rm -rf %{buildroot}
 %{_var}/lib/condor-wallaby-base-db/condor-base-db.snapshot
 
 %changelog
+* Mon Aug 29 2011 rrati <rrati@redhat> - 1.15-1
+- Added a v before BaseDBVersion number
+- Added SSL functionality for Aviary
+- Added UPDATE_INTERVAL to startd subsystem
+- Updated low-latency params to use CAROD subsystem
+- Added ability for other watchdog agents to manage an HA Scheduler setup 
+  via BaseHAScheduler feature
+
 * Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1
 - Added BaseScheduler dependency to AviaryScheduler
 - Edited dependencies on Scheduler/HAScheduler
