@@ -460,27 +460,27 @@ features:
   - ExecuteNode
   name: LowLatency
   params: 
-    JOB_HOOKS_PORT: $(LL_DAEMON_PORT)
-    LL_BROKER_QUEUE: 0
+    JOB_HOOKS_PORT: $(CAROD_PORT)
+    CAROD: $(SBIN)/carod
+    CAROD_PORT: "10000"
+    CAROD_LEASE_TIME: "35"
+    CAROD_QUEUED_CONNECTIONS: "5"
     LOW_LATENCY_JOB_HOOK_JOB_EXIT: $(LIBEXEC)/hooks/hook_job_exit.py
     LOW_LATENCY_HOOK_REPLY_FETCH: $(LIBEXEC)/hooks/hook_reply_fetch.py
-    DAEMON_LIST: ">= LL_DAEMON"
+    DAEMON_LIST: ">= CAROD"
+    CAROD_BROKER_IP: 0
     STARTER_UPDATE_INTERVAL: "30"
     LOW_LATENCY_JOB_HOOK_UPDATE_JOB_INFO: $(LIBEXEC)/hooks/hook_update_job_status.py
     FETCHWORKDELAY: 10 * (Activity == "Idle")
     STARTD_JOB_HOOK_KEYWORD: LOW_LATENCY
     LOW_LATENCY_JOB_HOOK_PREPARE_JOB: $(LIBEXEC)/hooks/hook_prepare_job.py
-    LL_DAEMON_LEASE_TIME: "35"
-    LL_DAEMON_IP: 127.0.0.1
-    LL_DAEMON: $(SBIN)/carod
-    MAX_LL_DAEMON_LOG: "1000000"
-    LL_DAEMON_QUEUED_CONNECTIONS: "5"
-    LL_BROKER_IP: 0
-    LL_DAEMON_PORT: "10000"
-    LL_DAEMON_LEASE_CHECK_INTERVAL: "30"
+    CAROD_LOG: $(LOG)/CaroLog
+    CAROD_LEASE_CHECK_INTERVAL: "30"
+    CAROD_BROKER_QUEUE: 0
+    CAROD_IP: 127.0.0.1
+    MAX_CAROD_LOG: "1000000"
     LOW_LATENCY_HOOK_FETCH_WORK: $(LIBEXEC)/hooks/hook_fetch_work.py
-    LL_DAEMON_LOG: $(LOG)/CaroLog
-    LL_BROKER_PORT: "5672"
+    CAROD_BROKER_PORT: "5672"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -823,6 +823,126 @@ params:
   level: 0
   must_change: false
   name: BaseDBVersion
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(SBIN)/carod
+  depends: []
+
+  description: The location of the carod daemon
+  kind: String
+  level: 0
+  must_change: false
+  name: CAROD
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The IP address where an AMQP broker is running
+  kind: String
+  level: 0
+  must_change: true
+  name: CAROD_BROKER_IP
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "5672"
+  depends: []
+
+  description: The port the AMQP broker is listening on for connections
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CAROD_BROKER_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: The queue on the AMQP broker containing jobs
+  kind: String
+  level: 0
+  must_change: true
+  name: CAROD_BROKER_QUEUE
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: 127.0.0.1
+  depends: []
+
+  description: The IP Address where the carod is listening for connections
+  kind: String
+  level: 0
+  must_change: false
+  name: CAROD_IP
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "30"
+  depends: []
+
+  description: How often carod will check for jobs that haven't communicated in $(CAROD_LEASE_TIME)
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CAROD_LEASE_CHECK_INTERVAL
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "35"
+  depends: []
+
+  description: The amount of time condor can process a low-latency job without reporting status to carod
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CAROD_LEASE_TIME
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: $(LOG)/CaroLog
+  depends: []
+
+  description: The location of the Low-Latency daemon log file
+  kind: String
+  level: 0
+  must_change: false
+  name: CAROD_LOG
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "10000"
+  depends: []
+
+  description: The port the carod daemon is using to listen for connections
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CAROD_PORT
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "5"
+  depends: []
+
+  description: The number of outstandinng connections carod will allow before rejecting connection requests
+  kind: Integer
+  level: 0
+  must_change: false
+  name: CAROD_QUEUED_CONNECTIONS
   needs_restart: false
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
@@ -1475,7 +1595,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
+  default_val: $(SEC_DEFAULT_AUTHENTICATION_METHODS)
   depends: []
 
   description: The default authentication methods used by the Job Router
@@ -1691,126 +1811,6 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: ""
-  depends: []
-
-  description: The IP address where an AMQP broker is running
-  kind: String
-  level: 0
-  must_change: true
-  name: LL_BROKER_IP
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "5672"
-  depends: []
-
-  description: The port the AMQP broker is listening on for connections
-  kind: Integer
-  level: 0
-  must_change: false
-  name: LL_BROKER_PORT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: The queue on the AMQP broker containing jobs
-  kind: String
-  level: 0
-  must_change: true
-  name: LL_BROKER_QUEUE
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(SBIN)/carod
-  depends: []
-
-  description: The location of the carod daemon
-  kind: String
-  level: 0
-  must_change: false
-  name: LL_DAEMON
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: 127.0.0.1
-  depends: []
-
-  description: The IP Address where the carod is listening for connections
-  kind: String
-  level: 0
-  must_change: false
-  name: LL_DAEMON_IP
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "30"
-  depends: []
-
-  description: How often carod will check for jobs that haven't communicated in $(LL_DAEMON_LEASE_TIME)
-  kind: Integer
-  level: 0
-  must_change: false
-  name: LL_DAEMON_LEASE_CHECK_INTERVAL
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "35"
-  depends: []
-
-  description: The amount of time condor can process a low-latency job without reporting status to carod
-  kind: Integer
-  level: 0
-  must_change: false
-  name: LL_DAEMON_LEASE_TIME
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: $(LOG)/CaroLog
-  depends: []
-
-  description: The location of the Low-Latency daemon log file
-  kind: String
-  level: 0
-  must_change: false
-  name: LL_DAEMON_LOG
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "10000"
-  depends: []
-
-  description: The port the carod daemon is using to listen for connections
-  kind: Integer
-  level: 0
-  must_change: false
-  name: LL_DAEMON_PORT
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "5"
-  depends: []
-
-  description: The number of outstandinng connections carod will allow before rejecting connection requests
-  kind: Integer
-  level: 0
-  must_change: false
-  name: LL_DAEMON_QUEUED_CONNECTIONS
-  needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
   default_val: $(LIBEXEC)/hooks/hook_fetch_work.py
   depends: []
 
@@ -1895,7 +1895,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
+  default_val: $(SEC_DEFAULT_AUTHENTICATION_METHODS)
   depends: []
 
   description: The default authentication methods used by the Master
@@ -1964,6 +1964,18 @@ params:
   must_change: false
   name: MAXJOBRETIREMENTTIME
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "1000000"
+  depends: []
+
+  description: The maximum size of the Low-Latency daemon log
+  kind: Integer
+  level: 0
+  must_change: false
+  name: MAX_CAROD_LOG
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2048,18 +2060,6 @@ params:
   must_change: false
   name: MAX_KBDD_LOG
   needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "1000000"
-  depends: []
-
-  description: The maximum size of the Low-Latency daemon log
-  kind: Integer
-  level: 0
-  must_change: false
-  name: MAX_LL_DAEMON_LOG
-  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2831,7 +2831,7 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
-  default_val: "$(SEC_DEFAULT_AUTHENTICATION_METHODS)"
+  default_val: $(SEC_DEFAULT_AUTHENTICATION_METHODS)
   depends: []
 
   description: The default authentication methods used by the Scheduler
@@ -3893,17 +3893,17 @@ subsystems:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: ll_daemon
   params: 
-  - LL_BROKER_IP
-  - LL_BROKER_PORT
-  - LL_BROKER_QUEUE
-  - LL_DAEMON
-  - LL_DAEMON_IP
-  - LL_DAEMON_LEASE_CHECK_INTERVAL
-  - LL_DAEMON_LEASE_TIME
-  - LL_DAEMON_LOG
-  - LL_DAEMON_PORT
-  - LL_DAEMON_QUEUED_CONNECTIONS
-  - MAX_LL_DAEMON_LOG
+  - CAROD
+  - CAROD_BROKER_IP
+  - CAROD_BROKER_PORT
+  - CAROD_BROKER_QUEUE
+  - CAROD_IP
+  - CAROD_LEASE_CHECK_INTERVAL
+  - CAROD_LEASE_TIME
+  - CAROD_LOG
+  - CAROD_PORT
+  - CAROD_QUEUED_CONNECTIONS
+  - MAX_CAROD_LOG
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
   name: master
   params: 
