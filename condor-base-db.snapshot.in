@@ -649,6 +649,20 @@ features:
 
   depends: []
 
+  included: 
+  - AviaryScheduler
+  name: SecureAviaryScheduler
+  params: 
+    AVIARY_SSL_SERVER_KEY: 0
+    AVIARY_SSL_SERVER_CERT: 0
+    AVIARY_SSL: "True"
+    AVIARY_SSL_CA_FILE: 0
+    AVIARY_SSL_CA_DIR: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
   included: []
 
   name: SharedFileSystem
@@ -800,6 +814,66 @@ params:
   must_change: false
   name: AMAZON_GAHP_LOG
   needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "False"
+  depends: []
+
+  description: Enable HTTPS mutual authentication in Aviary
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: AVIARY_SSL
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA directory
+  kind: String
+  level: 0
+  must_change: true
+  name: AVIARY_SSL_CA_DIR
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA file
+  kind: String
+  level: 0
+  must_change: true
+  name: AVIARY_SSL_CA_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server certificate
+  kind: String
+  level: 0
+  must_change: true
+  name: AVIARY_SSL_SERVER_CERT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server private key
+  kind: String
+  level: 0
+  must_change: true
+  name: AVIARY_SSL_SERVER_KEY
+  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
