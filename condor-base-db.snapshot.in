@@ -4069,6 +4069,7 @@ subsystems:
   - TRIGGER_DATA_GETDATA_PREFIX
   - TRIGGER_DATA_GETDATA_RECONFIG
   - TRIGGER_DATA_JOBLIST
+  - UPDATE_INTERVAL
   - WANT_SUSPEND
   - WANT_VACATE
 - !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
