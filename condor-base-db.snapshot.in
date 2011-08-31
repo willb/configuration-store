@@ -612,6 +612,34 @@ features:
     QUERY_SERVER: $(SBIN)/aviary_query_server
     QUERY_SERVER.HISTORY_INTERVAL: "120"
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - AviaryScheduler
+  name: SSLEnabledAviaryScheduler
+  params: 
+    SCHEDD.AVIARY_SSL_SERVER_KEY: 0
+    SCHEDD.AVIARY_SSL_SERVER_CERT: 0
+    SCHEDD.AVIARY_SSL_CA_FILE: 0
+    SCHEDD.AVIARY_SSL: "True"
+    SCHEDD.AVIARY_SSL_CA_DIR: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: 
+  - QueryServer
+  name: SSLEnabledQueryServer
+  params: 
+    QUERY_SERVER.AVIARY_SSL_CA_DIR: 0
+    QUERY_SERVER.AVIARY_SSL: "True"
+    QUERY_SERVER.AVIARY_SSL_SERVER_KEY: 0
+    QUERY_SERVER.AVIARY_SSL_SERVER_CERT: 0
+    QUERY_SERVER.AVIARY_SSL_CA_FILE: 0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: 
   - HAScheduler
   depends: []
@@ -644,20 +672,6 @@ features:
   name: SchedulerInDL
   params: 
     DAEMON_LIST: ">= SCHEDD"
-- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
-  conflicts: []
-
-  depends: []
-
-  included: 
-  - AviaryScheduler
-  name: SecureAviaryScheduler
-  params: 
-    AVIARY_SSL_SERVER_KEY: 0
-    AVIARY_SSL_SERVER_CERT: 0
-    AVIARY_SSL: "True"
-    AVIARY_SSL_CA_FILE: 0
-    AVIARY_SSL_CA_DIR: 0
 - !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
   conflicts: []
 
@@ -814,66 +828,6 @@ params:
   must_change: false
   name: AMAZON_GAHP_LOG
   needs_restart: false
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: "False"
-  depends: []
-
-  description: Enable HTTPS mutual authentication in Aviary
-  kind: Boolean
-  level: 0
-  must_change: false
-  name: AVIARY_SSL
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Path to Aviary SSL CA directory
-  kind: String
-  level: 0
-  must_change: true
-  name: AVIARY_SSL_CA_DIR
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Path to Aviary SSL CA file
-  kind: String
-  level: 0
-  must_change: true
-  name: AVIARY_SSL_CA_FILE
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Path to Aviary SSL server certificate
-  kind: String
-  level: 0
-  must_change: true
-  name: AVIARY_SSL_SERVER_CERT
-  needs_restart: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
-  conflicts: []
-
-  default_val: ""
-  depends: []
-
-  description: Path to Aviary SSL server private key
-  kind: String
-  level: 0
-  must_change: true
-  name: AVIARY_SSL_SERVER_KEY
-  needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
@@ -2569,6 +2523,66 @@ params:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
 
+  default_val: "False"
+  depends: []
+
+  description: Enable HTTPS mutual authentication for Aviary in the Query Server
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: QUERY_SERVER.AVIARY_SSL
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA directory used by the Query Server
+  kind: String
+  level: 0
+  must_change: true
+  name: QUERY_SERVER.AVIARY_SSL_CA_DIR
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA file used by the Query Server
+  kind: String
+  level: 0
+  must_change: true
+  name: QUERY_SERVER.AVIARY_SSL_CA_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server certificate used by the Query Server
+  kind: String
+  level: 0
+  must_change: true
+  name: QUERY_SERVER.AVIARY_SSL_SERVER_CERT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server private key used by the Query Server
+  kind: String
+  level: 0
+  must_change: true
+  name: QUERY_SERVER.AVIARY_SSL_SERVER_KEY
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
   default_val: "120"
   depends: []
 
@@ -2865,6 +2879,66 @@ params:
   level: 0
   must_change: false
   name: SCHEDD
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: "False"
+  depends: []
+
+  description: Enable HTTPS mutual authentication for Aviary in the Scheduler
+  kind: Boolean
+  level: 0
+  must_change: false
+  name: SCHEDD.AVIARY_SSL
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA directory used by the Scheduler
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD.AVIARY_SSL_CA_DIR
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL CA file used by the Scheduler
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD.AVIARY_SSL_CA_FILE
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server certificate used by the Scheduler
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD.AVIARY_SSL_SERVER_CERT
+  needs_restart: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: Path to Aviary SSL server private key used by the Scheduler
+  kind: String
+  level: 0
+  must_change: true
+  name: SCHEDD.AVIARY_SSL_SERVER_KEY
   needs_restart: true
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []
