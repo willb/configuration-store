@@ -20,6 +20,8 @@ end
 
 include Mrg::Grid::Config
 
+Store.quiesce(:ENABLE_SKELETON_GROUP, true)
+
 def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
