@@ -2,7 +2,7 @@ import wallaby
 
 # the "tagging" module patches the Wallaby client library with 
 # support for tag operations
-import tagging
+import wallaby.tagging
 
 def get_store():
     # We'll start by setting up a Wallaby client library session against
