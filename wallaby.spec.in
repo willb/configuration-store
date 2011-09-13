@@ -1,5 +1,11 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
-%define rel 6
+
+%if ! (0%{?fedora} > 12 || 0%{?rhel} > 5)
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%endif
+
+%define rel 7
 
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
@@ -45,7 +51,16 @@ Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
 BuildRequires: ruby
 
-%if 0%{?fedora} >= 12
+%package python
+Summary: Python client library for Wallaby
+Group: Applications/System
+BuildRequires: python2-devel
+Requires: python-qpid-qmf
+
+%description python
+A Python client library for interacting with the Wallaby service over QMF
+
+%if (0%{?fedora} >= 14 || 0%{?rhel} >= 6)
 %package -n wallaby-http-server
 Summary: wallaby web service
 Group: Applications/System
@@ -67,11 +82,13 @@ Functions to communicate with wallaby over qmf
 
 %prep
 %setup -q
+ls -l
+echo "+++"
 
 %build
 
 %install
-rm -rf %{buildroot}
+# rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/util
@@ -81,6 +98,7 @@ mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
 mkdir -p %{buildroot}/%{_localstatedir}/log/wallaby
+mkdir -p %{buildroot}/%{python_sitelib}/wallaby
 cp -p -f bin/wallaby %{buildroot}/%{_bindir}
 cp -p -f bin/wallaby-agent %{buildroot}/%{_bindir}
 cp -p -f lib/mrg/grid/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid
@@ -90,13 +108,17 @@ cp -p -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/co
 # These aren't packaged
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
-%if 0%{?fedora} < 12
+%if 0%{?fedora} < 14 && 0%{?rhel} < 6
 # XXX: change this when Sinatra is packaged for RHEL
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
 cp -p -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
+ls -l
+pwd
+cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
+cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
 %clean
 rm -rf %{buildroot}
@@ -118,6 +140,7 @@ getent group condor >/dev/null || groupadd -r condor
 getent passwd wallaby >/dev/null || \
   useradd -r -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
     -c "Owner of Wallaby service" wallaby
+exit 0
 
 %post
 # This adds the proper /etc/rc*.d links for the script
@@ -142,6 +165,10 @@ fi
 %doc LICENSE
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby
+
+%files python
+%defattr(-, root, root, -)
+%{python_sitelib}/wallaby/
 
 %files -n ruby-wallaby
 %defattr(-, root, root, -)
@@ -202,6 +229,10 @@ fi
 %endif
 
 %changelog
+
+* Mon Sep 12 2011 willb <willb@redhat> - 0.10.5-7
+- Python client now packaged
+- Other packaging improvements
 
 * Mon Jun 6 2011 willb <willb@redhat> - 0.10.5-6
 - Mode, ownership, and timestamps now preserved for installed files
@@ -422,3 +453,4 @@ fi
 
 * Wed Feb 10 2010 rrati <rrati@redhat> - 0.1.0-0.1
 - Initial package
+

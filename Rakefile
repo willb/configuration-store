@@ -101,6 +101,8 @@ task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file] do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()
+  FileUtils.cp_r 'extensions', pkg_dir()
+  FileUtils.cp_r 'schema', pkg_dir()
   FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO'], pkg_dir()
   FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
   sh "tar -cf #{pkg_source} #{pkg_dir}"
