@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # version:  version metadata
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.

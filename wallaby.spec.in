@@ -1,6 +1,6 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
 
-%if ! (0%{?fedora} > 12 || 0%{?rhel} > 5)
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
@@ -30,7 +30,13 @@ Requires(postun): initscripts
 BuildArch: noarch
 
 %description
-Wallaby is a configuration service for Condor pools.
+Wallaby is a configuration service for Condor pools.  It provides a
+semantic model of Condor configuration, enabling administrators to
+apply high-level features to groups of nodes rather than set the
+values of low-level parameters in configuration files.  Wallaby also
+validates configurations before deploying them, pushes out
+configurations to affected nodes, keeps an inventory of running nodes,
+and manages multiple versions of configurations.
 
 %package utils
 Summary: Utilities to interact with the Wallaby service.
@@ -40,7 +46,8 @@ Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby = %{version}
 
 %description utils
-This package contains command-line utilities for updating Wallaby pool and node configurations and interacting with the Wallaby service.
+This package contains command-line utilities for updating Wallaby pool
+and node configurations and interacting with the Wallaby service.
 
 %package -n ruby-wallaby
 Summary: Wallaby implementation libraries, API, and client library
@@ -56,7 +63,8 @@ Group: Applications/System
 Requires: python-qpid-qmf
 
 %description python
-This package provides a Python client library for writing programs that interact with the Wallaby configuration service over QMF.
+This package provides a Python client library for writing programs
+that interact with the Wallaby configuration service over QMF.
 
 %if (0%{?fedora} >= 14 || 0%{?rhel} >= 6)
 %package -n wallaby-http-server
@@ -70,11 +78,16 @@ Requires: wallaby-utils = %{version}-%{release}
 Requires: rubygem-sinatra
 
 %description -n wallaby-http-server
-The Wallaby HTTP server is a read-only web service gateway to Wallaby configuration information.
+The Wallaby HTTP server is a read-only web service gateway to Wallaby
+configuration information.  
 %endif
 
 %description -n ruby-wallaby
-This package provides the libraries that the Wallaby service and tools are built on.  It also provides a client library to write Ruby programs that interact with the Wallaby service, and the Wallaby shell API, which facilitates writing new command-line tools that extend Wallaby.
+This package provides the libraries that the Wallaby service and tools
+are built on.  It also provides a client library to write Ruby
+programs that interact with the Wallaby service, and the Wallaby shell
+API, which facilitates writing new command-line tools that extend
+Wallaby.
 
 %prep
 %setup -q
@@ -115,10 +128,15 @@ cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
 %clean
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 rm -rf %{buildroot}
+%endif
 
 %files
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %defattr(-, root, root, -)
+%endif
+
 %doc LICENSE README.rdoc TODO
 %defattr(0755,wallaby,wallaby,-)
 %dir %{_localstatedir}/lib/wallaby
@@ -148,24 +166,30 @@ fi
 
 %postun
 if [ "$1" -ge "1" ] ; then
-    /sbin/chkconfig --del wallaby
-    /sbin/chkconfig --add wallaby
-    chown -R wallaby:wallaby /var/lib/wallaby /var/log/wallaby
     /sbin/service wallaby condrestart >/dev/null 2>&1 || :
 fi
 
 %files utils
+
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %defattr(-, root, root, -)
+%endif
+
 %doc LICENSE
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby
 
 %files python
+
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %defattr(-, root, root, -)
+%endif
 %{python_sitelib}/wallaby/
 
 %files -n ruby-wallaby
+%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %defattr(-, root, root, -)
+%endif
 %{ruby_sitelib}/mrg/grid/config.rb
 %{ruby_sitelib}/mrg/grid/config-client.rb
 %{ruby_sitelib}/mrg/grid/config-proxies.rb
@@ -215,10 +239,8 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
 
-
-%if 0%{?fedora} >= 12
+%if 0%{?fedora} != 0 || 0%{?rhel} >= 6 
 %files -n wallaby-http-server
-%defattr(-, root, root, -)
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 
