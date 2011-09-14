@@ -39,7 +39,7 @@ configurations to affected nodes, keeps an inventory of running nodes,
 and manages multiple versions of configurations.
 
 %package utils
-Summary: Utilities to interact with the Wallaby service.
+Summary: Utilities to interact with the Wallaby service
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby-qmf >= 0.7.929717
@@ -68,7 +68,7 @@ that interact with the Wallaby configuration service over QMF.
 
 %if (0%{?fedora} >= 14 || 0%{?rhel} >= 6)
 %package -n wallaby-http-server
-Summary: wallaby web service
+Summary: Wallaby web service interface
 Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby-irb
@@ -136,7 +136,7 @@ rm -rf %{buildroot}
 %if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
 %defattr(-, root, root, -)
 %endif
-
+%config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
 %doc LICENSE README.rdoc TODO
 %defattr(0755,wallaby,wallaby,-)
 %dir %{_localstatedir}/lib/wallaby
@@ -144,7 +144,6 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby-agent
 %{_initrddir}/wallaby
-%config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
 
 %pre
 getent group wallaby >/dev/null || groupadd -r wallaby
