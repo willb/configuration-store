@@ -252,6 +252,7 @@ fi
 
 * Mon Sep 12 2011 willb <willb@redhat> - 0.10.5-7
 - Python client now packaged
+- Logrotate configuration now included
 - Other packaging improvements
 
 * Mon Jun 6 2011 willb <willb@redhat> - 0.10.5-6
