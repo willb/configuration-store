@@ -1,0 +1,15 @@
+[Unit]
+Description=Wallaby configuration service for Condor pools
+After=qpidd.service
+
+[Service]
+Type=simple
+Environment=WALLABY_FOREGROUND=true
+EnvironmentFile=-/etc/sysconfig/wallaby-agent-env
+ExecStart=/usr/bin/wallaby-agent
+User=wallaby
+StandardOutput=syslog+console
+StandardError=syslog+console
+
+[Install]
+WantedBy=multi-user.target
