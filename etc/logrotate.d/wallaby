@@ -1,0 +1,5 @@
+/var/log/wallaby/* {
+    notifempty
+    missingok
+    copytruncate
+}

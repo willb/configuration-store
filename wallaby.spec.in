@@ -23,6 +23,7 @@ Requires: ruby-spqr >= 0.3.0
 Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby = %{version}-%{release}
+Requires: logrotate >= 0.3
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
@@ -104,6 +105,7 @@ mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
 mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
+mkdir -p %{buildroot}/%{_sysconfdir}/logrotate.d
 mkdir -p %{buildroot}/%{_localstatedir}/log/wallaby
 mkdir -p %{buildroot}/%{python_sitelib}/wallaby
 cp -p -f bin/wallaby %{buildroot}/%{_bindir}
@@ -121,6 +123,7 @@ rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
+cp -p -f etc/logrotate.d/wallaby %{buildroot}/%{_sysconfdir}/logrotate.d/wallaby
 cp -p -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
 ls -l
 pwd
@@ -137,6 +140,7 @@ rm -rf %{buildroot}
 %defattr(-, root, root, -)
 %endif
 %config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
+%config(noreplace) %{_sysconfdir}/logrotate.d/wallaby
 %doc LICENSE README.rdoc TODO
 %defattr(0755,wallaby,wallaby,-)
 %dir %{_localstatedir}/lib/wallaby
@@ -144,6 +148,7 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby-agent
 %{_initrddir}/wallaby
+
 
 %pre
 getent group wallaby >/dev/null || groupadd -r wallaby
