@@ -4,7 +4,7 @@ After=qpidd.service
 
 [Service]
 Type=forking
-Environment=-/etc/sysconfig/wallaby-agent
+EnvironmentFile=-/etc/sysconfig/wallaby-agent
 ExecStart=/usr/bin/wallaby-agent
 
 [Install]
