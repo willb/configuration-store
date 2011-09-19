@@ -6,7 +6,19 @@
 %define want_systemd 0
 %endif
 
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if (0%{?fedora} == 0 && 0%{?rhel} <= 5)
+%define el5_quirks 1
+%else
+%define el5_quirks 0
+%endif
+
+%if (0%{?fedora} != 0 || 0%{?rhel} >= 6)
+%define has_sinatra 1
+%else
+%define has_sinatra 0
+%endif
+
+%if %{el5_quirks} == 1
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
@@ -73,7 +85,7 @@ Requires: python-qpid-qmf
 This package provides a Python client library for writing programs
 that interact with the Wallaby configuration service over QMF.
 
-%if (0%{?fedora} >= 14 || 0%{?rhel} >= 6)
+%if %{has_sinatra}
 %package -n wallaby-http-server
 Summary: Wallaby web service interface
 Group: Applications/System
@@ -124,8 +136,7 @@ cp -p -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/co
 # These aren't packaged
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
-%if 0%{?fedora} < 14 && 0%{?rhel} < 6
-# XXX: change this when Sinatra is packaged for RHEL
+%if %{has_sinatra} == 0
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
@@ -142,12 +153,12 @@ cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
 %clean
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if %{el5_quirks}
 rm -rf %{buildroot}
 %endif
 
 %files
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if %{el5_quirks}
 %defattr(-, root, root, -)
 %endif
 %config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
@@ -189,7 +200,7 @@ fi
 
 %files utils
 
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if %{el5_quirks}
 %defattr(-, root, root, -)
 %endif
 
@@ -199,13 +210,13 @@ fi
 
 %files python
 
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if %{el5_quirks}
 %defattr(-, root, root, -)
 %endif
 %{python_sitelib}/wallaby/
 
 %files -n ruby-wallaby
-%if ! (0%{?fedora} != 0 || 0%{?rhel} > 5)
+%if %{el5_quirks}
 %defattr(-, root, root, -)
 %endif
 %{ruby_sitelib}/mrg/grid/config.rb
@@ -257,7 +268,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
 
-%if 0%{?fedora} != 0 || 0%{?rhel} >= 6 
+%if %{has_sinatra}
 %files -n wallaby-http-server
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
