@@ -2,8 +2,10 @@
 
 %if 0%{?fedora} >= 15
 %define want_systemd 1
+%define wallaby_agent_environment sysconfig/wallaby-agent-env
 %else
 %define want_systemd 0
+%define wallaby_agent_environment sysconfig/wallaby-agent
 %endif
 
 %if (0%{?fedora} == 0 && 0%{?rhel} <= 5)
@@ -152,7 +154,7 @@ cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
 cp -p -f etc/wallaby.service %{buildroot}/%{_unitdir}
 %endif
 cp -p -f etc/logrotate.d/wallaby %{buildroot}/%{_sysconfdir}/logrotate.d/wallaby
-cp -p -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
+cp -p -f etc/%{wallaby_agent_environment} %{buildroot}/%{_sysconfdir}/%{wallaby_agent_environment}
 cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
@@ -165,7 +167,7 @@ rm -rf %{buildroot}
 %if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
-%config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
+%config(noreplace) %{_sysconfdir}/%{wallaby_agent_environment}
 %config(noreplace) %{_sysconfdir}/logrotate.d/wallaby
 %doc LICENSE README.rdoc TODO
 %defattr(0755,wallaby,wallaby,-)

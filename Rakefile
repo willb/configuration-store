@@ -96,8 +96,13 @@ task :gen_db_spec do
   sh "cat #{db_pkg_spec}" + ".in" + "| sed 's/BASE_DB_VERSION/#{db_pkg_version}/' > #{db_pkg_spec}"
 end
 
+desc "Create an environment file from the sysconfig file"
+task :gen_env_file do
+  sh "sed 's/^export //g' < etc/sysconfig/wallaby-agent > etc/sysconfig/wallaby-agent-env"
+end
+
 desc "Create a tarball"
-task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file] do
+task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file] do
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()

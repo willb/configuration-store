@@ -5,7 +5,7 @@ After=qpidd.service
 [Service]
 Type=simple
 Environment=WALLABY_FOREGROUND=true
-EnvironmentFile=-/etc/sysconfig/wallaby-agent
+EnvironmentFile=-/etc/sysconfig/wallaby-agent-env
 ExecStart=/usr/bin/wallaby-agent
 User=wallaby
 StandardOutput=syslog+console
