@@ -121,7 +121,7 @@ Wallaby.
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/%{_lib}/systemd/system
+mkdir -p %{buildroot}/%{_unitdir}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/util
@@ -149,12 +149,10 @@ cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/gri
 %if %{want_systemd} == 0
 cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
 %else
-cp -p -f etc/wallaby.service %{buildroot}/%{_lib}/systemd/system
+cp -p -f etc/wallaby.service %{buildroot}/%{_unitdir}
 %endif
 cp -p -f etc/logrotate.d/wallaby %{buildroot}/%{_sysconfdir}/logrotate.d/wallaby
 cp -p -f etc/sysconfig/wallaby-agent %{buildroot}/%{_sysconfdir}/sysconfig/wallaby-agent
-ls -l
-pwd
 cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
