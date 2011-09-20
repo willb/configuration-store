@@ -1,5 +1,7 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
 
+%define rel 8
+
 %if 0%{?fedora} >= 15
 %define want_systemd 1
 %define wallaby_agent_environment sysconfig/wallaby-agent-env
@@ -24,8 +26,6 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
-
-%define rel 7
 
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
@@ -144,6 +144,7 @@ cp -p -f lib/mrg/grid/config/shell/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/co
 # These aren't packaged
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_pull.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
+# We only want the http server if we have sinatra available
 %if %{has_sinatra} == 0
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
@@ -248,6 +249,7 @@ fi
 %if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
+%dir %{ruby_sitelib}/mrg/grid/
 %{ruby_sitelib}/mrg/grid/config.rb
 %{ruby_sitelib}/mrg/grid/config-client.rb
 %{ruby_sitelib}/mrg/grid/config-proxies.rb
@@ -303,6 +305,9 @@ fi
 %endif
 
 %changelog
+
+* Tue Sep 20 2011 willb <willb@redhat> - 0.10.5-8
+- Packaging fixes
 
 * Mon Sep 12 2011 willb <willb@redhat> - 0.10.5-7
 - Python client now packaged
