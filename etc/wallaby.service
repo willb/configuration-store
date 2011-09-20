@@ -3,9 +3,13 @@ Description=Wallaby configuration service for Condor pools
 After=qpidd.service
 
 [Service]
-Type=forking
+Type=simple
+Environment=WALLABY_FOREGROUND=true
 EnvironmentFile=-/etc/sysconfig/wallaby-agent
 ExecStart=/usr/bin/wallaby-agent
+User=wallaby
+StandardOutput=syslog+console
+StandardError=syslog+console
 
 [Install]
 WantedBy=multi-user.target
