@@ -7,9 +7,9 @@
 %endif
 
 %if (0%{?fedora} == 0 && 0%{?rhel} <= 5)
-%define el5_quirks 1
+%define building_for_el5 1
 %else
-%define el5_quirks 0
+%define building_for_el5 0
 %endif
 
 %if (0%{?fedora} != 0 || 0%{?rhel} >= 6)
@@ -18,7 +18,7 @@
 %define has_sinatra 0
 %endif
 
-%if %{el5_quirks} == 1
+%if %{building_for_el5} == 1
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
@@ -42,10 +42,16 @@ Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby = %{version}-%{release}
 Requires: logrotate >= 0.3
+%if %{want_systemd}
+Requires(post): systemd-units
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+%else
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
 Requires(postun): initscripts
+%endif
 BuildArch: noarch
 
 %description
@@ -153,12 +159,12 @@ cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
 %clean
-%if %{el5_quirks}
+%if %{building_for_el5}
 rm -rf %{buildroot}
 %endif
 
 %files
-%if %{el5_quirks}
+%if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
 %config(noreplace) %{_sysconfdir}/sysconfig/wallaby-agent
@@ -183,6 +189,28 @@ getent passwd wallaby >/dev/null || \
     -c "Owner of Wallaby service" wallaby
 exit 0
 
+
+%if %{want_systemd}
+%post
+if [ $1 -eq 1 ] ; then 
+    # Initial installation 
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
+
+%preun
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable wallaby.service > /dev/null 2>&1 || :
+    /bin/systemctl stop wallaby.service > /dev/null 2>&1 || :
+fi
+
+%postun
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart wallaby.service >/dev/null 2>&1 || :
+fi
+%else
 %post
 # This adds the proper /etc/rc*.d links for the script
 /sbin/chkconfig --add wallaby
@@ -197,10 +225,11 @@ fi
 if [ "$1" -ge "1" ] ; then
     /sbin/service wallaby condrestart >/dev/null 2>&1 || :
 fi
+%endif # want_systemd
 
 %files utils
 
-%if %{el5_quirks}
+%if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
 
@@ -210,13 +239,13 @@ fi
 
 %files python
 
-%if %{el5_quirks}
+%if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
 %{python_sitelib}/wallaby/
 
 %files -n ruby-wallaby
-%if %{el5_quirks}
+%if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
 %{ruby_sitelib}/mrg/grid/config.rb
