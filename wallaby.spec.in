@@ -174,7 +174,7 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby-agent
 %if %{want_systemd}
-%{_lib}/systemd/system/wallaby.service
+%{_unitdir}/wallaby.service
 %else
 %{_initrddir}/wallaby
 %endif
