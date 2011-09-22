@@ -20,6 +20,7 @@ require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/InconsistencyDetecting'
+require 'mrg/grid/config/MethodUtils'
 
 require 'set'
 
@@ -30,6 +31,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         include DataValidating
+        include MethodUtils
 
         def self.s_are_permissive_by_default 
           !!(ENV['WALLABY_PERMISSIVE_PARAMETERS']) 

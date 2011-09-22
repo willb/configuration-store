@@ -1,5 +1,7 @@
 # cmd_upgrade_db.rb:  
 #
+# Copyright (c) 2011 Red Hat, Inc.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+require 'mrg/grid/config-patches'
 
 module Mrg
   module Grid
@@ -44,12 +48,16 @@ module Mrg
                 exit
               end
 
+              opts.on("-d", "--directory VALUE", "directory containing patch files") do |dir|
+                @patch_dir = dir
+              end
+
               opts.on("-f", "--force", "force upgrade") do
                 @force = true
               end
 
-              opts.on("-d", "--directory VALUE", "directory containing patch files") do |dir|
-                @patch_dir = dir
+              opts.on("-v", "--verbose", "verbose logging") do
+                Mrg::Grid::PatchConfigs::PatchLoader.log = LoadSupport::SimpleLog.new(:info, :debug)
               end
             end
           end
@@ -61,33 +69,25 @@ module Mrg
           register_callback :before_option_parsing, :init_patch_dir
 
           def init_log(*args)
-            Mrg::Grid::SerializedConfigs::PatchLoader.log = LoadSupport::SimpleLog.new(:info)
+            Mrg::Grid::PatchConfigs::PatchLoader.log = LoadSupport::SimpleLog.new(:info)
           end
 
           register_callback :before_option_parsing, :init_log
 
           def act
-            patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(store, @force)
+            patcher = Mrg::Grid::PatchConfigs::PatchLoader.new(store, @force)
 
-            files = Dir.entries(@patch_dir)
-            files.delete(".")
-            files.delete("..")
-            files.sort! {|x, y| split = y.split(".")
-                                y_maj = split[0].to_i
-                                y_min = split[1].to_i
-                                split = x.split(".")
-                                x_maj = split[0].to_i
-                                x_min = split[1].to_i
-                                (x_maj > y_maj) or (x_maj <=> y_maj and x_min <=> y_min)}
+            files = Dir["#{@patch_dir}/db*.wpatch"]
+            files.sort! {|x, y| Mrg::Grid::PatchConfigs::DBVersion.new(x) <=> Mrg::Grid::PatchConfigs::DBVersion.new(y) }
             files.each do |file|
               if not File.directory?(file)
-                fhdl = open("#{@patch_dir}/#{file}")
+                fhdl = open("#{file}")
                 patcher.load_yaml(fhdl.read)
                 begin
                   patcher.load
                 rescue Exception=>ex
                   patcher.revert_db
-                  exit!(1, "Database upgrade failed. #{ex.message}")
+                  raise ex
                 ensure
                   fhdl.close
                 end

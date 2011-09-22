@@ -18,6 +18,7 @@ require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Group'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/ConfigValidating'
+require 'mrg/grid/config/MethodUtils'
 
 module Mrg
   module Grid
@@ -44,6 +45,7 @@ module Mrg
         include ::SPQR::Manageable
         include DataValidating
         include ConfigValidating
+        include MethodUtils
 
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Node'

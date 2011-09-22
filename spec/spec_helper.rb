@@ -303,6 +303,7 @@ module PatchTester
     affected = patcher.affected_entities
     [:modify, :delete].each do |changed|
       affected[changed].each do |type, names|
+        klass = Mrg::Grid::Config.const_get(type).new
         names.each do |n|
           skip = false
           args[:skip_patterns].each do |s|
@@ -326,7 +327,7 @@ module PatchTester
             end
             obj.should_not == nil
             getter = getter.intern
-            cmd = setter_from_getter(getter)
+            cmd = klass.gen_setter(getter)
             if cmd.to_s =~ /^modifyParams/ and (type == :Feature or type == :Group)
               obj.send(cmd, "REPLACE", {"EXTRA_PARAM"=>new_val}, {})
             elsif cmd.to_s =~ /^modify/
