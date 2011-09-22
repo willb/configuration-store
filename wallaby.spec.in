@@ -1,25 +1,23 @@
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
 
-%define rel 8
-
 %if 0%{?fedora} >= 15
-%define want_systemd 1
-%define wallaby_agent_environment sysconfig/wallaby-agent-env
+%global want_systemd 1
+%global wallaby_agent_environment sysconfig/wallaby-agent-env
 %else
-%define want_systemd 0
-%define wallaby_agent_environment sysconfig/wallaby-agent
+%global want_systemd 0
+%global wallaby_agent_environment sysconfig/wallaby-agent
 %endif
 
 %if (0%{?fedora} == 0 && 0%{?rhel} <= 5)
-%define building_for_el5 1
+%global building_for_el5 1
 %else
-%define building_for_el5 0
+%global building_for_el5 0
 %endif
 
 %if (0%{?fedora} != 0 || 0%{?rhel} >= 6)
-%define has_sinatra 1
+%global has_sinatra 1
 %else
-%define has_sinatra 0
+%global has_sinatra 0
 %endif
 
 %if %{building_for_el5} == 1
@@ -30,12 +28,14 @@
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
 Version: WALLABY_VERSION
-Release: %{rel}%{?dist}
+Release: 1%{?dist}
 Group: Applications/System
 License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/wallaby.git
-Source0: %{name}-%{version}-%{rel}.tar.gz
+Source0: https://fedorahosted.org/releases/g/r/grid/%{name}-%{version}.tar.gz
+%if %{building_for_el5}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+%endif
 BuildRequires: python2-devel
 Requires: ruby(abi) = 1.8
 BuildRequires: ruby
@@ -48,6 +48,7 @@ Requires: logrotate >= 0.3
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
+BuildRequires: systemd-units
 %else
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -122,7 +123,9 @@ Wallaby.
 %build
 
 %install
+%if %{building_for_el5}
 rm -rf %{buildroot}
+%endif
 mkdir -p %{buildroot}/%{_unitdir}
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
@@ -159,8 +162,8 @@ cp -p -f etc/%{wallaby_agent_environment} %{buildroot}/%{_sysconfdir}/%{wallaby_
 cp -p -f schema/wallaby.py %{buildroot}/%{python_sitelib}/wallaby/__init__.py
 cp -p -f extensions/wallaby/*.py %{buildroot}/%{python_sitelib}/wallaby
 
-%clean
 %if %{building_for_el5}
+%clean
 rm -rf %{buildroot}
 %endif
 
@@ -249,62 +252,18 @@ fi
 %if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
-%dir %{ruby_sitelib}/mrg/grid/
-%{ruby_sitelib}/mrg/grid/config.rb
-%{ruby_sitelib}/mrg/grid/config-client.rb
-%{ruby_sitelib}/mrg/grid/config-proxies.rb
-%{ruby_sitelib}/mrg/grid/config/ArcLabel.rb
-%{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
-%{ruby_sitelib}/mrg/grid/config/Configuration.rb
-%{ruby_sitelib}/mrg/grid/config/ConfigValidating.rb
-%{ruby_sitelib}/mrg/grid/config/DirtyElement.rb
-%{ruby_sitelib}/mrg/grid/config/DataValidating.rb
-%{ruby_sitelib}/mrg/grid/config/Feature.rb
-%{ruby_sitelib}/mrg/grid/config/Group.rb
-%{ruby_sitelib}/mrg/grid/config/InconsistencyDetecting.rb
-%{ruby_sitelib}/mrg/grid/config/Node.rb
-%{ruby_sitelib}/mrg/grid/config/NodeMembership.rb
-%{ruby_sitelib}/mrg/grid/config/Parameter.rb
-%{ruby_sitelib}/mrg/grid/config/QmfUtils.rb
-%{ruby_sitelib}/mrg/grid/config/Snapshot.rb
-%{ruby_sitelib}/mrg/grid/config/Store.rb
-%{ruby_sitelib}/mrg/grid/config/Subsystem.rb
-%{ruby_sitelib}/mrg/grid/config/dbmeta.rb
-%{ruby_sitelib}/mrg/grid/config/errors.rb
-%{ruby_sitelib}/mrg/grid/config/version.rb
-%{ruby_sitelib}/mrg/grid/config/dbmigrate/1.rb
-%{ruby_sitelib}/mrg/grid/config/dbmigrate/2.rb
-%{ruby_sitelib}/mrg/grid/config/dbmigrate/3.rb
-%{ruby_sitelib}/mrg/grid/config/dbmigrate/4.rb
-%{ruby_sitelib}/mrg/grid/config/dbmigrate/5.rb
-%{ruby_sitelib}/mrg/grid/util/graph.rb
-%{ruby_sitelib}/mrg/grid/util/daemon.rb
-%{ruby_sitelib}/mrg/grid/config/shell.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_apropos.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_console.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_explain.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_help.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_load.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_param.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_feature.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_node.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_new_command.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_feature_import.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_sanitize.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_snapshot.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_inventory.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
-%{ruby_sitelib}/mrg/grid/config/shell/cmd_activate.rb
-%{ruby_sitelib}/mrg/grid/config/shell/entity_ops.rb
-%{ruby_sitelib}/mrg/grid/config/shell/command.rb
-%{ruby_sitelib}/mrg/grid/config/shell/skel.rb
-
+%{ruby_sitelib}/mrg/grid/
 %if %{has_sinatra}
+%exclude %{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
+
 %files -n wallaby-http-server
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 
 %changelog
+
+* Wed Sep 21 2011 willb <willb@redhat> - 0.10.6-1
+- Packaging fixes
 
 * Tue Sep 20 2011 willb <willb@redhat> - 0.10.5-8
 - Packaging fixes
