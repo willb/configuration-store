@@ -137,23 +137,23 @@ module Mrg
         end
 
         def diff_nodes(old_nodes)
-          @patch.updates.nodes, @patch.expected.nodes = make_patch_entity(@nodes, old_nodes, [[:membership, :memberships, :modifyMemberships]])
+          @patch.updates.nodes, @patch.expected.nodes = make_patch_entity(@nodes, old_nodes, gen_methods([:name, :idgroup, :provisioned, :last_updated_version], "Node"))
         end
 
         def diff_groups(old_groups)
-          @patch.updates.groups, @patch.expected.groups = make_patch_entity(@groups, old_groups, [[:features, :features, :modifyFeatures], [:params, :params, :modifyParams]])
+          @patch.updates.groups, @patch.expected.groups = make_patch_entity(@groups, old_groups, gen_methods([:name, :is_identity_group], "Group"))
         end
 
         def diff_params(old_params)
-          @patch.updates.params, @patch.expected.params = make_patch_entity(@params, old_params, [[:kind, :kind, :setKind], [:default_val, :default, :setDefault], [:description, :description, :setDescription], [:must_change, :must_change, :setMustChange], [:level, :visibility_level, :setVisibilityLevel], [:needs_restart, :requires_restart, :setRequiresRestart], [:depends, :depends, :modifyDepends], [:conflicts, :conflicts, :modifyConflicts]])
+          @patch.updates.params, @patch.expected.params = make_patch_entity(@params, old_params, gen_methods([:name], "Parameter"))
         end
 
         def diff_features(old_features)
-          @patch.updates.features, @patch.expected.features = make_patch_entity(@features, old_features, [[:params, :params, :modifyParams], [:included, :included_features, :modifyIncludedFeatures], [:conflicts, :conflicts, :modifyConflicts], [:depends, :depends, :modifyDepends]])
+          @patch.updates.features, @patch.expected.features = make_patch_entity(@features, old_features, gen_methods([:name], "Feature"))
         end
 
         def diff_subsystems(old_subsystems)
-          @patch.updates.subsystems, @patch.expected.subsystems = make_patch_entity(@subsystems, old_subsystems, [[:params, :params, :modifyParams]])
+          @patch.updates.subsystems, @patch.expected.subsystems = make_patch_entity(@subsystems, old_subsystems, gen_methods([:name], "Subsystem"))
         end
 
         def diff_versions(old_version)
@@ -172,6 +172,26 @@ module Mrg
              @patch.updates.features["BaseDBVersion"] = {"modifyParams"=>["REPLACE", {"BaseDBVersion"=>"v#{version.to_s}"}, {}]}
           end
         end
+
+        def gen_methods(ignore, type)
+          methods = []
+          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.intern} - ignore
+          public_methods = Mrg::Grid::Config.const_get(type).spqr_meta.properties.map {|p| p.name.to_s}
+          attrs.each do |m|
+            tmp = m.to_s.split('_')
+            begin
+              qmf_m = public_methods.grep(/#{tmp[0]}/)[0].intern
+              set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
+            rescue
+              if tmp.count > 1
+                qmf_m = public_methods.grep(/#{tmp[1]}/)[0].intern
+                set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
+              end
+            end
+            methods << [m, qmf_m, set]
+          end
+          methods
+        end
       end
 
       class PatchLoader
@@ -181,7 +201,7 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = ::Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
+          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
           @valid_methods = {}
           @entities.each do |type|
             otype = obj_type(type.intern)
@@ -212,7 +232,7 @@ module Mrg
         end
 
         def PatchLoader.log
-          @log ||= MsgSink.new
+          @log ||= Mrg::Grid::SerializedConfigs::MsgSink.new
         end
         
         def PatchLoader.log=(lg)
@@ -268,11 +288,11 @@ module Mrg
 
         def entity_details(type, name)
           details = {:expected=>{}, :updates=>{}}
-          t = Mrg::Grid::SerializedConfigs::Store.constants.grep(/^#{name.slice(0,5).downcase}/)
+          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].intern
           klass = Mrg::Grid::Config.const_get(type)
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
-              cmd = klass.gen_getter(set.intern)
+              cmd = klass.get_from_set(set.intern)
               if set.to_s =~ /^modify/
                 details[:updates][cmd] = @updates.send(t)[name][set][1]
               else
@@ -335,8 +355,8 @@ module Mrg
                 if type == :groups
                   obj = @store.send("addExplicitGroup", name)
                 else
-                  method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^add#{type.to_s.slice(0,5).capitalize}/)
-                  obj = @store.send(method.to_s, name)
+                  method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^add#{type.to_s.slice(0,4).capitalize}/)[0]
+                  obj = @store.send(method, name)
                 end
                 added = true
               else
@@ -378,8 +398,8 @@ module Mrg
               if (not @updates.send(type).has_key?(name)) && (name.index("+++") == nil)
                 verify_entity(get_entity(type, name), type, name)
                 log.info "Removing #{otype} '#{name}'"
-                method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^remove#{type.to_s.slice(0,5).capitalize}/)
-                @store.send(method.to_s, name)
+                method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^remove#{type.to_s.slice(0,4).capitalize}/)[0]
+                @store.send(method, name)
               end
             end
           end
@@ -426,8 +446,8 @@ module Mrg
           if type == :groups
             obj = @store.send("getGroupByName", name)
           else
-            method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^get#{type.to_s.slice(0,5).capitalize}/)
-            obj = @store.send(method.to_s, name)
+            method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{type.to_s.slice(0,4).capitalize}/)[0]
+            obj = @store.send(method, name)
           end
           obj
         end
@@ -445,7 +465,7 @@ module Mrg
             sym_t = type
           end
           if not @valid_methods[type].include?(sym_n)
-            raise RuntimeError.new("#{name} is an invalid object accessor")
+            raise RuntimeError.new("'#{name}' is an invalid object accessor")
           end
         end
       end

@@ -33,22 +33,22 @@ module Mrg
         include PatchTester
         
         it "should remove entities from the store" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           verify_changes(*patch_db(@args))
         end
 
         it "should add entities to the store" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.6.wpatch"]
           verify_changes(*patch_db(@args))
         end
 
         it "should update entities in the store" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.7.wpatch"]
           verify_changes(*patch_db(@args))
         end
 
         it "should create a snapshot for each patch file from the db version in the file" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml", "#{File.dirname(__FILE__)}/db-patching-add-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch", "#{File.dirname(__FILE__)}/db-1.6.wpatch"]
           Snapshot.count.should == 0
           verify_changes(*patch_db(@args))
           Snapshot.count.should == 2
@@ -66,22 +66,22 @@ module Mrg
         end
 
         it "should fail on unexpected db changes when deleting" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @args[:skip_patterns] = ["+++"]
           @args[:exit_code] = 1
           change_expectations_then_patch(@args)
         end
 
         it "should fail on unexpected db changes when updating" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-update-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.7.wpatch"]
           @args[:exit_code] = 1
           change_expectations_then_patch(@args)
         end
 
         it "should rollback the database on failure" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @args[:exit_code] = 1
-          patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
+          patcher = Mrg::Grid::PatchConfigs::PatchLoader.new(@store, false)
 
           patcher.load_yaml(open("#{@args[:files][0]}", "r") {|db| db.read})
           dets = patcher.entity_details(:Feature, "BaseDBVersion")
@@ -96,13 +96,13 @@ module Mrg
         end
 
         it "should handle missing DB version feature" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @store.removeFeature("BaseDBVersion")
           verify_changes(*patch_db(@args))
         end
 
         it "should handle malformed DB version" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @args[:cmd_args] = ["-f"]
           bad_versions = ["invalid string", "1111111", ".1111", 11111, 0.1111]
 
@@ -121,7 +121,7 @@ module Mrg
         end
 
         it "should handle DB versions with and without a v" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @args[:cmd_args] = ["-f"]
           @store.makeSnapshot("Pre")
           obj = @store.getFeature("BaseDBVersion")
@@ -141,7 +141,7 @@ module Mrg
         end
 
         it "should patch anyway if force option used" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
           @args[:exit_code] = 1
 
           obj = @store.getFeature("BaseDBVersion")
@@ -153,8 +153,8 @@ module Mrg
         end
 
         it "should not patch if the db version is >= patch verion" do
-          @args[:files] = ["#{File.dirname(__FILE__)}/db-patching-del-patch.yaml"]
-          patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
+          @args[:files] = ["#{File.dirname(__FILE__)}/db-1.5.wpatch"]
+          patcher = Mrg::Grid::PatchConfigs::PatchLoader.new(@store, false)
 
           patcher.load_yaml(open("#{@args[:files][0]}", "r") {|db| db.read})
           tmp = patcher.db_version.to_s.split(".")

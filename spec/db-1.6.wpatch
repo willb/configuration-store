@@ -1,4 +1,4 @@
---- !ruby/object:Mrg::Grid::SerializedConfigs::Patch 
+--- !ruby/object:Mrg::Grid::PatchConfigs::Patch 
 db_version: "1.6"
 expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
   features: 

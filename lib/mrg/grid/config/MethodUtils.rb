@@ -19,27 +19,43 @@ require 'set'
 module Mrg
   module Grid
     module MethodUtils
-      def gen_setter(get)
-        type = self.send(get).class
-        tmp = get.split('_')
-        cap_str = ""
-        tmp.each do |w|
-          cap_str += w.capitalize
+      module ClassMixins
+        def set_from_get(get)
+          if self.spqr_meta.mmethods.keys.include?(get)
+            type = self.spqr_meta.mmethods[get].kind
+          else
+            self.spqr_meta.properties.each {|p| type = p.kind if p.name == get}
+            if (type == nil) or (type == "")
+              raise RuntimeError.new("Invalid get accessor '#{get}'")
+            end
+          end
+          tmp = get.to_s.split('_')
+          cap_str = ""
+          tmp.each do |w|
+            cap_str += w.capitalize
+          end
+          if (type == :list) || (type == :map)
+            "modify#{cap_str}".intern
+          else
+            "set#{cap_str}".intern
+          end
         end
-        if (type == Array) || (type == Hash)
-          "modify#{cap_str}".intern
-        else
-          "set#{cap_str}".intern
+
+        def get_from_set(set)
+          set.to_s =~ /^set(.+)/
+          if $1 == nil
+            set.to_s =~ /^modify(.+)/
+          end
+          if $1 == nil
+            raise RuntimeError.new("Invalid set accessor #{set.inspect}")
+          end
+          getter = $1.gsub(/([A-Z][a-z]*)/, '\1_').chop
+          getter.downcase.intern
         end
       end
 
-      def gen_getter(set)
-        set =~ /^set(.+)/
-        if $1 == nil
-          set =~ /^modify(.+)/
-        end
-        getter = $1.gsub(/([A-Z][a-z]*)/, '\1_').chop
-        getter.downcase.intern
+      def self.included(receiver)
+        receiver.extend ClassMixins
       end
     end
 

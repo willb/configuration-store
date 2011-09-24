@@ -183,7 +183,7 @@ module PatchTester
     dir = args[:dir]
 
     details = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = {} } }
-    patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
+    patcher = Mrg::Grid::PatchConfigs::PatchLoader.new(@store, false)
     Dir.mkdir(dir) rescue nil
     prev_f = ""
     args[:files].each do |f|
@@ -197,7 +197,7 @@ module PatchTester
         prev_f = filename
       end
     end
-    Mrg::Grid::Config::Shell::Upgrade_db.new(@store, "").main(["-d", "#{dir}"] + args[:cmd_args]).should == args[:exit_code]
+    Mrg::Grid::Config::Shell::Upgrade_db.new(@store, "").main(["-v", "-d", "#{dir}"] + args[:cmd_args]).should == args[:exit_code]
     args[:files].each do |f|
       patcher.load_yaml(open("#{dir}/#{File.basename(f)}", "r") {|db| db.read})
       new = patcher.affected_entities
@@ -222,9 +222,10 @@ module PatchTester
           else
             @store.send("check#{type}Validity", n).should == []
             if type == :Group
-              obj = @store.send("get#{long_to_short(type)}ByName", n)
+              obj = @store.send("getGroupByName", n)
             else
-              obj = @store.send("get#{long_to_short(type)}", n)
+              method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^get#{type.to_s.slice(0,5).capitalize}/)
+              obj = @store.send(method.to_s, n)
             end
             obj.should_not == nil
             details[type][n][:updates].each do |get, value|
@@ -237,7 +238,7 @@ module PatchTester
   end
 
   def setup_to_trail(prev, nextf)
-    reader = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
+    reader = Mrg::Grid::PatchConfigs::PatchLoader.new(@store, false)
     reader.load_yaml(open("#{prev}", "r") {|db| db.read})
     ver1 = reader.db_version
     fhdl = open(nextf, 'r')
@@ -289,7 +290,7 @@ module PatchTester
     args ||= {}
     defaults = {:skip_patterns=>[]}
     args = defaults.merge(args)
-    patcher = Mrg::Grid::SerializedConfigs::PatchLoader.new(@store, false)
+    patcher = Mrg::Grid::PatchConfigs::PatchLoader.new(@store, false)
     snap_name = "Pre-Change"
     extra_feat = "ExtraFeature"
     extra_group = "ExtraGroup"
@@ -303,7 +304,8 @@ module PatchTester
     affected = patcher.affected_entities
     [:modify, :delete].each do |changed|
       affected[changed].each do |type, names|
-        klass = Mrg::Grid::Config.const_get(type).new
+        puts type.inspect
+        klass = Mrg::Grid::Config.const_get(type)
         names.each do |n|
           skip = false
           args[:skip_patterns].each do |s|
@@ -321,13 +323,14 @@ module PatchTester
             t = Time.now.utc
             new_val = (t.tv_sec * 1000000) + t.tv_usec
             if type == :Group
-              obj = @store.send("get#{long_to_short(type)}ByName", n)
+              obj = @store.send("getGroupByName", n)
             else
-              obj = @store.send("get#{long_to_short(type)}", n)
+              method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^get#{type.to_s.slice(0,5).capitalize}/)
+              obj = @store.send(method.to_s, n)
             end
             obj.should_not == nil
             getter = getter.intern
-            cmd = klass.gen_setter(getter)
+            cmd = klass.set_from_get(getter)
             if cmd.to_s =~ /^modifyParams/ and (type == :Feature or type == :Group)
               obj.send(cmd, "REPLACE", {"EXTRA_PARAM"=>new_val}, {})
             elsif cmd.to_s =~ /^modify/
