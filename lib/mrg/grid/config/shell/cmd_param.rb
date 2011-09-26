@@ -109,7 +109,7 @@ module Mrg
           end
           
           def self.description
-            "Displays metadata about a parameter."
+            "Displays metadata about a parameter in the store."
           end
           
           def supports_options
@@ -152,36 +152,86 @@ module Mrg
           end
 
           def act
-            run_pager
             store.console.objects(:class=>"Parameter").each do |param|
               puts "#{param.name}"
             end
             0
           end
+        end
 
-          def run_pager
-            return unless STDOUT.tty?
+        class AttachParam < Command
+          def self.opname
+            "attach-params"
+          end
 
-            read, write = IO.pipe
+          def self.opargs
+            ""
+          end
 
-            unless Kernel.fork # Child process
-              STDOUT.reopen(write)
-              STDERR.reopen(write) if STDERR.tty?
-              read.close
-              write.close
-              return
+          def self.description
+            "Attach parameters to entities in the store."
+          end
+
+          def supports_options
+            false
+          end
+
+          def init_option_parser
+            OptionParser.new do |opts|
+
+              opts.banner = "Usage:  wallaby #{self.class.opname} action type name PARAM[=VALUE]\nModifies parameters attached to an entity"
+
+              opts.on("-h", "--help", "displays this message") do
+                puts @oparser
+                exit
+              end
+            end
+          end
+
+          def verify_args(*args)
+            valid = {}
+            valid[:type] = [:Node, :Parameter, :Group, :Subsystem, :Feature]
+            valid[:action] = [:ADD, :REMOVE, :REPLACE]
+            @options = {}
+            @arg_error = false
+
+            dup_args = args.dup
+
+            @options[:action] = dup_args.shift.upcase
+            @options[:type] = dup_args.shift.capitalize
+            @options[:name] = dup_args.shift
+            valid.keys.each do |key|
+              if (not valid[key].include?(@options[key].intern)) && (@options[key] != nil)
+                puts "#{@options[key]} is an invalid #{key} name"
+                @arg_error = true
+              end
             end
 
-            # Parent process, become pager
-            STDIN.reopen(read)
-            read.close
-            write.close
-  
-            ENV['LESS'] = 'FSRX' # Don't page if the input is short enough
+            @params = {}
+            dup_args.each do |a|
+              tmp = a.split("=", 2)
+              @params[tmp[0]] = 0 if tmp.length == 1
+              @params[tmp[0]] = tmp[1] if tmp.length == 2
+            end
+          end
 
-            Kernel.select [STDIN] # Wait until we have input before we start the pager
-            pager = ENV['PAGER'] || 'less'
-            exec pager rescue exec "/bin/sh", "-c", pager
+          register_callback :after_option_parsing, :verify_args
+
+          def act
+            result = 0
+
+            if @arg_error == true
+              result = 1
+            elsif store.send("check#{@options[:type]}Validity", [@options[:name]]) != []
+              puts "Invalid #{@options[:type]} #{@options[:name]}"
+              result = 1
+            else
+              method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{@options[:type].slice(0,4).capitalize}/)[0]
+              obj = store.send(method, @options[:name])
+              obj.modifyParams(@options[:action], @params, {})
+            end
+
+            result
           end
         end
       end
