@@ -57,10 +57,8 @@ module Mrg
       def self.included(receiver)
         receiver.extend ClassMixins
       end
-    end
 
-    module NameUtils
-      def obj_type(attr)
+      def self.attr_to_class(attr)
         a = attr.to_s.gsub(/(.+)s/, '\1').capitalize
         if Mrg::Grid::Config.constants.include?(a)
           Mrg::Grid::Config.const_get(a).to_s.split("::").last.intern
@@ -76,6 +74,14 @@ module Mrg
           end
           type.intern
         end
+      end
+
+      def self.find_method(sn, type="Store")
+        Mrg::Grid::Config.const_get(type).spqr_meta.manageable_methods.map {|m| m.name.to_s}.grep(/#{sn}/)
+      end
+
+      def self.find_property(sn, type="Store")
+        Mrg::Grid::Config.const_get(type).spqr_meta.properties.map {|p| p.name.to_s}.grep(/#{sn}/)
       end
     end
   end

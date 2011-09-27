@@ -15,7 +15,6 @@
 # limitations under the License.
 
 require 'yaml'
-require 'rhubarb/rhubarb'
 require 'mrg/grid/config'
 
 module Mrg
@@ -175,19 +174,18 @@ module Mrg
 
         def gen_methods(ignore, type)
           methods = []
+          qmf_m = ""
           attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.intern} - ignore
-          public_methods = Mrg::Grid::Config.const_get(type).spqr_meta.properties.map {|p| p.name.to_s}
           attrs.each do |m|
             tmp = m.to_s.split('_')
             begin
-              qmf_m = public_methods.grep(/#{tmp[0]}/)[0].intern
-              set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
+              qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[0], type)[0].intern
             rescue
               if tmp.count > 1
-                qmf_m = public_methods.grep(/#{tmp[1]}/)[0].intern
-                set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
+                qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[1], type)[0].intern
               end
             end
+            set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
             methods << [m, qmf_m, set]
           end
           methods
@@ -196,7 +194,6 @@ module Mrg
 
       class PatchLoader
         include Mrg::Grid::SerializedConfigs::DBHelpers
-        include Mrg::Grid::NameUtils
 
         def initialize(store, force_upgrade=false)
           @store = store
@@ -204,7 +201,7 @@ module Mrg
           @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
           @valid_methods = {}
           @entities.each do |type|
-            otype = obj_type(type.intern)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type.intern)
             klass = Mrg::Grid::Config.const_get(otype)
             qmf_methods = klass.spqr_meta.manageable_methods.map {|m| m.name}
             qmf_props = klass.spqr_meta.properties.map {|p| p.name}
@@ -264,7 +261,7 @@ module Mrg
           changes = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = [] } }
           @entities.each do |type|
             type = type.intern
-            otype = obj_type(type)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @updates.send(type).keys.each do |name|
               if @expected.send(type).has_key?(name)
                 changes[:modify][otype].push(name)
@@ -276,7 +273,7 @@ module Mrg
 
           @entities.each do |type|
             type = type.intern
-            otype = obj_type(type)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name)
                 changes[:delete][otype].push(name)
@@ -309,8 +306,7 @@ module Mrg
  
         private
         def snap_db
-          t = Time.now.utc
-          @snapshot = "Database upgrade to #{@db_version} automatic pre-upgrade snapshot at #{t} -- #{::Rhubarb::Util::timestamp.to_s(16)}"
+          @snapshot = Mrg::Grid::Config::Snapshot.autogen_name("Database upgrade to #{@db_version} automatic pre-upgrade snapshot")
           log.info "Creating snapshot named '#{@snapshot}'"
           if @store.makeSnapshot(@snapshot) == nil
             raise RuntimeError.new("Failed to create snapshot")
@@ -347,17 +343,13 @@ module Mrg
         def update_entities
           @entities.each do |type|
             type = type.intern
-            otype = obj_type(type)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @updates.send(type).keys.each do |name|
               added = false
               if @store.send("check#{otype}Validity", [name]) != []
                 log.info "Adding #{otype} '#{name}'"
-                if type == :groups
-                  obj = @store.send("addExplicitGroup", name)
-                else
-                  method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^add#{type.to_s.slice(0,4).capitalize}/)[0]
-                  obj = @store.send(method, name)
-                end
+                method = find_store_method("add\\w*#{type.to_s.slice(0,4).capitalize}")
+                obj = @store.send(method, name)
                 added = true
               else
                 obj = get_entity(type, name)
@@ -393,12 +385,12 @@ module Mrg
 
           @entities.each do |type|
             type = type.intern
-            otype = obj_type(type)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @expected.send(type).keys.each do |name|
               if (not @updates.send(type).has_key?(name)) && (name.index("+++") == nil)
                 verify_entity(get_entity(type, name), type, name)
                 log.info "Removing #{otype} '#{name}'"
-                method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^remove#{type.to_s.slice(0,4).capitalize}/)[0]
+                method = find_store_method("remove#{type.to_s.slice(0,4).capitalize}")
                 @store.send(method, name)
               end
             end
@@ -408,7 +400,7 @@ module Mrg
         end
 
         def verify_entity(obj, type, name)
-          otype = obj_type(type)
+          otype = Mrg::Grid::MethodUtils.attr_to_class(type)
           log.info "Verifying #{otype} '#{name}'"
           @expected.send(type)[name].keys.each do |get|
             log.debug "Verifying #{otype} '#{name}##{get}'"
@@ -441,15 +433,10 @@ module Mrg
         end
 
         def get_entity(type, name)
-          otype = obj_type(type)
+          otype = Mrg::Grid::MethodUtils.attr_to_class(type)
           log.info "Retrieving #{otype} '#{name}'"
-          if type == :groups
-            obj = @store.send("getGroupByName", name)
-          else
-            method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{type.to_s.slice(0,4).capitalize}/)[0]
-            obj = @store.send(method, name)
-          end
-          obj
+          method = find_store_method("get#{type.to_s.slice(0,4).capitalize}")
+          @store.send(method, name)
         end
 
         def validate_accessor(type, name)
@@ -467,6 +454,29 @@ module Mrg
           if not @valid_methods[type].include?(sym_n)
             raise RuntimeError.new("'#{name}' is an invalid object accessor")
           end
+        end
+
+        def find_store_method(regex)
+          method = nil
+          possibles = Mrg::Grid::MethodUtils.find_method(regex, "Store")
+          if possibles.size == 1
+            method = possibles[0]
+          else
+            possibles.each do |m|
+              if (m =~ /^#{regex}[^A-Z]*ByName$/) && (method == nil)
+                # If there is a ByName function, that is desired since an
+                # exact match is likely not a function that takes a name
+                method = m
+              elsif (m =~ /^#{regex}$/) && (method == nil)
+                # Exact match
+                method = m
+              elsif (m =~ /^#{regex}[^A-Z]*$/) && (method == nil)
+                # No more capital letters
+                method = m
+              end
+            end
+          end
+          method
         end
       end
     end

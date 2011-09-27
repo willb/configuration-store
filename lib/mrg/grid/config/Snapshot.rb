@@ -17,6 +17,7 @@
 require 'mrg/grid/config'
 require 'zlib'
 require 'sqlite3'
+require 'rhubarb/rhubarb'
 
 module Mrg
   module Grid
@@ -46,6 +47,11 @@ module Mrg
         
         def snaptext=(st)
           self.orig_snaptext = SQLite3::Blob.new(Zlib::Deflate.deflate(st, Zlib::BEST_COMPRESSION))
+        end
+
+        def self.autogen_name(prefix)
+          t = Time.now.utc
+          "#{prefix} at #{t} -- #{::Rhubarb::Util::timestamp.to_s(16)}"
         end
       end
     end

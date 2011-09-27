@@ -461,8 +461,7 @@ module Mrg
         # </method>
         
         def makeSnapshot(name)
-          tm = Time.now.utc
-          name = "Automatically generated snapshot at #{tm} -- #{((tm.tv_sec * 1000000) + tm.tv_usec).to_s(16)}" if name.size == 0
+          name = Mrg::Grid::Config::Snapshot.autogen_name("Automatically generated snapshot") if name.size == 0
           fail(42, "Snapshot name #{name} already taken") if Snapshot.find_first_by_name(name)
           result = Snapshot.create(:name=>name)
           snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
