@@ -348,7 +348,7 @@ module Mrg
               added = false
               if @store.send("check#{otype}Validity", [name]) != []
                 log.info "Adding #{otype} '#{name}'"
-                method = find_store_method("add\\w*#{type.to_s.slice(0,4).capitalize}")
+                method = Mrg::Grid::MethodUtils.find_store_method("add\\w*#{type.to_s.slice(0,4).capitalize}")
                 obj = @store.send(method, name)
                 added = true
               else
@@ -390,7 +390,7 @@ module Mrg
               if (not @updates.send(type).has_key?(name)) && (name.index("+++") == nil)
                 verify_entity(get_entity(type, name), type, name)
                 log.info "Removing #{otype} '#{name}'"
-                method = find_store_method("remove#{type.to_s.slice(0,4).capitalize}")
+                method = Mrg::Grid::MethodUtils.find_store_method("remove#{type.to_s.slice(0,4).capitalize}")
                 @store.send(method, name)
               end
             end
@@ -435,7 +435,7 @@ module Mrg
         def get_entity(type, name)
           otype = Mrg::Grid::MethodUtils.attr_to_class(type)
           log.info "Retrieving #{otype} '#{name}'"
-          method = find_store_method("get#{type.to_s.slice(0,4).capitalize}")
+          method = Mrg::Grid::MethodUtils.find_store_method("get#{type.to_s.slice(0,4).capitalize}")
           @store.send(method, name)
         end
 
@@ -454,29 +454,6 @@ module Mrg
           if not @valid_methods[type].include?(sym_n)
             raise RuntimeError.new("'#{name}' is an invalid object accessor")
           end
-        end
-
-        def find_store_method(regex)
-          method = nil
-          possibles = Mrg::Grid::MethodUtils.find_method(regex, "Store")
-          if possibles.size == 1
-            method = possibles[0]
-          else
-            possibles.each do |m|
-              if (m =~ /^#{regex}[^A-Z]*ByName$/) && (method == nil)
-                # If there is a ByName function, that is desired since an
-                # exact match is likely not a function that takes a name
-                method = m
-              elsif (m =~ /^#{regex}$/) && (method == nil)
-                # Exact match
-                method = m
-              elsif (m =~ /^#{regex}[^A-Z]*$/) && (method == nil)
-                # No more capital letters
-                method = m
-              end
-            end
-          end
-          method
         end
       end
     end

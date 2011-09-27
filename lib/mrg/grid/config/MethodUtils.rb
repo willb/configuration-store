@@ -83,6 +83,29 @@ module Mrg
       def self.find_property(sn, type="Store")
         Mrg::Grid::Config.const_get(type).spqr_meta.properties.map {|p| p.name.to_s}.grep(/#{sn}/)
       end
+
+      def self.find_store_method(regex)
+        method = nil
+        possibles = Mrg::Grid::MethodUtils.find_method(regex, "Store")
+        if possibles.size == 1
+          method = possibles[0]
+        else
+          possibles.each do |m|
+            if (m =~ /^#{regex}[^A-Z]*ByName$/) && (method == nil)
+              # If there is a ByName function, that is desired since an
+              # exact match is likely not a function that takes a name
+              method = m
+            elsif (m =~ /^#{regex}$/) && (method == nil)
+              # Exact match
+              method = m
+            elsif (m =~ /^#{regex}[^A-Z]*$/) && (method == nil)
+              # No more capital letters
+              method = m
+            end
+          end
+        end
+        method
+      end
     end
   end
 end
