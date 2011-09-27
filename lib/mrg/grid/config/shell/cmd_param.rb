@@ -178,8 +178,15 @@ module Mrg
 
           def init_option_parser
             OptionParser.new do |opts|
+              @options = [{:opt_name=>:action, :mod_func=>:upcase},
+                          {:opt_name=>:type, :mod_func=>:capitalize},
+                          {:opt_name=>:name, :mod_func=>:dup}]
 
-              opts.banner = "Usage:  wallaby #{self.class.opname} action type name PARAM[=VALUE]\nModifies parameters attached to an entity"
+              str_o = ""
+              @options.each do |o|
+                str_o += "#{o[:opt_name].to_s.upcase} "
+              end
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\nModifies parameters attached to an entity"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -192,18 +199,30 @@ module Mrg
             valid = {}
             valid[:type] = [:Node, :Parameter, :Group, :Subsystem, :Feature]
             valid[:action] = [:ADD, :REMOVE, :REPLACE]
-            @options = {}
+            @input = {}
             @arg_error = false
 
             dup_args = args.dup
 
-            @options[:action] = dup_args.shift.upcase
-            @options[:type] = dup_args.shift.capitalize
-            @options[:name] = dup_args.shift
-            valid.keys.each do |key|
-              if (not valid[key].include?(@options[key].intern)) && (@options[key] != nil)
-                puts "#{@options[key]} is an invalid #{key} name"
+            @options.each do |opt|
+              oname = opt[:opt_name]
+              ofunc = opt[:mod_func]
+              input = dup_args.shift
+              if input == nil
+                puts "fatal: you must specify a valid #{opt[:opt_name].to_s.upcase}"
                 @arg_error = true
+              else
+                @input["orig_#{oname}".intern] = input
+                @input[oname] = input.send(ofunc)
+              end
+            end
+
+            if @arg_error == false
+              valid.keys.each do |key|
+                if not valid[key].include?(@input[key].intern)
+                  puts "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase} name"
+                  @arg_error = true
+                end
               end
             end
 
@@ -212,6 +231,11 @@ module Mrg
               tmp = a.split("=", 2)
               @params[tmp[0]] = 0 if tmp.length == 1
               @params[tmp[0]] = tmp[1] if tmp.length == 2
+            end
+            # Work around paramter naming issue
+            @params.each do |k,v|
+              @params.delete(k)
+              @params[store.getParam(k).name] = v
             end
           end
 
@@ -222,13 +246,13 @@ module Mrg
 
             if @arg_error == true
               result = 1
-            elsif store.send("check#{@options[:type]}Validity", [@options[:name]]) != []
-              puts "Invalid #{@options[:type]} #{@options[:name]}"
+            elsif store.send("check#{@input[:type]}Validity", [@input[:name]]) != []
+              puts "Invalid #{@input[:type]} #{@input[:name]}"
               result = 1
             else
-              method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{@options[:type].slice(0,4).capitalize}/)[0]
-              obj = store.send(method, @options[:name])
-              obj.modifyParams(@options[:action], @params, {})
+              method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{@input[:type].slice(0,4).capitalize}/)[0]
+              obj = store.send(method, @input[:name])
+              obj.modifyParams(@input[:action], @params, {})
             end
 
             result
