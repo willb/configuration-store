@@ -180,13 +180,13 @@ module Mrg
             OptionParser.new do |opts|
               @options = [{:opt_name=>:action, :mod_func=>:upcase},
                           {:opt_name=>:type, :mod_func=>:capitalize},
-                          {:opt_name=>:name, :mod_func=>:dup}]
+                          {:opt_name=>:name, :mod_func=>:to_s}]
 
               str_o = ""
               @options.each do |o|
                 str_o += "#{o[:opt_name].to_s.upcase} "
               end
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\nModifies parameters attached to an entity"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\nModifies parameter/value pairs attached to an entity"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -197,7 +197,7 @@ module Mrg
 
           def verify_args(*args)
             valid = {}
-            valid[:type] = [:Node, :Parameter, :Group, :Subsystem, :Feature]
+            valid[:type] = [:Node, :Group, :Feature]
             valid[:action] = [:ADD, :REMOVE, :REPLACE]
             @input = {}
             @arg_error = false
@@ -209,7 +209,7 @@ module Mrg
               ofunc = opt[:mod_func]
               input = dup_args.shift
               if input == nil
-                puts "fatal: you must specify a valid #{opt[:opt_name].to_s.upcase}"
+                puts "fatal: you must specify a #{opt[:opt_name].to_s.upcase}"
                 @arg_error = true
               else
                 @input["orig_#{oname}".intern] = input
@@ -220,7 +220,7 @@ module Mrg
             if @arg_error == false
               valid.keys.each do |key|
                 if not valid[key].include?(@input[key].intern)
-                  puts "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase} name"
+                  puts "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase}"
                   @arg_error = true
                 end
               end
@@ -250,8 +250,11 @@ module Mrg
               puts "Invalid #{@input[:type]} #{@input[:name]}"
               result = 1
             else
-              method = Mrg::Grid::Config::Store.spqr_meta.manageable_methods.map {|p| p.name.to_s}.grep(/^get#{@input[:type].slice(0,4).capitalize}/)[0]
+              method = Mrg::Grid::MethodUtils.find_store_method("get#{@input[:type].slice(0,4)}")
               obj = store.send(method, @input[:name])
+              if @input[:type] == "Node"
+                obj = obj.identity_group
+              end
               obj.modifyParams(@input[:action], @params, {})
             end
 
