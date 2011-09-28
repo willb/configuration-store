@@ -90,19 +90,10 @@ module Mrg
         if possibles.size == 1
           method = possibles[0]
         else
-          possibles.each do |m|
-            if (m =~ /^#{regex}[^A-Z]*ByName$/) && (method == nil)
-              # If there is a ByName function, that is desired since an
-              # exact match is likely not a function that takes a name
-              method = m
-            elsif (m =~ /^#{regex}$/) && (method == nil)
-              # Exact match
-              method = m
-            elsif (m =~ /^#{regex}[^A-Z]*$/) && (method == nil)
-              # No more capital letters
-              method = m
-            end
-          end
+          loc = possibles.index{|m| m =~ /^#{regex}[^A-Z]*ByName$/}
+          loc = possibles.index{|m| m =~ /^#{regex}$/} if loc == nil
+          loc = possibles.index{|m| m =~ /^#{regex}[^A-Z]*$/} if loc == nil
+          method = possibles[loc]
         end
         method
       end
