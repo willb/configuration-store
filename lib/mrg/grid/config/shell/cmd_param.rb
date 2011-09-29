@@ -169,7 +169,7 @@ module Mrg
           end
 
           def self.description
-            "Attach parameters to entities in the store."
+            "Modifies parameter/value pairs attached to an entity."
           end
 
           def supports_options
@@ -177,16 +177,16 @@ module Mrg
           end
 
           def init_option_parser
-            OptionParser.new do |opts|
-              @options = [{:opt_name=>:action, :mod_func=>:upcase},
-                          {:opt_name=>:type, :mod_func=>:capitalize},
-                          {:opt_name=>:name, :mod_func=>:to_s}]
+            @options = [{:opt_name=>:action, :mod_func=>:upcase},
+                        {:opt_name=>:type, :mod_func=>:capitalize},
+                        {:opt_name=>:name, :mod_func=>:to_s}]
+            str_o = ""
+            @options.each do |o|
+              str_o += "#{o[:opt_name].to_s.upcase} "
+            end
 
-              str_o = ""
-              @options.each do |o|
-                str_o += "#{o[:opt_name].to_s.upcase} "
-              end
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\nModifies parameter/value pairs attached to an entity"
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\n#{self.class.description}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -196,9 +196,7 @@ module Mrg
           end
 
           def verify_args(*args)
-            valid = {}
-            valid[:type] = [:Node, :Group, :Feature]
-            valid[:action] = [:ADD, :REMOVE, :REPLACE]
+            valid = {:type=>[:Node, :Group, :Feature, :Subsystem], :action=>[:ADD, :REMOVE, :REPLACE]}
             @input = {}
             @arg_error = false
 
@@ -255,7 +253,11 @@ module Mrg
               if @input[:type] == "Node"
                 obj = obj.identity_group
               end
-              obj.modifyParams(@input[:action], @params, {})
+              if @input[:type] == "Subsystem"
+                obj.modifyParams(@input[:action], @params.keys, {})
+              else
+                obj.modifyParams(@input[:action], @params, {})
+              end
             end
 
             result
