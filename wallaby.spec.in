@@ -195,6 +195,9 @@ fi
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_dump.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_activate.rb
 %{ruby_sitelib}/mrg/grid/config/shell/cmd_upgrade_db.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_group.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_relationships.rb
+%{ruby_sitelib}/mrg/grid/config/shell/cmd_subsys.rb
 %{ruby_sitelib}/mrg/grid/config/shell/entity_ops.rb
 %{ruby_sitelib}/mrg/grid/config/shell/command.rb
 %{ruby_sitelib}/mrg/grid/config/shell/skel.rb
