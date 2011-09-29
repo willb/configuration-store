@@ -150,6 +150,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config.rb
 %{ruby_sitelib}/mrg/grid/config-client.rb
 %{ruby_sitelib}/mrg/grid/config-proxies.rb
+%{ruby_sitelib}/mrg/grid/config-patches.rb
 %{ruby_sitelib}/mrg/grid/config/ArcLabel.rb
 %{ruby_sitelib}/mrg/grid/config/ArcUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Configuration.rb
@@ -159,6 +160,7 @@ fi
 %{ruby_sitelib}/mrg/grid/config/Feature.rb
 %{ruby_sitelib}/mrg/grid/config/Group.rb
 %{ruby_sitelib}/mrg/grid/config/InconsistencyDetecting.rb
+%{ruby_sitelib}/mrg/grid/config/MethodUtils.rb
 %{ruby_sitelib}/mrg/grid/config/Node.rb
 %{ruby_sitelib}/mrg/grid/config/NodeMembership.rb
 %{ruby_sitelib}/mrg/grid/config/Parameter.rb

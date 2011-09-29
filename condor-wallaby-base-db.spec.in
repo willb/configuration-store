@@ -36,16 +36,17 @@ rm -rf %{buildroot}
 %defattr(-, root, root, -)
 %doc LICENSE
 %{_localstatedir}/lib/condor-wallaby-base-db/condor-base-db.snapshot
-%{_localstatedir}/lib/wallaby/patches/1.5
-%{_localstatedir}/lib/wallaby/patches/1.6
-%{_localstatedir}/lib/wallaby/patches/1.7
-%{_localstatedir}/lib/wallaby/patches/1.8
-%{_localstatedir}/lib/wallaby/patches/1.9
-%{_localstatedir}/lib/wallaby/patches/1.10
-%{_localstatedir}/lib/wallaby/patches/1.11
-%{_localstatedir}/lib/wallaby/patches/1.12
-%{_localstatedir}/lib/wallaby/patches/1.13
-%{_localstatedir}/lib/wallaby/patches/1.14
+%{_localstatedir}/lib/wallaby/patches/db-1.5.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.6.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.7.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.8.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.9.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.10.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.11.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.12.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.13.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.14.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.15.wpatch
 
 %changelog
 * Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1

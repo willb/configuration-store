@@ -22,11 +22,11 @@ include Grit
 
 class DiffGenerator
   def self.find_repo
-    dir = ""
-    while not File.exists?("./#{dir}/.git")
+    dir = "./"
+    while not File.exists?("#{dir}/.git")
       dir += "../"
     end
-    dir.chop
+    dir
   end
 
   def self.main(args)
