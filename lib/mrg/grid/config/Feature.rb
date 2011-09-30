@@ -21,6 +21,7 @@ require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/InconsistencyDetecting'
+require 'mrg/grid/config/MethodUtils'
 
 require 'mrg/grid/util/graph'
 
@@ -33,6 +34,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         include DataValidating
+        include MethodUtils
 
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Feature'

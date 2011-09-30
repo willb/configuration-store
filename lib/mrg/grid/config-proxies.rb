@@ -20,6 +20,18 @@ require 'yaml'
 module Mrg
   module Grid
     module SerializedConfigs
+      module DBHelpers
+        def create_relationships
+          log.info("Creating relationships between store entities")
+          @callbacks.each {|cb| cb.call}
+          @callbacks = []
+        end
+        
+        def dictify(ls)
+          Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
+        end
+      end
+
       class MsgSink
         def method_missing(sym, *args)
           nil
@@ -123,7 +135,7 @@ module Mrg
           raise "Configuration proxy not implemented"
         end
       end
-      
+
       class Store
         include DefaultStruct
         field :nodes, Set
@@ -132,7 +144,7 @@ module Mrg
         field :features, Set
         field :subsystems, Set
       end
-      
+
       class Feature
         include DefaultStruct
         field :name, String
@@ -179,16 +191,18 @@ module Mrg
       end
       
       class ConfigLoader
+        include DBHelpers
+
         module InternalHelpers
           def listify(ls)
             ls
           end
-          
+         
           def setify(s)
             s.uniq
           end
         end
-        
+      
         module QmfHelpers
           def listify(ls)
             ls
@@ -198,7 +212,7 @@ module Mrg
             ls
           end
         end
-        
+      
         def ConfigLoader.log
           @log ||= MsgSink.new
         end
@@ -229,7 +243,7 @@ module Mrg
           end
           
           yrepr = nil
-          
+
           begin
             yrepr = YAML::parse(ymltxt).transform
 
@@ -366,21 +380,11 @@ module Mrg
           end
         end
         
-        def create_relationships
-          log.info("Creating relationships between store entities")
-          @callbacks.each {|cb| cb.call}
-          @callbacks = []
-        end
-        
-        def dictify(ls)
-          Hash[*ls.map {|obj| [obj.name, obj]}.flatten]
-        end
-        
         def skk(x)
           x
         end
       end
-      
+
       class ConfigSerializer
         module QmfConfigSerializer
           # this is a no-op if we're using ConfigClients

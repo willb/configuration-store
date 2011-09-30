@@ -15,6 +15,7 @@
 # limitations under the License.
 
 require 'mrg/grid/config'
+require 'mrg/grid/config/MethodUtils'
 
 module Mrg
   module Grid
@@ -23,6 +24,7 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         include DataValidating
+        include MethodUtils
 
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Subsystem'

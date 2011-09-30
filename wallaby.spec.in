@@ -132,6 +132,7 @@ mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell
 mkdir -p %{buildroot}/%{ruby_sitelib}/mrg/grid/util
 mkdir -p %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby
+mkdir -p %{buildroot}/%{_localstatedir}/lib/wallaby/patches
 mkdir -p %{buildroot}/%{_initrddir}
 mkdir -p %{buildroot}/%{_sysconfdir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
@@ -240,6 +241,7 @@ fi
 %doc LICENSE
 %defattr(0755,root,root,-)
 %{_bindir}/wallaby
+%dir %{_localstatedir}/lib/wallaby/patches
 
 %files python
 

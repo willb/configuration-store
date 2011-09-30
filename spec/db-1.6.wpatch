@@ -1,0 +1,103 @@
+--- !ruby/object:Mrg::Grid::PatchConfigs::Patch 
+db_version: "1.6"
+expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    BaseDBVersion: 
+      params: 
+        BaseDBVersion: v1.0
+
+  groups: {}
+
+  nodes: {}
+
+  params: {}
+
+  subsystems: {}
+
+updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+  features: 
+    AddFeature: 
+      modifyParams: 
+      - REPLACE
+      - ADD_PARAM: ADD VALUE
+      - {}
+
+      modifyDepends: 
+      - REPLACE
+      - - DepFeature
+      - {}
+
+      modifyConflicts: 
+      - REPLACE
+      - - ConflictFeature
+      - {}
+
+      modifyIncludedFeatures: 
+      - REPLACE
+      - - IncludeFeature
+      - {}
+
+    BaseDBVersion: 
+      modifyParams: 
+      - REPLACE
+      - BaseDBVersion: v1.6
+      - {}
+
+  groups: 
+    +++d6140eacb7a6763bac6e62fbf3a64f3f: 
+      modifyParams: 
+      - REPLACE
+      - {}
+
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - []
+
+      - {}
+
+    AddGroup: 
+      modifyParams: 
+      - REPLACE
+      - DEP_PARAM: value
+      - {}
+
+      modifyFeatures: 
+      - REPLACE
+      - - AddFeature
+
+      - {}
+
+  nodes: 
+    add_node: 
+      modifyMemberships: 
+      - REPLACE
+      - - AddGroup
+      - {}
+
+  params: 
+    ADD_PARAM: 
+      setDefault: ""
+      setKind: integer
+      modifyDepends: 
+      - REPLACE
+      - - DEP_PARAM
+      - {}
+
+      setDescription: Added Param
+      setVisibilityLevel: 1
+      modifyConflicts: 
+      - REPLACE
+      - - CONFLICT_PARAM
+      - {}
+
+      setRequiresRestart: true
+      setMustChange: true
+  subsystems: 
+    AddSubsys: 
+      modifyParams: 
+      - REPLACE
+      - - ADD_PARAM
+      - {}
+

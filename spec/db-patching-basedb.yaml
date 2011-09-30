@@ -1,0 +1,195 @@
+--- !ruby/object:Mrg::Grid::SerializedConfigs::Store 
+features: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: BaseDBVersion
+  params: 
+    BaseDBVersion: v1.0
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: ConflictFeature
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: DelFeature
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: DepFeature
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: []
+
+  depends: []
+
+  included: []
+
+  name: IncludeFeature
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Feature 
+  conflicts: 
+  - ConflictFeature
+  depends: 
+  - DepFeature
+  included: 
+  - IncludeFeature
+  name: ModiFeature
+  params: 
+    MOD_PARAM: VALUE
+groups: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: []
+
+  is_identity_group: true
+  name: +++576335d8883cbe8850723a1c17e359f8
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: []
+
+  is_identity_group: true
+  name: +++6207a5dbf86f11c0472aef5a8985ff78
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: []
+
+  is_identity_group: false
+  name: +++DEFAULT
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: []
+
+  is_identity_group: false
+  name: DelGroup
+  params: {}
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
+  features: []
+
+  is_identity_group: false
+  name: ModiGroup
+  params: {}
+
+nodes: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Node 
+  idgroup: ""
+  last_updated_version: 0
+  membership: []
+
+  name: del_node
+  provisioned: true
+- !ruby/object:Mrg::Grid::SerializedConfigs::Node 
+  idgroup: ""
+  last_updated_version: 0
+  membership: 
+  - ModiGroup
+  name: modi_node
+  provisioned: true
+params: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: ""
+  kind: string
+  level: 0
+  must_change: false
+  name: BaseDBVersion
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: ""
+  kind: string
+  level: 0
+  must_change: false
+  name: CONFLICT_PARAM
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: ""
+  kind: string
+  level: 0
+  must_change: false
+  name: DEL_PARAM
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: ""
+  kind: string
+  level: 0
+  must_change: false
+  name: DEP_PARAM
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: []
+
+  default_val: ""
+  depends: []
+
+  description: ""
+  kind: string
+  level: 0
+  must_change: false
+  name: EXTRA_PARAM
+  needs_restart: false
+- !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
+  conflicts: 
+  - CONFLICT_PARAM
+  default_val: NO DEFAULT
+  depends: 
+  - DEP_PARAM
+  description: CHANGE ME
+  kind: string
+  level: 0
+  must_change: false
+  name: MOD_PARAM
+  needs_restart: false
+subsystems: 
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: DelSubsys
+  params: []
+
+- !ruby/object:Mrg::Grid::SerializedConfigs::Subsystem 
+  name: ModiSubsys
+  params: 
+  - MOD_PARAM

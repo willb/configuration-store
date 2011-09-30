@@ -18,6 +18,7 @@ require 'rhubarb/rhubarb'
 require 'mrg/grid/config/Parameter'
 require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/DataValidating'
+require 'mrg/grid/config/MethodUtils'
 
 require 'digest/md5'
 
@@ -33,6 +34,7 @@ module Mrg
         include ::SPQR::Manageable
         include DataValidating
         include ConfigValidating
+        include MethodUtils
 
         declare_table_name('nodegroup') # this line is necessary because you can't have a SQL table named "group"
         qmf_package_name 'com.redhat.grid.config'

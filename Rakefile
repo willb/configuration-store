@@ -103,12 +103,17 @@ end
 
 desc "Create a tarball"
 task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file] do
+  sh "bin/create-db-diffs.rb"
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()
   FileUtils.cp_r 'extensions', pkg_dir()
   FileUtils.cp_r 'schema', pkg_dir()
   FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO'], pkg_dir()
+  ["1.1", "1.2", "1.3", "1.4"].each do |f|
+    FileUtils.rm("patches/db-#{f}.wpatch")
+  end
+  FileUtils.cp_r 'patches', db_pkg_dir()
   FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
   sh "tar -cf #{pkg_source} #{pkg_dir}"
   sh "tar -cf #{db_pkg_source} #{db_pkg_dir}"
@@ -127,7 +132,7 @@ desc "Cleanup after an RPM build"
 task :clean do
   require 'fileutils'
   FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec"], :force => true
-  FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), 'condor-base-db.snapshot'], :force => true
+  FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), "condor-base-db.snapshot", "patches"], :force => true
 end
 
 task :copy_db => [:gen_db_file] do
