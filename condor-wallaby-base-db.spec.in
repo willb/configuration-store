@@ -9,7 +9,7 @@ License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/wallaby.git
 Source0: %{name}-%{version}-%{rel}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: wallaby-utils
+Requires: wallaby-utils >= 0.10.7
 BuildArch: noarch
 
 %description
@@ -53,6 +53,7 @@ rm -rf %{buildroot}
 * Fri Sep 30 2011 rrati <rrati@redhat> - 1.16-1
 - Renamed Aviary security feature
 - Added SSL functionality for QueryServer
+- Updated wallaby-utils dep
 
 * Mon Aug 29 2011 rrati <rrati@redhat> - 1.15-1
 - Added a v before BaseDBVersion number
