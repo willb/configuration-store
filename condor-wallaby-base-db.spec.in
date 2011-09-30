@@ -47,13 +47,13 @@ rm -rf %{buildroot}
 %{_localstatedir}/lib/wallaby/patches/db-1.13.wpatch
 %{_localstatedir}/lib/wallaby/patches/db-1.14.wpatch
 %{_localstatedir}/lib/wallaby/patches/db-1.15.wpatch
+%{_localstatedir}/lib/wallaby/patches/db-1.16.wpatch
 
 %changelog
-* Thu Jun 23 2011 rrati <rrati@redhat> - 1.14-1
-- Added BaseScheduler dependency to AviaryScheduler
-- Edited dependencies on Scheduler/HAScheduler
+* Fri Sep 30 2011 rrati <rrati@redhat> - 1.16-1
+- Renamed Aviary security feature
+- Added SSL functionality for QueryServer
 
-%changelog
 * Mon Aug 29 2011 rrati <rrati@redhat> - 1.15-1
 - Added a v before BaseDBVersion number
 - Added SSL functionality for Aviary
