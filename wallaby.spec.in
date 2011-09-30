@@ -264,6 +264,9 @@ fi
 
 %changelog
 
+* Fri Sep 30 2011 willb <willb@redhat> - 0.10.7-1
+- Feature-complete database patching tool (thanks to rrati)
+
 * Wed Sep 21 2011 willb <willb@redhat> - 0.10.6-1
 - Packaging fixes
 
