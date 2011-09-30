@@ -131,7 +131,7 @@ end
 desc "Cleanup after an RPM build"
 task :clean do
   require 'fileutils'
-  FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec"], :force => true
+  FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec", "etc/sysconfig/wallaby-agent-env"], :force => true
   FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), "condor-base-db.snapshot", "patches"], :force => true
 end
 
