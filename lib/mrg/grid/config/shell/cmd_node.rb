@@ -98,14 +98,43 @@ module Mrg
             false
           end
 
-          def entity_callback(param)
-            puts "#{param.name}"
+          def entity_callback(node)
+            puts "#{node.name}"
             api_accessors.each do |k|
-              puts "  #{k}:  #{param.send(k).inspect}"
+              puts "  #{k}:  #{node.send(k).inspect}"
+            end
+            id_group = node.identity_group
+            [:features, :params].each do |k|
+              puts "  #{k}:  #{id_group.send(k).inspect}"
             end
           end
 
           register_callback :after_option_parsing, :post_arg_callback
+        end
+
+        class ListNode < Command
+          def self.opname
+            "list-nodes"
+          end
+
+          def self.opargs
+            ""
+          end
+
+          def self.description
+            "Lists all the node names in the store."
+          end
+
+          def supports_options
+            false
+          end
+
+          def act
+            store.console.objects(:class=>"Node").each do |node|
+              puts "#{node.name}"
+            end
+            0
+          end
         end
       end
     end

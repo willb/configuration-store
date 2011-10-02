@@ -1,4 +1,4 @@
-# feature:  wallaby shell feature crud functionality
+# group:  wallaby shell group crud functionality
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
@@ -20,13 +20,13 @@ module Mrg
   module Grid
     module Config
       module Shell
-        module FeatureOps
+        module GroupOps
           def api_messages
             @api_messages ||= {:name=>:setName}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :params, :depends, :conflicts, :included_features]
+            @api_accessors ||= [:name, :membership, :features, :params]
           end
 
           def accessor_options
@@ -34,117 +34,115 @@ module Mrg
           end
         end
 
-        class AddFeature < Command
+        class AddGroup < Command
           include EntityOps
-          include FeatureOps
+          include GroupOps
           
           def self.opname
-            "add-feature"
+            "add-group"
           end
 
           def self.description
-            "Adds a feature to the store."
+            "Adds a group to the store."
           end
 
           def storeop
-            :addFeature
+            :addExplicitGroup
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
+        end
+
+        class ModifyGroup < Command
+          include EntityOps
+          include GroupOps
+          
+          def self.opname
+            "modify-group"
+          end
+          
+          def self.description
+            "Alters metadata for a group in the store."
+          end
+          
+          def storeop
+            :getGroupByName
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
+        end
+       
+        class RemoveGroup < Command
+          include EntityOps
+          include GroupOps
+          
+          def self.opname
+            "remove-group"
+          end
+          
+          def self.description
+            "Deletes a group from the store."
+          end
+          
+          def storeop
+            :removeGroup
           end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
         
-        class ModifyFeature < Command
+        class ShowGroup < Command
           include EntityOps
-          include FeatureOps
+          include GroupOps
           
           def self.opname
-            "modify-feature"
+            "show-group"
           end
-
+          
           def self.description
-            "Alters metadata for a feature in the store."
+            "Displays the properties of a group."
           end
-
+          
           def storeop
-            :getFeature
-          end
-
-          register_callback :after_option_parsing, :post_arg_callback
-        end
-        
-        class RemoveFeature < Command
-          include EntityOps
-          include FeatureOps
-          
-          def self.opname
-            "remove-feature"
-          end
-          
-          def self.description
-            "Deletes a feature from the store."
+            :getGroupByName
           end
           
           def supports_options
             false
           end
-          
-          def storeop
-            :removeFeature
-          end
 
-          register_callback :after_option_parsing, :post_arg_callback
-        end
-        
-        class ShowFeature < Command
-          include EntityOps
-          include FeatureOps
-          
-          def self.opname
-            "show-feature"
-          end
-          
-          def self.description
-            "Displays the properties of a feature."
-          end
-          
-          def supports_options
-            false
-          end
-          
-          def storeop
-            :getFeature
-          end
-          
-          def show_banner
-            false
-          end
-
-          def entity_callback(param)
-            puts "#{param.name}"
+          def entity_callback(group)
+            puts "#{group.name}"
             api_accessors.each do |k|
-              puts "  #{k}:  #{param.send(k).inspect}"
+              puts "  #{k}:  #{group.send(k).inspect}"
             end
           end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
 
-        class ListFeatures < Command
+        class ListGroup < Command
           def self.opname
-            "list-features"
+            "list-groups"
           end
-          
+
+          def self.opargs
+            ""
+          end
+
           def self.description
-            "Lists all the feature names in the store."
+            "Lists all the group names in the store."
           end
-          
+
           def supports_options
             false
           end
 
           def act
-            store.console.objects(:class=>"Feature").each do |feature|
-              puts "#{feature.name}"
+            store.console.objects(:class=>"Group").each do |group|
+              if not group.name =~ /^[+]{3}/ or group.name == "+++DEFAULT"
+                puts "#{group.name}"
+              end
             end
             0
           end
