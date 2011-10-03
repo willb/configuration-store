@@ -27,6 +27,9 @@ def setup_rhubarb(kwargs=nil)
 
   Rhubarb::Persistence::open(dbname, :default, false)
   classes.each {|cl| cl.create_table}
+
+  Group.DEFAULT_GROUP
+  Group.SKELETON_GROUP
 end
 
 def teardown_rhubarb

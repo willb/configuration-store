@@ -64,7 +64,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          2
+          3
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
@@ -79,12 +79,14 @@ module Mrg
 
         ### Schema method declarations
         
-        def getDefaultGroup
-          return Group.DEFAULT_GROUP
-        end
+        ["default", "skeleton"].each do |special_group|
+          define_method "get#{special_group.capitalize}Group".to_sym do
+            return Group.send("#{special_group.upcase}_GROUP")
+          end
         
-        expose :getDefaultGroup do |args|
-          args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the default group."
+          expose "get#{special_group.capitalize}Group".to_sym do |args|
+            args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the #{special_group} group."
+          end
         end
         
         # getGroup 
@@ -302,8 +304,12 @@ module Mrg
           seek_version = (seek_version && ConfigVersion.hasVersionedNodeConfig(name, seek_version)) || nil
 
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>seek_version || 0)
+
+          # add to the skeleton group
+          n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {})
+
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
-          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig("+++DEFAULT", name)
+          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, name)
           n
         end
         
@@ -447,6 +453,7 @@ module Mrg
           end
           
           Group.DEFAULT_GROUP
+          Group.SKELETON_GROUP
           nil
         end
         

@@ -159,16 +159,16 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
           end
         end
         
-        it "should not be a member of any groups by default" do
+        it "should not be a member of any non-skeleton groups by default" do
           n = @store.addNode("blather.local.")
-          n.memberships.size.should == 0
+          n.memberships.should == [Group::SKELETON_GROUP_NAME]
         end
         
         it "should be possible to add a node to a group" do
           n = @store.addNode("blather.local.")
           groupnames = %w{ExecuteNodes HASchedulers DesktopMachines}
           groups = groupnames.map {|g| @store.addExplicitGroup(g)}
-          n.modifyMemberships("ADD", Array[*groupnames])
+          n.modifyMemberships("REPLACE", Array[*groupnames])
           
           n.memberships.size.should == groupnames.size
           n.memberships.should == Array[*groupnames]

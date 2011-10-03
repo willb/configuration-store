@@ -50,10 +50,17 @@ module Mrg
           find(u)
         end
         
+        DEFAULT_GROUP_NAME = "+++DEFAULT"
+        SKELETON_GROUP_NAME = "+++SKEL"
+        
         def Group.DEFAULT_GROUP
-          (Group.find_first_by_name("+++DEFAULT") or Group.create(:name => "+++DEFAULT"))
+          (Group.find_first_by_name(DEFAULT_GROUP_NAME) or Group.create(:name => DEFAULT_GROUP_NAME))
         end
         
+        def Group.SKELETON_GROUP
+          Group.find_first_by_name(SKELETON_GROUP_NAME) || Group.create(:name => SKELETON_GROUP_NAME)
+        end
+
         qmf_property :uid, :uint32, :index=>true
 
         declare_column :name, :string
@@ -81,7 +88,8 @@ module Mrg
         
         qmf_property :display_name, :sstr, :desc=>"A human-readable version of this group's name, useful for presenting names of identity groups to end-users."
         def display_name
-          return "the default group" if name == "+++DEFAULT"
+          return "the default group" if name == DEFAULT_GROUP_NAME
+          return "the skeleton group" if name == SKELETON_GROUP_NAME
           return "the identity group for #{membership[0]}" if is_identity_group
           return "group #{name}"
         end
@@ -329,7 +337,7 @@ module Mrg
         end
         
         declare_query :default_has_feature?, <<-QUERY
-        row_id IN (SELECT grp FROM groupfeatures WHERE feature = ?) AND name = '+++DEFAULT'
+        row_id IN (SELECT grp FROM groupfeatures WHERE feature = ?) AND name = '#{DEFAULT_GROUP_NAME}'
         QUERY
         
         def feature_objs
