@@ -110,6 +110,7 @@ module Mrg
           # Print values of input parameters
           log.debug "setName: name => #{name.inspect}"
           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::GROUP), "Group name #{name} is taken") if (self.name != name and Group.find_first_by_name(name))
+          fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't rename special group #{name}") if is_special
           self.name = name
         end
         
@@ -348,6 +349,11 @@ module Mrg
           log.debug "params called on group #{self.inspect}"
           Hash[*GroupParams.find_by(:grp=>self).map {|gp| [gp.param.name, gp.value]}.flatten]
         end
+        
+        def is_special
+          name.slice(0,3) == "+++"
+        end
+        
       end
       
       class GroupFeatures

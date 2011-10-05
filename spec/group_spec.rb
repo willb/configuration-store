@@ -18,6 +18,14 @@ module Mrg
 
         include DescribeGetterAndSetter
         
+        it "should not be possible to rename the default group" do
+          lambda {Group.DEFAULT_GROUP.setName("foo!")}.should raise_error
+        end
+
+        it "should not be possible to remove the default group" do
+          lambda {@store.removeGroup(Group.DEFAULT_GROUP.name)}.should raise_error
+        end
+        
         it "should have an appropriate display name when it is the default group" do
           Group.DEFAULT_GROUP.display_name.should == "the default group"
         end
