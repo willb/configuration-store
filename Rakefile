@@ -128,11 +128,19 @@ task :bump_major do
   commit_version
 end
 
+def pristine_name
+  "#{pkg_name}-#{pkg_version}.tar.gz"
+end
 
+desc "upload a pristine tarball for the current release to fedorahosted"
+task :upload_pristine => [:pristine] do
+  raise "Please set FH_USERNAME" unless ENV['FH_USERNAME']
+  sh "scp #{pristine_name} #{ENV['FH_USERNAME']}@fedorahosted.org:grid"
+end
 
 desc "generate a pristine tarball for the tag corresponding to the current version"
 task :pristine do
-  sh "git archive --format=tar v#{pkg_version} | gzip -9v > #{pkg_name}-#{pkg_version}.tar.gz"
+  sh "git archive --format=tar v#{pkg_version} | gzip -9v > #{pristine_name}"
 end
 
 desc "create RPMs"
@@ -164,7 +172,7 @@ end
 
 desc "Create a tarball"
 task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file] do
-  sh "bin/create-db-diffs.rb"
+  sh 'env RUBYOPT=-Ilib bin/create-db-diffs.rb'
   FileUtils.cp_r 'bin', pkg_dir()
   FileUtils.cp_r 'lib', pkg_dir()
   FileUtils.cp_r 'etc', pkg_dir()
