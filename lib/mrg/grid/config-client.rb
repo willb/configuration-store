@@ -126,6 +126,10 @@ module Mrg
           check_result(@qmfo.modifyParams(c,p,o))
         end
         
+        def setName(name)
+          check_result(@qmfo.setName(name))
+        end
+
         private
         include ObjResolver
       end
@@ -223,10 +227,10 @@ module Mrg
         def name
           @qmfo.name
         end
-        
+
         def setName(name)
           check_result(@qmfo.setName(name))
-        end
+        end        
         
         def included_features()
           @qmfo.included_features
