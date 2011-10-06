@@ -26,6 +26,11 @@ def pkg_version
   ::Mrg::Grid::Config::Version.as_string
 end
 
+def pkg_version_component(which)
+  ::Mrg::Grid::Config::Version.const_get(which.to_s.upcase)
+end
+  
+
 def pkg_name
   return 'wallaby'
 end
@@ -72,6 +77,62 @@ end
 
 def db_pkg_dir
   return db_pkg_name() + "-" + db_pkg_version()
+end
+
+def commit_version
+  old_version = pkg_version
+  [:MAJOR, :MINOR, :PATCH, :BUILD].each {|vc| ::Mrg::Grid::Config::Version.send(:remove_const, vc)}
+  load 'lib/mrg/grid/config/version.rb'
+  new_version = pkg_version
+  message = "bumping version from #{old_version} to #{new_version}"
+  sh "git commit -m '#{message}' lib/mrg/grid/config/version.rb"
+  sh "git tag v#{new_version}"
+  sh "git push origin master v#{new_version}" 
+end
+
+def bump_version_component(vc)
+  old_v=pkg_version_component(vc)
+  set_version_component(vc, old_v+1)
+end
+
+def set_version_component(vc, new_v)
+  old_v=pkg_version_component(vc)
+  vc = vc.to_s.upcase
+  sh "sed -i 's/#{vc}=#{old_v}/#{vc}=#{new_v}/' lib/mrg/grid/config/version.rb"
+end
+
+def clear_build
+  set_version_component(:build, '"nil"') if pkg_version_component(:build)
+end
+
+desc "bump the patchlevel"
+task :bump_patch do
+  bump_version_component(:patch)
+  clear_build
+  commit_version
+end
+
+desc "bump the minor version number"
+task :bump_minor do
+  bump_version_component(:minor)
+  set_version_component(:patch, 0)
+  clear_build
+  commit_version
+end
+
+desc "bump the major version number"
+task :bump_major do
+  bump_version_component(:major)
+  [:patch, :major].each {|vc| set_version_component(vc, 0)}
+  clear_build
+  commit_version
+end
+
+
+
+desc "generate a pristine tarball for the tag corresponding to the current version"
+task :pristine do
+  sh "git archive --format=tar v#{pkg_version} | gzip -9v > #{pkg_name}-#{pkg_version}.tar.gz"
 end
 
 desc "create RPMs"
