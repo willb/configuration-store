@@ -85,12 +85,12 @@ Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
 Provides: ruby(mrg/grid/config) = %{version}
 
-%package python
+%package -n python-wallaby
 Summary: Python client library for Wallaby
 Group: Applications/System
 Requires: python-qpid-qmf
 
-%description python
+%description -n python-wallaby
 This package provides a Python client library for writing programs
 that interact with the Wallaby configuration service over QMF.
 
@@ -243,7 +243,7 @@ fi
 %{_bindir}/wallaby
 %dir %{_localstatedir}/lib/wallaby/patches
 
-%files python
+%files -n python-wallaby
 
 %if %{building_for_el5}
 %defattr(-, root, root, -)
@@ -263,6 +263,10 @@ fi
 %endif
 
 %changelog
+
+* Thu Oct 6 2011 willb <willb@redhat> - 0.10.9-1
+- wallaby-python package renamed
+- skeleton group support only if explicitly enabled
 
 * Sat Oct 1 2011 rrati <rrati@redhat> - 0.10.8-1
 - Many new wallaby shell commands for creating and updating entities
