@@ -150,7 +150,7 @@ module Mrg
           log.debug "removeGroup: name => #{name.inspect}"
           group = Group.find_first_by_name(name)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Group named #{name} not found") unless group
-          fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't remove special group #{name}") if group.is_special
+          fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't remove special group #{group.name}") if group.is_special
           group.delete
         end
         

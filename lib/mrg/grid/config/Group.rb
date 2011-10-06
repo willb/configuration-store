@@ -110,7 +110,7 @@ module Mrg
           # Print values of input parameters
           log.debug "setName: name => #{name.inspect}"
           fail(Errors.make(Errors::NAME_ALREADY_IN_USE, Errors::GROUP), "Group name #{name} is taken") if (self.name != name and Group.find_first_by_name(name))
-          fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't rename special group #{name}") if is_special
+          fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't rename special group #{self.name}") if is_special
           self.name = name
         end
         
