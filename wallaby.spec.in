@@ -14,7 +14,7 @@
 %global building_for_el5 0
 %endif
 
-%if (0%{?fedora} != 0 || 0%{?rhel} >= 6)
+%if (0%{?fedora} != 0)
 %global has_sinatra 1
 %else
 %global has_sinatra 0
