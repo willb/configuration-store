@@ -24,12 +24,25 @@ require 'yaml'
 
 module Mrg
   module Grid
+    class WallabyClientError < RuntimeError
+      attr_reader :status
+      def initialize(status, m)
+        @status = status
+        super(m)
+      end
+    end
+    
     module ConfigClient
 
       module ObjResolver
         def get_object(obj_id, klass=nil)
           obj = @console.object(:object_id=>obj_id)
           klass ? klass.new(obj, @console) : obj
+        end
+        
+        def check_result(value)
+          raise WallabyClientError.new(value.status, value.text) unless value.status == 0
+          value
         end
       end
       
@@ -90,7 +103,7 @@ module Mrg
         end
         
         def explain
-          @qmfo.explain.explanation
+          check_result(@qmfo.explain).explanation
         end
         
         def name
@@ -106,11 +119,11 @@ module Mrg
         end
         
         def modifyFeatures(c,fs,o)
-          @qmfo.modifyFeatures(c,fs,o)
+          check_result(@qmfo.modifyFeatures(c,fs,o))
         end
         
         def modifyParams(c,p,o={})
-          @qmfo.modifyParams(c,p,o)
+          check_result(@qmfo.modifyParams(c,p,o))
         end
         
         private
@@ -135,7 +148,7 @@ module Mrg
         end
 
         def setKind(t)
-          @qmfo.setKind(t)
+          check_result(@qmfo.setKind(t))
         end
         
         def default
@@ -143,7 +156,7 @@ module Mrg
         end
 
         def setDefault(v)
-          @qmfo.setDefault(v)
+          check_result(@qmfo.setDefault(v))
         end
         
         def description
@@ -151,7 +164,7 @@ module Mrg
         end
 
         def setDescription(d)
-          @qmfo.setDescription(d)
+          check_result(@qmfo.setDescription(d))
         end
         
         def visibility_level
@@ -159,7 +172,7 @@ module Mrg
         end
 
         def setVisibilityLevel(level)
-          @qmfo.setVisibilityLevel(level)
+          check_result(@qmfo.setVisibilityLevel(level))
         end
 
         def requires_restart
@@ -167,7 +180,7 @@ module Mrg
         end
 
         def setRequiresRestart(needsRestart)
-          @qmfo.setRequiresRestart(needsRestart)
+          check_result(@qmfo.setRequiresRestart(needsRestart))
         end
 
         def must_change
@@ -175,7 +188,7 @@ module Mrg
         end
         
         def setMustChange(mustChange)
-          @qmfo.setMustChange(mustChange)
+          check_result(@qmfo.setMustChange(mustChange))
         end
 
         def depends
@@ -183,7 +196,7 @@ module Mrg
         end
 
         def modifyDepends(c,d,o)
-          @qmfo.modifyDepends(c,d.uniq,o)
+          check_result(@qmfo.modifyDepends(c,d.uniq,o))
         end
 
         def conflicts
@@ -191,7 +204,7 @@ module Mrg
         end
 
         def modifyConflicts(c,co,o)
-          @qmfo.modifyConflicts(c,co.uniq,o)
+          check_result(@qmfo.modifyConflicts(c,co.uniq,o))
         end
 
         private
@@ -212,7 +225,7 @@ module Mrg
         end
         
         def setName(name)
-          @qmfo.setName(name)
+          check_result(@qmfo.setName(name))
         end
         
         def included_features()
@@ -220,7 +233,7 @@ module Mrg
         end
         
         def modifyIncludedFeatures(command, features, options={})
-          @qmfo.modifyIncludedFeatures(command, features, options)
+          check_result(@qmfo.modifyIncludedFeatures(command, features, options))
         end
         
         def explain
@@ -236,19 +249,19 @@ module Mrg
         end
         
         def modifyParams(command,pvmap,options={})
-          @qmfo.modifyParams(command,pvmap,options)
+          check_result(@qmfo.modifyParams(command,pvmap,options))
         end
         
         def modifyDepends(command, depends, options={})
-          @qmfo.modifyDepends(command, depends, options)
+          check_result(@qmfo.modifyDepends(command, depends, options))
         end
         
         def modifyConflicts(command, conflicts, options={})
-          @qmfo.modifyConflicts(command, conflicts.uniq, options)
+          check_result(@qmfo.modifyConflicts(command, conflicts.uniq, options))
         end
         
         def modifySubsys(command, subsys, options={})
-          @qmfo.modifySubsys(command, subsys.uniq, options)
+          check_result(@qmfo.modifySubsys(command, subsys.uniq, options))
         end
         
         def conflicts
@@ -281,7 +294,7 @@ module Mrg
         end
         
         def modifyParams(command, params, options)
-          @qmfo.modifyParams(command, params.uniq, options)
+          check_result(@qmfo.modifyParams(command, params.uniq, options))
         end
         
         private
@@ -319,7 +332,7 @@ module Mrg
         end
 
         def modifyMemberships(command, groups, options)
-          @qmfo.modifyMemberships(command, groups, options)
+          check_result(@qmfo.modifyMemberships(command, groups, options))
         end
 
         def memberships
@@ -328,12 +341,11 @@ module Mrg
 
         def getConfig(options=nil)
           options ||= {}
-          @qmfo.getConfig(options).config
+          check_result(@qmfo.getConfig(options)).config
         end
         
         def whatChanged(old_version, new_version)
-          result = @qmfo.whatChanged(old_version, new_version)
-          raise result.message if result.status != 0
+          result = check_result(@qmfo.whatChanged(old_version, new_version))
           [result.params, result.restart, result.affected]
         end
 
@@ -354,87 +366,87 @@ module Mrg
         end
         
         def getDefaultGroup
-          get_object(@qmfo.getDefaultGroup().obj, Group) rescue nil
+          get_object(check_result(@qmfo.getDefaultGroup()).obj, Group)
         end
         
         def getGroup(query)
-          get_object(@qmfo.getGroup(query).obj, Group) rescue nil
+          get_object(check_result(@qmfo.getGroup(query)).obj, Group)
         end
         
         def getGroupByName(name)
-          getGroup("name"=>name) rescue nil
+          getGroup("name"=>name)
         end
         
         def addExplicitGroup(name)
-          get_object(@qmfo.addExplicitGroup(name).obj, Group) rescue nil
+          get_object(check_result(@qmfo.addExplicitGroup(name)).obj, Group)
         end
 
         def getExplicitGroup(name)
-          get_object(@qmfo.getGroup({"NAME"=>name}).obj, Group) rescue nil
+          get_object(check_result(@qmfo.getGroup({"NAME"=>name})).obj, Group)
         end
 
         def removeGroup(uid)
-          @qmfo.removeGroup(uid)
+          check_result(@qmfo.removeGroup(uid))
           nil
         end
 
         def getFeature(name)
-          get_object(@qmfo.getFeature(name).obj, Feature) rescue nil
+          get_object(check_result(@qmfo.getFeature(name)).obj, Feature)
         end
 
         def addFeature(name)
-          get_object(@qmfo.addFeature(name).obj, Feature) rescue nil
+          get_object(check_result(@qmfo.addFeature(name)).obj, Feature)
         end
 
         def removeFeature(name)
-          @qmfo.removeFeature(name)
+          check_result(@qmfo.removeFeature(name))
           nil
         end
 
         def addNode(name, options=nil)
           options ||= {}
-          get_object(@qmfo.addNodeWithOptions(name, options).obj, Node) rescue nil
+          get_object(check_result(@qmfo.addNodeWithOptions(name, options)).obj, Node)
         end
 
         alias addNodeWithOptions addNode
 
         def getNode(name)
-          get_object(@qmfo.getNode(name).obj, Node) rescue nil
+          get_object(check_result(@qmfo.getNode(name)).obj, Node)
         end
 
         def removeNode(name)
-          @qmfo.removeNode(name)
+          check_result(@qmfo.removeNode(name))
           nil
         end
 
         def addParam(name)
-          get_object(@qmfo.addParam(name).obj, Parameter) rescue nil
+          get_object(check_result(@qmfo.addParam(name)).obj, Parameter)
         end
 
         def getParam(name)
-          get_object(@qmfo.getParam(name).obj, Parameter) rescue nil
+          get_object(check_result(@qmfo.getParam(name)).obj, Parameter)
         end
 
         def removeParam(name)
-          @qmfo.removeParam(name)
+          check_result(@qmfo.removeParam(name))
           nil
         end
 
         def addSubsys(name)
-          get_object(@qmfo.addSubsys(name).obj, Subsystem) rescue nil
+          get_object(check_result(@qmfo.addSubsys(name)).obj, Subsystem)
         end
 
         def getSubsys(name)
-          get_object(@qmfo.getSubsys(name).obj, Subsystem) rescue nil
+          get_object(check_result(@qmfo.getSubsys(name)).obj, Subsystem)
         end
 
         def removeSubsys(name)
-          @qmfo.removeSubsys(name)
+          check_result(@qmfo.removeSubsys(name))
           nil
         end
         
         def activateConfig
-          explain = @qmfo.activateConfiguration.explain
+          explain = check_result(@qmfo.activateConfiguration).explain
           explain.inject({}) do |acc, (node, node_explain)|
             acc[node] = node_explain.inject({}) do |ne_acc, (reason, ls)|
               ne_acc[reason] = ls
@@ -446,7 +458,7 @@ module Mrg
 
         def storeinit(kwargs=nil)
           kwargs ||= {}
-          @qmfo.storeinit(kwargs)
+          check_result(@qmfo.storeinit(kwargs))
         end
 
         [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
