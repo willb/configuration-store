@@ -89,6 +89,7 @@ Provides: ruby(mrg/grid/config) = %{version}
 Summary: Python client library for Wallaby
 Group: Applications/System
 Requires: python-qpid-qmf
+Obsoletes: wallaby-python
 
 %description -n python-wallaby
 This package provides a Python client library for writing programs
