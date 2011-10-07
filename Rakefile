@@ -128,8 +128,12 @@ task :bump_major do
   commit_version
 end
 
+def package_prefix
+  "#{pkg_name}-#{pkg_version}"
+end
+
 def pristine_name
-  "#{pkg_name}-#{pkg_version}.tar.gz"
+  "#{package_prefix}.tar.gz"
 end
 
 desc "upload a pristine tarball for the current release to fedorahosted"
@@ -139,8 +143,8 @@ task :upload_pristine => [:pristine] do
 end
 
 desc "generate a pristine tarball for the tag corresponding to the current version"
-task :pristine do
-  sh "git archive --format=tar v#{pkg_version} | gzip -9v > #{pristine_name}"
+task :pristine => [:gen_env_file] do
+  sh "git archive --format=tar v#{pkg_version} --prefix=#{package_prefix}/ | gzip -9v > #{pristine_name}"
 end
 
 desc "create RPMs"
@@ -171,22 +175,16 @@ task :gen_env_file do
 end
 
 desc "Create a tarball"
-task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file] do
+task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file, :pristine] do
   sh 'env RUBYOPT=-Ilib bin/create-db-diffs.rb'
-  FileUtils.cp_r 'bin', pkg_dir()
-  FileUtils.cp_r 'lib', pkg_dir()
-  FileUtils.cp_r 'etc', pkg_dir()
-  FileUtils.cp_r 'extensions', pkg_dir()
-  FileUtils.cp_r 'schema', pkg_dir()
-  FileUtils.cp ['LICENSE', 'README.rdoc', 'TODO'], pkg_dir()
   ["1.1", "1.2", "1.3", "1.4"].each do |f|
     FileUtils.rm("patches/db-#{f}.wpatch")
   end
   FileUtils.cp_r 'patches', db_pkg_dir()
   FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
-  sh "tar -cf #{pkg_source} #{pkg_dir}"
+  
   sh "tar -cf #{db_pkg_source} #{db_pkg_dir}"
-  FileUtils.mv pkg_source(), 'SOURCES'
+  FileUtils.cp pristine_name, 'SOURCES'
   FileUtils.mv db_pkg_source(), 'SOURCES'
 end
 

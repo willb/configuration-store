@@ -122,6 +122,8 @@ Wallaby.
 
 %build
 
+sed 's/^export //' < etc/sysconfig/wallaby-agent > etc/sysconfig/wallaby-agent-env
+
 %install
 %if %{building_for_el5}
 rm -rf %{buildroot}
