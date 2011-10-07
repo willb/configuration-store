@@ -28,7 +28,7 @@
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
 Version: WALLABY_VERSION
-Release: 1%{?dist}
+Release: 2%{?dist}
 Group: Applications/System
 License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/wallaby.git
@@ -266,6 +266,10 @@ fi
 %endif
 
 %changelog
+
+* Fri Oct 7 2011 willb <willb@redhat> - 0.11.0-2
+- client library now throws exceptions for agent errors
+- packaging fixes
 
 * Thu Oct 6 2011 willb <willb@redhat> - 0.10.9-1
 - wallaby-python package renamed
