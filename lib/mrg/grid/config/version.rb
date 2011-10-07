@@ -19,8 +19,8 @@ module Mrg
     module Config
       module Version
         MAJOR=0
-        MINOR=10
-        PATCH=9
+        MINOR=11
+        PATCH=0
         BUILD=nil
         
         def self.as_string
