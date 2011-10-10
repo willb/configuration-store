@@ -165,7 +165,7 @@ module Mrg
           new_min = new_split[1].to_i
 
           if old_maj > 1 || (old_maj >= 1 && old_min > 4)
-             @patch.expected.features["BaseDBVersion"] = {:params=>{"BaseDBVersion"=>"#{old_version.to_s}"}}
+             @patch.expected.features["BaseDBVersion"] = {"params"=>{"BaseDBVersion"=>"#{old_version.to_s}"}}
           end
           if new_maj > 1 || (new_maj >= 1 && new_min > 4)
              @patch.updates.features["BaseDBVersion"] = {"modifyParams"=>["REPLACE", {"BaseDBVersion"=>"v#{version.to_s}"}, {}]}
