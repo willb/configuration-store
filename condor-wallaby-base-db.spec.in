@@ -1,4 +1,4 @@
-%define rel 1
+%define rel 2
 
 Summary: Base condor database for wallaby
 Name: condor-wallaby-base-db
@@ -50,6 +50,9 @@ rm -rf %{buildroot}
 %{_localstatedir}/lib/wallaby/patches/db-1.16.wpatch
 
 %changelog
+* Mon Oct 10 2011 rrati <rrati@redhat> - 1.16-2
+- Fixed issue with incorect db version metadata in patch files
+
 * Fri Sep 30 2011 rrati <rrati@redhat> - 1.16-1
 - Renamed Aviary security feature
 - Added SSL functionality for QueryServer
