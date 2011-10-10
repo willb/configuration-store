@@ -36,7 +36,7 @@ module Mrg
           def init_option_parser
             @options = {}
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{noun}-name [...] [#{noun}-options]"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{noun.upcase}" +(" [...]" if multiple_targets).to_s + (" [#{noun}-options]".upcase if supports_options).to_s
               
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -72,6 +72,10 @@ module Mrg
             true
           end
 
+          def multiple_targets
+            true
+          end
+
           def act
             result = 0
             
@@ -79,7 +83,11 @@ module Mrg
               puts "You must specify at least one #{noun} to #{verb}."
               result = 1
             end
-            
+
+            if (not multiple_targets) && (@args.size > 1)
+              exit!(1, "you can only specify 1 #{noun} to #{verb}")
+            end
+
             invalid_entities = []
             invalid_entities = store.send("check#{noun.capitalize}Validity", @args) unless verb == "add"
             if invalid_entities.size > 0
@@ -103,7 +111,7 @@ module Mrg
                   end
                 end
               rescue => ex
-                puts "Couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.message rescue ex.inspect})" : "")
+                puts "Couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + " (#{ex.message})" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.inspect})" : "")
                 result = 1
               end
             end

@@ -198,7 +198,8 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
+          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.delete_if {|x| x == "params" } << "params"
+          log.debug "Store entities: #{@entities.inspect}"
           @valid_methods = {}
           @entities.each do |type|
             otype = Mrg::Grid::MethodUtils.attr_to_class(type.intern)
@@ -406,17 +407,21 @@ module Mrg
             log.debug "Verifying #{otype} '#{name}##{get}'"
             validate_accessor(otype, get)
             current_val = obj.send(get)
-            if (name == "BaseDBVersion") && (current_val.has_key?("BaseDBVersion"))
+            log.debug "Current value from object: #{current_val.inspect}"
+            if (type == :features) && (get == "params") && (current_val.has_key?("BaseDBVersion"))
+              log.debug "Removing 'v' from DB version string"
               current_val["BaseDBVersion"].delete!("v")
             end
-            if type == :features and get == "params"
+            if (type == :features) && (get == "params")
               log.debug "Generating params using default values"
               default_params = obj.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
               log.debug "Params using default values: #{default_params.inspect}"
               default_params.each {|dp_key| current_val[dp_key] = 0}
             end
             expected_val = @expected.send(type)[name][get]
-            if (name == "BaseDBVersion") && (expected_val.has_key?("BaseDBVersion"))
+            log.debug "Expected value from patch: #{expected_val.inspect}"
+            if (type == :features) && (get == "params") && (expected_val.has_key?("BaseDBVersion"))
+              log.debug "Removing 'v' from DB version string"
               expected_val["BaseDBVersion"].delete!("v")
             end
             begin

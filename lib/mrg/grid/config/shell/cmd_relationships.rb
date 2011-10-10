@@ -27,16 +27,18 @@ module Mrg
             true
           end
 
+          def actions
+            [:ADD, :REMOVE, :REPLACE]
+          end
+
           def options
-            [{:opt_name=>:action, :mod_func=>:upcase}, {:opt_name=>:target, :mod_func=>:to_s}]
+            [{:opt_name=>:action, :mod_func=>:upcase, :desc=>"one of #{actions.join(", ")}"},
+             {:opt_name=>:target, :mod_func=>:to_s, :desc=>"the name of the entity to act upon"},
+             {:opt_name=>:name, :mod_func=>:to_s, :desc=>"the names of entities to modify relationship with"}]
           end
 
           def opargs
-            str_o = ""
-            options.each do |o|
-              str_o += "#{o[:opt_name].to_s.upcase} "
-            end
-            str_o + "NAME"
+            options.collect {|x| "#{x[:opt_name].to_s.upcase}" }.join(" ") + " [...]"
           end
 
           def self.included(receiver)
@@ -46,9 +48,7 @@ module Mrg
           end
 
           def parse_args(*args)
-            actions = [:ADD, :REMOVE, :REPLACE]
             @input = {}
-            @arg_error = false
 
             dup_args = args.dup
 
@@ -57,35 +57,38 @@ module Mrg
               ofunc = opt[:mod_func]
               input = dup_args.shift
               if input == nil
-                puts "fatal: you must specify a #{opt[:opt_name].to_s.upcase}"
-                @arg_error = true
-              else
+                exit!(1, "you must specify a #{opt[:opt_name].to_s.upcase}")
+              elsif @input.keys.length/2 < (self.options.length-1)
                 @input["orig_#{oname}".intern] = input
-                @input[oname] = input.send(ofunc)
+                @input[oname] = input.send(*ofunc)
+              else
+                dup_args.unshift(input)
+                @input[:name] = []
+                dup_args.each do |a|
+                  @input[:name] << a.send(*ofunc)
+                end
+                @input[:name].uniq!
               end
             end
-            if (not actions.include?(@input[:action].intern)) && (arg_error == false)
-                puts "fatal: #{@input[:orig_action]} is an invalid action"
-                @arg_error = true
+            if not actions.include?(@input[:action].intern)
+              exit!(1, "#{@input[:orig_action]} is an invalid action")
             end
-
-            @relationships = []
-            dup_args.each do |a|
-              @relationships << a
-            end
-            @relationships.uniq!
           end
 
           def init_option_parser
+            name = self.class.opname.split("-") 
+            if options.size > 0
+              d = options.collect {|o| "#{o[:opt_name].to_s.upcase} is #{o[:desc]}\n" }
+            end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} [options] #{opargs}\n#{self.class.description}"
+              opts.banner = "Usage:  wallaby #{name.join("-")} #{opargs} [#{(name - ["apply"])[0].upcase}-OPTIONS]\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
               end
 
-              opts.on("-p", "--priority PRI", "priority when adding") do |p|
+	      opts.on("-p", "--priority PRI", "priority when modifying") do |p|
                 @priority = p.to_i
               end
             end
@@ -96,44 +99,40 @@ module Mrg
           end
 
           def verify_names(type)
-            store.send("check#{type}Validity", @relationships)
+            store.send("check#{type}Validity", @input[:name])
           end
 
           def act
             result = 0
 
-            if @arg_error == true
+            tmp = self.class.opname.split("-") - ["apply"]
+            cname = Mrg::Grid::Config.constants.grep(/^#{tmp[0].capitalize}[^A-Z]*$/)[0]
+            bad_target = verify_target(cname)
+            bad_names = verify_names(cname)
+            if (bad_target != []) || (bad_names != [])
+              puts "Invalid TARGET: #{bad_target}" if bad_target != []
+              puts "Invalid NAME: #{bad_names}" if bad_names != []
               result = 1
             else
-              tmp = self.class.opname.split("-") - ["apply"]
-              cname = Mrg::Grid::Config.constants.grep(/^#{tmp[0].capitalize}[^A-Z]*$/)[0]
-              bad_target = verify_target(cname)
-              bad_names = verify_names(cname)
-              if (bad_target != []) || (bad_names != [])
-                puts "Invalid TARGET: #{bad_target}" if bad_target != []
-                puts "Invalid NAME: #{bad_names}" if bad_names != []
-                result = 1
+              smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
+              obj = store.send(smethod, @input[:target])
+              if cname == "Node" and sub_group_for_node
+                obj = obj.identity_group
+                cname = "Group"
+              end
+              cmethod = Mrg::Grid::MethodUtils.find_method(tmp[1].capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
+              if (@priority == nil) || (@input[:action] != "ADD")
+                obj.send(cmethod, @input[:action], @input[:name], {})
               else
-                smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
-                obj = store.send(smethod, @input[:target])
-                if cname == "Node" and sub_group_for_node
-                  obj = obj.identity_group
-                  cname = "Group"
+                get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.intern)
+                cur = obj.send(get)
+                cnt = 0
+                @input[:name].select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
+                cur = cur - @input[:name]
+                if @input[:action] == "ADD"
+                  cur.insert(@priority - cnt, *@input[:name]).compact!
                 end
-                cmethod = Mrg::Grid::MethodUtils.find_method(tmp[1].capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
-                if (@priority == nil) || (@input[:action] != "ADD")
-                  obj.send(cmethod, @input[:action], @relationships, {})
-                else
-                  get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.intern)
-                  cur = obj.send(get)
-                  cnt = 0
-                  @relationships.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
-                  cur = cur - @relationships
-                  if @input[:action] == "ADD"
-                    cur.insert(@priority - cnt, *@relationships).compact!
-                  end
-                  obj.send(cmethod, "REPLACE", cur, {})
-                end
+                obj.send(cmethod, "REPLACE", cur, {})
               end
             end
             result
@@ -210,6 +209,10 @@ module Mrg
           def self.description
             "Modify features applied to a node in the store."
           end
+
+          def verify_names(type)
+            store.send("checkFeatureValidity", @input[:name])
+          end
         end
 
         class GroupApply < Command
@@ -221,6 +224,10 @@ module Mrg
         
           def self.description
             "Modify features applied to a group in the store."
+          end
+
+          def verify_names(type)
+            store.send("checkFeatureValidity", @input[:name])
           end
         end
 
@@ -240,7 +247,7 @@ module Mrg
           end
 
           def verify_names(type)
-            store.send("checkGroupValidity", @relationships)
+            store.send("checkGroupValidity", @input[:name])
           end
         end
       end

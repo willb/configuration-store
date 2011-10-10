@@ -176,17 +176,31 @@ module Mrg
             false
           end
 
-          def init_option_parser
-            @options = [{:opt_name=>:action, :mod_func=>:upcase},
-                        {:opt_name=>:type, :mod_func=>:capitalize},
-                        {:opt_name=>:name, :mod_func=>:to_s}]
-            str_o = ""
-            @options.each do |o|
-              str_o += "#{o[:opt_name].to_s.upcase} "
-            end
+          def actions
+            [:ADD, :REMOVE, :REPLACE]
+          end
 
+          def types
+            [:Node, :Group, :Feature, :Subsystem]
+          end
+
+          def options
+            [{:opt_name=>:action, :mod_func=>:upcase, :desc=>"one of #{actions.join(", ")}"},
+             {:opt_name=>:type, :mod_func=>:capitalize, :desc=>"one of #{types.join(", ")}"},
+             {:opt_name=>:name, :mod_func=>:to_s, :desc=>"the name of the entity to act upon"},
+             {:opt_name=>:param, :mod_func=>[:split, "=", 2], :desc=>"the name[=value] of parameters to modify relationship with"}]
+          end
+
+          def opargs
+            options.collect {|x| "#{x[:opt_name].to_s.upcase}" }.join(" ")
+          end
+
+          def init_option_parser
+            if options.size > 0
+              d = options.collect {|o| "#{o[:opt_name].to_s.upcase} is #{o[:desc]}\n" }
+            end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{str_o.strip} PARAM[=VALUE]\n#{self.class.description}"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{opargs}[=VALUE] [...]\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -196,44 +210,46 @@ module Mrg
           end
 
           def verify_args(*args)
-            valid = {:type=>[:Node, :Group, :Feature, :Subsystem], :action=>[:ADD, :REMOVE, :REPLACE]}
+            valid = {:type=>types, :action=>actions}
             @input = {}
-            @arg_error = false
 
             dup_args = args.dup
 
-            @options.each do |opt|
+            self.options.each do |opt|
               oname = opt[:opt_name]
               ofunc = opt[:mod_func]
               input = dup_args.shift
               if input == nil
-                puts "fatal: you must specify a #{opt[:opt_name].to_s.upcase}"
-                @arg_error = true
-              else
+                exit!(1, "you must specify a #{opt[:opt_name].to_s.upcase}")
+              elsif @input.keys.length/2 < (self.options.length-1)
                 @input["orig_#{oname}".intern] = input
-                @input[oname] = input.send(ofunc)
-              end
-            end
-
-            if @arg_error == false
-              valid.keys.each do |key|
-                if not valid[key].include?(@input[key].intern)
-                  puts "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase}"
-                  @arg_error = true
+                @input[oname] = input.send(*ofunc)
+              else
+                dup_args.unshift(input)
+                @input[oname] = {}
+                dup_args.each do |a|
+                  tmp = a.send(*ofunc)
+                  @input[oname][tmp[0]] = 0 if tmp.length == 1
+                  @input[oname][tmp[0]] = tmp[1] if tmp.length == 2
                 end
               end
             end
 
-            @params = {}
-            dup_args.each do |a|
-              tmp = a.split("=", 2)
-              @params[tmp[0]] = 0 if tmp.length == 1
-              @params[tmp[0]] = tmp[1] if tmp.length == 2
+            valid.keys.each do |key|
+              if not valid[key].include?(@input[key].intern)
+                exit!(1, "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase}")
+              end
             end
-            # Work around paramter naming issue
-            @params.each do |k,v|
-              @params.delete(k)
-              @params[store.getParam(k).name] = v
+
+            invalids = store.checkParameterValidity(@input[:param].keys)
+            if invalids != []
+              exit!(1, "fatal: unknown param(s) #{invalids.inspect}")
+            else
+              # Work around paramter naming issue
+              @input[:param].each do |k,v|
+                @input[:param].delete(k)
+                @input[:param][store.getParam(k).name] = v
+              end
             end
           end
 
@@ -242,9 +258,7 @@ module Mrg
           def act
             result = 0
 
-            if @arg_error == true
-              result = 1
-            elsif store.send("check#{@input[:type]}Validity", [@input[:name]]) != []
+            if store.send("check#{@input[:type]}Validity", [@input[:name]]) != []
               puts "Invalid #{@input[:type]} #{@input[:name]}"
               result = 1
             else
@@ -254,9 +268,9 @@ module Mrg
                 obj = obj.identity_group
               end
               if @input[:type] == "Subsystem"
-                obj.modifyParams(@input[:action], @params.keys, {})
+                obj.modifyParams(@input[:action], @input[:param].keys, {})
               else
-                obj.modifyParams(@input[:action], @params, {})
+                obj.modifyParams(@input[:action], @input[:param], {})
               end
             end
 

@@ -63,16 +63,7 @@ module Mrg
         if Mrg::Grid::Config.constants.include?(a)
           Mrg::Grid::Config.const_get(a).to_s.split("::").last.intern
         else
-          options = Mrg::Grid::Config.constants.grep(/^#{a}/)
-          type = ""
-          options.each do |str|
-            caps = 0
-            str.chars{|c| caps += 1 if c =~ /[A-Z]/}
-            if caps == 1
-              type = str
-            end
-          end
-          type.intern
+          Mrg::Grid::Config.constants.grep(/^#{a}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0].intern
         end
       end
 

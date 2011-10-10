@@ -113,6 +113,9 @@ module Mrg
         end
 
         class ListNode < Command
+          include EntityOps
+          include NodeOps
+
           def self.opname
             "list-nodes"
           end
@@ -123,10 +126,6 @@ module Mrg
 
           def self.description
             "Lists all the node names in the store."
-          end
-
-          def supports_options
-            false
           end
 
           def act
