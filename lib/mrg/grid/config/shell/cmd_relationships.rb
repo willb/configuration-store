@@ -81,15 +81,17 @@ module Mrg
               d = options.collect {|o| "#{o[:opt_name].to_s.upcase} is #{o[:desc]}\n" }
             end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{name.join("-")} #{opargs} [#{(name - ["apply"])[0].upcase}-OPTIONS]\n#{self.class.description}\n#{d}"
+              opts.banner = "Usage:  wallaby #{name.join("-")} #{opargs} " + ("[#{(name - ["apply"])[0].upcase}-OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
               end
 
-	      opts.on("-p", "--priority PRI", "priority when modifying") do |p|
-                @priority = p.to_i
+              if supports_options
+	        opts.on("-p", "--priority PRI", "priority when modifying") do |p|
+                  @priority = p.to_i
+                end
               end
             end
           end
@@ -213,6 +215,10 @@ module Mrg
           def verify_names(type)
             store.send("checkFeatureValidity", @input[:name])
           end
+
+          def supports_options
+            true
+          end
         end
 
         class GroupApply < Command
@@ -229,6 +235,10 @@ module Mrg
           def verify_names(type)
             store.send("checkFeatureValidity", @input[:name])
           end
+
+          def supports_options
+            true
+          end
         end
 
         class NodeMembership < Command
@@ -244,6 +254,10 @@ module Mrg
 
           def sub_group_for_node
             false
+          end
+
+          def supports_options
+            true
           end
 
           def verify_names(type)
