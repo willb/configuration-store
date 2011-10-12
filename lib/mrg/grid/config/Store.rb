@@ -40,6 +40,12 @@ module Mrg
       class Store
         include ::SPQR::Manageable
         include QmfV1Kludges
+        include ::Mrg::Grid::Util::Quiescent
+        
+        ENABLE_DEFAULT_GROUP = true
+        quiescent :ENABLE_SKELETON_GROUP, do
+          ENV["WALLABY_ENABLE_SKELETON_GROUP"] && ENV["WALLABY_ENABLE_SKELETON_GROUP"] =~ /^y/i
+        end
         
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Store'
@@ -81,6 +87,7 @@ module Mrg
         
         ["default", "skeleton"].each do |special_group|
           define_method "get#{special_group.capitalize}Group".to_sym do
+            fail(Errors.make(Errors::NOT_IMPLEMENTED), "get#{special_group.capitalize}Group is not enabled") unless Store.const_get("ENABLE_#{special_group.upcase}_GROUP")
             return Group.send("#{special_group.upcase}_GROUP")
           end
         
@@ -307,7 +314,7 @@ module Mrg
           n = Node.create(:name=>name, :provisioned=>is_provisioned, :last_checkin=>0, :last_updated_version=>seek_version || 0)
 
           # add to the skeleton group
-          n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {})
+          n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {}) if Store::ENABLE_SKELETON_GROUP
 
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
           n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, name)
@@ -454,6 +461,8 @@ module Mrg
           end
           
           Group.DEFAULT_GROUP
+          
+          # There's no harm in always creating this.
           Group.SKELETON_GROUP
           nil
         end

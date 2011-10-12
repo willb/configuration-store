@@ -157,6 +157,7 @@ rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_force_restart.rb
 rm -f %{buildroot}/%{ruby_sitelib}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 cp -p -f lib/mrg/grid/config/dbmigrate/*.rb %{buildroot}/%{ruby_sitelib}/mrg/grid/config/dbmigrate
+
 %if %{want_systemd} == 0
 cp -p -f etc/wallaby %{buildroot}/%{_initrddir}/wallaby
 %else

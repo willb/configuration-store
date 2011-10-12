@@ -60,6 +60,7 @@ debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upc
 do_daemonify = !ENV['WALLABY_FOREGROUND']
 run_as = nil
 logoptions = nil
+use_skeleton_group = false
 
 op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-agent [options]"
@@ -98,6 +99,10 @@ op = OptionParser.new do |opts|
 
   opts.on("-M", "--auth-mechanism PASS", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
     explicit_mechanism = mechanism
+  end
+  
+  opts.on("--enable-skeleton-group", "enable the \"skeleton group\" "  "  that is copied to each newly-created node") do
+    Mrg::Grid::Config::Store.quiesce(:ENABLE_SKELETON_GROUP, true)
   end
 
   opts.on("--run-as USER", "unix user to execute wallaby-agent as") do |user|
