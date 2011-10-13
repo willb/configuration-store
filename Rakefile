@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake'
+require 'erb'
 
 require './lib/mrg/grid/config/version'
 
@@ -22,6 +23,8 @@ rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
 end
 
+PKG_RELEASE=ENV['PKG_RELEASE'] || 1
+
 def pkg_version
   ::Mrg::Grid::Config::Version.as_string
 end
@@ -29,7 +32,24 @@ end
 def pkg_version_component(which)
   ::Mrg::Grid::Config::Version.const_get(which.to_s.upcase)
 end
-  
+
+def make_patches
+  numbered_files = ENV['SIMPLE_GIT_PATCH_NAMES'] ? "--numbered-files" : ""
+  sh "git format-patch #{numbered_files} -o SOURCES v#{pkg_version}"
+end
+
+def list_patches
+  Dir["SOURCES/*.patch"].sort.map {|f| f.gsub("SOURCES/", "")}
+end
+
+def printable_patch_list(ls=nil)
+  ls||=list_patches
+  result, = ls.inject([[], 0]) do |acc, value|
+    ls_so_far, idx = acc
+    [ls_so_far << "Patch#{idx}: #{value}", idx + 1]
+  end
+  result.join("\n")
+end
 
 def pkg_name
   return 'wallaby'
@@ -40,7 +60,7 @@ def pkg_spec
 end
 
 def pkg_rel
-  return `grep -i 'define rel' #{pkg_spec} | awk '{print $3}'`.chomp()
+  PKG_RELEASE
 end
 
 def pkg_source
@@ -148,15 +168,24 @@ task :pristine => [:gen_env_file] do
 end
 
 desc "create RPMs"
-task :rpms => [:build, :tarball, :gen_spec] do
+task :rpms => [:build, :tarball, :patches, :gen_spec] do
   FileUtils.cp [pkg_spec(), db_pkg_spec()], 'SPECS'
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{pkg_spec}"
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{db_pkg_spec}"
 end
 
+task :patches do
+  make_patches
+end
+
+desc "create RPMs"
+
 desc "Generate the specfile"
-task :gen_spec do
-  sh "cat #{pkg_spec}" + ".in" + "| sed 's/WALLABY_VERSION/#{pkg_version}/' > #{pkg_spec}"
+task :gen_spec => [:make_rpmdirs] do
+  make_patches
+  File.open(pkg_spec, "w") do |f|
+    f.write(ERB.new(File.read("#{pkg_spec}.in")).result(binding))
+  end
 end
 
 desc "Generate the db specfile"
