@@ -17,7 +17,9 @@
 require 'spqr/spqr'
 require 'rhubarb/rhubarb'
 require 'mrg/grid/config-proxies'
+require 'mrg/grid/util/quiescent'
 require 'socket'
+
 
 module Mrg
   module Grid
@@ -43,8 +45,8 @@ module Mrg
         include ::Mrg::Grid::Util::Quiescent
         
         ENABLE_DEFAULT_GROUP = true
-        quiescent :ENABLE_SKELETON_GROUP, do
-          ENV["WALLABY_ENABLE_SKELETON_GROUP"] && ENV["WALLABY_ENABLE_SKELETON_GROUP"] =~ /^y/i
+        quiescent :ENABLE_SKELETON_GROUP do
+          ENV["WALLABY_ENABLE_SKELETON_GROUP"] && ENV["WALLABY_ENABLE_SKELETON_GROUP"] =~ /^[yt1]/i
         end
         
         qmf_package_name 'com.redhat.grid.config'
