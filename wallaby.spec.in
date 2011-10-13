@@ -272,6 +272,10 @@ fi
 
 %changelog
 
+* Thu Oct 13 2011 willb <willb@redhat> - 0.11.0-4
+- fixed conditionalized skeleton group support (broken since 0.10.9-1)
+- packaging workflow improvements
+
 * Tue Oct 11 2011 willb <willb@redhat> - 0.11.0-3
 - minor packaging fixes
 
