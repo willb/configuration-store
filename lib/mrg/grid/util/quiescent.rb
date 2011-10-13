@@ -24,7 +24,7 @@ module Mrg
           end
 
           def __qcs
-         s   @__qcs ||= {}
+            @__qcs ||= {}
           end
 
           def quiesce(name, val)

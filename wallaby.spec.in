@@ -27,12 +27,13 @@
 
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
-Version: WALLABY_VERSION
-Release: 3%{?dist}
+Version: <%= pkg_version %>
+Release: <%= pkg_rel %>%{?dist}
 Group: Applications/System
 License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/wallaby.git
 Source0: https://fedorahosted.org/releases/g/r/grid/%{name}-%{version}.tar.gz
+<%= printable_patch_list %>
 %if %{building_for_el5}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %endif
@@ -121,7 +122,8 @@ Wallaby.
 
 %prep
 %setup -q
-
+<% list_patches.each_with_index do |p, i| %>
+<%= "%patch#{i} -p1" %><% end %>
 %build
 
 sed 's/^export //' < etc/sysconfig/wallaby-agent > etc/sysconfig/wallaby-agent-env
@@ -269,6 +271,10 @@ fi
 %endif
 
 %changelog
+
+* Thu Oct 13 2011 willb <willb@redhat> - 0.11.0-4
+- fixed conditionalized skeleton group support (broken since 0.10.9-1)
+- packaging workflow improvements
 
 * Tue Oct 11 2011 willb <willb@redhat> - 0.11.0-3
 - minor packaging fixes
