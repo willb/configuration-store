@@ -222,7 +222,7 @@ module Mrg
               if input == nil
                 exit!(1, "you must specify a #{opt[:opt_name].to_s.upcase}")
               elsif @input.keys.length/2 < (self.options.length-1)
-                @input["orig_#{oname}".intern] = input
+                @input["orig_#{oname}".to_sym] = input
                 @input[oname] = input.send(*ofunc)
               else
                 dup_args.unshift(input)
@@ -236,8 +236,8 @@ module Mrg
             end
 
             valid.keys.each do |key|
-              if not valid[key].include?(@input[key].intern)
-                exit!(1, "#{@input["orig_#{key}".intern]} is an invalid #{key.to_s.upcase}")
+              if not valid[key].include?(@input[key].to_sym)
+                exit!(1, "#{@input["orig_#{key}".to_sym]} is an invalid #{key.to_s.upcase}")
               end
             end
 

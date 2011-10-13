@@ -147,8 +147,12 @@ module Mrg
 
           def act
             store.console.objects(:class=>"Group").each do |group|
-              if (not group.name =~ /^[+]{3}/) || (group.name =~ /^[+]{3}[A-Z]+$/)
-                puts "#{group.name}"
+              if not group.is_identity_group
+                if group.name =~ /^[+]{3}/
+                  puts "#{group.display_name} #{group.name}"
+                else
+                  puts "#{group.name}"
+                end
               end
             end
             0

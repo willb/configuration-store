@@ -35,9 +35,9 @@ module Mrg
             cap_str += w.capitalize
           end
           if (type == :list) || (type == :map)
-            "modify#{cap_str}".intern
+            "modify#{cap_str}".to_sym
           else
-            "set#{cap_str}".intern
+            "set#{cap_str}".to_sym
           end
         end
 
@@ -50,7 +50,7 @@ module Mrg
             raise RuntimeError.new("Invalid set accessor #{set.inspect}")
           end
           getter = $1.gsub(/([A-Z][a-z]*)/, '\1_').chop
-          getter.downcase.intern
+          getter.downcase.to_sym
         end
       end
 
@@ -61,9 +61,9 @@ module Mrg
       def self.attr_to_class(attr)
         a = attr.to_s.gsub(/(.+)s/, '\1').capitalize
         if Mrg::Grid::Config.constants.include?(a)
-          Mrg::Grid::Config.const_get(a).to_s.split("::").last.intern
+          Mrg::Grid::Config.const_get(a).to_s.split("::").last.to_sym
         else
-          Mrg::Grid::Config.constants.grep(/^#{a}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0].intern
+          Mrg::Grid::Config.constants.grep(/^#{a}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0].to_sym
         end
       end
 

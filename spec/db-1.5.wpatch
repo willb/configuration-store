@@ -21,14 +21,7 @@ expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store
 
       params: {}
 
-    +++576335d8883cbe8850723a1c17e359f8: 
-      features: []
-
-      params: {}
-
-  nodes: 
-    del_node: 
-      memberships: []
+  nodes: {}
 
   params: 
     DEL_PARAM: 

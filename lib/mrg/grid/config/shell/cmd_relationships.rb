@@ -59,7 +59,7 @@ module Mrg
               if input == nil
                 exit!(1, "you must specify a #{opt[:opt_name].to_s.upcase}")
               elsif @input.keys.length/2 < (self.options.length-1)
-                @input["orig_#{oname}".intern] = input
+                @input["orig_#{oname}".to_sym] = input
                 @input[oname] = input.send(*ofunc)
               else
                 dup_args.unshift(input)
@@ -70,7 +70,7 @@ module Mrg
                 @input[:name].uniq!
               end
             end
-            if not actions.include?(@input[:action].intern)
+            if not actions.include?(@input[:action].to_sym)
               exit!(1, "#{@input[:orig_action]} is an invalid action")
             end
           end
@@ -89,7 +89,7 @@ module Mrg
               end
 
               if supports_options
-	        opts.on("-p", "--priority PRI", "priority when modifying") do |p|
+	        opts.on("-p", "--priority PRI", "priority when adding, ignored otherwise") do |p|
                   @priority = p.to_i
                 end
               end
@@ -126,7 +126,7 @@ module Mrg
               if (@priority == nil) || (@input[:action] != "ADD")
                 obj.send(cmethod, @input[:action], @input[:name], {})
               else
-                get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.intern)
+                get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.to_sym)
                 cur = obj.send(get)
                 cnt = 0
                 @input[:name].select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}

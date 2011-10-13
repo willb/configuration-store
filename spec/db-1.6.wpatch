@@ -44,19 +44,6 @@ updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store
       - {}
 
   groups: 
-    +++d6140eacb7a6763bac6e62fbf3a64f3f: 
-      modifyParams: 
-      - REPLACE
-      - {}
-
-      - {}
-
-      modifyFeatures: 
-      - REPLACE
-      - []
-
-      - {}
-
     AddGroup: 
       modifyParams: 
       - REPLACE
@@ -69,12 +56,7 @@ updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store
 
       - {}
 
-  nodes: 
-    add_node: 
-      modifyMemberships: 
-      - REPLACE
-      - - AddGroup
-      - {}
+  nodes: {}
 
   params: 
     ADD_PARAM: 

@@ -16,10 +16,8 @@ expected: !ruby/object:Mrg::Grid::SerializedConfigs::Store
       - DepFeature
   groups: {}
 
-  nodes: 
-    modi_node: 
-      memberships: 
-      - ModiGroup
+  nodes: {}
+
   params: 
     MOD_PARAM: 
       kind: string
@@ -129,31 +127,7 @@ updates: !ruby/object:Mrg::Grid::SerializedConfigs::Store
 
       - {}
 
-    +++29306130b5e05dbc6196397d140b1eb4: 
-      modifyParams: 
-      - REPLACE
-      - {}
-
-      - {}
-
-      modifyFeatures: 
-      - REPLACE
-      - []
-
-      - {}
-
-  nodes: 
-    modi_node2: 
-      modifyMemberships: 
-      - REPLACE
-      - - ModiGroup
-      - {}
-
-    modi_node: 
-      modifyMemberships: 
-      - REPLACE
-      - - ModiGroup2
-      - {}
+  nodes: {}
 
   params: 
     CONFLICT_PARAM2: 
