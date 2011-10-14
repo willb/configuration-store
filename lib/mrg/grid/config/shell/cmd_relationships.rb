@@ -18,6 +18,36 @@ module Mrg
   module Grid
     module Config
       module Shell
+        module NodeMembershipOps
+          def sub_group_for_node
+            false
+          end
+
+          def target_type
+            @t_type ||= (self.class.opname.split("-") - prepositions)[1]
+          end
+
+          def name_type
+            @n_type ||= (self.class.opname.split("-") - prepositions)[2]
+          end
+
+          def verify_names
+            store.send("checkGroupValidity", @names)
+          end
+
+          def options
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"GROUP-NAME", :desc=>"the names of groups to #{command.downcase}"}]
+          end
+        end
+
+        module ParamOps
+          def options
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"#{name_type.upcase}-NAME[=VALUE]", :desc=>"the names[=values] of #{name_type.downcase}s to #{command.downcase}"}]
+          end
+        end
+
         module RelationshipOps
           def supports_options
             false
@@ -27,18 +57,29 @@ module Mrg
             true
           end
 
-          def actions
-            [:ADD, :REMOVE, :REPLACE]
-          end
-
           def options
-            [{:opt_name=>:action, :mod_func=>:upcase, :desc=>"one of #{actions.join(", ")}"},
-             {:opt_name=>:target, :mod_func=>:to_s, :desc=>"the name of the entity to act upon"},
-             {:opt_name=>:name, :mod_func=>:to_s, :desc=>"the names of entities to modify relationship with"}]
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"#{name_type.upcase}-NAME", :desc=>"the names of #{name_type.downcase}s to #{command.downcase}"}]
           end
 
           def opargs
             options.collect {|x| "#{x[:opt_name].to_s.upcase}" }.join(" ") + " [...]"
+          end
+
+          def prepositions
+            ["to", "from", "on"]
+          end
+
+          def command
+            @cmd ||= (self.class.opname.split("-") - prepositions)[0].upcase
+          end
+
+          def target_type
+            @t_type ||= (self.class.opname.split("-") - prepositions)[2]
+          end
+
+          def name_type
+            @n_type ||= (self.class.opname.split("-") - prepositions)[1]
           end
 
           def self.included(receiver)
@@ -48,40 +89,41 @@ module Mrg
           end
 
           def parse_args(*args)
-            @input = {}
-
-            dup_args = args.dup
-
+            opts = 0
             self.options.each do |opt|
-              oname = opt[:opt_name]
-              ofunc = opt[:mod_func]
-              input = dup_args.shift
+              input = args.shift
               if input == nil
-                exit!(1, "you must specify a #{opt[:opt_name].to_s.upcase}")
-              elsif @input.keys.length/2 < (self.options.length-1)
-                @input["orig_#{oname}".to_sym] = input
-                @input[oname] = input.send(*ofunc)
+                exit!(1, "you must specify a #{opt[:opt_name]}")
+              elsif opts < (self.options.length-1)
+                @target = input
               else
-                dup_args.unshift(input)
-                @input[:name] = []
-                dup_args.each do |a|
-                  @input[:name] << a.send(*ofunc)
+                if (name_type == "param") && (target_type != "subsystem")
+                  @names = {}
+                  args.unshift(input)
+                  args.each do |a|
+                    tmp = a.split("=", 2)
+                    @names[tmp[0]] = 0 if tmp.length == 1
+                    @names[tmp[0]] = tmp[1] if tmp.length == 2
+                  end
+                else
+                  @names = []
+                  @names << input
+                  args.each do |a|
+                    @names << a
+                  end
+                  @names.uniq!
                 end
-                @input[:name].uniq!
               end
-            end
-            if not actions.include?(@input[:action].to_sym)
-              exit!(1, "#{@input[:orig_action]} is an invalid action")
+              opts += 1
             end
           end
 
           def init_option_parser
-            name = self.class.opname.split("-") 
             if options.size > 0
-              d = options.collect {|o| "#{o[:opt_name].to_s.upcase} is #{o[:desc]}\n" }
+              d = options.collect {|o| "#{o[:opt_name]} is #{o[:desc]}\n" }
             end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{name.join("-")} #{opargs} " + ("[#{(name - ["apply"])[0].upcase}-OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{opargs} " + ("[#{target_type.upcase}-OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -89,50 +131,60 @@ module Mrg
               end
 
               if supports_options
-	        opts.on("-p", "--priority PRI", "priority when adding, ignored otherwise") do |p|
+	        opts.on("-p", "--priority PRI", "priority for NAMES") do |p|
                   @priority = p.to_i
                 end
               end
             end
           end
 
-          def verify_target(type)
-            store.send("check#{type}Validity", [@input[:target]])
+          def full_target_type
+            Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
           end
 
-          def verify_names(type)
-            store.send("check#{type}Validity", @input[:name])
+          def verify_target
+            store.send("check#{full_target_type}Validity", [@target])
+          end
+
+          def verify_names
+            t = Mrg::Grid::Config.constants.grep(/^#{name_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            n = @names
+            n = @names.keys if @names.class == Hash
+            if t == nil
+              store.send("check#{full_target_type}Validity", n)
+            else
+              store.send("check#{t}Validity", n)
+            end
           end
 
           def act
             result = 0
 
-            tmp = self.class.opname.split("-") - ["apply"]
-            cname = Mrg::Grid::Config.constants.grep(/^#{tmp[0].capitalize}[^A-Z]*$/)[0]
-            bad_target = verify_target(cname)
-            bad_names = verify_names(cname)
+            cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            bad_target = verify_target
+            bad_names = verify_names
             if (bad_target != []) || (bad_names != [])
-              puts "Invalid TARGET: #{bad_target}" if bad_target != []
-              puts "Invalid NAME: #{bad_names}" if bad_names != []
+              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
+              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
               result = 1
             else
               smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
-              obj = store.send(smethod, @input[:target])
+              obj = store.send(smethod, @target)
               if cname == "Node" and sub_group_for_node
                 obj = obj.identity_group
                 cname = "Group"
               end
-              cmethod = Mrg::Grid::MethodUtils.find_method(tmp[1].capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
-              if (@priority == nil) || (@input[:action] != "ADD")
-                obj.send(cmethod, @input[:action], @input[:name], {})
+              cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,6).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
+              if (@priority == nil) || (command != "ADD")
+                obj.send(cmethod, command, @names, {})
               else
                 get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.to_sym)
                 cur = obj.send(get)
                 cnt = 0
-                @input[:name].select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
-                cur = cur - @input[:name]
-                if @input[:action] == "ADD"
-                  cur.insert(@priority - cnt, *@input[:name]).compact!
+                @names.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
+                cur = cur - @names
+                if command == "ADD"
+                  cur.insert(@priority - cnt, *@names).compact!
                 end
                 obj.send(cmethod, "REPLACE", cur, {})
               end
@@ -141,79 +193,159 @@ module Mrg
           end
         end
 
-        class ParamConflict < Command
+        class AddParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "param-conflict"
+            "add-conflict-to-param"
           end
         
           def self.description
-            "Modify a parameter's conflicts in the store."
+            "Add conflicts to a parameter in the store."
           end
         end
 
-        class ParamDepend < Command
+        class RemoveParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "param-depend"
+            "remove-conflict-from-param"
           end
         
           def self.description
-            "Modify a parameter's dependencies in the store."
+            "Remove conflicts from a parameter in the store."
           end
         end
 
-        class FeatureConflict < Command
+        class ReplaceParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "feature-conflict"
+            "replace-conflict-on-param"
           end
         
           def self.description
-            "Modify a feature's conflicts in the store."
+            "Replace the conflicts on a parameter in the store with a new set of conflicts."
           end
         end
 
-        class FeatureDepend < Command
+        class AddParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "feature-depend"
+            "add-dependency-to-param"
           end
         
           def self.description
-            "Modify a feature's dependencies in the store."
+            "Add dependencies to a parameter in the store."
           end
         end
 
-        class FeatureInclude < Command
+        class RemoveParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "feature-include"
+            "remove-dependency-from-param"
           end
         
           def self.description
-            "Modify a feature's includes in the store."
+            "Remove dependencies from a parameter in the store."
           end
         end
 
-        class NodeApply < Command
+        class ReplaceParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "apply-node-feature"
+            "replace-dependency-on-param"
           end
         
           def self.description
-            "Modify features applied to a node in the store."
+            "Replace the dependencies on a parameter in the store with a new set of dependencies."
           end
+        end
 
-          def verify_names(type)
-            store.send("checkFeatureValidity", @input[:name])
+        class AddFeatureConflict < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-conflict-to-feature"
+          end
+        
+          def self.description
+            "Add conflicts to a feature in the store."
+          end
+        end
+
+        class RemoveFeatureConflict < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-conflict-from-feature"
+          end
+        
+          def self.description
+            "Remove conflicts from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureConflict < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-conflict-on-feature"
+          end
+        
+          def self.description
+            "Replace the conflicts on a feature in the store with a new set of conflicts."
+          end
+        end
+
+        class AddFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-dependency-to-feature"
+          end
+        
+          def self.description
+            "Add dependencies to a feature in the store."
+          end
+        end
+
+        class RemoveFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-dependency-from-feature"
+          end
+        
+          def self.description
+            "Remove dependencies from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-dependency-on-feature"
+          end
+        
+          def self.description
+            "Replace the dependencies on a feature in the store with a new set of dependencies."
+          end
+        end
+
+        class AddFeatureInclude < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-include-to-feature"
+          end
+        
+          def self.description
+            "Add includes to a feature in the store."
           end
 
           def supports_options
@@ -221,19 +353,39 @@ module Mrg
           end
         end
 
-        class GroupApply < Command
+        class RemoveFeatureInclude < Command
           include RelationshipOps
 
           def self.opname
-            "apply-group-feature"
+            "remove-include-from-feature"
           end
         
           def self.description
-            "Modify features applied to a group in the store."
+            "Remove includes from a feature in the store."
           end
+        end
 
-          def verify_names(type)
-            store.send("checkFeatureValidity", @input[:name])
+        class ReplaceFeatureInclude < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-include-on-feature"
+          end
+        
+          def self.description
+            "Replace the includes on a feature in the store with a new set of includes."
+          end
+        end
+
+        class AddNodeFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-feature-to-node"
+          end
+        
+          def self.description
+            "Add features to a node in the store."
           end
 
           def supports_options
@@ -241,27 +393,263 @@ module Mrg
           end
         end
 
-        class NodeMembership < Command
+        class RemoveNodeFeature < Command
           include RelationshipOps
 
           def self.opname
-            "node-membership"
+            "remove-feature-from-node"
           end
         
           def self.description
-            "Modify a node's group membership."
+            "Remove features from a node in the store."
           end
+        end
 
-          def sub_group_for_node
-            false
+        class ReplaceNodeFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-feature-on-node"
+          end
+        
+          def self.description
+            "Replace the features on a node in the store with a new set of features."
+          end
+        end
+
+        class AddGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-feature-to-group"
+          end
+        
+          def self.description
+            "Add features to a group in the store."
           end
 
           def supports_options
             true
           end
+        end
 
-          def verify_names(type)
-            store.send("checkGroupValidity", @input[:name])
+        class RemoveGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-feature-from-group"
+          end
+        
+          def self.description
+            "Remove features from a group in the store."
+          end
+        end
+
+        class ReplaceGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-feature-on-group"
+          end
+        
+          def self.description
+            "Replace the features on a group in the store with a new set of features."
+          end
+        end
+
+        class AddNodeParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-param-to-node"
+          end
+        
+          def self.description
+            "Add parameters to a node in the store."
+          end
+        end
+
+        class RemoveNodeParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "remove-param-from-node"
+          end
+        
+          def self.description
+            "Remove parameters from a node in the store."
+          end
+        end
+
+        class ReplaceNodeParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-param-on-node"
+          end
+        
+          def self.description
+            "Replace the parameters on a node in the store with a new set of parameters."
+          end
+        end
+
+        class AddGroupParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-param-to-group"
+          end
+        
+          def self.description
+            "Add parameters to a group in the store."
+          end
+        end
+
+        class RemoveGroupParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "remove-param-from-group"
+          end
+        
+          def self.description
+            "Remove parameters from a group in the store."
+          end
+        end
+
+        class ReplaceGroupParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-param-on-group"
+          end
+        
+          def self.description
+            "Replace the parameters on a group in the store with a new set of parameters."
+          end
+        end
+
+        class AddFeatureParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-param-to-feature"
+          end
+        
+          def self.description
+            "Add parameters to a feature in the store."
+          end
+        end
+
+        class RemoveFeatureParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "remove-param-from-feature"
+          end
+        
+          def self.description
+            "Remove parameters from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-param-on-feature"
+          end
+        
+          def self.description
+            "Replace the parameters on a feature in the store with a new set of parameters."
+          end
+        end
+
+        class AddSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-param-to-subsystem"
+          end
+        
+          def self.description
+            "Add parameters to a subsystem in the store."
+          end
+        end
+
+        class RemoveSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-param-from-subsystem"
+          end
+        
+          def self.description
+            "Remove parameters from a subsystem in the store."
+          end
+        end
+
+        class ReplaceSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-param-on-subsystem"
+          end
+        
+          def self.description
+            "Replace the parameters on a subsystem in the store with a new set of parameters."
+          end
+        end
+
+        class AddNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "add-node-membership"
+          end
+        
+          def self.description
+            "Add group memberships to a node in the store."
+          end
+
+          def supports_options
+            true
+          end
+        end
+
+        class RemoveNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "remove-node-membership"
+          end
+        
+          def self.description
+            "Remove group memberships from a node in the store."
+          end
+        end
+
+        class ReplaceNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "replace-node-membership"
+          end
+        
+          def self.description
+            "Raplce group memberships on a node in the store with a new set of group memberships."
           end
         end
       end
