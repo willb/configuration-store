@@ -272,6 +272,10 @@ fi
 
 %changelog
 
+* Fri Oct 14 2011 rrati <rrati@redhat> - 0.12.0-1
+- improvements to wallaby shell commands
+- packaging workflow improvements
+
 * Thu Oct 13 2011 willb <willb@redhat> - 0.11.0-4
 - fixed conditionalized skeleton group support (broken since 0.10.9-1)
 - packaging workflow improvements
