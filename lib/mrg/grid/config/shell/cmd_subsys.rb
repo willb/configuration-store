@@ -32,6 +32,10 @@ module Mrg
           def accessor_options
             @accessor_options ||= {}
           end
+
+          def supports_options
+            false
+          end
         end
 
         class AddSubsys < Command
@@ -90,10 +94,6 @@ module Mrg
             :getSubsys
           end
           
-          def supports_options
-            false
-          end
-
           def entity_callback(subsys)
             puts "#{subsys.name}"
             api_accessors.each do |k|
@@ -102,9 +102,14 @@ module Mrg
           end
 
           register_callback :after_option_parsing, :post_arg_callback
+
+          Mrg::Grid::Config::Shell.register_command(self, opname + "s")
         end
 
         class ListSubsys < Command
+          include EntityOps
+          include SubsysOps
+          
           def self.opname
             "list-subsystems"
           end
@@ -115,10 +120,6 @@ module Mrg
 
           def self.description
             "Lists all the subsystem names in the store."
-          end
-
-          def supports_options
-            false
           end
 
           def act

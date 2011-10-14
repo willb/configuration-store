@@ -64,20 +64,6 @@ groups:
 - !ruby/object:Mrg::Grid::SerializedConfigs::Group 
   features: []
 
-  is_identity_group: true
-  name: +++576335d8883cbe8850723a1c17e359f8
-  params: {}
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
-  features: []
-
-  is_identity_group: true
-  name: +++6207a5dbf86f11c0472aef5a8985ff78
-  params: {}
-
-- !ruby/object:Mrg::Grid::SerializedConfigs::Group 
-  features: []
-
   is_identity_group: false
   name: +++DEFAULT
   params: {}
@@ -96,21 +82,8 @@ groups:
   name: ModiGroup
   params: {}
 
-nodes: 
-- !ruby/object:Mrg::Grid::SerializedConfigs::Node 
-  idgroup: ""
-  last_updated_version: 0
-  membership: []
+nodes: []
 
-  name: del_node
-  provisioned: true
-- !ruby/object:Mrg::Grid::SerializedConfigs::Node 
-  idgroup: ""
-  last_updated_version: 0
-  membership: 
-  - ModiGroup
-  name: modi_node
-  provisioned: true
 params: 
 - !ruby/object:Mrg::Grid::SerializedConfigs::Parameter 
   conflicts: []

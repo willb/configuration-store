@@ -32,6 +32,10 @@ module Mrg
           def accessor_options
             @accessor_options ||= {:name=>String}
           end
+          
+          def supports_options
+            false
+          end
         end
 
         class AddGroup < Command
@@ -68,6 +72,14 @@ module Mrg
           def storeop
             :getGroupByName
           end
+          
+          def supports_options
+            true
+          end
+          
+          def multiple_targets
+            false
+          end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
@@ -83,7 +95,7 @@ module Mrg
           def self.description
             "Deletes a group from the store."
           end
-          
+
           def storeop
             :removeGroup
           end
@@ -107,10 +119,6 @@ module Mrg
             :getGroupByName
           end
           
-          def supports_options
-            false
-          end
-
           def entity_callback(group)
             puts "#{group.name}"
             api_accessors.each do |k|
@@ -119,9 +127,14 @@ module Mrg
           end
 
           register_callback :after_option_parsing, :post_arg_callback
+
+          Mrg::Grid::Config::Shell.register_command(self, opname + "s")
         end
 
         class ListGroup < Command
+          include EntityOps
+          include GroupOps
+          
           def self.opname
             "list-groups"
           end
@@ -134,14 +147,14 @@ module Mrg
             "Lists all the group names in the store."
           end
 
-          def supports_options
-            false
-          end
-
           def act
             store.console.objects(:class=>"Group").each do |group|
-              if not group.name =~ /^[+]{3}/ or group.name == "+++DEFAULT"
-                puts "#{group.name}"
+              if not group.is_identity_group
+                if group.name =~ /^[+]{3}/
+                  puts "#{group.display_name} #{group.name}"
+                else
+                  puts "#{group.name}"
+                end
               end
             end
             0

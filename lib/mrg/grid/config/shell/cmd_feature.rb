@@ -32,6 +32,10 @@ module Mrg
           def accessor_options
             @accessor_options ||= {:name=>String}
           end
+          
+          def supports_options
+            false
+          end
         end
 
         class AddFeature < Command
@@ -68,6 +72,14 @@ module Mrg
           def storeop
             :getFeature
           end
+          
+          def supports_options
+            true
+          end
+
+          def multiple_targets
+            false
+          end
 
           register_callback :after_option_parsing, :post_arg_callback
         end
@@ -82,10 +94,6 @@ module Mrg
           
           def self.description
             "Deletes a feature from the store."
-          end
-          
-          def supports_options
-            false
           end
           
           def storeop
@@ -107,10 +115,6 @@ module Mrg
             "Displays the properties of a feature."
           end
           
-          def supports_options
-            false
-          end
-          
           def storeop
             :getFeature
           end
@@ -127,9 +131,14 @@ module Mrg
           end
 
           register_callback :after_option_parsing, :post_arg_callback
+
+          Mrg::Grid::Config::Shell.register_command(self, opname + "s")
         end
 
         class ListFeatures < Command
+          include EntityOps
+          include FeatureOps
+          
           def self.opname
             "list-features"
           end
@@ -138,10 +147,6 @@ module Mrg
             "Lists all the feature names in the store."
           end
           
-          def supports_options
-            false
-          end
-
           def act
             store.console.objects(:class=>"Feature").each do |feature|
               puts "#{feature.name}"

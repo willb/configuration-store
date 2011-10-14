@@ -175,14 +175,14 @@ module Mrg
         def gen_methods(ignore, type)
           methods = []
           qmf_m = ""
-          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.intern} - ignore
+          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.to_sym} - ignore
           attrs.each do |m|
             tmp = m.to_s.split('_')
             begin
-              qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[0], type)[0].intern
+              qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[0], type)[0].to_sym
             rescue
               if tmp.count > 1
-                qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[1], type)[0].intern
+                qmf_m = Mrg::Grid::MethodUtils.find_property(tmp[1], type)[0].to_sym
               end
             end
             set = Mrg::Grid::Config.const_get(type).set_from_get(qmf_m)
@@ -198,10 +198,11 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }
+          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }.delete_if {|x| x == "params" } << "params"
+          log.debug "Store entities: #{@entities.inspect}"
           @valid_methods = {}
           @entities.each do |type|
-            otype = Mrg::Grid::MethodUtils.attr_to_class(type.intern)
+            otype = Mrg::Grid::MethodUtils.attr_to_class(type.to_sym)
             klass = Mrg::Grid::Config.const_get(otype)
             qmf_methods = klass.spqr_meta.manageable_methods.map {|m| m.name}
             qmf_props = klass.spqr_meta.properties.map {|p| p.name}
@@ -260,7 +261,7 @@ module Mrg
         def affected_entities
           changes = Hash.new {|h,k| h[k] = Hash.new {|h1,k1| h1[k1] = [] } }
           @entities.each do |type|
-            type = type.intern
+            type = type.to_sym
             otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @updates.send(type).keys.each do |name|
               if @expected.send(type).has_key?(name)
@@ -272,7 +273,7 @@ module Mrg
           end
 
           @entities.each do |type|
-            type = type.intern
+            type = type.to_sym
             otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @expected.send(type).keys.each do |name|
               if not @updates.send(type).has_key?(name)
@@ -285,11 +286,11 @@ module Mrg
 
         def entity_details(type, name)
           details = {:expected=>{}, :updates=>{}}
-          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].intern
+          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].to_sym
           klass = Mrg::Grid::Config.const_get(type)
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
-              cmd = klass.get_from_set(set.intern)
+              cmd = klass.get_from_set(set.to_sym)
               if set.to_s =~ /^modify/
                 details[:updates][cmd] = @updates.send(t)[name][set][1]
               else
@@ -342,7 +343,7 @@ module Mrg
 
         def update_entities
           @entities.each do |type|
-            type = type.intern
+            type = type.to_sym
             otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @updates.send(type).keys.each do |name|
               added = false
@@ -384,7 +385,7 @@ module Mrg
           end
 
           @entities.each do |type|
-            type = type.intern
+            type = type.to_sym
             otype = Mrg::Grid::MethodUtils.attr_to_class(type)
             @expected.send(type).keys.each do |name|
               if (not @updates.send(type).has_key?(name)) && (name.index("+++") == nil)
@@ -406,17 +407,21 @@ module Mrg
             log.debug "Verifying #{otype} '#{name}##{get}'"
             validate_accessor(otype, get)
             current_val = obj.send(get)
-            if (name == "BaseDBVersion") && (current_val.has_key?("BaseDBVersion"))
+            log.debug "Current value from object: #{current_val.inspect}"
+            if (type == :features) && (get == "params") && (current_val.has_key?("BaseDBVersion"))
+              log.debug "Removing 'v' from DB version string"
               current_val["BaseDBVersion"].delete!("v")
             end
-            if type == :features and get == "params"
+            if (type == :features) && (get == "params")
               log.debug "Generating params using default values"
               default_params = obj.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
               log.debug "Params using default values: #{default_params.inspect}"
               default_params.each {|dp_key| current_val[dp_key] = 0}
             end
             expected_val = @expected.send(type)[name][get]
-            if (name == "BaseDBVersion") && (expected_val.has_key?("BaseDBVersion"))
+            log.debug "Expected value from patch: #{expected_val.inspect}"
+            if (type == :features) && (get == "params") && (expected_val.has_key?("BaseDBVersion"))
+              log.debug "Removing 'v' from DB version string"
               expected_val["BaseDBVersion"].delete!("v")
             end
             begin
@@ -442,12 +447,12 @@ module Mrg
         def validate_accessor(type, name)
           log.debug "Validating method #{type}##{name}"
           if name.class == String
-            sym_n = name.intern
+            sym_n = name.to_sym
           else
             sym_n = name
           end
           if type.class == String
-            sym_t = type.intern
+            sym_t = type.to_sym
           else
             sym_t = type
           end

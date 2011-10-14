@@ -334,7 +334,7 @@ module PatchTester
               obj = @store.send(method.to_s, n)
             end
             obj.should_not == nil
-            getter = getter.intern
+            getter = getter.to_sym
             cmd = klass.set_from_get(getter)
             if cmd.to_s =~ /^modifyParams/ and (type == :Feature or type == :Group)
               obj.send(cmd, "REPLACE", {"EXTRA_PARAM"=>new_val}, {})

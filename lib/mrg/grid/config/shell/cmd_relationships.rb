@@ -18,6 +18,57 @@ module Mrg
   module Grid
     module Config
       module Shell
+        module GroupMembershipOps
+          def act
+            result = 0
+
+            cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            bad_target = verify_target
+            bad_names = verify_names
+            if (bad_target != []) || (bad_names != [])
+              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
+              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
+              result = 1
+            else
+              @names.each do |n|
+                obj = store.getNode(n)
+                obj.modifyMemberships(command, [@target], {})
+              end
+            end
+            result
+          end
+        end
+
+        module NodeMembershipOps
+          def sub_group_for_node
+            false
+          end
+
+          def target_type
+            @t_type ||= (self.class.opname.split("-") - prepositions)[1]
+          end
+
+          def name_type
+            @n_type ||= (self.class.opname.split("-") - prepositions)[2].gsub(/[s]$/, "")
+          end
+
+          def verify_names
+            store.send("checkGroupValidity", @names)
+          end
+
+          def options
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"GROUP-NAME", :desc=>"the names of groups to #{command.downcase}"}]
+          end
+        end
+
+        module ParamOps
+          def options
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"#{name_type.upcase}-NAME[=VALUE]", :desc=>"the names[=values] of #{name_type.downcase}s to #{command.downcase}"}]
+          end
+        end
+
         module RelationshipOps
           def supports_options
             false
@@ -28,15 +79,28 @@ module Mrg
           end
 
           def options
-            [{:opt_name=>:action, :mod_func=>:upcase}, {:opt_name=>:target, :mod_func=>:to_s}]
+            [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
+             {:opt_name=>"#{name_type.upcase}-NAME", :desc=>"the names of #{name_type.downcase}s to #{command.downcase}"}]
           end
 
           def opargs
-            str_o = ""
-            options.each do |o|
-              str_o += "#{o[:opt_name].to_s.upcase} "
-            end
-            str_o + "NAME"
+            options.collect {|x| "#{x[:opt_name].to_s.upcase}" }.join(" ") + " [...]"
+          end
+
+          def prepositions
+            ["to", "from", "on"]
+          end
+
+          def command
+            @cmd ||= (self.class.opname.split("-") - prepositions)[0].upcase
+          end
+
+          def target_type
+            @t_type ||= (self.class.opname.split("-") - prepositions)[2]
+          end
+
+          def name_type
+            @n_type ||= (self.class.opname.split("-") - prepositions)[1].gsub(/[s]$/, "")
           end
 
           def self.included(receiver)
@@ -46,201 +110,590 @@ module Mrg
           end
 
           def parse_args(*args)
-            actions = [:ADD, :REMOVE, :REPLACE]
-            @input = {}
-            @arg_error = false
-
-            dup_args = args.dup
-
+            opts = 0
             self.options.each do |opt|
-              oname = opt[:opt_name]
-              ofunc = opt[:mod_func]
-              input = dup_args.shift
+              input = args.shift
               if input == nil
-                puts "fatal: you must specify a #{opt[:opt_name].to_s.upcase}"
-                @arg_error = true
+                exit!(1, "you must specify a #{opt[:opt_name]}")
+              elsif opts < (self.options.length-1)
+                @target = input
               else
-                @input["orig_#{oname}".intern] = input
-                @input[oname] = input.send(ofunc)
+                if (name_type == "param") && (target_type != "subsystem")
+                  @names = {}
+                  args.unshift(input)
+                  args.each do |a|
+                    tmp = a.split("=", 2)
+                    @names[tmp[0]] = 0 if tmp.length == 1
+                    @names[tmp[0]] = tmp[1] if tmp.length == 2
+                  end
+                else
+                  @names = []
+                  @names << input
+                  args.each do |a|
+                    @names << a
+                  end
+                  @names.uniq!
+                end
               end
+              opts += 1
             end
-            if (not actions.include?(@input[:action].intern)) && (arg_error == false)
-                puts "fatal: #{@input[:orig_action]} is an invalid action"
-                @arg_error = true
-            end
-
-            @relationships = []
-            dup_args.each do |a|
-              @relationships << a
-            end
-            @relationships.uniq!
           end
 
           def init_option_parser
+            if options.size > 0
+              d = options.collect {|o| "#{o[:opt_name]} is #{o[:desc]}\n" }
+            end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} [options] #{opargs}\n#{self.class.description}"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{opargs} " + ("[#{target_type.upcase}-OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
               end
 
-              opts.on("-p", "--priority PRI", "priority when adding") do |p|
-                @priority = p.to_i
+              if supports_options
+	        opts.on("-p", "--priority PRI", "priority for NAMES") do |p|
+                  @priority = p.to_i
+                end
               end
             end
           end
 
-          def verify_target(type)
-            store.send("check#{type}Validity", [@input[:target]])
+          def full_target_type
+            Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
           end
 
-          def verify_names(type)
-            store.send("check#{type}Validity", @relationships)
+          def verify_target
+            store.send("check#{full_target_type}Validity", [@target])
+          end
+
+          def verify_names
+            t = Mrg::Grid::Config.constants.grep(/^#{name_type.slice(0,5).capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            n = @names
+            n = @names.keys if @names.class == Hash
+            if t == nil
+              store.send("check#{full_target_type}Validity", n)
+            else
+              store.send("check#{t}Validity", n)
+            end
           end
 
           def act
             result = 0
 
-            if @arg_error == true
+            cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            bad_target = verify_target
+            bad_names = verify_names
+            if (bad_target != []) || (bad_names != [])
+              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
+              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
               result = 1
             else
-              tmp = self.class.opname.split("-") - ["apply"]
-              cname = Mrg::Grid::Config.constants.grep(/^#{tmp[0].capitalize}[^A-Z]*$/)[0]
-              bad_target = verify_target(cname)
-              bad_names = verify_names(cname)
-              if (bad_target != []) || (bad_names != [])
-                puts "Invalid TARGET: #{bad_target}" if bad_target != []
-                puts "Invalid NAME: #{bad_names}" if bad_names != []
-                result = 1
+              smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
+              obj = store.send(smethod, @target)
+              if cname == "Node" and sub_group_for_node
+                obj = obj.identity_group
+                cname = "Group"
+              end
+              cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,5).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
+              if (@priority == nil) || (command != "ADD")
+                obj.send(cmethod, command, @names, {})
               else
-                smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
-                obj = store.send(smethod, @input[:target])
-                if cname == "Node" and sub_group_for_node
-                  obj = obj.identity_group
-                  cname = "Group"
+                get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.to_sym)
+                cur = obj.send(get)
+                cnt = 0
+                @names.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
+                cur = cur - @names
+                if command == "ADD"
+                  cur.insert(@priority - cnt, *@names).compact!
                 end
-                cmethod = Mrg::Grid::MethodUtils.find_method(tmp[1].capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
-                if (@priority == nil) || (@input[:action] != "ADD")
-                  obj.send(cmethod, @input[:action], @relationships, {})
-                else
-                  get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.intern)
-                  cur = obj.send(get)
-                  cnt = 0
-                  @relationships.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
-                  cur = cur - @relationships
-                  if @input[:action] == "ADD"
-                    cur.insert(@priority - cnt, *@relationships).compact!
-                  end
-                  obj.send(cmethod, "REPLACE", cur, {})
-                end
+                obj.send(cmethod, "REPLACE", cur, {})
               end
             end
             result
           end
         end
 
-        class ParamConflict < Command
+        class AddParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "param-conflict"
+            "add-conflicts-to-param"
           end
         
           def self.description
-            "Modify a parameter's conflicts in the store."
+            "Add conflicts to a parameter in the store."
           end
         end
 
-        class ParamDepend < Command
+        class RemoveParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "param-depend"
+            "remove-conflicts-from-param"
           end
         
           def self.description
-            "Modify a parameter's dependencies in the store."
+            "Remove conflicts from a parameter in the store."
           end
         end
 
-        class FeatureConflict < Command
+        class ReplaceParamConflict < Command
           include RelationshipOps
 
           def self.opname
-            "feature-conflict"
+            "replace-conflicts-on-param"
           end
         
           def self.description
-            "Modify a feature's conflicts in the store."
+            "Replace the conflicts on a parameter in the store with a new set of conflicts."
           end
         end
 
-        class FeatureDepend < Command
+        class AddParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "feature-depend"
+            "add-dependencies-to-param"
           end
         
           def self.description
-            "Modify a feature's dependencies in the store."
+            "Add dependencies to a parameter in the store."
           end
         end
 
-        class FeatureInclude < Command
+        class RemoveParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "feature-include"
+            "remove-dependencies-from-param"
           end
         
           def self.description
-            "Modify a feature's includes in the store."
+            "Remove dependencies from a parameter in the store."
           end
         end
 
-        class NodeApply < Command
+        class ReplaceParamDepend < Command
           include RelationshipOps
 
           def self.opname
-            "apply-node-feature"
+            "replace-dependencies-on-param"
           end
         
           def self.description
-            "Modify features applied to a node in the store."
+            "Replace the dependencies on a parameter in the store with a new set of dependencies."
           end
         end
 
-        class GroupApply < Command
+        class AddFeatureConflict < Command
           include RelationshipOps
 
           def self.opname
-            "apply-group-feature"
+            "add-conflicts-to-feature"
           end
         
           def self.description
-            "Modify features applied to a group in the store."
+            "Add conflicts to a feature in the store."
           end
         end
 
-        class NodeMembership < Command
+        class RemoveFeatureConflict < Command
           include RelationshipOps
 
           def self.opname
-            "node-membership"
+            "remove-conflicts-from-feature"
           end
         
           def self.description
-            "Modify a node's group membership."
+            "Remove conflicts from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureConflict < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-conflicts-on-feature"
+          end
+        
+          def self.description
+            "Replace the conflicts on a feature in the store with a new set of conflicts."
+          end
+        end
+
+        class AddFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-dependencies-to-feature"
+          end
+        
+          def self.description
+            "Add dependencies to a feature in the store."
+          end
+        end
+
+        class RemoveFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-dependencies-from-feature"
+          end
+        
+          def self.description
+            "Remove dependencies from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureDepend < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-dependencies-on-feature"
+          end
+        
+          def self.description
+            "Replace the dependencies on a feature in the store with a new set of dependencies."
+          end
+        end
+
+        class AddFeatureInclude < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-includes-to-feature"
+          end
+        
+          def self.description
+            "Add includes to a feature in the store."
           end
 
-          def sub_group_for_node
-            false
+          def supports_options
+            true
+          end
+        end
+
+        class RemoveFeatureInclude < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-includes-from-feature"
+          end
+        
+          def self.description
+            "Remove includes from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureInclude < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-includes-on-feature"
+          end
+        
+          def self.description
+            "Replace the includes on a feature in the store with a new set of includes."
+          end
+        end
+
+        class AddNodeFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-features-to-node"
+          end
+        
+          def self.description
+            "Add features to a node in the store."
           end
 
-          def verify_names(type)
-            store.send("checkGroupValidity", @relationships)
+          def supports_options
+            true
+          end
+        end
+
+        class RemoveNodeFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-features-from-node"
+          end
+        
+          def self.description
+            "Remove features from a node in the store."
+          end
+        end
+
+        class ReplaceNodeFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-features-on-node"
+          end
+        
+          def self.description
+            "Replace the features on a node in the store with a new set of features."
+          end
+        end
+
+        class AddGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-features-to-group"
+          end
+        
+          def self.description
+            "Add features to a group in the store."
+          end
+
+          def supports_options
+            true
+          end
+        end
+
+        class RemoveGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-features-from-group"
+          end
+        
+          def self.description
+            "Remove features from a group in the store."
+          end
+        end
+
+        class ReplaceGroupFeature < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-features-on-group"
+          end
+        
+          def self.description
+            "Replace the features on a group in the store with a new set of features."
+          end
+        end
+
+        class AddNodeParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-params-to-node"
+          end
+        
+          def self.description
+            "Add parameters to a node in the store."
+          end
+        end
+
+        class RemoveNodeParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-params-from-node"
+          end
+        
+          def self.description
+            "Remove parameters from a node in the store."
+          end
+        end
+
+        class ReplaceNodeParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-params-on-node"
+          end
+        
+          def self.description
+            "Replace the parameters on a node in the store with a new set of parameters."
+          end
+        end
+
+        class AddGroupParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-params-to-group"
+          end
+        
+          def self.description
+            "Add parameters to a group in the store."
+          end
+        end
+
+        class RemoveGroupParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-params-from-group"
+          end
+        
+          def self.description
+            "Remove parameters from a group in the store."
+          end
+        end
+
+        class ReplaceGroupParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-params-on-group"
+          end
+        
+          def self.description
+            "Replace the parameters on a group in the store with a new set of parameters."
+          end
+        end
+
+        class AddFeatureParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "add-params-to-feature"
+          end
+        
+          def self.description
+            "Add parameters to a feature in the store."
+          end
+        end
+
+        class RemoveFeatureParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-params-from-feature"
+          end
+        
+          def self.description
+            "Remove parameters from a feature in the store."
+          end
+        end
+
+        class ReplaceFeatureParam < Command
+          include RelationshipOps
+          include ParamOps
+
+          def self.opname
+            "replace-params-on-feature"
+          end
+        
+          def self.description
+            "Replace the parameters on a feature in the store with a new set of parameters."
+          end
+        end
+
+        class AddSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "add-params-to-subsystem"
+          end
+        
+          def self.description
+            "Add parameters to a subsystem in the store."
+          end
+        end
+
+        class RemoveSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "remove-params-from-subsystem"
+          end
+        
+          def self.description
+            "Remove parameters from a subsystem in the store."
+          end
+        end
+
+        class ReplaceSubsysParam < Command
+          include RelationshipOps
+
+          def self.opname
+            "replace-params-on-subsystem"
+          end
+        
+          def self.description
+            "Replace the parameters on a subsystem in the store with a new set of parameters."
+          end
+        end
+
+        class AddNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "add-node-memberships"
+          end
+        
+          def self.description
+            "Add group memberships to a node in the store."
+          end
+
+          def supports_options
+            true
+          end
+        end
+
+        class RemoveNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "remove-node-memberships"
+          end
+        
+          def self.description
+            "Remove group memberships from a node in the store."
+          end
+        end
+
+        class ReplaceNodeMembership < Command
+          include RelationshipOps
+          include NodeMembershipOps
+
+          def self.opname
+            "replace-node-memberships"
+          end
+        
+          def self.description
+            "Replace group memberships on a node in the store with a new set of group memberships."
+          end
+        end
+
+        class AddNodeGroup < Command
+          include RelationshipOps
+          include GroupMembershipOps
+
+          def self.opname
+            "add-nodes-to-group"
+          end
+        
+          def self.description
+            "Add nodes to a group in the store."
+          end
+        end
+
+        class RemoveNodeGroup < Command
+          include RelationshipOps
+          include GroupMembershipOps
+
+          def self.opname
+            "remove-nodes-from-group"
+          end
+        
+          def self.description
+            "Remove nodes from a group in the store."
           end
         end
       end
