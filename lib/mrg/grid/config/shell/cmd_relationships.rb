@@ -472,7 +472,6 @@ module Mrg
 
         class RemoveNodeParam < Command
           include RelationshipOps
-          include ParamOps
 
           def self.opname
             "remove-param-from-node"
@@ -511,7 +510,6 @@ module Mrg
 
         class RemoveGroupParam < Command
           include RelationshipOps
-          include ParamOps
 
           def self.opname
             "remove-param-from-group"
@@ -550,7 +548,6 @@ module Mrg
 
         class RemoveFeatureParam < Command
           include RelationshipOps
-          include ParamOps
 
           def self.opname
             "remove-param-from-feature"
