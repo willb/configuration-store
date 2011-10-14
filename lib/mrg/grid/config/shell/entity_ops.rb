@@ -111,7 +111,7 @@ module Mrg
                   end
                 end
               rescue => ex
-                puts "Couldn't #{verb == "add" ? "create" : "find"} #{noun} #{name}" + " (#{ex.message})" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.inspect})" : "")
+                puts "Couldn't #{(verb == "remove") && (ex.status & Errors::BAD_COMMAND) && (ex.status & Errors::GROUP) ? "delete" : (verb == "add" ? "create" : "find")} #{noun} #{name}" + " (#{ex.message})" + (ENV['WALLABY_SHELL_DEBUG'] ? " (#{ex.inspect})" : "")
                 result = 1
               end
             end
