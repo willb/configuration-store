@@ -110,6 +110,8 @@ module Mrg
           end
 
           register_callback :after_option_parsing, :post_arg_callback
+
+          Mrg::Grid::Config::Shell.register_command(self, opname + "s")
         end
 
         class ListNode < Command

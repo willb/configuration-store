@@ -18,6 +18,27 @@ module Mrg
   module Grid
     module Config
       module Shell
+        module GroupMembershipOps
+          def act
+            result = 0
+
+            cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            bad_target = verify_target
+            bad_names = verify_names
+            if (bad_target != []) || (bad_names != [])
+              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
+              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
+              result = 1
+            else
+              @names.each do |n|
+                obj = store.getNode(n)
+                obj.modifyMemberships(command, [@target], {})
+              end
+            end
+            result
+          end
+        end
+
         module NodeMembershipOps
           def sub_group_for_node
             false
@@ -28,7 +49,7 @@ module Mrg
           end
 
           def name_type
-            @n_type ||= (self.class.opname.split("-") - prepositions)[2]
+            @n_type ||= (self.class.opname.split("-") - prepositions)[2].gsub(/[s]$/, "")
           end
 
           def verify_names
@@ -79,7 +100,7 @@ module Mrg
           end
 
           def name_type
-            @n_type ||= (self.class.opname.split("-") - prepositions)[1]
+            @n_type ||= (self.class.opname.split("-") - prepositions)[1].gsub(/[s]$/, "")
           end
 
           def self.included(receiver)
@@ -147,7 +168,7 @@ module Mrg
           end
 
           def verify_names
-            t = Mrg::Grid::Config.constants.grep(/^#{name_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+            t = Mrg::Grid::Config.constants.grep(/^#{name_type.slice(0,5).capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
             n = @names
             n = @names.keys if @names.class == Hash
             if t == nil
@@ -174,7 +195,7 @@ module Mrg
                 obj = obj.identity_group
                 cname = "Group"
               end
-              cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,6).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
+              cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,5).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
               if (@priority == nil) || (command != "ADD")
                 obj.send(cmethod, command, @names, {})
               else
@@ -197,7 +218,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-conflict-to-param"
+            "add-conflicts-to-param"
           end
         
           def self.description
@@ -209,7 +230,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-conflict-from-param"
+            "remove-conflicts-from-param"
           end
         
           def self.description
@@ -221,7 +242,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-conflict-on-param"
+            "replace-conflicts-on-param"
           end
         
           def self.description
@@ -233,7 +254,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-dependency-to-param"
+            "add-dependencies-to-param"
           end
         
           def self.description
@@ -245,7 +266,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-dependency-from-param"
+            "remove-dependencies-from-param"
           end
         
           def self.description
@@ -257,7 +278,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-dependency-on-param"
+            "replace-dependencies-on-param"
           end
         
           def self.description
@@ -269,7 +290,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-conflict-to-feature"
+            "add-conflicts-to-feature"
           end
         
           def self.description
@@ -281,7 +302,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-conflict-from-feature"
+            "remove-conflicts-from-feature"
           end
         
           def self.description
@@ -293,7 +314,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-conflict-on-feature"
+            "replace-conflicts-on-feature"
           end
         
           def self.description
@@ -305,7 +326,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-dependency-to-feature"
+            "add-dependencies-to-feature"
           end
         
           def self.description
@@ -317,7 +338,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-dependency-from-feature"
+            "remove-dependencies-from-feature"
           end
         
           def self.description
@@ -329,7 +350,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-dependency-on-feature"
+            "replace-dependencies-on-feature"
           end
         
           def self.description
@@ -341,7 +362,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-include-to-feature"
+            "add-includes-to-feature"
           end
         
           def self.description
@@ -357,7 +378,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-include-from-feature"
+            "remove-includes-from-feature"
           end
         
           def self.description
@@ -369,7 +390,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-include-on-feature"
+            "replace-includes-on-feature"
           end
         
           def self.description
@@ -381,7 +402,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-feature-to-node"
+            "add-features-to-node"
           end
         
           def self.description
@@ -397,7 +418,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-feature-from-node"
+            "remove-features-from-node"
           end
         
           def self.description
@@ -409,7 +430,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-feature-on-node"
+            "replace-features-on-node"
           end
         
           def self.description
@@ -421,7 +442,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-feature-to-group"
+            "add-features-to-group"
           end
         
           def self.description
@@ -437,7 +458,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-feature-from-group"
+            "remove-features-from-group"
           end
         
           def self.description
@@ -449,7 +470,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-feature-on-group"
+            "replace-features-on-group"
           end
         
           def self.description
@@ -462,7 +483,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "add-param-to-node"
+            "add-params-to-node"
           end
         
           def self.description
@@ -474,7 +495,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-param-from-node"
+            "remove-params-from-node"
           end
         
           def self.description
@@ -487,7 +508,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "replace-param-on-node"
+            "replace-params-on-node"
           end
         
           def self.description
@@ -500,7 +521,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "add-param-to-group"
+            "add-params-to-group"
           end
         
           def self.description
@@ -512,7 +533,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-param-from-group"
+            "remove-params-from-group"
           end
         
           def self.description
@@ -525,7 +546,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "replace-param-on-group"
+            "replace-params-on-group"
           end
         
           def self.description
@@ -538,7 +559,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "add-param-to-feature"
+            "add-params-to-feature"
           end
         
           def self.description
@@ -550,7 +571,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-param-from-feature"
+            "remove-params-from-feature"
           end
         
           def self.description
@@ -563,7 +584,7 @@ module Mrg
           include ParamOps
 
           def self.opname
-            "replace-param-on-feature"
+            "replace-params-on-feature"
           end
         
           def self.description
@@ -575,7 +596,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "add-param-to-subsystem"
+            "add-params-to-subsystem"
           end
         
           def self.description
@@ -587,7 +608,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "remove-param-from-subsystem"
+            "remove-params-from-subsystem"
           end
         
           def self.description
@@ -599,7 +620,7 @@ module Mrg
           include RelationshipOps
 
           def self.opname
-            "replace-param-on-subsystem"
+            "replace-params-on-subsystem"
           end
         
           def self.description
@@ -612,7 +633,7 @@ module Mrg
           include NodeMembershipOps
 
           def self.opname
-            "add-node-membership"
+            "add-node-memberships"
           end
         
           def self.description
@@ -629,7 +650,7 @@ module Mrg
           include NodeMembershipOps
 
           def self.opname
-            "remove-node-membership"
+            "remove-node-memberships"
           end
         
           def self.description
@@ -642,11 +663,37 @@ module Mrg
           include NodeMembershipOps
 
           def self.opname
-            "replace-node-membership"
+            "replace-node-memberships"
           end
         
           def self.description
-            "Raplce group memberships on a node in the store with a new set of group memberships."
+            "Replace group memberships on a node in the store with a new set of group memberships."
+          end
+        end
+
+        class AddNodeGroup < Command
+          include RelationshipOps
+          include GroupMembershipOps
+
+          def self.opname
+            "add-nodes-to-group"
+          end
+        
+          def self.description
+            "Add nodes to a group in the store."
+          end
+        end
+
+        class RemoveNodeGroup < Command
+          include RelationshipOps
+          include GroupMembershipOps
+
+          def self.opname
+            "remove-nodes-from-group"
+          end
+        
+          def self.description
+            "Remove nodes from a group in the store."
           end
         end
       end
