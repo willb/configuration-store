@@ -16,6 +16,12 @@ module Mrg
           reconstitute_db(yaml_text)
 
           @args = {:dir=>"/tmp/db_patches"}
+          if !ENV['WALLABY_RSPEC_ALLOW_LOGGING']
+            @old_stdout = $stdout.dup
+            @old_stderr = $stderr.dup
+            $stdout = File.open("/dev/null", "w")
+            $stderr = File.open("/dev/null", "w")
+          end
         end
         
         after(:each) do
@@ -27,6 +33,10 @@ module Mrg
           end
           Dir.delete(dir)
           teardown_rhubarb
+          if !ENV['WALLABY_RSPEC_ALLOW_LOGGING']
+            $stdout = @old_stdout.dup
+            $stderr = @old_stderr.dup
+          end
         end
         
         include BaseDBFixture
