@@ -118,7 +118,7 @@ module Mrg
               elsif opts < (self.options.length-1)
                 @target = input
               else
-                if (name_type == "param") && (target_type != "subsystem")
+                if (name_type == "param") && (target_type != "subsystem") && (command != "REMOVE")
                   @names = {}
                   args.unshift(input)
                   args.each do |a|
@@ -144,7 +144,7 @@ module Mrg
               d = options.collect {|o| "#{o[:opt_name]} is #{o[:desc]}\n" }
             end
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{opargs} " + ("[#{target_type.upcase}-OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{opargs} " + ("[OPTIONS]" if supports_options).to_s + "\n#{self.class.description}\n#{d}"
 
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
@@ -152,7 +152,7 @@ module Mrg
               end
 
               if supports_options
-	        opts.on("-p", "--priority PRI", "priority for NAMES") do |p|
+	        opts.on("-p", "--priority PRI", "Add #{name_type.upcase}-NAME(s) at given priority") do |p|
                   @priority = p.to_i
                 end
               end

@@ -36,7 +36,7 @@ module Mrg
           def init_option_parser
             @options = {}
             OptionParser.new do |opts|
-              opts.banner = "Usage:  wallaby #{self.class.opname} #{noun.upcase}" +(" [...]" if multiple_targets).to_s + (" [#{noun}-options]".upcase if supports_options).to_s
+              opts.banner = "Usage:  wallaby #{self.class.opname} #{noun.upcase}" +(" [...]" if multiple_targets).to_s + (" [OPTIONS]" if supports_options).to_s
               
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser

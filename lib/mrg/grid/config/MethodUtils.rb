@@ -81,10 +81,9 @@ module Mrg
         if possibles.size == 1
           method = possibles[0]
         else
-          loc = possibles.index{|m| m =~ /^#{regex}[^A-Z]*ByName$/}
-          loc = possibles.index{|m| m =~ /^#{regex}$/} if loc == nil
-          loc = possibles.index{|m| m =~ /^#{regex}[^A-Z]*$/} if loc == nil
-          method = possibles[loc]
+          possibles.each {|m| method = m if m =~ /^#{regex}[^A-Z]*ByName$/}
+          possibles.each {|m| method = m if m =~ /^#{regex}$/} if method == nil
+          possibles.each {|m| method = m if m =~ /^#{regex}[^A-Z]*$/} if method == nil
         end
         method
       end
