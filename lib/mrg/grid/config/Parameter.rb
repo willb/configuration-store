@@ -44,12 +44,12 @@ module Mrg
         ### Property method declarations
         # property name sstr 
 
-        declare_column :name, :string, :not_null
+        declare_column :name, :text, :not_null
         declare_index_on :name
         
-        declare_column :kind, :string, :default, :string
-        declare_column :default_val, :string
-        declare_column :description, :string
+        declare_column :kind, :text, :default, :string
+        declare_column :default_val, :text
+        declare_column :description, :text
         declare_column :must_change, :boolean, :default, :false
         declare_column :level, :integer
         declare_column :needsRestart, :boolean

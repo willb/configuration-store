@@ -63,7 +63,7 @@ module Mrg
 
         qmf_property :uid, :uint32, :index=>true
 
-        declare_column :name, :string
+        declare_column :name, :text
 
         declare_column :is_identity_group, :boolean, :default, :false
         qmf_property :is_identity_group, :bool
@@ -366,7 +366,7 @@ module Mrg
         include ::Rhubarb::Persisting
         declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
         declare_column :param, :integer, references(Parameter, :on_delete=>:cascade)
-        declare_column :value, :string
+        declare_column :value, :text
       end
     end
   end

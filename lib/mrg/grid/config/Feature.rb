@@ -41,7 +41,7 @@ module Mrg
         ### Property method declarations
         # property uid uint32 
         
-        declare_column :name, :string
+        declare_column :name, :text
         declare_index_on :name
         qmf_property :name, :sstr, :desc=>"This feature's name"
         
@@ -556,7 +556,7 @@ module Mrg
         include ::Rhubarb::Persisting
         declare_column :feature, :integer, :not_null, references(Feature, :on_delete=>:cascade)
         declare_column :param, :integer, :not_null, references(Parameter, :on_delete=>:cascade)
-        declare_column :given_value, :string
+        declare_column :given_value, :text
         declare_column :uses_default, :boolean, :default, :false
         def value
           return self.given_value unless self.uses_default

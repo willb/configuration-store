@@ -31,7 +31,7 @@ module Mrg
         ### Property method declarations
         # property name sstr 
 
-        declare_column :name, :string, :not_null
+        declare_column :name, :text, :not_null
         declare_index_on :name
         
         qmf_property :name, :sstr, :index=>true
