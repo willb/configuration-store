@@ -272,6 +272,9 @@ fi
 
 %changelog
 
+* Fri Oct 14 2011 willb <willb@redhat> - 0.12.1-1
+- minor bug fixes in wallaby shell commands
+
 * Fri Oct 14 2011 rrati <rrati@redhat> - 0.12.0-1
 - improvements to wallaby shell commands
 - packaging workflow improvements
