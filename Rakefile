@@ -170,16 +170,7 @@ end
 
 desc "Create a tarball"
 task :tarball => [:make_rpmdirs, :gen_spec, :gen_env_file, :pristine] do
-  sh 'env RUBYOPT=-Ilib bin/create-db-diffs.rb'
-  ["1.1", "1.2", "1.3", "1.4"].each do |f|
-    FileUtils.rm("patches/db-#{f}.wpatch")
-  end
-  FileUtils.cp_r 'patches', db_pkg_dir()
-  FileUtils.cp ['condor-base-db.snapshot', 'LICENSE'], db_pkg_dir()
-  
-  sh "tar -cf #{db_pkg_source} #{db_pkg_dir}"
   FileUtils.cp pristine_name, 'SOURCES'
-  FileUtils.mv db_pkg_source(), 'SOURCES'
 end
 
 desc "Make dirs for building RPM"
