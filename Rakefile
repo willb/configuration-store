@@ -75,30 +75,6 @@ def rpm_dirs
   return %w{BUILD BUILDROOT RPMS SOURCES SPECS SRPMS}
 end
 
-def db_pkg_version
-  return `cat DB_VERSION`.chomp()
-end
-
-def db_pkg_name
-  return 'condor-wallaby-base-db'
-end
-
-def db_pkg_spec
-  return db_pkg_name() + ".spec"
-end
-
-def db_pkg_source
-  return db_pkg_name() + "-" + db_pkg_version() + "-" + db_pkg_rel() + ".tar.gz"
-end
-
-def db_pkg_rel
-  return `grep -i 'define rel' #{db_pkg_spec} | awk '{print $3}'`.chomp()
-end
-
-def db_pkg_dir
-  return db_pkg_name() + "-" + db_pkg_version()
-end
-
 def commit_version
   old_version = pkg_version
   [:MAJOR, :MINOR, :PATCH, :BUILD].each {|vc| ::Mrg::Grid::Config::Version.send(:remove_const, vc)}
@@ -143,7 +119,7 @@ end
 desc "bump the major version number"
 task :bump_major do
   bump_version_component(:major)
-  [:patch, :major].each {|vc| set_version_component(vc, 0)}
+  [:patch, :minor].each {|vc| set_version_component(vc, 0)}
   clear_build
   commit_version
 end
@@ -169,9 +145,8 @@ end
 
 desc "create RPMs"
 task :rpms => [:build, :tarball, :patches, :gen_spec] do
-  FileUtils.cp [pkg_spec(), db_pkg_spec()], 'SPECS'
+  FileUtils.cp [pkg_spec()], 'SPECS'
   sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{pkg_spec}"
-  sh "rpmbuild --define=\"_topdir \${PWD}\" -ba SPECS/#{db_pkg_spec}"
 end
 
 task :patches do
@@ -188,23 +163,13 @@ task :gen_spec => [:make_rpmdirs] do
   end
 end
 
-desc "Generate the db specfile"
-task :gen_db_file do
-  sh "cat condor-base-db.snapshot.in | sed 's/BASE_DB_VERSION/#{db_pkg_version}/' > condor-base-db.snapshot"
-end
-
-desc "Generate the db snapshot file"
-task :gen_db_spec do
-  sh "cat #{db_pkg_spec}" + ".in" + "| sed 's/BASE_DB_VERSION/#{db_pkg_version}/' > #{db_pkg_spec}"
-end
-
 desc "Create an environment file from the sysconfig file"
 task :gen_env_file do
   sh "sed 's/^export //g' < etc/sysconfig/wallaby-agent > etc/sysconfig/wallaby-agent-env"
 end
 
 desc "Create a tarball"
-task :tarball => [:make_rpmdirs, :gen_spec, :gen_db_spec, :gen_db_file, :gen_env_file, :pristine] do
+task :tarball => [:make_rpmdirs, :gen_spec, :gen_env_file, :pristine] do
   sh 'env RUBYOPT=-Ilib bin/create-db-diffs.rb'
   ["1.1", "1.2", "1.3", "1.4"].each do |f|
     FileUtils.rm("patches/db-#{f}.wpatch")
@@ -220,23 +185,18 @@ end
 desc "Make dirs for building RPM"
 task :make_rpmdirs => :clean do
   FileUtils.mkdir pkg_dir()
-  FileUtils.mkdir db_pkg_dir()
   FileUtils.mkdir rpm_dirs()
 end
 
-desc "Cleanup after an RPM build"
+desc "Clean up after an RPM build"
 task :clean do
   require 'fileutils'
   FileUtils.rm_r [pkg_dir(), 'pkg', rpm_dirs(), pkg_spec(), pkg_name() + ".gemspec", "etc/sysconfig/wallaby-agent-env"], :force => true
-  FileUtils.rm_r [db_pkg_dir(), db_pkg_spec(), "condor-base-db.snapshot", "patches"], :force => true
 end
 
-task :copy_db => [:gen_db_file] do
-  src = 'condor-base-db.snapshot'
-  target = 'spec/base-db.yaml'
-  unless uptodate?(target, src)
-    FileUtils.cp src, target
-  end
+file "spec/base-db.yaml" do
+  branch = ENV['WALLABY_DB_BRANCH'] || "master"
+  sh "curl 'http://git.fedorahosted.org/git/?p=grid/wallaby-condor-db.git;a=blob_plain;f=condor-base-db.snapshot.in;hb=#{branch}' -o spec/base-db.yaml"
 end
 
 require 'spec/rake/spectask'
@@ -252,8 +212,8 @@ Spec::Rake::SpecTask.new(:rcov) do |spec|
   spec.rcov = true
 end
 
-task :spec => [:check_dependencies, :copy_db]
-task :rcov => [:check_dependencies, :copy_db]
+task :spec => [:check_dependencies, "spec/base-db.yaml"]
+task :rcov => [:check_dependencies, "spec/base-db.yaml"]
 
 begin
   require 'reek/adapters/rake_task'
