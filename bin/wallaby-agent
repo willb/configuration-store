@@ -60,7 +60,6 @@ debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upc
 do_daemonify = !ENV['WALLABY_FOREGROUND']
 run_as = nil
 logoptions = nil
-use_skeleton_group = false
 
 op = OptionParser.new do |opts|
   opts.banner = "Usage wallaby-agent [options]"
