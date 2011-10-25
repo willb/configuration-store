@@ -117,6 +117,10 @@ module Mrg
         def params
           @qmfo.params
         end
+
+        def getConfig
+          @qmfo.getConfig.config
+        end
         
         def modifyFeatures(c,fs,o)
           check_result(@qmfo.modifyFeatures(c,fs,o))
@@ -369,10 +373,12 @@ module Mrg
           end
         end
         
-        def getDefaultGroup
-          get_object(check_result(@qmfo.getDefaultGroup()).obj, Group)
+        [:getDefaultGroup, :getSkeletonGroup].each do |msg|
+          define_method msg do
+            get_object(check_result(@qmfo.send(msg)).obj, Group)
+          end
         end
-        
+
         def getGroup(query)
           get_object(check_result(@qmfo.getGroup(query)).obj, Group)
         end
@@ -459,6 +465,8 @@ module Mrg
             acc
           end
         end
+        
+        alias activateConfiguration activateConfig
 
         def storeinit(kwargs=nil)
           kwargs ||= {}
