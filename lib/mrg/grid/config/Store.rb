@@ -46,7 +46,9 @@ module Mrg
         
         ENABLE_DEFAULT_GROUP = true
         quiescent :ENABLE_SKELETON_GROUP do
-          ENV["WALLABY_ENABLE_SKELETON_GROUP"] && ENV["WALLABY_ENABLE_SKELETON_GROUP"] =~ /^[yt1]/i
+          result = ENV["WALLABY_ENABLE_SKELETON_GROUP"] && ENV["WALLABY_ENABLE_SKELETON_GROUP"] =~ /^[yt1]/i
+          log.info "#{result ? "" : "not "}enabling the skeleton group; WALLABY_ENABLE_SKELETON_GROUP == '#{ENV['WALLABY_ENABLE_SKELETON_GROUP'].inspect}'"
+          result
         end
         
         qmf_package_name 'com.redhat.grid.config'
