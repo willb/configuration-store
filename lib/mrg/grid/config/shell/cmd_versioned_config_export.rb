@@ -52,16 +52,31 @@ module Mrg
               end
 
               opts.on("--earliest NUM", Integer, "output only the earliest NUM configurations") do |num|
-                @list_preproc = Proc.new {|ls| ls.sort_by {|cv| cv.version}.slice(0,num)}
+                old_lp = @list_preproc
+
+                @list_preproc = Proc.new do |ls| 
+                  ls = old_lp.call(ls) if old_lp
+                  ls.sort_by {|cv| cv.version}.slice(0,num)
+                end
               end
 
               opts.on("--latest NUM", Integer, "output only the most recent NUM configurations") do |num|
-                @list_preproc = Proc.new {|ls| ls.sort_by {|cv| cv.version}.slice(-num,ls.size)}
+                old_lp = @list_preproc
+
+                @list_preproc = Proc.new do |ls|
+                  ls = old_lp.call(ls) if old_lp 
+                  ls.sort_by {|cv| cv.version}.slice(-num,ls.size)
+                end
               end
 
               opts.on("--since DATE", "output only configurations since the given date") do |date|
                 since = parsetime(date)
-                @list_preproc = Proc.new {|ls| ls.select {|cv| cv.version >= since}}
+                old_lp = @list_preproc
+
+                @list_preproc = Proc.new do |ls|
+                  ls = old_lp.call(ls) if old_lp 
+                  ls.select {|cv| cv.version >= since}
+                end
               end
             end
           end
@@ -83,8 +98,8 @@ module Mrg
             # This call will be invoked after command-line argument processing.  args
             # will contain every argument passed to this command (minus any processed 
             # command-line options).  It may include, for example, input filenames.
+            exit!(1, "You must specify exactly one database file; use --help for help") unless args.length == 1
             @infile, = args.dup
-            # XXX:  except if more than one provided?
           end
 
           register_callback :after_option_parsing, :after_option_parsing_callback
