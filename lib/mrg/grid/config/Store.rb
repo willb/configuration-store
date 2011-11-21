@@ -547,6 +547,16 @@ module Mrg
             instances_of(klass)
           end
         end
+
+        def live_objects
+          h = Hash.new {|h,k| h[k] = 0}
+          ObjectSpace.each_object {|o| klass = o.class.to_s ; h[klass] = h[klass] + 1}
+          h
+        end
+
+        expose :live_objects do |args|
+          args.declare :dict, :map, :out, "a map of classes to live object counts"
+        end
         
         private
         
