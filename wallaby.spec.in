@@ -40,9 +40,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python2-devel
 Requires: ruby(abi) = 1.8
 BuildRequires: ruby
+Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-spqr >= 0.3.0
 Requires: ruby-rhubarb >= 0.2.6
-Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-wallaby = %{version}-%{release}
 Requires: logrotate >= 0.3
 %if %{want_systemd}
@@ -84,6 +84,8 @@ Group: Applications/System
 Requires: ruby(abi) = 1.8
 Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
+Requires: ruby-spqr >= 0.3.0
+Requires: ruby-rhubarb >= 0.2.6
 Provides: ruby(mrg/grid/config) = %{version}
 
 %package -n python-wallaby
