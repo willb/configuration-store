@@ -274,6 +274,9 @@ fi
 
 %changelog
 
+* Wed Nov 23 2011 willb <willb@redhat> - 0.12.3-1
+- fix for bz 756402
+
 * Mon Nov 21 2011 willb <willb@redhat> - 0.12.2-1
 - fixed broken dependencies for wallaby-utils
 - vc-export shell command
