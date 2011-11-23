@@ -96,7 +96,7 @@ op = OptionParser.new do |opts|
     password = pass
   end
 
-  opts.on("-M", "--auth-mechanism PASS", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
+  opts.on("-M", "--auth-mechanism PASS", SPQR::App::VALID_MECHANISMS, "authentication mechanism (#{SPQR::App::VALID_MECHANISMS.join(", ")})") do |mechanism|
     explicit_mechanism = mechanism
   end
   
