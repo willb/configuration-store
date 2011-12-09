@@ -274,6 +274,9 @@ fi
 
 %changelog
 
+* Fri Dec 9 2011 willb <willb@redhat> - 0.12.4-1
+- fixes for minor tool problems that came up in 0.12 development
+
 * Wed Nov 23 2011 willb <willb@redhat> - 0.12.3-1
 - fix for bz 756402
 
