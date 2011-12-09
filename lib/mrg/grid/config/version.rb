@@ -20,7 +20,7 @@ module Mrg
       module Version
         MAJOR=0
         MINOR=12
-        PATCH=3
+        PATCH=4
         BUILD=nil
         
         def self.as_string
