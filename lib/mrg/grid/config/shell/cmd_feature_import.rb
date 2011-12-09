@@ -91,7 +91,7 @@ module Mrg
             puts "Creating feature #{@feature[:name]}..."
 
             params = @feature[:params].keys
-            invalid_params = store.checkParameterValidity(params).invalidParameters
+            invalid_params = store.checkParameterValidity(params)
 
             unless invalid_params == []
               puts "Creating necessary parameters..."
