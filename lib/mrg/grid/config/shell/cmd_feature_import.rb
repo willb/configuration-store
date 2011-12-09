@@ -38,7 +38,7 @@ module Mrg
               when /^#default\s+(.*)$/ then results[:params][$1.strip] = 0
               when /^#name\s+(.*)$/ then results[:name] = $1.strip
               when /^([^=]*)=(.*)$/ then results[:params][$1.strip] = ($2.strip.size > 0 ? $2.strip : 0)
-              else puts "warning:  unrecognized config file line #{line}"
+              else puts "warning:  unrecognized config file line #{line}" unless line =~ /^#.*/
               end
             end
 
@@ -74,11 +74,14 @@ module Mrg
             rescue SystemCallError => sce
               puts "fatal: #{sce.message}"
               exit(1)
+            end            
+            
+            if @feature_name
+              # command-line name takes precedence
+              @feature[:name] = @feature_name
             end
-            
-            @feature[:name] = @feature_name if @feature_name
-            
-            unless @feature[:name]
+
+            unless @feature[:name] && @feature[:name].size > 0
               puts "fatal: No feature name supplied.  You must provide one, either\nwith a '--name' parameter on the command-line, or with\na '#name' directive in the feature file."
               puts oparser
               exit(1)
