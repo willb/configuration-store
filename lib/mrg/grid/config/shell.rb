@@ -33,7 +33,9 @@ module Mrg
       module Shell
         COMMANDS={}
         COMMAND_LIST=[]
-        
+
+        VALID_MECHANISMS = %w{ANONYMOUS PLAIN GSSAPI DIGEST-MD5 CRAM-MD5 OTP}
+
         Args = Struct.new(:cmd, :for_wt, :for_cmd)
 
         BASE_COMMAND_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "shell")
@@ -99,6 +101,12 @@ module Mrg
           username = ENV['WALLABY_BROKER_USER']
           password = ENV['WALLABY_BROKER_PASSWORD']
           explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
+          unless explicit_mechanism && VALID_MECHANISMS.include?(explicit_mechanism)
+            puts "warning:  rejecting bogus WALLABY_BROKER_MECHANISM of '#{explicit_mechanism}'"
+            puts "warning:  valid mechanisms include #{VALID_MECHANISMS.sort.join(", ")}"
+            explicit_mechanism = nil
+          end
+
           debug = :warn
 
           @op = OptionParser.new do |opts|
@@ -125,7 +133,7 @@ module Mrg
               password = pass
             end
 
-            opts.on("-M", "--auth-mechanism PASS", %w{ANONYMOUS PLAIN GSSAPI}, "authentication mechanism (#{%w{ANONYMOUS PLAIN GSSAPI}.join(", ")})") do |mechanism|
+            opts.on("-M", "--auth-mechanism PASS", VALID_MECHANISMS, "authentication mechanism (#{VALID_MECHANISMS.join(", ")})") do |mechanism|
               explicit_mechanism = mechanism
             end
           end
