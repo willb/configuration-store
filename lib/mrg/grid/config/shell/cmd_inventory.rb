@@ -34,7 +34,7 @@ module Mrg
           end
           
           def self.description
-            "Lists (a subset of) wallaby-managed nodes."
+            "Lists a (non-strict) subset of wallaby-managed nodes."
           end
           
           def init_option_parser
