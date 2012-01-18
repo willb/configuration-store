@@ -101,7 +101,7 @@ module Mrg
           username = ENV['WALLABY_BROKER_USER']
           password = ENV['WALLABY_BROKER_PASSWORD']
           explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
-          unless explicit_mechanism && VALID_MECHANISMS.include?(explicit_mechanism)
+          if explicit_mechanism && !(VALID_MECHANISMS.include?(explicit_mechanism))
             puts "warning:  rejecting bogus WALLABY_BROKER_MECHANISM of '#{explicit_mechanism}'"
             puts "warning:  valid mechanisms include #{VALID_MECHANISMS.sort.join(", ")}"
             explicit_mechanism = nil
