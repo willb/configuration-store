@@ -274,6 +274,10 @@ fi
 
 %changelog
 
+* Wed Jan 18 2012 willb <willb@redhat> - 0.12.5-2
+- minor usability fixes to "wallaby inventory -c"
+- fix for bz 782816
+
 * Tue Jan 10 2012 willb <willb@redhat> - 0.12.5-1
 - the Wallaby shell no longer a priori rejects certain valid SASL authentication mechanisms
 
