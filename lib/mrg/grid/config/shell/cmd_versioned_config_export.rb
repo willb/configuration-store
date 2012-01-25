@@ -21,6 +21,8 @@ module Mrg
     module Config
       module Shell
         class VersionedConfigExport < ::Mrg::Grid::Config::Shell::Command
+          documented_if_environment_has :WALLABY_TECH_PREVIEW
+
           # opname returns the operation name; for "wallaby foo", it
           # would return "foo".
           def self.opname
