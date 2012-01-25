@@ -106,7 +106,8 @@ module Mrg
         class ShowFeature < Command
           include EntityOps
           include FeatureOps
-          
+          documented_only_if_default_name
+
           def self.opname
             "show-feature"
           end

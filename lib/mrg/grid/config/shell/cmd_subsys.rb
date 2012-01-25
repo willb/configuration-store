@@ -81,7 +81,8 @@ module Mrg
         class ShowSubsys < Command
           include EntityOps
           include SubsysOps
-          
+          documented_only_if_default_name
+
           def self.opname
             "show-subsystem"
           end

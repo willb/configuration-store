@@ -106,6 +106,7 @@ module Mrg
         class ShowGroup < Command
           include EntityOps
           include GroupOps
+          documented_only_if_default_name
           
           def self.opname
             "show-group"

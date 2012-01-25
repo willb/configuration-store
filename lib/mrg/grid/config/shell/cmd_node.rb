@@ -81,7 +81,8 @@ module Mrg
         class ShowNode < Command
           include EntityOps
           include NodeOps
-          
+          documented_only_if_default_name
+
           def self.opname
             "show-node"
           end
