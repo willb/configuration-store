@@ -177,6 +177,7 @@ begin
 
   app = SPQR::App.new(options)
   app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::NodeUpdatedNotice,Mrg::Grid::Config::ConfigVersion
+  $wallaby_log = Mrg::Grid::Config::Store.log
   
   begin
     Mrg::Grid::Config::Store.find_by_id(0).storeinit("remove-spurious"=>"yes")
