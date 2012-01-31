@@ -297,7 +297,7 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
+              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
             end
 
             def hasVersionedNodeConfig(node, ver=nil)
@@ -344,7 +344,18 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config.to_hash
+              config = vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
+
+              # This deeply inelegant code (ideally, it would just be 
+              # "config.to_hash" in both cases, which would be a no-op 
+              # if config were already a Hash) is a workaround for 
+              # bz748507, which seems to crop up exclusively in old-style 
+              # serialized configs
+              if config.is_a?(Hash)
+                ConfigUtils.fix_config_values(config)
+              else
+                config.to_hash
+              end
             end
 
             def hasVersionedNodeConfig(node, ver=nil)
