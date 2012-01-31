@@ -25,10 +25,15 @@ Store.quiesce(:ENABLE_SKELETON_GROUP, true)
 def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
-  classes = kwargs[:classes] || (MAIN_DB_TABLES + SNAP_DB_TABLES)
+  snapdbname = kwargs[:snapdb] || dbname
+  db_classes = kwargs[:db_classes] || MAIN_DB_TABLES 
+  snap_classes = kwargs[:snap_classes] || SNAP_DB_TABLES
 
   Rhubarb::Persistence::open(dbname, :default, false)
-  classes.each {|cl| cl.create_table}
+  Rhubarb::Persistence::open(snapdbname, :snap, false)
+  db_classes.each {|cl| cl.create_table}
+  snap_classes.each {|cl| cl.db = Rhubarb::Persistence::dbs[:snap]}
+  snap_classes.each {|cl| cl.create_table rescue nil}
 
   Group.DEFAULT_GROUP
   Group.SKELETON_GROUP
