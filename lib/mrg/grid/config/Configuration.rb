@@ -41,6 +41,17 @@ module Mrg
             config
           end
           
+          if ConfigUtils.should_fix_broken_configs?
+            result.each do |param,val| 
+              old_result = result[param]
+              new_result = ValueUtil.strip_prefix(val)
+              if old_result != new_result
+                $wallaby_log.warn("found a spurious configuration value:  #{param} had value #{old_result}") if $wallaby_log
+                result[param] = new_result
+              end
+            end
+          end
+
           result["WALLABY_CONFIG_VERSION"] = version.to_s
           result
         end
@@ -65,8 +76,8 @@ module Mrg
         end
 
         def self.strip_prefix(value)
-          match = value && value.match(APPEND_MATCHER)
-          match ? value_string(match) : value
+          match = (value && value.match(APPEND_MATCHER))
+          value = (match ? value_string(match) : value)
         end
 
         def self.prefix_string(match)
@@ -77,10 +88,17 @@ module Mrg
           match[2]
         end
 
+        def self.has_append_match(value)
+          return !!append_match(value)
+        end
+
         # applies the value supplied to the config, appending if necessary
         def self.apply!(config, param, value, use_ssp=false)
           if (value && match = append_match(value))
+            supplied_value = value
             value = value_string(match)
+            $wallaby_log.warn("ValueUtil.apply! didn't strip all append markers from '#{supplied_value}'; got '#{value}'") if ($wallaby_log && has_append_match(value)) if $wallaby_log
+
             js = join_string(match)
             ssp = use_ssp ? prefix_string(match) : ""
             config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{js}#{value}" : "#{ssp}#{value}"
@@ -136,6 +154,23 @@ module Mrg
       end
       
       module ConfigUtils
+
+        def self.should_fix_broken_configs?
+          @fix_broken_configs ||= !!(ENV['WALLABY_FIX_BROKEN_CONFIGS'] && ENV['WALLABY_FIX_BROKEN_CONFIGS'] =~ /^true$/i)
+        end
+
+        # Strips prepended append markers from configuration values if
+        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment
+        def self.fix_config_values(result)
+          if should_fix_broken_configs?
+            result.inject({}) do |acc,(k,v)| 
+              acc[k] = ValueUtil.strip_prefix(v)
+              acc
+            end
+          else
+            result
+          end
+        end
         
         # Returns the symmetric difference of two hash tables, represented as an array of pairs
         def self.diff(c1,c2)
@@ -262,7 +297,7 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
+              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
             end
 
             def hasVersionedNodeConfig(node, ver=nil)
@@ -286,7 +321,9 @@ module Mrg
            def internal_get_node_config(node)
              node_obj = VersionedNode[node]
              cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
-             (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
+             result = (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
+             fixed_result = ConfigUtils.fix_config_values(result)
+             fixed_result
            end
           
            def internal_set_node_config(node, config)
@@ -307,7 +344,18 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config.to_hash
+              config = vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
+
+              # This deeply inelegant code (ideally, it would just be 
+              # "config.to_hash" in both cases, which would be a no-op 
+              # if config were already a Hash) is a workaround for 
+              # bz748507, which seems to crop up exclusively in old-style 
+              # serialized configs
+              if config.is_a?(Hash)
+                ConfigUtils.fix_config_values(config)
+              else
+                config.to_hash
+              end
             end
 
             def hasVersionedNodeConfig(node, ver=nil)
