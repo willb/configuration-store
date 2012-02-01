@@ -5,8 +5,9 @@ require 'digest/md5'
 module Mrg
   module Grid
     module Config
+      class BZ748507; end
 
-      describe Node do
+      describe BZ748507 do
 
         def dbtext
           open("/var/lib/condor-wallaby-base-db/condor-base-db.snapshot", "r") {|db| db.read}
@@ -23,16 +24,17 @@ module Mrg
         end
         
         after(:each) do
-          FileUtils.rm("#{@cwd}/ohsnap.db")
           ENV["WALLABY_FIX_BROKEN_CONFIGS"] = @old_env
           @old_env = nil
-          @cwd = nil
           teardown_rhubarb
+          FileUtils.rm("#{@cwd}/ohsnap.db")
+          @cwd = nil
         end
         
         include BaseDBFixture
         
         it "should adequately work around value-append markers in frozen configurations" do
+          pending "set WALLABY_TEST_APPEND_WORKAROUND to run these examples" unless ENV["WALLABY_TEST_APPEND_WORKAROUND"]
           node = @store.getNode("willb-laptop")
           node.getConfig("version"=>1327695029622659)['DAEMON_LIST'].should_not match /^>=/
         end
