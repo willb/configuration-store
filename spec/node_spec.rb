@@ -268,12 +268,41 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
           group.modifyParams("ADD", {"SECOND"=>"blahrific"}, {})
           node.validate.should == true
         end
+
+        {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |nodekind, node_find_msg|
+          [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
+            it "should appropriately conditionally set parameters on #{nodekind=~/^[aeiou]/ ? "an" :"a"} #{nodekind} node when the conditional assignment is in #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+              param = @store.addParam("STRINGSET")
+              group.modifyParams("ADD", {"STRINGSET", "?= FOO"}, {})
+              modify_memberships.call(node, group)
+              config = node.getConfig
+              
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should match(/^FOO$/)
+            end
+            
+            it "should not conditionally set parameters on the identity group of #{nodekind=~/^[aeiou]/ ? "an" :"a"} #{nodekind} node when there is an underlying assignment from #{from}" do
+              node = @store.send(node_find_msg, "guineapig.local.")
+              group = group_locator.call(@store)
+              param = @store.addParam("STRINGSET")
+              group.modifyParams("ADD", {"STRINGSET", "?= FOO"}, {})
+              node.identity_group.modifyParams("ADD", {"STRINGSET", "?= BAR"}, {})
+              modify_memberships.call(node, group)
+              config = node.getConfig
+              
+              config.should have_key("STRINGSET")
+              config["STRINGSET"].should match(/^FOO$/)              
+            end
+          end
+        end
       
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |nodekind, node_find_msg|
           ::Mrg::Grid::Config::ValueUtil::APPENDS.each do |indicator, comma|
-          
+            next unless comma.is_a?(String)
+
             [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
-  
               it "should, if it is #{nodekind}, include StringSet parameter values from #{from} (using #{indicator})" do
                 node = @store.send(node_find_msg, "guineapig.local.")
                 group = group_locator.call(@store)
