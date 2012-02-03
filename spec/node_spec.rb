@@ -300,7 +300,6 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
       
         {"provisioned"=>:addNode, "unprovisioned"=>:getNode}.each do |nodekind, node_find_msg|
           ::Mrg::Grid::Config::ValueUtil::APPENDS.each do |indicator, comma|
-            next unless comma.is_a?(String)
 
             [["an explicit group", Proc.new {|store| store.addExplicitGroup("SETNODES")}, Proc.new {|node, group| node.modifyMemberships("ADD", Array[group.name], {})}], ["the default group", Proc.new {|store| Group.DEFAULT_GROUP}, Proc.new {|node, group| nil }]].each do |from, group_locator, modify_memberships|
               it "should, if it is #{nodekind}, include StringSet parameter values from #{from} (using #{indicator})" do
@@ -330,7 +329,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 config = node.getConfig
   
                 config.should have_key("STRINGSET")
-                config["STRINGSET"].should_not match(/#{Regexp.quote(comma)}/)
+                config["STRINGSET"].should_not match(/#{Regexp.quote(comma)}/) if comma.is_a?(String)
               end
   
               it "should, if it is #{nodekind}, not include whitespace after single StringSet parameter values from #{from} (using #{indicator})" do
@@ -363,6 +362,8 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
                 config["STRINGSET"].should_not match(/^#{Regexp.quote(indicator)}/)
               end
             end
+
+            next unless comma.is_a?(String)
   
             it "should, if it is #{nodekind}, properly append StringSet values to features added from the default group and parameters from the identity group (using #{indicator})" do
               node = @store.send(node_find_msg, "guineapig.local.")
