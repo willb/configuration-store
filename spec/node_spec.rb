@@ -38,7 +38,7 @@ module Mrg
           n = @store.addNode("blather.local.")
 
           bogus_name = ""
-          9.times { bogus_name << ((rand*26).floor + ?a).chr }
+          9.times { bogus_name << ((rand*26).floor + ?a.ord).chr }
 
           rid = n.row_id
           n.name = bogus_name
@@ -275,7 +275,7 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
               node = @store.send(node_find_msg, "guineapig.local.")
               group = group_locator.call(@store)
               param = @store.addParam("STRINGSET")
-              group.modifyParams("ADD", {"STRINGSET", "?= FOO"}, {})
+              group.modifyParams("ADD", {"STRINGSET"=>"?= FOO"}, {})
               modify_memberships.call(node, group)
               config = node.getConfig
               
@@ -287,8 +287,8 @@ it "should give #{prov_status} nodes proper default values for the last_updated_
               node = @store.send(node_find_msg, "guineapig.local.")
               group = group_locator.call(@store)
               param = @store.addParam("STRINGSET")
-              group.modifyParams("ADD", {"STRINGSET", "?= FOO"}, {})
-              node.identity_group.modifyParams("ADD", {"STRINGSET", "?= BAR"}, {})
+              group.modifyParams("ADD", {"STRINGSET"=>"?= FOO"}, {})
+              node.identity_group.modifyParams("ADD", {"STRINGSET"=>"?= BAR"}, {})
               modify_memberships.call(node, group)
               config = node.getConfig
               

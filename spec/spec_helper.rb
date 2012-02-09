@@ -235,14 +235,14 @@ module PatchTester
       affected[changed].each do |type, names|
         names.each do |n|
           if changed == :delete
-            @store.send("check#{type}Validity", n).should == [n]
+            @store.send("check#{type}Validity", [n]).should == [n]
           else
-            @store.send("check#{type}Validity", n).should == []
+            @store.send("check#{type}Validity", [n]).should == []
             if type == :Group
               obj = @store.send("getGroupByName", n)
             else
-              method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^get#{type.to_s.slice(0,5).capitalize}/)
-              obj = @store.send(method.to_s, n)
+              method = Mrg::Grid::Config::Store.instance_methods(false).map{|ms| ms.to_s}.grep(/^get#{type.to_s.slice(0,5).capitalize}/)
+              obj = @store.send(method.pop.to_s, n)
             end
             obj.should_not == nil
             details[type][n][:updates].each do |get, value|
@@ -261,7 +261,7 @@ module PatchTester
     fhdl = open(nextf, 'r')
     contents = ""
     old = 0
-    fhdl.read.each do |line|
+    fhdl.read.each_line do |line|
       if line =~ /BaseDBVersion:\s*v(.+)$/
         if old == 0
           old = $1
@@ -272,7 +272,7 @@ module PatchTester
     fhdl.close
     fhdl = open(nextf, 'w')
     ver2 = 0
-    contents.each do |line|
+    contents.each_line do |line|
       if line =~ /^db_version:\s*"(.*)"$/
         ver2 = $1
       end
@@ -292,9 +292,9 @@ module PatchTester
 
   def verify_store(old_store)
     cur_store = get_store_contents
-    cur_store.public_methods(false).select {|m| m.index("=") == nil}.each do |type|
+    cur_store.public_methods(false).map{|ms| ms.to_s}.select {|m| m.index("=") == nil}.each do |type|
       cur_store.send(type).each do |obj|
-        methods = obj.public_methods(false).select {|m| m.index("=") == nil}
+        methods = obj.public_methods(false).map{|ms| ms.to_s}.select {|m| m.index("=") == nil}
         old_obj = old_store.send(type).select {|o| o.name == obj.name}[0]
         methods.each do |m|
           obj.send(m).should == old_obj.send(m)
@@ -325,7 +325,7 @@ module PatchTester
         names.each do |n|
           skip = false
           args[:skip_patterns].each do |s|
-            if n.index(s) != nil
+            if n.to_s.index(s) != nil
               skip = true
               break
             end
@@ -333,7 +333,7 @@ module PatchTester
           if skip
             next
           end
-          @store.send("check#{type}Validity", n).should == []
+          @store.send("check#{type}Validity", [n]).should == []
           dets = patcher.entity_details(type, n)
           dets[:expected].each do |getter, value|
             t = Time.now.utc
@@ -341,8 +341,8 @@ module PatchTester
             if type == :Group
               obj = @store.send("getGroupByName", n)
             else
-              method = Mrg::Grid::Config::Store.instance_methods(false).grep(/^get#{type.to_s.slice(0,5).capitalize}/)
-              obj = @store.send(method.to_s, n)
+              method = Mrg::Grid::Config::Store.instance_methods(false).map{|ms|ms.to_s}.grep(/^get#{type.to_s.slice(0,5).capitalize}/)
+              obj = @store.send(method.pop.to_s, n)
             end
             obj.should_not == nil
             getter = getter.to_sym
