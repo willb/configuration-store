@@ -18,24 +18,28 @@ module Mrg
   module Grid
     module Config
       module Shell
-        module GroupMembershipOps
-          def act
-            result = 0
-
-            cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
+        module VerifyOps
+          def verify_input
             bad_target = verify_target
             bad_names = verify_names
-            if (bad_target != []) || (bad_names != [])
-              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
-              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
-              result = 1
-            else
-              @names.each do |n|
-                obj = store.getNode(n)
-                obj.modifyMemberships(command, [@target], {})
-              end
+            if (not bad_target.empty?) || (not bad_names.empty?)
+              bad_target.each {|n| puts "#{options[0][:opt_name].split('-')[0].downcase} '#{n}' does not exist"}
+              bad_names.each {|n| puts "#{options[1][:opt_name].split('-')[0].downcase} '#{n}' does not exist"}
+              exit!(1, "Invalid input")
             end
-            result
+          end
+        end
+
+        module GroupMembershipOps
+          include VerifyOps
+
+          def act
+            verify_input
+            @names.each do |n|
+              obj = store.getNode(n)
+              obj.modifyMemberships(command, [@target], {})
+            end
+            return 0
           end
         end
 
@@ -70,6 +74,8 @@ module Mrg
         end
 
         module RelationshipOps
+          include VerifyOps
+
           def supports_options
             false
           end
@@ -113,7 +119,7 @@ module Mrg
             opts = 0
             self.options.each do |opt|
               input = args.shift
-              if input == nil
+              if input == nil and command != "REPLACE"
                 exit!(1, "you must specify a #{opt[:opt_name]}")
               elsif opts < (self.options.length-1)
                 @target = input
@@ -128,9 +134,9 @@ module Mrg
                   end
                 else
                   @names = []
-                  @names << input
+                  @names << input if input and not input.empty?
                   args.each do |a|
-                    @names << a
+                    @names << a if not a.empty?
                   end
                   @names.uniq!
                 end
@@ -179,38 +185,29 @@ module Mrg
           end
 
           def act
-            result = 0
-
+            verify_input
             cname = Mrg::Grid::Config.constants.grep(/^#{target_type.capitalize}/).select {|x| Mrg::Grid::Config.const_get(x).ancestors.include?(::SPQR::Manageable) }[0]
-            bad_target = verify_target
-            bad_names = verify_names
-            if (bad_target != []) || (bad_names != [])
-              puts "Invalid #{options[0][:opt_name]}: #{bad_target.inspect}" if bad_target != []
-              puts "Invalid #{options[1][:opt_name].split("[")[0]}: #{bad_names.inspect}" if bad_names != []
-              result = 1
-            else
-              smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
-              obj = store.send(smethod, @target)
-              if cname == "Node" and sub_group_for_node
-                obj = obj.identity_group
-                cname = "Group"
-              end
-              cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,5).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
-              if (@priority == nil) || (command != "ADD")
-                obj.send(cmethod, command, @names, {})
-              else
-                get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.to_sym)
-                cur = obj.send(get)
-                cnt = 0
-                @names.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
-                cur = cur - @names
-                if command == "ADD"
-                  cur.insert(@priority - cnt, *@names).compact!
-                end
-                obj.send(cmethod, "REPLACE", cur, {})
-              end
+            smethod = Mrg::Grid::MethodUtils.find_store_method("get#{cname.slice(0,5)}")
+            obj = store.send(smethod, @target)
+            if cname == "Node" and sub_group_for_node
+              obj = obj.identity_group
+              cname = "Group"
             end
-            result
+            cmethod = Mrg::Grid::MethodUtils.find_method(name_type.slice(0,5).capitalize, cname).select {|m| m if m.index("modify") != nil}[0]
+            if (@priority == nil) || (command != "ADD")
+              obj.send(cmethod, command, @names, {})
+            else
+              get = Mrg::Grid::Config.const_get(cname).get_from_set(cmethod.to_sym)
+              cur = obj.send(get)
+              cnt = 0
+              @names.select {|x| cur.include?(x)}.each {|y| cnt += 1 if cur.index(y) < @priority}
+              cur = cur - @names
+              if command == "ADD"
+                cur.insert(@priority - cnt, *@names).compact!
+              end
+              obj.send(cmethod, "REPLACE", cur, {})
+            end
+            return 0
           end
         end
 
