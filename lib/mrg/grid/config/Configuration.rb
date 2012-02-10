@@ -63,16 +63,21 @@ module Mrg
         # config value (if one exists).  This hash contains the kinds
         # of appending we can support, mapping from the character or
         # characters before value to the string used to delimit joined values.
-        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
-        
+        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || ', '?='=>Proc.new {|lt, rt| (!lt || lt=='') ? rt : lt}}
+        APPEND_PROCS = {}
         APPEND_MATCHER = /^(?:(#{APPENDS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
 
         def self.append_match(value)
           return value.match(APPEND_MATCHER)
         end
 
-        def self.join_string(match)
-          APPENDS[match[1]]
+        def self.join_proc(match)
+          joiner = APPENDS[match[1]]
+          if joiner.is_a?(String)
+            APPEND_PROCS[joiner] ||= Proc.new {|lt,rt| "#{lt}#{joiner}#{rt}"}
+          else
+            joiner
+          end
         end
 
         def self.strip_prefix(value)
@@ -99,9 +104,9 @@ module Mrg
             value = value_string(match)
             $wallaby_log.warn("ValueUtil.apply! didn't strip all append markers from '#{supplied_value}'; got '#{value}'") if ($wallaby_log && has_append_match(value)) if $wallaby_log
 
-            js = join_string(match)
+            jp = join_proc(match)
             ssp = use_ssp ? prefix_string(match) : ""
-            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{js}#{value}" : "#{ssp}#{value}"
+            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{jp.call(config[param], value)}" : "#{ssp}#{value}"
           else
             config[param] = value unless (config.has_key?(param) && (!value || value == ""))
           end
