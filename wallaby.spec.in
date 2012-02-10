@@ -41,8 +41,8 @@ BuildRequires: python2-devel
 Requires: ruby(abi) = 1.8
 BuildRequires: ruby
 Requires: ruby-qmf >= 0.7.929717
-Requires: ruby-spqr >= 0.3.5
-Requires: ruby-rhubarb >= 0.2.6
+Requires: ruby-spqr >= 0.3.6
+Requires: ruby-rhubarb >= 0.4.3
 Requires: ruby-wallaby = %{version}-%{release}
 Requires: logrotate >= 0.3
 %if %{want_systemd}
@@ -273,6 +273,11 @@ fi
 %endif
 
 %changelog
+
+* Fri Feb 10 2012 willb <willb@redhat> - 0.13.0-1
+- conditional assignment of parameter values ("?=" operator)
+- fix for bz 748507
+- compatibility with Ruby 1.9
 
 * Wed Jan 18 2012 willb <willb@redhat> - 0.12.5-2
 - minor usability fixes to "wallaby inventory -c"
