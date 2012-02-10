@@ -175,7 +175,7 @@ module Mrg
         def gen_methods(ignore, type)
           methods = []
           qmf_m = ""
-          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.to_sym} - ignore
+          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).map {|ms| ms.to_s}.select {|m| m.index("=") == nil}.collect {|m| m.to_sym} - ignore
           attrs.each do |m|
             tmp = m.to_s.split('_')
             begin
@@ -198,7 +198,7 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }.delete_if {|x| x == "params" } << "params"
+          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).map{|ms| ms.to_s}.select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }.delete_if {|x| x == "params" } << "params"
           log.debug "Store entities: #{@entities.inspect}"
           @valid_methods = {}
           @entities.each do |type|
@@ -286,7 +286,7 @@ module Mrg
 
         def entity_details(type, name)
           details = {:expected=>{}, :updates=>{}}
-          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].to_sym
+          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).map {|ms| ms.to_s}.select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].to_sym
           klass = Mrg::Grid::Config.const_get(type)
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|

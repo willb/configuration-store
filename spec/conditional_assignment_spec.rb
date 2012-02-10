@@ -55,7 +55,7 @@ module Mrg
         it "should handle conditional assignment sensibly in features" do
           pending "this example requires Array#permutation, which your ruby doesn't support; sorry!" unless [].respond_to?(:permutation)
           @store.addParam("LATEBOUND")
-          features = %{alpha beta gamma}.map {|f| result = @store.addFeature(f) ; result.modifyParams("ADD", {"LATEBOUND"=>"?=#{f.upcase}"}, {}); result}
+          features = %w{alpha beta gamma}.map {|f| result = @store.addFeature(f) ; result.modifyParams("ADD", {"LATEBOUND"=>"?=#{f.upcase}"}, {}); result}
           
           features.map {|f| f.name}.permutation.each do |flist|
             node = @store.getNode("example.local.")
