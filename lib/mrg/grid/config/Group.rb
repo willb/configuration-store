@@ -75,7 +75,11 @@ module Mrg
         #   A list of the nodes associated with this group
         def membership()
           log.debug "membership called on group #{self.inspect}"
-          NodeMembership.find_by(:grp=>self).map{|nm| nm.node.name}
+          db_membership.map{|n| n.name}
+        end
+
+        def db_membership()
+          NodeMembership.find_by(:grp=>self).map{|nm| nm.node}
         end
 
         expose :membership do |args|
