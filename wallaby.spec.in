@@ -271,12 +271,12 @@ fi
 %if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
-%{ruby_appropriate_install_dir}/mrg/grid/
+/%{ruby_appropriate_install_dir}/mrg/grid/
 %if %{has_sinatra}
-%exclude %{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
+%exclude /%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
 
 %files -n wallaby-http-server
-%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
+/%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 
 %changelog
