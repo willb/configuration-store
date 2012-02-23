@@ -1,4 +1,4 @@
-/var/log/wallaby/* {
+/var/log/wallaby/*.log {
     notifempty
     missingok
     copytruncate
