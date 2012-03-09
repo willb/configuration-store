@@ -281,6 +281,10 @@ fi
 
 %changelog
 
+* Fri Mar 9 2012 willb <willb@redhat> - 0.13.1-1
+- Fixes BZs 786801 and 796406
+- specfile updates from Fedora work
+
 * Fri Feb 10 2012 willb <willb@redhat> - 0.13.0-2
 - specfile fixes
 
