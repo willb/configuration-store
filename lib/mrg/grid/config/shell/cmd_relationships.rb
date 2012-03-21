@@ -126,7 +126,7 @@ module Mrg
               else
                 if (name_type == "param") && (target_type != "subsystem") && (command != "REMOVE")
                   @names = {}
-                  args.unshift(input)
+                  args.unshift(input) if input
                   args.each do |a|
                     tmp = a.split("=", 2)
                     @names[tmp[0]] = 0 if tmp.length == 1
