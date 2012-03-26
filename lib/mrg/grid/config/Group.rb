@@ -371,6 +371,14 @@ module Mrg
         declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
         declare_column :param, :integer, references(Parameter, :on_delete=>:cascade)
         declare_column :value, :text
+        declare_column :uses_default, :boolean, :default, :false
+
+        alias db_value value
+
+        def value
+          return self.db_value unless self.uses_default
+          self.param.default_val
+        end
       end
     end
   end
