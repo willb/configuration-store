@@ -21,7 +21,9 @@
 %if (0%{?fedora} >= 17)
 %global ruby_abi 1.9.1
 %global ruby_appropriate_install_dir %{ruby_vendorlibdir}
+%global requires_ruby_devel 1
 %else
+%global requires_ruby_devel 0
 %global ruby_abi 1.8
 %{!?ruby_sitelib: %global ruby_sitelib %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"] ')}
 %global ruby_appropriate_install_dir %{ruby_sitelib}
@@ -93,6 +95,9 @@ Requires: ruby-irb
 Requires: ruby-qmf >= 0.7.929717
 Requires: ruby-spqr >= 0.3.5
 Requires: ruby-rhubarb >= 0.2.6
+%if %{requires_ruby_devel}
+BuildRequires: ruby-devel
+%endif
 Provides: ruby(mrg/grid/config) = %{version}
 
 %package -n python-wallaby
@@ -271,15 +276,18 @@ fi
 %if %{building_for_el5}
 %defattr(-, root, root, -)
 %endif
-/%{ruby_appropriate_install_dir}/mrg/grid/
+%{ruby_appropriate_install_dir}/mrg/grid/
 %if %{has_sinatra}
-%exclude /%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
+%exclude %{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
 
 %files -n wallaby-http-server
-/%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
+%{ruby_appropriate_install_dir}/mrg/grid/config/shell/cmd_http_server.rb
 %endif
 
 %changelog
+
+* Mon Mar 26 2012 willb <willb@redhat> - 0.13.1-2
+- F17 fixes
 
 * Fri Mar 9 2012 willb <willb@redhat> - 0.13.1-1
 - Fixes BZs 786801 and 796406
