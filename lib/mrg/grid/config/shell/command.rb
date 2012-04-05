@@ -102,6 +102,7 @@ module Mrg
           end
           
           def main(args)
+            args = fold_callbacks(:preprocess_options, *args)
             run_callbacks(:before_option_parsing, *args)
             
             begin
@@ -165,6 +166,13 @@ module Mrg
               self.send(callback, *args)
             end
           end
+
+          def fold_callbacks(c_when, *args)
+            self.class.callbacks[c_when].inject(args) do |acc, callback|
+              self.send(callback, *acc)
+            end
+          end
+
           
           def store
             if @store.is_a? Proc
