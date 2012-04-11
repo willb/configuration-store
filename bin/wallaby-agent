@@ -163,6 +163,7 @@ begin
   if DO_SNAPCREATE
     puts "creating snapshot tables"
     Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
+    Rhubarb::Persistence::dbs[:snapshot].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPDBVERSION}")
   end
   
   options = {}
@@ -185,8 +186,19 @@ begin
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
   rescue Exception => ex
-    s.warn "exception encountered during routine cleanup:  #{ex.inspect}"
+    Syslog.open {|s| s.warn "exception encountered during routine cleanup:  #{ex.inspect}"}
     puts "exception encountered during routine cleanup:  #{ex.inspect}" unless do_daemonify
+  end
+  
+  {:snapshot=>[::Mrg::Grid::Config::SNAP_DB_TABLES, snapdb], :default=>[::Mrg::Grid::Config::MAIN_DB_TABLES, dbname]}.each do |ds, meta| do
+    begin
+      table_list, db_file = meta
+      
+      $wallaby_log.info "checking for necessary #{ds} database migrations...."
+      puts "checking for necessary #{ds} database migrations...." unless do_daemonify
+      
+      ::Mrg::Grid::Config::DBSchema.migrate(Rhubarb::Persistence::dbs[ds], )
+    end
   end
   
   app.main
