@@ -24,6 +24,7 @@ require 'mrg/grid/config/errors'
 
 require 'mrg/grid/config/ArcUtils'
 require 'mrg/grid/config/DataValidating'
+require 'mrg/grid/config/annotatable'
 
 require 'mrg/grid/config/ArcLabel'
 require 'mrg/grid/config/Parameter'

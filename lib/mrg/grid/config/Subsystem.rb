@@ -37,6 +37,7 @@ module Mrg
         qmf_property :name, :sstr, :index=>true
         qmf_property :params, :list, :desc=>"A list representing the set of parameter names that this subsystem is interested in."
         ### Schema method declarations
+        include ::Mrg::Grid::Config::Annotatable
 
         # modifyParams 
         # * command (sstr/I)

@@ -68,6 +68,8 @@ module Mrg
         declare_column :is_identity_group, :boolean, :default, :false
         qmf_property :is_identity_group, :bool
 
+        include ::Mrg::Grid::Config::Annotatable
+
         ### Schema method declarations
         
         # membership 

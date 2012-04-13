@@ -45,6 +45,8 @@ module Mrg
         declare_index_on :name
         qmf_property :name, :sstr, :desc=>"This feature's name"
         
+        include ::Mrg::Grid::Config::Annotatable
+        
         def uid
           @row_id
         end

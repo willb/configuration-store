@@ -74,7 +74,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          3
+          4
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
