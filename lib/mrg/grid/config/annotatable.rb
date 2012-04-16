@@ -1,4 +1,4 @@
-# Describable.rb:  description metadata for entities
+# annotatable.rb:  annotation/description metadata for entities
 #
 # Copyright (c) 2009--2010 Red Hat, Inc.
 #
@@ -19,10 +19,10 @@ module Mrg
   module Grid
     module Config
       module Annotatable
-        MAX_DESCRIPTION_LENGTH = 8192
+        MAX_ANNOTATION_LENGTH = 8192
         
         def setAnnotation(desc)
-          fail(Errors.make(Errors::BAD_ARGUMENT, Errors::ARGUMENT_TOO_LONG, (Errors.const_get(self.class.cbasename.upcase) || 0)), "#{self.class.cbasename} annotation is too long; must be under #{MAX_DESCRIPTION_LENGTH} characters.") unless desc.size < MAX_DESCRIPTION_LENGTH
+          fail(Errors.make(Errors::BAD_ARGUMENT, Errors::ARGUMENT_TOO_LONG, (Errors.const_get(self.class.cbasename.upcase) || 0)), "#{self.class.cbasename} annotation is too long; must be under #{MAX_ANNOTATION_LENGTH} characters.") unless desc.size < MAX_ANNOTATION_LENGTH
           self.annotation = desc
         end
         
