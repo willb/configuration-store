@@ -22,6 +22,7 @@ module Mrg
         MAX_ANNOTATION_LENGTH = 8192
         
         def setAnnotation(desc)
+          desc ||= ""
           fail(Errors.make(Errors::BAD_ARGUMENT, Errors::ARGUMENT_TOO_LONG, (Errors.const_get(self.class.cbasename.upcase) || 0)), "#{self.class.cbasename} annotation is too long; must be under #{MAX_ANNOTATION_LENGTH} characters.") unless desc.size < MAX_ANNOTATION_LENGTH
           self.annotation = desc
         end

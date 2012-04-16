@@ -34,6 +34,12 @@ module Mrg
     
     module ConfigClient
 
+      module AnnotatableObject
+        def setAnnotation(na)
+          check_result(@qmfo.setAnnotation(na))
+        end
+      end
+
       module ObjResolver
         def get_object(obj_id, klass=nil)
           obj = @console.object(:object_id=>obj_id)
@@ -90,8 +96,10 @@ module Mrg
       end
       
       class Group < ClientObj
+        include AnnotatableObject
+        
         def self.client_hash_properties
-          @cyp ||= %w{is_identity_group name features params}
+          @cyp ||= %w{is_identity_group name features params annotation}
         end
 
         def self.client_hash_methods
@@ -139,8 +147,10 @@ module Mrg
       end
 
       class Parameter < ClientObj
+        include AnnotatableObject
+        
         def self.client_hash_properties
-          @cyp ||= %w{kind default description must_change visibility_level requires_restart depends conflicts}
+          @cyp ||= %w{kind default description must_change visibility_level requires_restart depends conflicts annotation}
         end
 
         def self.client_hash_methods
@@ -220,8 +230,10 @@ module Mrg
       end
       
       class Feature < ClientObj
+        include AnnotatableObject
+        
         def self.client_hash_properties
-          @cyp ||= %w{name included_features params param_meta conflicts depends}
+          @cyp ||= %w{name included_features params param_meta conflicts depends annotation}
         end
 
         def self.client_hash_methods
@@ -285,8 +297,10 @@ module Mrg
       end
 
       class Subsystem < ClientObj
+        include AnnotatableObject
+        
         def self.client_hash_properties
-          @cyp ||= %w{params}
+          @cyp ||= %w{params annotation}
         end
 
         def self.client_hash_methods
@@ -310,8 +324,10 @@ module Mrg
       end
 
       class Node < ClientObj
+        include AnnotatableObject  
+        
         def self.client_hash_properties
-          @cyp ||= %w{name provisioned last_checkin last_updated_version identity_group memberships}
+          @cyp ||= %w{name provisioned last_checkin last_updated_version identity_group memberships annotation}
         end
 
         def self.client_hash_methods
