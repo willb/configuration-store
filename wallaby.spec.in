@@ -286,6 +286,10 @@ fi
 
 %changelog
 
+* Mon Apr 16 2012 willb <willb@redhat> - 0.14.0-1
+- "annotation" property and "setAnnotation" method on snapshots and all configuration entities
+- API minor version bump
+
 * Mon Mar 26 2012 willb <willb@redhat> - 0.13.1-2
 - F17 fixes
 
