@@ -26,6 +26,8 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
+        MAX_DESCRIPTION_LENGTH = 8192
+
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Snapshot'
         ### Property method declarations
@@ -37,6 +39,8 @@ module Mrg
         qmf_property :name, :sstr, :index=>true
         
         declare_column :snaptext, :blob
+        
+        include ::Mrg::Grid::Config::Annotatable
         
         alias orig_snaptext snaptext
         alias orig_snaptext= snaptext=

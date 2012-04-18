@@ -24,8 +24,9 @@ module Mrg
         # Kinds of failure
         INTERNAL_ERROR = FAILURE << 1
         NOT_IMPLEMENTED = FAILURE << 2
+        BAD_ARGUMENT = FAILURE << 3
         
-        # bits 3 -- 7 reserved for future high-level failures
+        # bits 4 -- 7 reserved for future high-level failures
         NAME_ALREADY_IN_USE = FAILURE << 8
         INVALID_NAME = FAILURE << 9
         NONEXISTENT_ENTITY = FAILURE << 10
@@ -33,6 +34,7 @@ module Mrg
         BAD_QUERY = FAILURE << 12
         CIRCULAR_RELATIONSHIP = FAILURE << 13
         INVALID_RELATIONSHIP = FAILURE << 14
+        ARGUMENT_TOO_LONG = FAILURE << 15
         
         # Entities implicated in failures
         UNKNOWN = FAILURE << 22

@@ -152,6 +152,7 @@ module Mrg
         field :included, Array
         field :conflicts, Set
         field :depends, Array
+        field :annotation, ""
       end
       
       class Group
@@ -160,6 +161,7 @@ module Mrg
         field :is_identity_group, false
         field :features, Array
         field :params, Hash
+        field :annotation, ""
       end
       
       class Parameter
@@ -173,6 +175,7 @@ module Mrg
         field :needs_restart, false
         field :conflicts, Set
         field :depends, Set
+        field :annotation, ""
       end
       
       class Node
@@ -182,12 +185,14 @@ module Mrg
         field :membership, Array
         field :provisioned, true
         field :last_updated_version, 0
+        field :annotation, ""
       end        
       
       class Subsystem
         include DefaultStruct
         field :name, String
         field :params, Set
+        field :annotation, ""
       end
       
       class ConfigLoader
@@ -283,6 +288,8 @@ module Mrg
             options["seek_versioned_config"] = old_node.last_updated_version if old_node.last_updated_version && old_node.last_updated_version > 0
             node = @store.addNodeWithOptions(name, options)
             node.makeUnprovisioned unless (old_node.provisioned)
+            node.setAnnotation(old_node.annotation)
+            
             memberships = old_node.membership
             if memberships.size > 0
               flmemberships = listify(memberships)
@@ -323,6 +330,8 @@ module Mrg
                 group.modifyParams("ADD", old_group.params, {})
               end
             end
+            
+            group.setAnnotation(old_group.annotation)
           end
         end
         
@@ -337,6 +346,7 @@ module Mrg
             param.setMustChange(old_param.must_change)
             param.setVisibilityLevel(old_param.level)
             param.setRequiresRestart(old_param.needs_restart)
+            param.setAnnotation(old_param.annotation)
 
             {:conflicts=>:modifyConflicts,:depends=>:modifyDepends}.each do |get,set|
               if old_param.send(get).size > 0
@@ -354,6 +364,7 @@ module Mrg
           @features.each do |name, old_feature|
             log.info "Creating feature '#{name}'"
             feature = @store.addFeature(name)
+            feature.setAnnotation(old_feature.annotation)
             [[:params, :modifyParams, :skk, "parameters"],[:included, :modifyIncludedFeatures, :listify, "included features"],[:conflicts, :modifyConflicts, :setify, "conflicting features"],[:depends, :modifyDepends, :listify, "feature dependencies"]].each do |get,set,xform,desc|
               if old_feature.send(get).size > 0
                 @callbacks << lambda do
@@ -370,6 +381,7 @@ module Mrg
           @subsystems.each do |name, old_ss|
             log.info "Creating subsystem '#{name}'"
             subsys = @store.addSubsys(name)
+            subsys.setAnnotation(old_ss.annotation)
             if old_ss.params.size > 0
               @callbacks << lambda do
                 log.info "Setting parameters for subsystem #{name}"
@@ -450,6 +462,7 @@ module Mrg
             out.provisioned = node.provisioned
             out.membership = fl_normalize(node.memberships)
             out.last_updated_version = node.last_updated_version
+            out.annotation = node.annotation
             out
           end
         end
@@ -462,6 +475,7 @@ module Mrg
             out.is_identity_group = group.is_identity_group
             out.features = fl_normalize(group.features)
             out.params = group.params
+            out.annotation = group.annotation
             out
           end
         end
@@ -479,6 +493,7 @@ module Mrg
             out.needs_restart = param.requires_restart
             out.conflicts = fs_normalize(param.conflicts)
             out.depends = fs_normalize(param.depends)
+            out.annotation = param.annotation
             out
           end
         end
@@ -489,6 +504,7 @@ module Mrg
             out = Feature.new
             out.name = feature.name
             params = feature.params
+            out.annotation = feature.annotation
             
             # Ensure that params that should get the default values are serialized
             default_params = feature.param_meta.select {|k,v| v["uses_default"] == true || v["uses_default"] == 1}.map {|pair| pair[0]}
@@ -507,6 +523,7 @@ module Mrg
             subsys = get_object(s)
             out = Subsystem.new
             out.name = subsys.name
+            out.annotation = subsys.annotation
             out.params = fs_normalize(subsys.params)
             out
           end

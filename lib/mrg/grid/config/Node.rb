@@ -62,6 +62,8 @@ module Mrg
         declare_column :provisioned, :boolean, :default, :true
         declare_column :last_checkin, :integer
         declare_column :last_updated_version, :integer
+        
+        include ::Mrg::Grid::Config::Annotatable
 
         alias orig_provisioned provisioned
         alias orig_last_checkin last_checkin

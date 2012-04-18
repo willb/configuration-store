@@ -64,6 +64,8 @@ module Mrg
         qmf_property :depends, :list, :desc=>"A set of parameter names that this parameter depends on."
         qmf_property :conflicts, :list, :desc=>"A set of parameter names that this parameter conflicts with."
         
+        include ::Mrg::Grid::Config::Annotatable
+        
         # We're overriding find_first_by_name to be case-insensitive
         declare_query :_find_first_by_name_ci, "length(name) = length(?1) and upper(name) = upper(?1) ORDER BY row_id"
 
