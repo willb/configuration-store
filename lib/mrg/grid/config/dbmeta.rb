@@ -24,57 +24,56 @@ module Mrg
 
       SNAPVERSION = 1
       SNAPMIGRATIONS = []
-      
-      DB_MIGRATION_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "dbmigrate")
-    end
-    
-    module DBSchema
-      def self.require_migrations
-        migrations = Dir["#{Mrg::Grid::Config::Shell::DB_MIGRATION_DIR}/*.rb"]
+          
+      module DBSchema
+        DB_MIGRATION_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "dbmigrate")
         
-        migrations.each do |m|
-          require File.join(File.dirname(m), File.basename(m, File.extname(m)))
-        end
-      end
-      
-      class Sink
-        [:fatal, :error, :warn, :info, :debug].each do |m|
-          define_method m do |*args|
-            if block_given?
-              puts "#{m}: #{yield}"
-            else
-              puts "#{m}: #{args.join(" ")}"
-            end
-            nil
+        def self.require_migrations
+          migrations = Dir["#{Mrg::Grid::Config::DBSchema::DB_MIGRATION_DIR}/*.rb"]
+        
+          migrations.each do |m|
+            require File.join(File.dirname(m), File.basename(m, File.extname(m)))
           end
         end
-      end
       
-      def self.migrate(db, tables, migrations, log=nil)
-        log ||= Sink.new
-        
-        tables.each do |cl| 
-          log.info "creating table for #{cl.name} if necessary..."
-          cl.create_table rescue nil
+        class Sink
+          [:fatal, :error, :warn, :info, :debug].each do |m|
+            define_method m do |*args|
+              if block_given?
+                puts "#{m}: #{yield}"
+              else
+                puts "#{m}: #{args.join(" ")}"
+              end
+              nil
+            end
+          end
         end
-
-        observed_version = db.get_first_value("PRAGMA user_version").to_i
-        version = observed_version
-
-        to_apply = migrations.slice(observed_version + 1, migrations.size)
+      
+        def self.migrate(db, tables, migrations, log=nil)
+          log ||= Sink.new
         
-        unless to_apply == []
-          log.info "found #{to_apply.size} migrations"
-          yield observed_version if block_given?
-        end
+          tables.each do |cl| 
+            log.info "creating table for #{cl.name} if necessary..."
+            cl.create_table rescue nil
+          end
 
-        to_apply.each do |migration|
-          log.info "bringing db up to version #{observed_version + 1}"
-          migration.call
           observed_version = db.get_first_value("PRAGMA user_version").to_i
-          log.info "db is at version #{observed_version}"
-        end
+          version = observed_version
+
+          to_apply = migrations.slice(observed_version + 1, migrations.size)
         
+          unless to_apply == []
+            log.info "found #{to_apply.size} migrations"
+            yield observed_version if block_given?
+          end
+
+          to_apply.each do |migration|
+            log.info "bringing db up to version #{observed_version + 1}"
+            (migration.arity == 1 ? migration.call(db) : migration.call) if migration
+            observed_version = db.get_first_value("PRAGMA user_version").to_i
+            log.info "db is at version #{observed_version}"
+          end
+        end
       end
     end
   end
