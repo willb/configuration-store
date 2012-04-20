@@ -22,11 +22,11 @@ module Mrg
       module Shell
         module ParamOps
           def api_messages
-            @api_messages ||= {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :must_change=>:setMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}.freeze
+            @api_messages ||= {:kind=>:setKind, :default_val=>:setDefault, :description=>:setDescription, :annotation=>:setAnnotation, :must_change=>:setMustChange, :level=>:setVisibilityLevel, :needsRestart=>:setRequiresRestart}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:kind, :default, :description, :must_change, :requires_restart, :visibility_level, :depends, :conflicts]
+            @api_accessors ||= [:kind, :default, :description, :must_change, :requires_restart, :visibility_level, :depends, :conflicts, :annotation]
           end
 
           def accessor_options

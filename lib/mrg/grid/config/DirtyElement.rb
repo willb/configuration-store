@@ -28,6 +28,8 @@ module Mrg
         KIND_FEATURE = 1 << 1
         KIND_SUBSYSTEM = 1 << 4
         
+        KINDS = Hash[*DirtyElement.constants.inject([]) {|acc, val| cn = val.to_s ; (acc << DirtyElement.const_get(cn) << cn.slice(5..-1) if cn =~ /^KIND_/)}]
+        
         declare_column :kind, :integer, :not_null
         declare_column :node, :integer, references(Node, :on_delete=>:cascade)
         declare_column :grp, :integer, references(Group, :on_delete=>:cascade)
@@ -59,6 +61,18 @@ module Mrg
         
         def self.dirty_default_group
           self.create(:kind=>KIND_EVERYTHING) unless self.find_first_by_kind(KIND_EVERYTHING)
+        end
+        
+        def to_pair
+          pair = {"kind"=>KINDS[self.kind]}
+          pair["name"] = case self.kind
+            when KIND_NODE then self.node.name
+            when KIND_GROUP then self.grp.name
+            when KIND_FEATURE then self.feature.name
+            when KIND_PARAMETER then self.parameter.name
+            when KIND_SUBSYSTEM then self.subsystem.name
+            when KIND_EVERYTHING then "all entities are due for validation"
+          end
         end
       end
     end

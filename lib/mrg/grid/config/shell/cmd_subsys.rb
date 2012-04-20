@@ -22,11 +22,11 @@ module Mrg
       module Shell
         module SubsysOps
           def api_messages
-            @api_messages ||= {}.freeze
+            @api_messages ||= {:annotation=>:setAnnotation}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :params]
+            @api_accessors ||= [:name, :params, :annotation]
           end
 
           def accessor_options
@@ -34,7 +34,7 @@ module Mrg
           end
 
           def supports_options
-            false
+            true
           end
         end
 

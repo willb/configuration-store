@@ -74,7 +74,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          4
+          5
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
@@ -243,6 +243,32 @@ module Mrg
         expose :validateConfiguration do |args|
           args.declare :explain, :map, :out, "A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated."
           args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
+        end
+        
+        
+        def affectedEntities(options=nil)
+          options = {"failfast"=>nil}.merge(options || {})
+          if options["failfast"]
+            dg = DirtyElement.find_first_by_kind(DirtyElement.KIND_EVERYTHING)
+            return [dg.to_pair] if dg
+          end
+          result = DirtyElement.find_all.map {|elt| elt.to_pair}
+          bytes = OBJECT_OVERHEAD * 4 # XXX: this is conservative but perhaps unnecessarily so
+          truncated_result = result.inject([]) do |acc, val|
+            this_val_size = OBJECT_OVERHEAD * 3 + val[0].length + val[1].length
+            if bytes + this_val_size < MAX_ARG_SIZE
+              bytes += this_val_size
+              acc << val
+            else
+              acc << ["OMITTED", "..."]
+            end
+          end
+          truncated_result
+        end
+        
+        expose :affectedEntities do |args|
+          args.declare :options, :map, :in, "Valid options include 'failfast', which will return a single-element list if the default group or the whole store is dirty."
+          args.declare :result, :list, :out, "A list of TYPE, NAME pairs indicating elements that have changed since the last activation and are due for validation and activation.  May be truncated due to communication limitations."
         end
         
         # addNode 
@@ -483,16 +509,27 @@ module Mrg
         # </method>
         
         def makeSnapshot(name)
-          name = Mrg::Grid::Config::Snapshot.autogen_name("Automatically generated snapshot") if name.size == 0
-          fail(42, "Snapshot name #{name} already taken") if Snapshot.find_first_by_name(name)
-          result = Snapshot.create(:name=>name)
-          snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
-          result.snaptext = snaptext
+          makeSnapshotWithOptions(name)
         end
         
         expose :makeSnapshot do |args|
           args.declare :name, :sstr, :in, "A name for this configuration.  A blank name will result in the store creating a name"
         end
+
+        def makeSnapshotWithOptions(name, opts=nil)
+          opts = {"annotation"=>""}.merge(opts || {})
+          name = Mrg::Grid::Config::Snapshot.autogen_name("Automatically generated snapshot") if name.size == 0
+          fail(42, "Snapshot name #{name} already taken") if Snapshot.find_first_by_name(name)
+          result = Snapshot.create(:name=>name, :annotation=>opts["annotation"])
+          snaptext = ::Mrg::Grid::SerializedConfigs::ConfigSerializer.new(self, false).serialize.to_yaml
+          result.snaptext = snaptext
+        end
+        
+        expose :makeSnapshotWithOptions do |args|
+          args.declare :name, :sstr, :in, "A name for this configuration.  A blank name will result in the store creating a name"
+          args.declare :options, :map, :in, "Options for this snapshot.  Valid options include 'annotation', which must map to a string containing an annotation for this snapshot."
+        end
+
         
         def loadSnapshot(name)
           snap = Snapshot.find_first_by_name(name)

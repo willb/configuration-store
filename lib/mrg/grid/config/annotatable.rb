@@ -24,7 +24,9 @@ module Mrg
         def setAnnotation(desc)
           desc ||= ""
           fail(Errors.make(Errors::BAD_ARGUMENT, Errors::ARGUMENT_TOO_LONG, (Errors.const_get(self.class.cbasename.upcase) || 0)), "#{self.class.cbasename} annotation is too long; must be under #{MAX_ANNOTATION_LENGTH} characters.") unless desc.size < MAX_ANNOTATION_LENGTH
+          @__annotation_dirtymsg ||= "dirty_#{self.class.cbasename.downcase}"
           self.annotation = desc
+          DirtyElement.send(@__annotation_dirtymsg, self) if DirtyElement.respond_to?(@__annotation_dirtymsg)
         end
         
         module ClassMixins
@@ -39,10 +41,10 @@ module Mrg
           end
 
           receiver.declare_column :annotation, :text
-          receiver.qmf_property :annotation, :lstr        
+          receiver.qmf_property :annotation, :lstr, :description=>"a user-defined annotation for this property; introduced in API version 20101031.4"
           
           receiver.expose :setAnnotation do |args|
-            args.declare :name, :sstr, :in, "An updated annotation for this #{self.class.name.split("::").pop.downcase}."
+            args.declare :name, :sstr, :in, "An updated annotation for this #{self.class.name.split("::").pop.downcase}.  This method was introduced in API version 20101031.4."
           end
         end
       end
