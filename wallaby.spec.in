@@ -286,6 +286,11 @@ fi
 
 %changelog
 
+* Thu Apr 19 2012 willb <willb@redhat> - 0.14.1-1
+- preliminary tool support for annotations
+- affectedEntities and affectedNodes methods on Store objects
+- API minor version bump; API is now 20101031.5
+
 * Mon Apr 16 2012 willb <willb@redhat> - 0.14.0-1
 - "annotation" property and "setAnnotation" method on snapshots and all configuration entities
 - API minor version bump
