@@ -34,7 +34,12 @@ module Mrg
           def init_option_parser
             OptionParser.new do |opts|
               opts.banner = "Usage:  wallaby #{self.class.opname}#{self.class.opargs}\n#{self.class.description}"
-                
+              if @op == :makeSnapshot
+                opts.on("-a", "--annotation COMMENT", "provides an annotation for the given snapshot") do |comment|
+                  @comment = comment
+                end
+              end
+              
               opts.on("-h", "--help", "displays this message") do
                 puts @oparser
                 exit
@@ -59,6 +64,11 @@ module Mrg
           end
 
           register_callback :after_option_parsing, :check_name
+
+          def act(kwargs=nil)
+            @comment ||= ""
+            store.makeSnapshotWithOptions(@name, "annotation"=>@comment)
+          end
 
           private
           def storeop

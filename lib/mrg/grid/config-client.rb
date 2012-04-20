@@ -445,6 +445,16 @@ module Mrg
           nil
         end
 
+        def affectedEntities(options=nil)
+          options ||= {}
+          check_result(@qmfo.affectedEntities(options)).result
+        end
+
+        def affectedNodes(options=nil)
+          options ||= {}
+          check_result(@qmfo.affectedNodes(options)).result
+        end
+
         def addParam(name)
           get_object(check_result(@qmfo.addParam(name)).obj, Parameter)
         end

@@ -22,11 +22,11 @@ module Mrg
       module Shell
         module GroupOps
           def api_messages
-            @api_messages ||= {:name=>:setName}.freeze
+            @api_messages ||= {:name=>:setName, :annotation=>:setAnnotation}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :membership, :features, :params]
+            @api_accessors ||= [:name, :membership, :features, :params, :annotation]
           end
 
           def accessor_options
