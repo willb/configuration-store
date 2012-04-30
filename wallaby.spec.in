@@ -12,6 +12,11 @@
 %global building_for_el5 0
 %endif
 
+%if (0%{?fedora} >= 17 && 0%{?rhel} >= 6)
+%global 
+%global wallaby_uid -u 181
+%endif
+
 %if (0%{?fedora} != 0)
 %global has_sinatra 1
 %else
@@ -33,6 +38,8 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
+
+
 
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
@@ -212,7 +219,7 @@ rm -rf %{buildroot}
 getent group wallaby >/dev/null || groupadd -r wallaby
 getent group condor >/dev/null || groupadd -r condor
 getent passwd wallaby >/dev/null || \
-  useradd -r -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
+  useradd -r %{?wallaby_uid} -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
     -c "Owner of Wallaby service" wallaby
 exit 0
 
