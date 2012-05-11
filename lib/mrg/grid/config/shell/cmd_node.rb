@@ -166,6 +166,7 @@ module Mrg
 
           def entity_callback(node)
             ver = (@options.has_key?(:latest) ? {"version"=>@options[:latest]} : {})
+            # XXX: should this be in a friendlier format for human readers?  or a particular machine-readable format?
             puts "  config:  #{node.getConfig(ver).inspect}"
           end
 
