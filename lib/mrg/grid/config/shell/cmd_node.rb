@@ -36,6 +36,10 @@ module Mrg
           def supports_options
             true
           end
+
+          def noun
+            "node"
+          end
         end
 
         class AddNode < Command
@@ -113,6 +117,61 @@ module Mrg
           register_callback :after_option_parsing, :post_arg_callback
 
           Mrg::Grid::Config::Shell.register_command(self, opname + "s")
+        end
+
+        class ShowNodeConfig < Command
+          include EntityOps
+          include NodeOps
+          documented_if_environment_has :WALLABY_TECH_PREVIEW
+
+          def self.opname
+            "show-node-config"
+          end
+          
+          def self.description
+            "Displays the configuration of a node."
+          end
+          
+          def storeop
+            :getNode
+          end
+          
+          def show_banner
+            false
+          end
+
+          def multiple_targets
+            false
+          end
+
+          def supports_options
+            false
+          end
+
+          def init_option_parser
+            @options = {}
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname} NODE [OPTIONS]"
+
+              opts.on("-h", "--help", "displays this message") do
+                puts @oparser
+                exit
+              end
+
+              opts.on("--version VERSION", Integer, "shows this node's configuration at VERSION") do |ver|
+                @options[:latest] = ver
+              end
+            end
+          end
+
+          def entity_callback(node)
+            ver = (@options.has_key?(:latest) ? {"version"=>@options[:latest]} : {})
+            # XXX: should this be in a friendlier format for human readers?  or a particular machine-readable format?
+            puts "  config:  #{node.getConfig(ver).inspect}"
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
+
         end
 
         class ListNode < Command
