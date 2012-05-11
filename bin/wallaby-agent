@@ -170,7 +170,7 @@ begin
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
   rescue Exception => ex
-    Syslog.open {|s| s.warn "exception encountered during routine cleanup:  #{ex.inspect}"}
+    Syslog.open {|s| s.warning "exception encountered during routine cleanup:  #{ex.inspect}"}
     puts "exception encountered during routine cleanup:  #{ex.inspect}" unless do_daemonify
   end
   
