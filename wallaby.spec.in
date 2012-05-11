@@ -215,14 +215,13 @@ rm -rf %{buildroot}
 %{_initrddir}/wallaby
 %endif
 
-%pre
+%pre -n ruby-wallaby
 getent group wallaby >/dev/null || groupadd -r wallaby
 getent group condor >/dev/null || groupadd -r condor
 getent passwd wallaby >/dev/null || \
   useradd -r %{?wallaby_uid} -g condor -d %{_localstatedir}/lib/wallaby -s /sbin/nologin \
     -c "Owner of Wallaby service" wallaby
 exit 0
-
 
 %if %{want_systemd}
 %post
@@ -292,6 +291,11 @@ fi
 %endif
 
 %changelog
+
+* Thu May 10 2012 willb <willb@redhat> - 0.14.2-1
+- packaging improvements:  ruby-wallaby now creates the wallaby user, and it does so with a proper UID on F17+ and EL6+
+- base db documentation generator (non-end-user visible)
+- shell support for inspecting node configs (non-end-user visible for now, but used by ruby implementations of ccs/ccp; BZ820419)
 
 * Thu Apr 19 2012 willb <willb@redhat> - 0.14.1-1
 - preliminary tool support for annotations
