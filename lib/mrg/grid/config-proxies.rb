@@ -272,7 +272,7 @@ module Mrg
           
           yrepr = nil
 
-          parse(ymltext)
+          parse(ymltxt)
           
         end
         
