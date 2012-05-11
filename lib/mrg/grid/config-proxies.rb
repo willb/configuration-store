@@ -429,6 +429,11 @@ module Mrg
               puts entity.inspect
               document(kind, entity)
             end
+            
+            index = path_for(kind, "index.markdown")
+            open(index, "w") do |f|
+              layout_index(f, kind, entities)
+            end
           end
         end 
         
@@ -441,52 +446,63 @@ module Mrg
           end
         end
         
+        def layout_index(file, kind, collection)
+          file.write <<-END
+---
+title: Available #{kind}s
+layout: default
+permalink: /#{uri_for(kind, "")}
+---
+#{collection.keys.sort.map {|k| "* [#{k}](#{uri_for(kind, k)})"}.join("\n")}
+END
+        end
+        
         def layout_feature(file, entity, uri)
           file.write <<-END
-          ---
-          title: #{entity.name}
-          layout: db_feature
-          permalink: /#{uri}/
-          name: #{entity.name}
-          included: #{entity.included.map {|f| [f, uri_for(:feature, f)]}.to_yaml}
-          depends: #{Hash[*entity.depends.map {|f| [f, uri_for(:feature, f)]}.flatten].to_yaml}
-          conflicts: #{Hash[*entity.conflicts.map {|f| [f, uri_for(:feature, f)]}.flatten].to_yaml}
-          params:  #{yamlify_params(entity.params)}
-          annotation: #{entity.annotation.to_yaml}
-          ---
+---
+title: #{entity.name}
+layout: db_feature
+permalink: /#{uri}/
+name: #{entity.name}
+included: #{entity.included.map {|f| [f, "/" + uri_for(:feature, f)]}.to_yaml}
+depends: #{Hash[*entity.depends.map {|f| [f, "/" + uri_for(:feature, f)]}.flatten].to_yaml}
+conflicts: #{Hash[*entity.conflicts.map {|f| [f, "/" + uri_for(:feature, f)]}.flatten].to_yaml}
+params:  #{yamlify_params(entity.params)}
+annotation: #{entity.annotation.to_yaml}
+---
           END
         end
         
         def layout_parameter(file, entity, uri)
           file.write <<-END
-          ---
-          title: #{entity.name}
-          layout: db_parameter
-          permalink: /#{uri}/
-          name: #{entity.name}
-          depends: #{Hash[*entity.depends.map {|e| [e, uri_for(:parameter, e)]}.flatten].to_yaml}
-          conflicts: #{Hash[*entity.conflicts.map {|e| [e, uri_for(:parameter, e)]}.flatten].to_yaml}
-          must_change: #{entity.must_change}
-          needs_restart: #{entity.needs_restart}
-          kind: #{entity.kind}
-          
-          description: #{entity.description.to_yaml}
-          annotation: #{entity.annotation.to_yaml}
-          ---
+---
+title: #{entity.name}
+layout: db_parameter
+permalink: /#{uri}/
+name: #{entity.name}
+depends: #{Hash[*entity.depends.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
+conflicts: #{Hash[*entity.conflicts.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
+must_change: #{entity.must_change}
+needs_restart: #{entity.needs_restart}
+kind: #{entity.kind}
+
+description: #{entity.description.to_yaml}
+annotation: #{entity.annotation.to_yaml}
+---
           END
         end
 
         def layout_subsystem(file, entity, uri)
           file.write <<-END
-          ---
-          title: #{entity.name}
-          layout: db_subsystem
-          permalink: /#{uri}/
-          name: #{entity.name}
-          params: #{entity.params.to_yaml}
+---
+title: #{entity.name}
+layout: db_subsystem
+permalink: /#{uri}/
+name: #{entity.name}
+params: #{entity.params.to_yaml}
 
-          annotation: #{entity.annotation.to_yaml}
-          ---
+annotation: #{entity.annotation.to_yaml}
+---
           END
         end
         
