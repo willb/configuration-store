@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Thu May 10 2012 willb <willb@redhat> - 0.14.2-2
+- fixes a trivial crashing bug that sneaked in to the prior package
+
 * Thu May 10 2012 willb <willb@redhat> - 0.14.2-1
 - packaging improvements:  ruby-wallaby now creates the wallaby user, and it does so with a proper UID on F17+ and EL6+
 - base db documentation generator (non-end-user visible)
