@@ -122,7 +122,7 @@ module Mrg
         class ShowNodeConfig < Command
           include EntityOps
           include NodeOps
-          documented_only_if_default_name
+          documented_if_environment_has :WALLABY_TECH_PREVIEW
 
           def self.opname
             "show-node-config"
