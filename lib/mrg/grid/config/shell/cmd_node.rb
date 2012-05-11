@@ -158,7 +158,7 @@ module Mrg
                 exit
               end
 
-              opts.on("-l", "--latest NUM", Integer, "show the most recent configuration not more recent then NUM") do |ver|
+              opts.on("--version VERSION", Integer, "shows this node's configuration at VERSION") do |ver|
                 @options[:latest] = ver
               end
             end
