@@ -297,7 +297,9 @@ module PatchTester
         methods = obj.public_methods(false).map{|ms| ms.to_s}.select {|m| m.index("=") == nil}
         old_obj = old_store.send(type).select {|o| o.name == obj.name}[0]
         methods.each do |m|
-          obj.send(m).should == old_obj.send(m)
+          old_val = old_obj.send(m)
+          val = obj.send(m)
+          val.should == old_val if (val != nil) && (old_val != nil)
         end
       end
     end
