@@ -24,13 +24,18 @@ module Mrg
         
         include BaseDBFixture
         
-        it "should not have value-append markers in frozen configurations" do
-          node = @store.getNode("foo")
-          Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{Master NodeAccess}, {})
-          Group.DEFAULT_GROUP.modifyParams("ADD", {'ALLOW_READ'=>'*', 'ALLOW_WRITE'=>'*', 'CONDOR_HOST'=>'localhost'}, {})
-          @store.activateConfiguration
-
-          node.getConfig("version"=>::Rhubarb::Util::timestamp)['DAEMON_LIST'].should_not match /^>=/
+        [true, false, :get_after].each do |should_activate|
+          it "should not have value-append markers in frozen configurations when #{should_activate ? "activating" : "not activating"}#{should_activate == :get_after ? " before getting the affected node" : ""}" do
+            Group.DEFAULT_GROUP.modifyFeatures("ADD", %w{Master NodeAccess}, {})
+            Group.DEFAULT_GROUP.modifyParams("ADD", {'ALLOW_READ'=>'*', 'ALLOW_WRITE'=>'*', 'CONDOR_HOST'=>'localhost'}, {})
+            
+            node = @store.getNode("foo") unless should_activate == :get_after
+            @store.activateConfiguration if should_activate
+            node = @store.getNode("foo") if should_activate == :get_after
+            
+            (node.getConfig['DAEMON_LIST'] || "").should_not match /^>=/
+            (node.getConfig("version"=>::Rhubarb::Util::timestamp)['DAEMON_LIST'] || "").should_not match /^>=/
+          end
         end
       end
     end
