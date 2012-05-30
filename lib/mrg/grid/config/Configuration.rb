@@ -159,6 +159,9 @@ module Mrg
       end
       
       module ConfigUtils
+        def self.should_fix_broken_configs=(should_fix)
+          @fix_broken_configs = should_fix
+        end
 
         def self.should_fix_broken_configs?
           @fix_broken_configs ||= !!(ENV['WALLABY_FIX_BROKEN_CONFIGS'] && ENV['WALLABY_FIX_BROKEN_CONFIGS'] =~ /^true$/i)
