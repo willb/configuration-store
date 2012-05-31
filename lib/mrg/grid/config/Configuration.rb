@@ -168,9 +168,11 @@ module Mrg
         end
 
         # Strips prepended append markers from configuration values if
-        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment
-        def self.fix_config_values(result)
-          if should_fix_broken_configs?
+        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment,
+        # if ConfigUtils.should_fix_broken_configs has been set to true
+        # elsewhere, or if the second parameter is non-false
+        def self.fix_config_values(result, always=false)
+          if should_fix_broken_configs? || always
             result.inject({}) do |acc,(k,v)| 
               acc[k] = ValueUtil.strip_prefix(v)
               acc
@@ -379,7 +381,7 @@ module Mrg
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
               return 0 unless vnc
               toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
-              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
+              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>ConfigUtils.fix_config_values(vnc.config, true)) unless toc
               toc.version.version
             end
           end
