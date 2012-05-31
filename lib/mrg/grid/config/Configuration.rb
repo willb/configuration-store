@@ -375,6 +375,35 @@ module Mrg
             end
 
             
+            # This method is exclusively used for copying over the
+            # default group's most recent configuration to a 
+            # newly-created node.  This results in the appearance that
+            # a newly-created node was created just before the last
+            # successful activation that affected the default group,
+            # and ensures that it will have the same configuration as
+            # all other unconfigured nodes that existed then.
+            #
+            # Internally, this is sort of an abuse of the lightweight
+            # versioned-configuration scheme.  In the LW scheme, group
+            # configurations are stored as hashes (potentially with
+            # append markers on parameters), and node configurations
+            # are stored as lists of group references.  But nodes that
+            # receive the default group configuration via this
+            # mechanism will have their first versioned configuration
+            # stored as a hash.  This isn't visible to the user
+            # (indeed, it is handled as part of the backwards-
+            # compatibility code for the LW scheme), but it can make
+            # for some confusing debugging.  Note that we forcibly
+            # strip append markers from values where they appear when
+            # copying the default group's configuration.
+            #
+            # It may be more sensible (and cleaner) to have this
+            # method create a standard node lightweight configuration
+            # that is marked with the timestamp of the last default
+            # group activation and contains a list of memberships
+            # (including the skeleton and default groups).  For now,
+            # this works.
+            #
             # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
