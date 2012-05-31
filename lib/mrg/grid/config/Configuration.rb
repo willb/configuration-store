@@ -159,15 +159,20 @@ module Mrg
       end
       
       module ConfigUtils
+        def self.should_fix_broken_configs=(should_fix)
+          @fix_broken_configs = should_fix
+        end
 
         def self.should_fix_broken_configs?
           @fix_broken_configs ||= !!(ENV['WALLABY_FIX_BROKEN_CONFIGS'] && ENV['WALLABY_FIX_BROKEN_CONFIGS'] =~ /^true$/i)
         end
 
         # Strips prepended append markers from configuration values if
-        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment
-        def self.fix_config_values(result)
-          if should_fix_broken_configs?
+        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment,
+        # if ConfigUtils.should_fix_broken_configs has been set to true
+        # elsewhere, or if the second parameter is non-false
+        def self.fix_config_values(result, always=false)
+          if should_fix_broken_configs? || always
             result.inject({}) do |acc,(k,v)| 
               acc[k] = ValueUtil.strip_prefix(v)
               acc
@@ -370,13 +375,42 @@ module Mrg
             end
 
             
+            # This method is exclusively used for copying over the
+            # default group's most recent configuration to a 
+            # newly-created node.  This results in the appearance that
+            # a newly-created node was created just before the last
+            # successful activation that affected the default group,
+            # and ensures that it will have the same configuration as
+            # all other unconfigured nodes that existed then.
+            #
+            # Internally, this is sort of an abuse of the lightweight
+            # versioned-configuration scheme.  In the LW scheme, group
+            # configurations are stored as hashes (potentially with
+            # append markers on parameters), and node configurations
+            # are stored as lists of group references.  But nodes that
+            # receive the default group configuration via this
+            # mechanism will have their first versioned configuration
+            # stored as a hash.  This isn't visible to the user
+            # (indeed, it is handled as part of the backwards-
+            # compatibility code for the LW scheme), but it can make
+            # for some confusing debugging.  Note that we forcibly
+            # strip append markers from values where they appear when
+            # copying the default group's configuration.
+            #
+            # It may be more sensible (and cleaner) to have this
+            # method create a standard node lightweight configuration
+            # that is marked with the timestamp of the last default
+            # group activation and contains a list of memberships
+            # (including the skeleton and default groups).  For now,
+            # this works.
+            #
             # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
               return 0 unless vnc
               toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
-              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
+              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>ConfigUtils.fix_config_values(vnc.config, true)) unless toc
               toc.version.version
             end
           end
