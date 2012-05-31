@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Thu May 31 2012 willb <willb@redhat> - 0.14.3-1
+- fixes bz 748507
+
 * Thu May 10 2012 willb <willb@redhat> - 0.14.2-2
 - fixes a trivial crashing bug that sneaked in to the prior package
 
