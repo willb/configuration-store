@@ -30,7 +30,7 @@ module Mrg
           out_file = Tempfile.new("cmd_node_spec")
           $stdout = out_file
           args = ["n1"]
-          args += ["-l", ver.to_s] if ver
+          args += ["--version", ver.to_s] if ver
           Mrg::Grid::Config::Shell::ShowNodeConfig.new(@store, "").main(args)
           $stdout = old
           out_file.flush
