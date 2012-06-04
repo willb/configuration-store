@@ -370,7 +370,7 @@ module Mrg
           n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {}) if Store::ENABLE_SKELETON_GROUP
 
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
-          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, name)
+          n.last_updated_version = seek_version || ConfigVersion.makeInitialConfig(name)
           n
         end
         
