@@ -386,12 +386,12 @@ module Mrg
           save_for_version = options[:save_for_version]
           cache = options[:cache] || DummyCache.new
           
-          cached_class = self.class
+          cached_class = self.respond_to?(:acting_as_class) ? self.acting_as_class : self.class
           cached_self = cache.find_instance(cached_class, self.name)
           
           my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
-          log.debug {"in #{(self.class.name.to_s =~ /(Node|Feature|Group|Parameter)$/ ; $~.to_s)}#validate for #{self.name}..."}
+          log.debug {"in #{(self.class.name.to_s =~ /(TransientNode|Node|Feature|Group|Parameter)$/ ; $~.to_s)}#validate for #{self.name}..."}
           
           dfn = cache.feature_dependencies_for(cached_class, cached_self).compact.map {|f| f.name}
           
