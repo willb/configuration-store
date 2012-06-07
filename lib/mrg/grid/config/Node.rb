@@ -79,12 +79,12 @@ module Mrg
         include ConfigValidating
         include NodeCommon
 
-        attr_reader :memberships
         attr_accessor :name
         
-        def initialize(name=nil)
+        def initialize(name=nil, log=nil)
           @memberships = []
           @name = name
+          @log = log
         end
         
         def db_memberships
@@ -94,13 +94,33 @@ module Mrg
         def memberships=(ms)
           @memberships = ms.dup
         end
+
+        def memberships
+          @memberships.map {|m| m.name}
+        end
         
         def acting_as_class
           Node
         end
         
+        def last_updated_version 
+          0
+        end
+        
         def idgroup
           nil
+        end
+        
+        def log
+          @log ||= begin
+            o = Object.new
+            class << o
+              def method_missing(*args)
+                
+              end
+            end
+            o
+          end
         end
       end
       

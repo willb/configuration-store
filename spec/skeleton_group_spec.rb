@@ -25,14 +25,28 @@ module Mrg
             n = @store.send(msg, "fake")
             n.memberships.should include(Group::SKELETON_GROUP_NAME)
           end
+
+          it "should give new #{kind} nodes the last-activated configuration for the skeleton group" do
+            @store.addParam("FOO")
+            g = @store.getGroupByName(Group::SKELETON_GROUP_NAME)
+            g.modifyParams("REPLACE", {"FOO"=>"BAR"})
+            @store.activateConfiguration
+            
+            n = @store.send(msg, "fake")
+            n.getConfig["FOO"].should == "BAR"
+          end
+
+          
         end
 
-        it "should not place newly-provisioned nodes in the skeleton group" do
+        it "should not place preexisting nodes in the skeleton group when provisioning them" do
           n = @store.getNode("fake")
           n.modifyMemberships("REPLACE", [], {})
           n = @store.addNode("fake")
           n.memberships.should_not include(Group::SKELETON_GROUP_NAME)
         end
+        
+        
 
         it "should publish the skeleton group over the API" do
           @store.getSkeletonGroup.name.should == Group::SKELETON_GROUP_NAME
