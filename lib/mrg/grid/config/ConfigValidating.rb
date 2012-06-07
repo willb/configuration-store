@@ -220,11 +220,16 @@ module Mrg
           instance
         end
         
-        def find_instance(klass, name)
+        def find_instance(klass, name, default=nil)
           name = name.name if name.respond_to?(:name)
           puts "trying to find #{klass.inspect}:#{name}" if $XXDEBUG
           cname = classname(klass)
-          self.send("#{cname.downcase}s")[name]
+          result = self.send("#{cname.downcase}s")[name]
+          unless result
+            self.send("#{cname.downcase}s")[name] = default
+            result = default
+          end
+          result
         end
 
         def sg_hash_maker(grp)
@@ -282,19 +287,18 @@ module Mrg
           @feature_inclusions = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(feature_inclusions).xc
           @feature_dependencies = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(feature_dependencies).xc
           @param_dependencies = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(param_dependencies).xc
-          
+
           if nodelist == [Group.DEFAULT_GROUP]
             nodelist = []
           else
-            nodelist.each do |node|
-              cloned_node = @nodes[node.name]
-              
+            nodelist.reject {|dg| dg == Group.DEFAULT_GROUP}.each do |node|
+              cloned_node = node.is_a?(TransientNode) ? node : @nodes[node.name]
               groups_of_interest |= cloned_node.db_memberships.map do |group|
                 entity_features_and_params.add_edge(cloned_node, group, "node-is-a-member-of-group")
                 group
               end
               
-              groups_of_interest << cloned_node.idgroup
+              groups_of_interest << cloned_node.idgroup if cloned_node.idgroup
               entity_features_and_params.add_edge(cloned_node, cloned_node.idgroup, "node-is-a-member-of-group")
               entity_features_and_params.add_edge(cloned_node, @groups[Group.DEFAULT_GROUP.name], "node-is-a-member-of-group")
             end
@@ -387,7 +391,7 @@ module Mrg
           cache = options[:cache] || DummyCache.new
           
           cached_class = self.respond_to?(:acting_as_class) ? self.acting_as_class : self.class
-          cached_self = cache.find_instance(cached_class, self.name)
+          cached_self = cache.find_instance(cached_class, self.name, self)
           
           my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
@@ -439,7 +443,8 @@ module Mrg
 
           if ConfigVersion::STORAGE_PLAN == :lw_serialized && klass.to_s =~ /Node$/
             # save versioned configs for each group, if these do not already exist
-            all_memberships = ["+++DEFAULT"] + instance.memberships.reverse + [instance.idgroup.name]
+            all_memberships = ["+++DEFAULT"] + instance.memberships.reverse 
+            all_memberships << instance.idgroup.name if instance.idgroup
 
             all_memberships.each do |g|
               cache.saved_groups[g][cv.version]
