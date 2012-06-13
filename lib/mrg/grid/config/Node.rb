@@ -79,12 +79,13 @@ module Mrg
         include ConfigValidating
         include NodeCommon
 
-        attr_accessor :name
+        attr_accessor :name, :last_updated_version
         
         def initialize(name=nil, log=nil)
           @memberships = []
           @name = name
           @log = log
+          @last_updated_version = 0
         end
         
         def db_memberships

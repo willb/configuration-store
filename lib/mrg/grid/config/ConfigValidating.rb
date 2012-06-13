@@ -44,9 +44,14 @@ module Mrg
           end
         end
         
-        def find_instance(klass, name)
+        def find_instance(klass, name, default=nil)
           cname = classname(klass)
-          self.send("#{cname.downcase}s")[name]
+          result = self.send("#{cname.downcase}s")[name]
+          unless result
+            self.send("#{cname.downcase}s")[name] = default
+            result = default
+          end
+          result
         end
         
         def features_for(klass, instance)
@@ -220,11 +225,17 @@ module Mrg
           instance
         end
         
-        def find_instance(klass, name)
+        def find_instance(klass, name, default=nil)
           name = name.name if name.respond_to?(:name)
           puts "trying to find #{klass.inspect}:#{name}" if $XXDEBUG
           cname = classname(klass)
-          self.send("#{cname.downcase}s")[name]
+          result = self.send("#{cname.downcase}s")[name]
+          unless result
+            self.send("#{cname.downcase}s")[name] = default
+            result = default
+          end
+          result
+          
         end
 
         def sg_hash_maker(grp)
@@ -387,7 +398,7 @@ module Mrg
           cache = options[:cache] || DummyCache.new
           
           cached_class = self.respond_to?(:acting_as_class) ? self.acting_as_class : self.class
-          cached_self = cache.find_instance(cached_class, self.name) || self
+          cached_self = cache.find_instance(cached_class, self.name, self)
           
           my_config = cached_self.getConfig  # FIXME: it would be nice to not calculate this redundantly
           
