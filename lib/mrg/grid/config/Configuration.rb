@@ -413,6 +413,30 @@ module Mrg
               toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>ConfigUtils.fix_config_values(vnc.config, true)) unless toc
               toc.version.version
             end
+            
+            def makeInitialConfig(to, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              skel_config = nil
+              default = Group::DEFAULT_GROUP_NAME
+              skel = Group::SKELETON_GROUP_NAME
+              default_config, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[VersionedNode.name_for_group(default)]}, :group_by=>[:node], :version=>ver)
+              skel_config, =  VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[VersionedNode.name_for_group(skel)]}, :group_by=>[:node], :version=>ver) if Store::ENABLE_SKELETON_GROUP
+              v_obj,version = [default_config, skel_config].map {|c| c ? [c.version, c.version.version] : [0,0]}.sort_by {|l| l[-1]}.pop
+
+              return 0 if version == 0
+
+              groups = Store::ENABLE_SKELETON_GROUP ? [skel, default] : [default]
+              toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
+              
+              unless toc
+                config = LightweightConfig.new
+                config.version = version
+                config.groups = groups
+                toc = VersionedNodeConfig.create(:version=>v_obj, :node=>VersionedNode[to], :config=>config)
+              end
+              
+              toc.version.version
+            end
           end
 
           module InstanceMethods
