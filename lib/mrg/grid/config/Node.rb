@@ -81,10 +81,11 @@ module Mrg
 
         attr_accessor :name, :last_updated_version
         
-        def initialize(name=nil)
+        def initialize(name=nil, log=nil)
           @memberships = []
           @name = name
           @last_updated_version = 0
+          @log = log
         end
         
         def db_memberships
