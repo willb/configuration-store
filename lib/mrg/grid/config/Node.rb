@@ -84,22 +84,22 @@ module Mrg
         def initialize(name=nil, log=nil)
           @memberships = []
           @name = name
-          @log = log
           @last_updated_version = 0
+          @log = log
         end
         
         def db_memberships
           @memberships + [Group.DEFAULT_GROUP]
         end
 
-        def memberships=(ms)
-          @memberships = ms.dup
-        end
-
         def memberships
           @memberships.map {|m| m.name}
         end
         
+        def memberships=(ms)
+          @memberships = ms.dup
+        end
+
         def acting_as_class
           Node
         end
@@ -111,7 +111,7 @@ module Mrg
         def idgroup
           nil
         end
-        
+
         def log
           @log ||= begin
             o = Object.new

@@ -34,13 +34,11 @@ module Mrg
               g.modifyParams("REPLACE", {"FOO"=>"BAR"})
               @store.activateConfiguration
               g.modifyParams("REPLACE", {"FOO"=>"BLAH"})
-            
+
               n = @store.send(msg, "fake")
               n.getConfig("version"=>::Rhubarb::Util::timestamp)["FOO"].should == "BAR"
             end
           end
-
-          
         end
 
         it "should not place preexisting nodes in the skeleton group when provisioning them" do
@@ -59,3 +57,4 @@ module Mrg
     end
   end
 end
+

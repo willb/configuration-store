@@ -310,7 +310,7 @@ module Mrg
         end
         
         def Feature.features_for_node(n)
-          flist = n.instance_of?(::Rhubarb::Persisting) ? _features_for_node(n) : n.db_memberships.map {|g| features_for_group(g)}.flatten
+          flist = n.is_a?(::Rhubarb::Persisting) ? _features_for_node(n) : n.db_memberships.map {|g| features_for_group(g)}.flatten
           expand_includes(flist)
         end
         

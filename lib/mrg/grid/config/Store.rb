@@ -688,6 +688,8 @@ module Mrg
               break acc
             end
             
+#XXX
+#            this_node_options = node.is_a?(TransientNode) ? options.reject {|k,v| k == :cache} : options
             node_result = node.validate(options)
             nodes_left -= 1
             

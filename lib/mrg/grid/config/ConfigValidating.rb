@@ -235,7 +235,6 @@ module Mrg
             result = default
           end
           result
-          
         end
 
         def sg_hash_maker(grp)
@@ -293,22 +292,17 @@ module Mrg
           @feature_inclusions = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(feature_inclusions).xc
           @feature_dependencies = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(feature_dependencies).xc
           @param_dependencies = ::Mrg::Grid::Util::Graph::DagTransitiveClosure.new(param_dependencies).xc
-          
-          if nodelist == [Group.DEFAULT_GROUP]
-            nodelist = []
-          else
-            nodelist.each do |node|
-              cloned_node = node.is_a?(TransientNode) ? node : @nodes[node.name]
-              
+
+          nodelist.reject {|dg| dg == Group.DEFAULT_GROUP}.each do |node|
+            cloned_node = node.is_a?(TransientNode) ? node : @nodes[node.name]
               groups_of_interest |= cloned_node.db_memberships.map do |group|
-                entity_features_and_params.add_edge(cloned_node, group, "node-is-a-member-of-group")
-                group
-              end
-              
-              groups_of_interest << cloned_node.idgroup if cloned_node.idgroup
-              entity_features_and_params.add_edge(cloned_node, cloned_node.idgroup, "node-is-a-member-of-group")
-              entity_features_and_params.add_edge(cloned_node, @groups[Group.DEFAULT_GROUP.name], "node-is-a-member-of-group")
+              entity_features_and_params.add_edge(cloned_node, group, "node-is-a-member-of-group")
+              group
             end
+              
+            groups_of_interest << cloned_node.idgroup if cloned_node.idgroup
+            entity_features_and_params.add_edge(cloned_node, cloned_node.idgroup, "node-is-a-member-of-group")
+            entity_features_and_params.add_edge(cloned_node, @groups[Group.DEFAULT_GROUP.name], "node-is-a-member-of-group")
           end
           
           groups_of_interest.each do |group|
