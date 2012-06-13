@@ -44,9 +44,14 @@ module Mrg
           end
         end
         
-        def find_instance(klass, name)
+        def find_instance(klass, name, default=nil)
           cname = classname(klass)
-          self.send("#{cname.downcase}s")[name]
+          result = self.send("#{cname.downcase}s")[name]
+          unless result
+            self.send("#{cname.downcase}s")[name] = default
+            result = default
+          end
+          result
         end
         
         def features_for(klass, instance)
