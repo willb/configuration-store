@@ -27,7 +27,24 @@ module Mrg
             "Activates pending changes to the pool configuration."
           end
           
+          def init_option_parser
+            # Edit this method to generate a method that parses your command-line options.
+            OptionParser.new do |opts|
+              opts.banner = "Usage:  wallaby #{self.class.opname}\n#{self.class.description}"
+              
+              opts.on("-h", "--help", "displays this message") do
+                puts @oparser
+                exit
+              end
+              
+              opts.on("-f", "--force", "forces activation of new config across the pool") do
+                @force = true
+              end
+            end
+          end
+          
           def act
+            force_update if @force
             explain = store.activateConfig
             if explain != {}
               puts "Failed to activate configuration; please correct the following errors."
@@ -41,6 +58,10 @@ module Mrg
             end
             0
           end
+        end
+
+        def force_update
+          store.getDefaultGroup.modifyParams("REPLACE", store.getDefaultGroup.params, {})
         end
       end
     end
