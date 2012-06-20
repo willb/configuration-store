@@ -425,8 +425,6 @@ module Mrg
         def document_all
           {:feature=>@features, :parameter=>@params, :subsystem=>@subsystems}.each do |kind, entities|
             entities.each do |name,entity|
-              puts kind
-              puts entity.inspect
               document(kind, entity)
             end
             
@@ -451,9 +449,8 @@ module Mrg
 ---
 title: Available #{kind}s
 layout: default
-permalink: /#{uri_for(kind, "")}
 ---
-#{collection.keys.sort.map {|k| "* [#{k}](#{uri_for(kind, k)})"}.join("\n")}
+#{collection.keys.sort.map {|k| "* [#{k}](/#{uri_for(kind, k)})"}.join("\n")}
 END
         end
         
@@ -462,7 +459,6 @@ END
 ---
 title: #{entity.name}
 layout: db_feature
-permalink: /#{uri}/
 name: #{entity.name}
 included: #{entity.included.map {|f| [f, "/" + uri_for(:feature, f)]}.to_yaml}
 depends: #{Hash[*entity.depends.map {|f| [f, "/" + uri_for(:feature, f)]}.flatten].to_yaml}
@@ -478,7 +474,6 @@ annotation: #{entity.annotation.to_yaml}
 ---
 title: #{entity.name}
 layout: db_parameter
-permalink: /#{uri}/
 name: #{entity.name}
 depends: #{Hash[*entity.depends.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
 conflicts: #{Hash[*entity.conflicts.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
@@ -497,7 +492,6 @@ annotation: #{entity.annotation.to_yaml}
 ---
 title: #{entity.name}
 layout: db_subsystem
-permalink: /#{uri}/
 name: #{entity.name}
 params: #{entity.params.to_yaml}
 
