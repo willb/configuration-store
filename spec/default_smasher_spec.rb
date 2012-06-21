@@ -28,7 +28,7 @@ module Mrg
         include BaseDBFixture
 
         it "should preserve the default group configuration when appending from the identity group" do
-          daemons = @node.getConfig["DAEMON_LIST"].split(",").map {|s| s.strip}
+          daemons = @node.getConfig("version"=>::Rhubarb::Util::timestamp)["DAEMON_LIST"].split(",").map {|s| s.strip}
           daemons.should include("MASTER")
           daemons.should include("STARTD")
           daemons.should include("SHARED_PORT")
@@ -37,6 +37,20 @@ module Mrg
           daemons.should include("NEGOTIATOR")
           daemons.should include("COLLECTOR")
         end
+
+        it "should preserve the default group configuration when appending from the identity group even after eliminating spurious duplicated configs" do
+          VersionedNodeConfig.delete_spurious
+
+          daemons = @node.getConfig("version"=>::Rhubarb::Util::timestamp)["DAEMON_LIST"].split(",").map {|s| s.strip}
+          daemons.should include("MASTER")
+          daemons.should include("STARTD")
+          daemons.should include("SHARED_PORT")
+          
+          daemons.should include("SCHEDD")
+          daemons.should include("NEGOTIATOR")
+          daemons.should include("COLLECTOR")
+        end
+
 
         it "should only include the append markers once in group configs" do
           # XXX: fix this
