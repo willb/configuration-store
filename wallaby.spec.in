@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Thu Jun 21 2012 willb <willb@redhat> - 0.15.1-2
+- fixes to skeleton group support for walk-in nodes
+
 * Wed Jun 20 2012 willb <willb@redhat> - 0.15.1-1
 - fixes bz 834141
 - packaging improvements
