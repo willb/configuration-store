@@ -688,8 +688,6 @@ module Mrg
               break acc
             end
             
-#XXX
-#            this_node_options = node.is_a?(TransientNode) ? options.reject {|k,v| k == :cache} : options
             node_result = node.validate(options)
             nodes_left -= 1
             
@@ -718,7 +716,7 @@ module Mrg
           # we're activating this configuration; save the default group configuration by itself 
           # if possible and if we aren't dealing with an explicit node list
           unless explicit_nodelist
-            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version)
+            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version) unless ConfigVersion.hasVersionedNodeConfig(Group.DEFAULT_GROUP_NAME, this_version)
           end
           DirtyElement.delete_all
           
