@@ -27,7 +27,7 @@ module Mrg
           end
 
           ["when another node exists at activation", "when no other nodes exist at activation"].each do |dowhen|
-            it "should give new #{kind} nodes the last-activated configuration for the skeleton group #{dowhen}" do
+            it "should give new #{kind} nodes the last-activated configuration for the skeleton group #{dowhen} and there is no default group" do
               @store.addParam("FOO")
               n_expected = @store.addNode("blah") if dowhen == "when another node exists at activation"
               g = @store.getGroupByName(Group::SKELETON_GROUP_NAME)
@@ -36,6 +36,21 @@ module Mrg
               g.modifyParams("REPLACE", {"FOO"=>"BLAH"})
 
               n = @store.send(msg, "fake")
+              n.getConfig("version"=>::Rhubarb::Util::timestamp)["FOO"].should == "BAR"
+            end
+
+            it "should give new #{kind} nodes the last-activated configuration for the skeleton group #{dowhen} and there is a default group" do
+              @store.addParam("FOO")
+              @store.getDefaultGroup.modifyParams("REPLACE", {"FOO"=>"ARGH"}, {})
+              @store.activateConfiguration
+              n_expected = @store.addNode("blah") if dowhen == "when another node exists at activation"
+              g = @store.getGroupByName(Group::SKELETON_GROUP_NAME)
+              g.modifyParams("REPLACE", {"FOO"=>"BAR"})
+              @store.activateConfiguration
+              g.modifyParams("REPLACE", {"FOO"=>"BLAH"})
+              
+              n = @store.send(msg, "fake")
+
               n.getConfig("version"=>::Rhubarb::Util::timestamp)["FOO"].should == "BAR"
             end
           end

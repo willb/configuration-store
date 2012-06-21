@@ -425,7 +425,7 @@ module Mrg
 
               return 0 if version == 0
 
-              groups = Store::ENABLE_SKELETON_GROUP ? [skel, default] : [default]
+              groups = Store::ENABLE_SKELETON_GROUP ? [default, skel] : [default]
               toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
               
               unless toc
@@ -448,7 +448,7 @@ module Mrg
           
            def internal_set_node_config(node, config)
              node_obj = VersionedNode[node]
-             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config) 
              # vnc.send(:update, :created, self.version)
            end
           end
