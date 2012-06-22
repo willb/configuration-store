@@ -294,6 +294,8 @@ fi
 
 * Thu Jun 21 2012 willb <willb@redhat> - 0.15.1-2
 - fixes to skeleton group support for walk-in nodes
+- more resilient Store#activateConfiguration in the face of event failure/workaround for QMF event problems on F17
+- wallaby-agent no longer deletes potentially-spurious configurations by default
 
 * Wed Jun 20 2012 willb <willb@redhat> - 0.15.1-1
 - fixes bz 834141
