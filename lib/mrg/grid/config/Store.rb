@@ -718,11 +718,15 @@ module Mrg
           unless explicit_nodelist
             validate_and_activate(false, [Group.DEFAULT_GROUP], this_version) unless ConfigVersion.hasVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, this_version)
           end
-          DirtyElement.delete_all
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
+          DirtyElement.delete_all
           
-          config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
+          begin
+            config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
+          rescue Exception=>ex
+            warnings << "Couldn't send configuration events:  #{ex.inspect}"
+          end
           
           dirty_nodes.each {|dn| dn.last_updated_version = this_version if dn.respond_to? :last_updated_version }
           
