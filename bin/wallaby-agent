@@ -165,7 +165,9 @@ begin
   $wallaby_log = Mrg::Grid::Config::Store.log
   
   begin
-    Mrg::Grid::Config::Store.find_by_id(0).storeinit("remove-spurious"=>"yes")
+    options = {}
+    options["remove-spurious"] = "yes" if (ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] && ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] =~ /^(true|yes)/i)
+    Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
     [:default, :snapshot].each do |which|
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
