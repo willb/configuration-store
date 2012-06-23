@@ -66,6 +66,13 @@ module Mrg
         it "should not exhibit Matt's failure case with walkin nodes not getting the skeleton group config" do
           default = @store.getDefaultGroup
           skel = @store.getSkeletonGroup
+
+          # nodes checked in before the activate should get the updated skeleton group  
+          # configuration after activate
+          old_wi = @store.getNode("old-walk-in")
+
+          # wallaby load /var/lib/condor-wallaby-base-db/condor-base-db.snapshot
+          # (handled by the "before" clause above)
           
           # wallaby add-features-to-group +++DEFAULT Master NodeAccess SharedPort
           default.modifyFeatures("ADD", %w{Master NodeAccess SharedPort}, {})
@@ -89,21 +96,35 @@ module Mrg
           cm.modifyMemberships("REPLACE", cm.memberships - %w{+++SKEL}, {})
           
           # wallaby add-features-to-node central-manager CentralManager Scheduler (maybe: JobServer)
-          cm.identity_group.modifyFeatures("ADD", %w{CentralManager Scheduler JobServer}, {})
+          cm.identity_group.modifyFeatures("ADD", %w{CentralManager Scheduler}, {})
           
           # wallaby add-params-to-node central-manager COLLECTOR_UPDATE_INTERVAL=15
           cm.identity_group.modifyParams("ADD", {"COLLECTOR_UPDATE_INTERVAL"=>15})
-          
+
           # wallaby activate
           @store.activateConfiguration.should == [{}, []]
           
-          # newly checked-in nodes should get skeleton group configuration
+          # newly checked-in nodes should get the most recently activated skeleton group configuration
           wi = @store.getNode("walk-in")
-          wi_config = wi.getConfig("version"=>::Rhubarb::Util::timestamp)
-          daemons = wi_config["DAEMON_LIST"].split(",").map {|s| s.strip}
-          daemons.should include("STARTD")
-          wi_config["START"].should == "TRUE"
-          wi_config["SUSPEND"].should == "FALSE"
+
+          # check nodes created before and after activation
+          [old_wi, wi].each do |wi_node|
+            
+            # check activated and current configs for each
+            [wi_node.getConfig("version"=>::Rhubarb::Util::timestamp), wi_node.getConfig].each do |wi_config|
+            
+              daemons = wi_config["DAEMON_LIST"].split(",").map {|s| s.strip}
+          
+              # checks for ExecuteNode
+              daemons.should include("STARTD")
+          
+              # checks for +++SKEL param settings
+              wi_config["START"].should == "TRUE"
+              wi_config["SUSPEND"].should == "FALSE"
+            end
+          
+            wi_node.memberships.should include("+++SKEL")
+          end
         end
 
         it "should publish the skeleton group over the API" do
