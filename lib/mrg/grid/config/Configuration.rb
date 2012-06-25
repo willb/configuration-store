@@ -98,7 +98,8 @@ module Mrg
         end
 
         # applies the value supplied to the config, appending if necessary
-        def self.apply!(config, param, value, use_ssp=false)
+        def self.apply!(config, param, supplied_value, use_ssp=false)
+          value = supplied_value.to_s
           if (value && match = append_match(value))
             supplied_value = value
             value = value_string(match)
