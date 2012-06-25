@@ -133,7 +133,10 @@ module Mrg
               end
 
               def getConfig
-                @__my_config ||= original_object.getConfig
+                @__my_config ||= begin
+                  cnf = original_object.getConfig
+                  cnf.inject({}) {|acc,(k,v)| acc[k]=v.to_s ; acc}
+                end
               end
               
               def config=(cfg)
