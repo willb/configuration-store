@@ -527,38 +527,6 @@ module Mrg
         end
       end
       
-      class VersionedParam
-        include ::Rhubarb::Persisting
-        
-        declare_column :name, :text
-        
-        def self.[](nm)
-          find_first_by_name(nm) || create(:name=>nm)
-        end
-      end
-      
-      # (mostly-)normalized model of versioned config
-      class VersionedNodeParamMapping
-        include ::Rhubarb::Persisting
-        
-        declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
-        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
-        declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
-        declare_column :val, :text
-
-        declare_index_on :node
-        declare_index_on :version
-        
-        alias :rhubarb_initialize :initialize
-        
-        def initialize(tup)
-          rhubarb_initialize(tup)
-          update(:created, self.version.version)
-          self
-        end
-
-      end
-      
       # "serialized object" model of versioned config
       class VersionedNodeConfig
         include ::Rhubarb::Persisting

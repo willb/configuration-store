@@ -18,7 +18,7 @@ module Mrg
   module Grid
     module Config
       MAIN_DB_TABLES=[Mrg::Grid::Config::Feature, Mrg::Grid::Config::Group, Mrg::Grid::Config::Parameter, Mrg::Grid::Config::Subsystem, Mrg::Grid::Config::Node, Mrg::Grid::Config::ArcLabel, Mrg::Grid::Config::ParameterArc, Mrg::Grid::Config::FeatureArc, Mrg::Grid::Config::FeatureParams, Mrg::Grid::Config::NodeMembership, Mrg::Grid::Config::GroupParams, Mrg::Grid::Config::GroupFeatures, Mrg::Grid::Config::SubsystemParams, Mrg::Grid::Config::DirtyElement]
-      SNAP_DB_TABLES=[Mrg::Grid::Config::Snapshot, Mrg::Grid::Config::ConfigVersion, Mrg::Grid::Config::VersionedNode, Mrg::Grid::Config::VersionedParam, Mrg::Grid::Config::VersionedNodeConfig, Mrg::Grid::Config::VersionedNodeParamMapping]
+      SNAP_DB_TABLES=[Mrg::Grid::Config::Snapshot, Mrg::Grid::Config::ConfigVersion, Mrg::Grid::Config::VersionedNode, Mrg::Grid::Config::VersionedNodeConfig]
       DBVERSION = 6
       DBMIGRATIONS = []
 
