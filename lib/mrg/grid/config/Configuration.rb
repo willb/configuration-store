@@ -297,57 +297,10 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS'] ? :serialized : :lw_serialized
+        STORAGE_PLAN = :lw_serialized
 
         def self.whatchanged(node, old_version, new_version)
           ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
-        end
-
-        module SerializedVersionedConfigLookup
-          module ClassMethods
-            def getVersionedNodeConfig(node, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
-            end
-
-            def hasVersionedNodeConfig(node, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc && vnc.version.version
-            end
-            
-            # NB: this will refuse to copy over an existing versioned config
-            def dupVersionedNodeConfig(from, to, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
-              return 0 unless vnc
-              toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
-              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
-              toc.version.version
-            end
-          end
-
-          module InstanceMethods
-           def internal_get_node_config(node)
-             node_obj = VersionedNode[node]
-             cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
-             result = (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
-             fixed_result = ConfigUtils.fix_config_values(result)
-             fixed_result
-           end
-          
-           def internal_set_node_config(node, config)
-             node_obj = VersionedNode[node]
-             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
-             # vnc.send(:update, :created, self.version)
-           end
-          end
-
-          def self.included(receiver)
-            receiver.extend         ClassMethods
-            receiver.send :include, InstanceMethods
-          end
         end
 
         module LWSerializedVersionedConfigLookup
@@ -493,10 +446,7 @@ module Mrg
         
         private
         
-        case STORAGE_PLAN
-        when :serialized then include SerializedVersionedConfigLookup
-        when :lw_serialized then include LWSerializedVersionedConfigLookup
-        end
+        include LWSerializedVersionedConfigLookup
       end
       
       class VersionedNode
@@ -525,38 +475,6 @@ module Mrg
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
-      end
-      
-      class VersionedParam
-        include ::Rhubarb::Persisting
-        
-        declare_column :name, :text
-        
-        def self.[](nm)
-          find_first_by_name(nm) || create(:name=>nm)
-        end
-      end
-      
-      # (mostly-)normalized model of versioned config
-      class VersionedNodeParamMapping
-        include ::Rhubarb::Persisting
-        
-        declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
-        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
-        declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
-        declare_column :val, :text
-
-        declare_index_on :node
-        declare_index_on :version
-        
-        alias :rhubarb_initialize :initialize
-        
-        def initialize(tup)
-          rhubarb_initialize(tup)
-          update(:created, self.version.version)
-          self
-        end
-
       end
       
       # "serialized object" model of versioned config

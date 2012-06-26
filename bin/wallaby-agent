@@ -164,6 +164,10 @@ begin
   app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::NodeUpdatedNotice,Mrg::Grid::Config::ConfigVersion
   $wallaby_log = Mrg::Grid::Config::Store.log
   
+  if ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS']
+    Syslog.open {|s| s.warning "You have set WALLABY_OLDSTYLE_VERSIONED_CONFIGS in your environment, but this option is no longer supported.  Old versioned configurations will continue to work, but new versioned configurations will be stored in the 'lightweight' style."}
+  end  
+
   begin
     options = {}
     options["remove-spurious"] = "yes" if (ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] && ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] =~ /^(true|yes)/i)
