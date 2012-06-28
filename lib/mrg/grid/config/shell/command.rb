@@ -27,6 +27,52 @@ module Mrg
             "Does nothing, successfully."
           end
           
+          def self.is_documented?(name=nil)
+            if self.respond_to?(:documented_if)
+              self.documented_if(:name=>name)
+            else
+              true
+            end
+          end
+
+          def self.documented_only_if_default_name
+            class << self
+              def documented_if(options)
+                name = (options[:name] || nil)
+                opname == name
+              end
+            end
+          end
+
+          # 1. If val is unspecified or nil, this command is documented
+          # if var is set (at all) in the environment.
+          # 2. If val is a string, this command is documented if var is
+          # set in the environment and its value is identical ignoring 
+          # case to val.
+          # 3. If val is an array, this command is documented if var is
+          # set in the environment and its value is identical ignoring case 
+          # to an element of val.
+          # 4. If val is a proc, this command is documented if calling val
+          # with ENV[var] as its argument returns something other than 
+          # false or nil.
+          def self.documented_if_environment_has(var, val=nil)
+            var = var.to_s
+            ec = (class << self; self; end)
+            ec.send(:define_method, :documented_if) do |options|
+              if val == nil
+                !!(ENV[var])
+              elsif val.is_a?(String)
+                ENV[var] && ENV[var].downcase == val.downcase
+              elsif val.is_a?(Array)
+                ENV[var] && val.map {|v| v.downcase}.include?(ENV[var].downcase)
+              elsif val.respond_to(:call)
+                val.call(ENV[var])
+              else
+                false
+              end
+            end
+          end
+
           attr_reader :oparser
           
           def init_option_parser
@@ -56,6 +102,7 @@ module Mrg
           end
           
           def main(args)
+            args = fold_callbacks(:preprocess_options, *args)
             run_callbacks(:before_option_parsing, *args)
             
             begin
@@ -119,6 +166,13 @@ module Mrg
               self.send(callback, *args)
             end
           end
+
+          def fold_callbacks(c_when, *args)
+            self.class.callbacks[c_when].inject(args) do |acc, callback|
+              self.send(callback, *acc)
+            end
+          end
+
           
           def store
             if @store.is_a? Proc

@@ -40,13 +40,103 @@ module Mrg
       module ReconfigEventMapBuilder
       end
       
+      # functionality common to Node and TransientNode
+      module NodeCommon
+        # getConfig 
+        # * options (map/I)
+        # * config (map/O)
+        #   A map(parameter, value) representing the configuration for the node supplied
+        def getConfig(options=nil)
+          options ||= {}
+          return getCurrentConfig unless options["version"]
+          ConfigVersion.getVersionedNodeConfig(self.name, options["version"]) || {}
+        end
+        
+        def getCurrentConfig
+          log.debug "getCurrentConfig called on node #{self.inspect}"
+          config = Group.DEFAULT_GROUP.getRawConfig
+          
+          log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
+
+          db_memberships.reverse_each do |grp|
+            log.debug("#{self.name} is a member of #{grp.name}")
+            log.debug("#{grp.name} has #{grp.features.size} features")
+            
+            config = grp.apply_to(config)
+          end
+
+          config = self.idgroup.apply_to(config) if self.idgroup
+
+          # NB: this is ignored with lightweight configuration versioning
+          config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
+          
+          config
+        end
+      end
+      
+      # an unsaved node, used only to force saving the skeleton group configuration
+      class TransientNode
+        include ConfigValidating
+        include NodeCommon
+
+        attr_accessor :name, :last_updated_version
+        
+        def initialize(name=nil, log=nil)
+          @memberships = []
+          @name = name
+          @last_updated_version = 0
+          @log = log
+        end
+        
+        def db_memberships
+          @memberships + [Group.DEFAULT_GROUP]
+        end
+
+        def memberships=(ms)
+          @memberships = ms.dup
+        end
+
+        def memberships
+          @memberships.map {|m| m.name}
+        end
+        
+        def acting_as_class
+          Node
+        end
+        
+        def last_updated_version 
+          0
+        end
+        
+        def idgroup
+          nil
+        end
+        
+        def log
+          @log ||= begin
+            o = Object.new
+            class << o
+              def method_missing(*args)
+                
+              end
+            end
+            o
+          end
+        end
+
+        def memberships
+          @memberships.map {|m| m.name}
+        end
+      end
+      
       class Node
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
         include DataValidating
         include ConfigValidating
         include MethodUtils
-
+        include NodeCommon
+        
         qmf_package_name 'com.redhat.grid.config'
         qmf_class_name 'Node'
         ### Property method declarations
@@ -108,42 +198,11 @@ module Mrg
         expose :checkin do |args|
         end
         
-        # getConfig 
-        # * options (map/I)
-        # * config (map/O)
-        #   A map(parameter, value) representing the configuration for the node supplied
-        def getConfig(options=nil)
-          options ||= {}
-          return getCurrentConfig unless options["version"]
-          ConfigVersion.getVersionedNodeConfig(self.name, options["version"]) || {}
-        end
-        
         expose :getConfig do |args|
           args.declare :options, :map, :in, "Valid options include 'version', which maps to a version number.  If this is supplied, return the latest version not newer than 'version'."
           args.declare :config, :map, :out, "A map from parameter names to values representing the configuration for this node."
         end
-        
-        def getCurrentConfig
-          log.debug "getCurrentConfig called on node #{self.inspect}"
-          config = Group.DEFAULT_GROUP.getRawConfig
-          
-          log.debug "Starting with DEFAULT_GROUP config, which is #{config.inspect}"
-
-          db_memberships.reverse_each do |grp|
-            log.debug("#{self.name} is a member of #{grp.name}")
-            log.debug("#{grp.name} has #{grp.features.size} features")
-            
-            config = grp.apply_to(config)
-          end
-
-          config = self.idgroup.apply_to(config) if self.idgroup
-
-          # XXX: this will change once we have configuration versioning
-          config["WALLABY_CONFIG_VERSION"] = self.last_updated_version.to_s
-          
-          config
-        end
-        
+                
         def explain
           explanation = {}
           history = ExplanationHistory.new

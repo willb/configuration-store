@@ -162,6 +162,7 @@ module Mrg
           group = Group.find_first_by_name(name)
           fail(Errors.make(Errors::NONEXISTENT_ENTITY, Errors::GROUP), "Group named #{name} not found") unless group
           fail(Errors.make(Errors::BAD_COMMAND, Errors::GROUP), "Can't remove special group #{group.name}") if group.is_special
+          group.db_membership.each {|n| DirtyElement.dirty_node(n) }
           group.delete
         end
         
@@ -321,7 +322,7 @@ module Mrg
           n.modifyMemberships("ADD", [Group::SKELETON_GROUP_NAME], {}) if Store::ENABLE_SKELETON_GROUP
 
           # XXX:  this is almost certainly not the right place to do this (copying default config over for newly-created nodes)
-          n.last_updated_version = seek_version || ConfigVersion.dupVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, name)
+          n.last_updated_version = seek_version || ConfigVersion.makeInitialConfig(name)
           n
         end
         
@@ -597,11 +598,17 @@ module Mrg
           if default_group_only
             log.warn "Attempting to activate a configuration with no nodes; will simply check the configuration of the default group"
             dirty_nodes << Group.DEFAULT_GROUP
-            warnings << "No nodes in configuration; only tested default group"
+            warnings << "No nodes in configuration; only tested #{ENABLE_SKELETON_GROUP ? "default and skeleton groups" : "default group"}"
             nothing_changed = false
           elsif nothing_changed
             log.warn "User requested configuration #{validate_only ? "validation" : "activation"}, but no nodes have changed configurations since last activate."
             warnings << "No node configurations have changed since the last activated config; #{validate_only ? "validate" : "activate"} request will have no effect."
+          end
+
+          if ENABLE_SKELETON_GROUP && DirtyElement.find_first_by_grp(Group.SKELETON_GROUP)
+            skeleton_node = TransientNode.new("+++SKELETON_NODE")
+            skeleton_node.memberships = [Group.SKELETON_GROUP]
+            dirty_nodes << skeleton_node
           end
           
           options = {}
@@ -650,13 +657,17 @@ module Mrg
           # we're activating this configuration; save the default group configuration by itself 
           # if possible and if we aren't dealing with an explicit node list
           unless explicit_nodelist
-            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version)
+            validate_and_activate(false, [Group.DEFAULT_GROUP], this_version) unless ConfigVersion.hasVersionedNodeConfig(Group::DEFAULT_GROUP_NAME, this_version)
           end
-          DirtyElement.delete_all
           
           log.debug "in validate_and_activate; just deleted dirty elements; count is #{DirtyElement.count}"
+          DirtyElement.delete_all
           
-          config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
+          begin
+            config_events_to(dirty_nodes, this_version, all_nodes) unless explicit_nodelist
+          rescue Exception=>ex
+            warnings << "Couldn't send configuration events:  #{ex.inspect}"
+          end
           
           dirty_nodes.each {|dn| dn.last_updated_version = this_version if dn.respond_to? :last_updated_version }
           

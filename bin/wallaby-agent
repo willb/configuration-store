@@ -21,30 +21,14 @@ require 'spqr/app'
 
 require 'mrg/grid/config'
 require 'mrg/grid/util/daemon'
+require 'mrg/grid/util/file'
 
 require 'logger'
 require 'syslog'
 require 'optparse'
 
-require 'pathname'
-
-# resolves symbolic links and "."/".." in a path that *mostly* exists,
-# where a "mostly-existing" path is defined as one in which at most
-# the rightmost component does not exist.
-def path_resolve(p)
-  path = Pathname.new(p)
-
-  # we can realpath existing files
-  if path.exist?
-    return path.realpath.to_s
-  end
-
-  # we're creating a new file here.  the dir must exist, but the file will not
-  dirname = path.dirname.realpath rescue (raise "Directory #{path.dirname.to_s} does not exist")
-  (dirname + path.basename).to_s
-end
-
 include ::Mrg::Grid::Util::Daemon
+include ::Mrg::Grid::Util::File
 
 USE_PREPARED_STATEMENTS = ENV['WALLABY_USE_PREPARED_STATEMENTS'] && (ENV['WALLABY_USE_PREPARED_STATEMENTS'] == "1")
 
@@ -163,6 +147,7 @@ begin
   if DO_SNAPCREATE
     puts "creating snapshot tables"
     Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
+    Rhubarb::Persistence::dbs[:snapshot].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
   end
   
   options = {}
@@ -177,21 +162,48 @@ begin
 
   app = SPQR::App.new(options)
   app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::NodeUpdatedNotice,Mrg::Grid::Config::ConfigVersion
+  $wallaby_log = Mrg::Grid::Config::Store.log
   
+  if ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS']
+    Syslog.open {|s| s.warning "You have set WALLABY_OLDSTYLE_VERSIONED_CONFIGS in your environment, but this option is no longer supported.  Old versioned configurations will continue to work, but new versioned configurations will be stored in the 'lightweight' style."}
+  end  
+
   begin
-    Mrg::Grid::Config::Store.find_by_id(0).storeinit("remove-spurious"=>"yes")
+    options = {}
+    options["remove-spurious"] = "yes" if (ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] && ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] =~ /^(true|yes)/i)
+    Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
     [:default, :snapshot].each do |which|
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
   rescue Exception => ex
-    s.warn "exception encountered during routine cleanup:  #{ex.inspect}"
+    Syslog.open {|s| s.warning "exception encountered during routine cleanup:  #{ex.inspect}"}
     puts "exception encountered during routine cleanup:  #{ex.inspect}" unless do_daemonify
+  end
+  
+  {:snapshot=>[::Mrg::Grid::Config::SNAP_DB_TABLES, snapdb, ::Mrg::Grid::Config::SNAPMIGRATIONS], 
+   :default=>[::Mrg::Grid::Config::MAIN_DB_TABLES, dbname, ::Mrg::Grid::Config::DBMIGRATIONS]}.each do |ds, meta|
+    begin
+      table_list, db_file, migrations = meta
+      
+      $wallaby_log.info "checking for necessary #{ds} database migrations...."
+      puts "checking for necessary #{ds} database migrations...." unless do_daemonify
+      
+      ::Mrg::Grid::Config::DBSchema.migrate(Rhubarb::Persistence::dbs[ds], table_list, migrations, $wallaby_log) do |version|
+        Rhubarb::Persistence::dbs[ds].transaction(:immediate) do |db|
+          # starting a transaction with ":immediate" means we get a shared lock
+          # and thus any db writes (unlikely!) complete before we copy the file
+          backup_file = unique_name(db_file, "v#{version}_")
+          $wallaby_log.info "backing up db file to  #{backup_file} before applying migration...."
+          FileUtils.cp(db_file, backup_file, :preserve=>true)
+        end
+      end   
+    end
   end
   
   app.main
 rescue Exception => ex
   Syslog.open do |s|
     s.crit "agent exiting with exception #{ex.inspect}"
-    puts "agent exiting with exception #{ex.inspect}" unless do_daemonify
+    puts "agent exiting with exception #{ex.inspect}\n#{ex.backtrace.join("\n")}" unless do_daemonify
   end
 end

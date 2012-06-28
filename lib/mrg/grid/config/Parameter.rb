@@ -92,12 +92,16 @@ module Mrg
         # default 
         # * default (lstr/O)
         def default
-          log.debug "getDefault called on param #{self.inspect}"
+          log.debug "default called on param #{self.inspect}"
           log.warn "param #{self.name} is a must_change parameter; its default value is meaningless by definition" if self.must_change
+
           # Assign values to output parameters
           self.default_val ||= ""
+
+          log.warn "param #{self.name} does not have a String value; it has a #{self.default_val.class} value" unless self.default_val.is_a?(String)
+
           # Return value
-          return self.default_val
+          return (self.default_val.to_s)
         end
         
         # setDefault 

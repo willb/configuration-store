@@ -65,6 +65,29 @@ module Mrg
             :makeSnapshot
           end
         end
+
+        class RemoveSnapshot < Command
+          include SnapshotBase
+
+          def self.opname
+            "remove-snapshot"
+          end
+          
+          def self.opargs
+            " SNAPNAME"
+          end
+          
+          def self.description
+            "Removes a snapshot with a given name."
+          end
+
+          register_callback :after_option_parsing, :check_name
+
+          private
+          def storeop
+            :removeSnapshot
+          end
+        end
         
         class LoadSnapshot < Command
           include SnapshotBase

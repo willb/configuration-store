@@ -58,7 +58,10 @@ module Mrg
 
           def describe_commands
             ::Mrg::Grid::Config::Shell::COMMANDS.keys.sort.each do |cmd|
-              puts "#{cmd}:  #{::Mrg::Grid::Config::Shell::COMMANDS[cmd].description rescue ""}"
+              command = ::Mrg::Grid::Config::Shell::COMMANDS[cmd]
+              if command.is_documented?(cmd)
+                puts "#{cmd}:  #{::Mrg::Grid::Config::Shell::COMMANDS[cmd].description rescue ""}"
+              end
             end
           end
 

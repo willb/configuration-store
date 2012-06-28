@@ -41,6 +41,17 @@ module Mrg
             config
           end
           
+          if ConfigUtils.should_fix_broken_configs?
+            result.each do |param,val| 
+              old_result = result[param]
+              new_result = ValueUtil.strip_prefix(val)
+              if old_result != new_result
+                $wallaby_log.warn("found a spurious configuration value:  #{param} had value #{old_result}") if $wallaby_log
+                result[param] = new_result
+              end
+            end
+          end
+
           result["WALLABY_CONFIG_VERSION"] = version.to_s
           result
         end
@@ -52,21 +63,26 @@ module Mrg
         # config value (if one exists).  This hash contains the kinds
         # of appending we can support, mapping from the character or
         # characters before value to the string used to delimit joined values.
-        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || '}
-        
+        APPENDS = {'>='=>', ', '&&='=>' && ', '||='=>' || ', '?='=>Proc.new {|lt, rt| (!lt || lt=='') ? rt : lt}}
+        APPEND_PROCS = {}
         APPEND_MATCHER = /^(?:(#{APPENDS.keys.map{|s| Regexp.escape(s)}.join('|')})\s*)+(.*?)\s*$/
 
         def self.append_match(value)
           return value.match(APPEND_MATCHER)
         end
 
-        def self.join_string(match)
-          APPENDS[match[1]]
+        def self.join_proc(match)
+          joiner = APPENDS[match[1]]
+          if joiner.is_a?(String)
+            APPEND_PROCS[joiner] ||= Proc.new {|lt,rt| "#{lt}#{joiner}#{rt}"}
+          else
+            joiner
+          end
         end
 
         def self.strip_prefix(value)
-          match = value && value.match(APPEND_MATCHER)
-          match ? value_string(match) : value
+          match = (value && value.match(APPEND_MATCHER))
+          value = (match ? value_string(match) : value)
         end
 
         def self.prefix_string(match)
@@ -77,13 +93,21 @@ module Mrg
           match[2]
         end
 
+        def self.has_append_match(value)
+          return !!append_match(value)
+        end
+
         # applies the value supplied to the config, appending if necessary
-        def self.apply!(config, param, value, use_ssp=false)
+        def self.apply!(config, param, supplied_value, use_ssp=false)
+          value = supplied_value.to_s
           if (value && match = append_match(value))
+            supplied_value = value
             value = value_string(match)
-            js = join_string(match)
+            $wallaby_log.warn("ValueUtil.apply! didn't strip all append markers from '#{supplied_value}'; got '#{value}'") if ($wallaby_log && has_append_match(value)) if $wallaby_log
+
+            jp = join_proc(match)
             ssp = use_ssp ? prefix_string(match) : ""
-            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{config[param]}#{js}#{value}" : "#{ssp}#{value}"
+            config[param] = (config.has_key?(param) && config[param]) ? "#{ssp}#{jp.call(config[param], value)}" : "#{ssp}#{value}"
           else
             config[param] = value unless (config.has_key?(param) && (!value || value == ""))
           end
@@ -136,6 +160,28 @@ module Mrg
       end
       
       module ConfigUtils
+        def self.should_fix_broken_configs=(should_fix)
+          @fix_broken_configs = should_fix
+        end
+
+        def self.should_fix_broken_configs?
+          @fix_broken_configs ||= !!(ENV['WALLABY_FIX_BROKEN_CONFIGS'] && ENV['WALLABY_FIX_BROKEN_CONFIGS'] =~ /^true$/i)
+        end
+
+        # Strips prepended append markers from configuration values if
+        # WALLABY_FIX_BROKEN_CONFIGS is set to "true" in the environment,
+        # if ConfigUtils.should_fix_broken_configs has been set to true
+        # elsewhere, or if the second parameter is non-false
+        def self.fix_config_values(result, always=false)
+          if should_fix_broken_configs? || always
+            result.inject({}) do |acc,(k,v)| 
+              acc[k] = ValueUtil.strip_prefix(v)
+              acc
+            end
+          else
+            result
+          end
+        end
         
         # Returns the symmetric difference of two hash tables, represented as an array of pairs
         def self.diff(c1,c2)
@@ -251,55 +297,10 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
-        STORAGE_PLAN = ENV['WALLABY_OLDSTYLE_VERSIONED_CONFIGS'] ? :serialized : :lw_serialized
+        STORAGE_PLAN = :lw_serialized
 
         def self.whatchanged(node, old_version, new_version)
           ConfigUtils.what_params_changed(getVersionedNodeConfig(node, old_version), getVersionedNodeConfig(node, new_version))
-        end
-
-        module SerializedVersionedConfigLookup
-          module ClassMethods
-            def getVersionedNodeConfig(node, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config
-            end
-
-            def hasVersionedNodeConfig(node, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc && vnc.version.version
-            end
-            
-            # NB: this will refuse to copy over an existing versioned config
-            def dupVersionedNodeConfig(from, to, ver=nil)
-              ver ||= ::Rhubarb::Util::timestamp
-              vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
-              return 0 unless vnc
-              toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
-              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
-              toc.version.version
-            end
-          end
-
-          module InstanceMethods
-           def internal_get_node_config(node)
-             node_obj = VersionedNode[node]
-             cnfo = VersionedNodeConfig.find_by(:version=>self, :node=>node_obj)
-             (cnfo && cnfo.size == 1 && cnfo[0].config) || {}
-           end
-          
-           def internal_set_node_config(node, config)
-             node_obj = VersionedNode[node]
-             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
-             # vnc.send(:update, :created, self.version)
-           end
-          end
-
-          def self.included(receiver)
-            receiver.extend         ClassMethods
-            receiver.send :include, InstanceMethods
-          end
         end
 
         module LWSerializedVersionedConfigLookup
@@ -307,7 +308,18 @@ module Mrg
             def getVersionedNodeConfig(node, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[node]}, :group_by=>[:node], :version=>ver)
-              vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>0} : vnc[0].config.to_hash
+              config = vnc.size == 0 ? {"WALLABY_CONFIG_VERSION"=>"0"} : vnc[0].config
+
+              # This deeply inelegant code (ideally, it would just be 
+              # "config.to_hash" in both cases, which would be a no-op 
+              # if config were already a Hash) is a workaround for 
+              # bz748507, which seems to crop up exclusively in old-style 
+              # serialized configs
+              if config.is_a?(Hash)
+                ConfigUtils.fix_config_values(config)
+              else
+                config.to_hash
+              end
             end
 
             def hasVersionedNodeConfig(node, ver=nil)
@@ -317,13 +329,66 @@ module Mrg
             end
 
             
+            # This method is exclusively used for copying over the
+            # default group's most recent configuration to a 
+            # newly-created node.  This results in the appearance that
+            # a newly-created node was created just before the last
+            # successful activation that affected the default group,
+            # and ensures that it will have the same configuration as
+            # all other unconfigured nodes that existed then.
+            #
+            # Internally, this is sort of an abuse of the lightweight
+            # versioned-configuration scheme.  In the LW scheme, group
+            # configurations are stored as hashes (potentially with
+            # append markers on parameters), and node configurations
+            # are stored as lists of group references.  But nodes that
+            # receive the default group configuration via this
+            # mechanism will have their first versioned configuration
+            # stored as a hash.  This isn't visible to the user
+            # (indeed, it is handled as part of the backwards-
+            # compatibility code for the LW scheme), but it can make
+            # for some confusing debugging.  Note that we forcibly
+            # strip append markers from values where they appear when
+            # copying the default group's configuration.
+            #
+            # It may be more sensible (and cleaner) to have this
+            # method create a standard node lightweight configuration
+            # that is marked with the timestamp of the last default
+            # group activation and contains a list of memberships
+            # (including the skeleton and default groups).  For now,
+            # this works.
+            #
             # NB: this will refuse to copy over an existing versioned config
             def dupVersionedNodeConfig(from, to, ver=nil)
               ver ||= ::Rhubarb::Util::timestamp
               vnc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[from]}, :group_by=>[:node], :version=>ver)
               return 0 unless vnc
               toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
-              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>vnc.config.dup) unless toc
+              toc = VersionedNodeConfig.create(:version=>vnc.version, :node=>VersionedNode[to], :config=>ConfigUtils.fix_config_values(vnc.config, true)) unless toc
+              toc.version.version
+            end
+            
+            def makeInitialConfig(to, ver=nil)
+              ver ||= ::Rhubarb::Util::timestamp
+              skel_config = nil
+              default = Group::DEFAULT_GROUP_NAME
+              skel = Group::SKELETON_GROUP_NAME
+              default_config, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[VersionedNode.name_for_group(default)]}, :group_by=>[:node], :version=>ver)
+              skel_config, =  VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[VersionedNode.name_for_group(skel)]}, :group_by=>[:node], :version=>ver) if Store::ENABLE_SKELETON_GROUP
+              v_obj,version = [default_config, skel_config].map {|c| c ? [c.version, c.version.version] : [0,0]}.sort_by {|l| l[-1]}.pop
+
+              return 0 if version == 0
+
+              groups = Store::ENABLE_SKELETON_GROUP ? [default, skel] : [default]
+              toc, = VersionedNodeConfig.find_freshest(:select_by=>{:node=>VersionedNode[to]}, :group_by=>[:node], :version=>ver)
+              
+              unless toc
+                config = LightweightConfig.new
+                config.version = version
+                config.groups = groups
+                toc = VersionedNodeConfig.create(:version=>v_obj, :node=>VersionedNode[to], :config=>config)
+              end
+              
               toc.version.version
             end
           end
@@ -337,7 +402,7 @@ module Mrg
           
            def internal_set_node_config(node, config)
              node_obj = VersionedNode[node]
-             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config)
+             vnc = VersionedNodeConfig.create(:version=>self, :node=>node_obj, :config=>config) 
              # vnc.send(:update, :created, self.version)
            end
           end
@@ -381,10 +446,7 @@ module Mrg
         
         private
         
-        case STORAGE_PLAN
-        when :serialized then include SerializedVersionedConfigLookup
-        when :lw_serialized then include LWSerializedVersionedConfigLookup
-        end
+        include LWSerializedVersionedConfigLookup
       end
       
       class VersionedNode
@@ -413,38 +475,6 @@ module Mrg
         def self.[](nm)
           find_first_by_name(nm) || create(:name=>nm)
         end
-      end
-      
-      class VersionedParam
-        include ::Rhubarb::Persisting
-        
-        declare_column :name, :text
-        
-        def self.[](nm)
-          find_first_by_name(nm) || create(:name=>nm)
-        end
-      end
-      
-      # (mostly-)normalized model of versioned config
-      class VersionedNodeParamMapping
-        include ::Rhubarb::Persisting
-        
-        declare_column :version, :integer, references(ConfigVersion, :on_delete=>:cascade)
-        declare_column :node, :integer, references(VersionedNode, :on_delete=>:cascade)
-        declare_column :param, :integer, references(VersionedParam, :on_delete=>:cascade)
-        declare_column :val, :text
-
-        declare_index_on :node
-        declare_index_on :version
-        
-        alias :rhubarb_initialize :initialize
-        
-        def initialize(tup)
-          rhubarb_initialize(tup)
-          update(:created, self.version.version)
-          self
-        end
-
       end
       
       # "serialized object" model of versioned config

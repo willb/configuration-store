@@ -120,7 +120,8 @@ module Mrg
                   updates[name].merge!({"#{set}"=>obj.send(get)})
                 end
                 if old.has_key?(name)
-                  expected[name].merge!({"#{qmfget}"=>old[name].send(get)})
+                  value = old[name].send(get)
+                  expected[name].merge!({"#{qmfget}"=>value}) if value != nil
                 end
               end
             end
@@ -128,7 +129,8 @@ module Mrg
           old.each do |name, obj|
             if not new.has_key?(name)
               methods.each do |get, qmfget, set|
-                expected[name].merge!({"#{qmfget}"=>old[name].send(get)})
+                value = old[name].send(get)
+                expected[name].merge!({"#{qmfget}"=>value}) if value != nil
               end
             end
           end
@@ -165,17 +167,17 @@ module Mrg
           new_min = new_split[1].to_i
 
           if old_maj > 1 || (old_maj >= 1 && old_min > 4)
-             @patch.expected.features["BaseDBVersion"] = {"params"=>{"BaseDBVersion"=>"#{old_version.to_s}"}}
+             @patch.expected.features["BaseDBVersion"].merge!({"params"=>{"BaseDBVersion"=>"v#{old_version.to_s}"}})
           end
           if new_maj > 1 || (new_maj >= 1 && new_min > 4)
-             @patch.updates.features["BaseDBVersion"] = {"modifyParams"=>["REPLACE", {"BaseDBVersion"=>"v#{version.to_s}"}, {}]}
+             @patch.updates.features["BaseDBVersion"].merge!({"modifyParams"=>["REPLACE", {"BaseDBVersion"=>"v#{version.to_s}"}, {}]})
           end
         end
 
         def gen_methods(ignore, type)
           methods = []
           qmf_m = ""
-          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).select {|m| m.index("=") == nil}.collect {|m| m.to_sym} - ignore
+          attrs = Mrg::Grid::SerializedConfigs.const_get(type).new.public_methods(false).map {|ms| ms.to_s}.select {|m| m.index("=") == nil}.collect {|m| m.to_sym} - ignore
           attrs.each do |m|
             tmp = m.to_s.split('_')
             begin
@@ -198,7 +200,7 @@ module Mrg
         def initialize(store, force_upgrade=false)
           @store = store
           @force = force_upgrade
-          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }.delete_if {|x| x == "params" } << "params"
+          @entities = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).map{|ms| ms.to_s}.select {|m| m.index("=") == nil}.sort {|x,y| y <=> x }.delete_if {|x| x == "params" } << "params"
           log.debug "Store entities: #{@entities.inspect}"
           @valid_methods = {}
           @entities.each do |type|
@@ -286,7 +288,7 @@ module Mrg
 
         def entity_details(type, name)
           details = {:expected=>{}, :updates=>{}}
-          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].to_sym
+          t = Mrg::Grid::SerializedConfigs::Store.new.public_methods(false).map {|ms| ms.to_s}.select {|m| m.index("=") == nil}.grep(/^#{type.to_s.slice(0,4).downcase}/)[0].to_sym
           klass = Mrg::Grid::Config.const_get(type)
           if @updates.send(t).has_key?(name)
             @updates.send(t)[name].keys.each do |set|
@@ -409,7 +411,7 @@ module Mrg
             current_val = obj.send(get)
             log.debug "Current value from object: #{current_val.inspect}"
             if (type == :features) && (get == "params") && (current_val.has_key?("BaseDBVersion"))
-              log.debug "Removing 'v' from DB version string"
+              log.debug "Removing 'v' from current DB version string"
               current_val["BaseDBVersion"].delete!("v")
             end
             if (type == :features) && (get == "params")
@@ -421,7 +423,7 @@ module Mrg
             expected_val = @expected.send(type)[name][get]
             log.debug "Expected value from patch: #{expected_val.inspect}"
             if (type == :features) && (get == "params") && (expected_val.has_key?("BaseDBVersion"))
-              log.debug "Removing 'v' from DB version string"
+              log.debug "Removing 'v' from expected DB version string"
               expected_val["BaseDBVersion"].delete!("v")
             end
             begin
@@ -431,8 +433,11 @@ module Mrg
               current_adj = current_val
               expected_adj = expected_val
             end
-            if current_adj != expected_adj
-              raise RuntimeError.new("#{otype} '#{name}' has a current value of #{current_adj.inspect} but expected #{expected_adj.inspect}")
+            if (current_adj != nil) && (expected_adj != nil) && (current_adj != expected_adj)
+              # A nil indicates the attribute doesn't exist, so we don't
+              # care if the value is different.  The happens when an attribute
+              # is added or removed from an entity
+              raise RuntimeError.new("#{otype} '#{name}' #{get} has a current value of #{current_adj.inspect} but expected #{expected_adj.inspect}")
             end
           end
         end

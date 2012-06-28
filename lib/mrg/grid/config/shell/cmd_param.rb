@@ -103,7 +103,8 @@ module Mrg
         class ShowParam < Command
           include EntityOps
           include ParamOps
-          
+          documented_only_if_default_name
+
           def self.opname
             "show-param"
           end

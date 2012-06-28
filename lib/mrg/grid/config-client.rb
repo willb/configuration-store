@@ -437,6 +437,10 @@ module Mrg
           get_object(check_result(@qmfo.getParam(name)).obj, Parameter)
         end
 
+        def getMustChangeParams
+          check_result(@qmfo.getMustChangeParams).params
+        end
+
         def removeParam(name)
           check_result(@qmfo.removeParam(name))
           nil

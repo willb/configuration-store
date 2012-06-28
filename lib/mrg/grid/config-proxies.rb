@@ -16,6 +16,8 @@
 
 require 'set'
 require 'yaml'
+require 'cgi'
+require 'fileutils'
 
 module Mrg
   module Grid
@@ -190,8 +192,29 @@ module Mrg
         field :params, Set
       end
       
+      module ConfigTextParsing
+        def parse(ymltxt)
+          begin
+            yrepr = YAML::parse(ymltxt).transform
+            
+            raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Store)
+            
+            @nodes = dictify(yrepr.nodes)
+            @groups = dictify(yrepr.groups)
+            @params = dictify(yrepr.params)
+            @features = dictify(yrepr.features)
+            @subsystems = dictify(yrepr.subsystems)
+            
+            @callbacks = []
+          rescue Exception=>ex
+            raise RuntimeError.new("Invalid snapshot file; #{ex.message}")
+          end
+        end
+      end            
+
       class ConfigLoader
         include DBHelpers
+        include ConfigTextParsing
 
         module InternalHelpers
           def listify(ls)
@@ -244,21 +267,7 @@ module Mrg
           
           yrepr = nil
 
-          begin
-            yrepr = YAML::parse(ymltxt).transform
-
-            raise RuntimeError.new("serialized object not of the correct type") if not yrepr.is_a?(::Mrg::Grid::SerializedConfigs::Store)
-
-            @nodes = dictify(yrepr.nodes)
-            @groups = dictify(yrepr.groups)
-            @params = dictify(yrepr.params)
-            @features = dictify(yrepr.features)
-            @subsystems = dictify(yrepr.subsystems)
-            
-            @callbacks = []
-          rescue Exception=>ex
-            raise RuntimeError.new("Invalid snapshot file; #{ex.message}")
-          end
+          parse(ymltxt)
           
         end
         
@@ -384,7 +393,119 @@ module Mrg
           x
         end
       end
+      
+      class DatabaseDocumenter
+        include ConfigTextParsing
+        include DBHelpers # just for dictify
+        
+        FEATURE_PATH = "features"
+        PARAMETER_PATH = "parameters"
+        SUBSYSTEM_PATH = "subsystems"
+        
+        def initialize(ymltxt, options=nil)
+          options ||= {}
+          options = {:basepath=>".", :baseuri=>"db-docs"}.merge(options)
+          @basepath = options[:basepath]
+          @baseuri = options[:baseuri]
+          parse(ymltxt)
+        end
+        
+        def document_all
+          {:feature=>@features, :parameter=>@params, :subsystem=>@subsystems}.each do |kind, entities|
+            entities.each do |name,entity|
+              document(kind, entity)
+            end
+            
+            index = path_for(kind, "index.markdown")
+            open(index, "w") do |f|
+              layout_index(f, kind, entities)
+            end
+          end
+        end 
+        
+        def document(kind, entity)
+          path = path_for(kind, entity.name)
+          uri = uri_for(kind, entity.name)
+          FileUtils.mkdir_p(path)
+          open(File.join(path, "index.markdown"), "w") do |f|
+            self.send("layout_#{kind}", f, entity, uri)
+          end
+        end
+        
+        def layout_index(file, kind, collection)
+          file.write <<-END
+---
+title: Available #{kind}s
+layout: default
+---
+#{collection.keys.sort.map {|k| "* [#{k}](/#{uri_for(kind, k)})"}.join("\n")}
+END
+        end
+        
+        def layout_feature(file, entity, uri)
+          file.write <<-END
+---
+title: #{entity.name}
+layout: db_feature
+name: #{entity.name}
+included: #{entity.included.map {|f| [f, "/" + uri_for(:feature, f)]}.to_yaml}
+depends: #{Hash[*entity.depends.map {|f| [f, "/" + uri_for(:feature, f)]}.flatten].to_yaml}
+conflicts: #{Hash[*entity.conflicts.map {|f| [f, "/" + uri_for(:feature, f)]}.flatten].to_yaml}
+params:  #{yamlify_params(entity.params)}
+annotation: #{entity.annotation.to_yaml}
+---
+          END
+        end
+        
+        def layout_parameter(file, entity, uri)
+          file.write <<-END
+---
+title: #{entity.name}
+layout: db_parameter
+name: #{entity.name}
+depends: #{Hash[*entity.depends.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
+conflicts: #{Hash[*entity.conflicts.map {|e| [e, "/" + uri_for(:parameter, e)]}.flatten].to_yaml}
+must_change: #{entity.must_change}
+needs_restart: #{entity.needs_restart}
+kind: #{entity.kind}
 
+description: #{entity.description.to_yaml}
+annotation: #{entity.annotation.to_yaml}
+---
+          END
+        end
+
+        def layout_subsystem(file, entity, uri)
+          file.write <<-END
+---
+title: #{entity.name}
+layout: db_subsystem
+name: #{entity.name}
+params: #{entity.params.to_yaml}
+
+annotation: #{entity.annotation.to_yaml}
+---
+          END
+        end
+        
+        def yamlify_params(params)
+          params.inject({}) do |acc,mapping| 
+            param, val = mapping
+            acc[param] = {:value=>val, :default=>@params[param].default_val}
+            acc
+          end.to_yaml
+        end
+        
+        def path_for(what, name)
+          File.join(@basepath, uri_for(what, name))
+        end
+
+        def uri_for(what, name)
+          File.join(@baseuri, self.class.const_get(what.to_s.upcase + "_PATH"), CGI.escape(name))
+        end
+
+      end
+      
       class ConfigSerializer
         module QmfConfigSerializer
           # this is a no-op if we're using ConfigClients
