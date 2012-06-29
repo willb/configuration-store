@@ -35,7 +35,7 @@
 Summary: Condor pool configuration service with QMF interface
 Name: wallaby
 Version: <%= pkg_version %>
-Release: <%= pkg_rel %>%{?dist}
+Release: 10%{?dist}
 Group: Applications/System
 License: ASL 2.0
 URL: http://git.fedorahosted.org/git/grid/wallaby.git
@@ -280,6 +280,9 @@ fi
 %endif
 
 %changelog
+
+* Thu Jun 28 2012 willb <willb@redhat> - 0.12.5-10
+- fixes BZs 748507, 834141, 807820, and 835525 (all backports from 0.15.x)
 
 * Tue Jan 10 2012 willb <willb@redhat> - 0.12.5-1
 - the Wallaby shell no longer a priori rejects certain valid SASL authentication mechanisms
