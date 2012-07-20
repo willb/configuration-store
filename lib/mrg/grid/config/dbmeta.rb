@@ -19,12 +19,16 @@ module Mrg
     module Config
       MAIN_DB_TABLES=[Mrg::Grid::Config::Feature, Mrg::Grid::Config::Group, Mrg::Grid::Config::Parameter, Mrg::Grid::Config::Subsystem, Mrg::Grid::Config::Node, Mrg::Grid::Config::ArcLabel, Mrg::Grid::Config::ParameterArc, Mrg::Grid::Config::FeatureArc, Mrg::Grid::Config::FeatureParams, Mrg::Grid::Config::NodeMembership, Mrg::Grid::Config::GroupParams, Mrg::Grid::Config::GroupFeatures, Mrg::Grid::Config::SubsystemParams, Mrg::Grid::Config::DirtyElement]
       SNAP_DB_TABLES=[Mrg::Grid::Config::Snapshot, Mrg::Grid::Config::ConfigVersion, Mrg::Grid::Config::VersionedNode, Mrg::Grid::Config::VersionedNodeConfig]
+      USER_DB_TABLES=[Mrg::Grid::Config::Auth::Role]
       DBVERSION = 6
       DBMIGRATIONS = []
 
       SNAPVERSION = 1
       SNAPMIGRATIONS = []
-          
+      
+      USERVERSION = 1
+      USERMIGRATIONS = []
+      
       module DBSchema
         DB_MIGRATION_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "dbmigrate")
         
