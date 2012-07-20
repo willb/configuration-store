@@ -34,6 +34,7 @@ USE_PREPARED_STATEMENTS = ENV['WALLABY_USE_PREPARED_STATEMENTS'] && (ENV['WALLAB
 
 dbname = ENV['WALLABY_CONFIGDB_NAME'] || ":memory:"
 snapdb = ENV['WALLABY_SNAPDB_NAME'] || ":memory:"
+userdb = ENV['WALLABY_USERDB_NAME'] || ":memory:"
 host = ENV['WALLABY_BROKER_HOST'] || "localhost"
 port = (ENV['WALLABY_BROKER_PORT'] || 5672).to_i
 username = ENV['WALLABY_BROKER_USER']
@@ -56,8 +57,12 @@ op = OptionParser.new do |opts|
     dbname = path_resolve(db)
   end
   
-  opts.on("-s", "--snapdb FILE", "file for store snapshots (will be created if it doesn't exist)") do |db|
+  opts.on("-s", "--snapdb FILE", "file for store snapshots and versioned configurations (will be created if it doesn't exist)") do |db|
     snapdb = path_resolve(db)
+  end
+  
+  opts.on("--userdb FILE", "file for user role information (will be created if it doesn't exist)") do |db|
+    userdb = path_resolve(db)
   end
   
   opts.on("-h", "--help", "shows this message") do
@@ -123,13 +128,16 @@ end
 
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
 DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
+DO_USERCREATE = (userdb == ":memory:" or not File.exist?(userdb))
 
 begin
   Rhubarb::Persistence::open(dbname,:default,USE_PREPARED_STATEMENTS)
   Rhubarb::Persistence::open(snapdb,:snapshot,USE_PREPARED_STATEMENTS)
+  Rhubarb::Persistence::open(userdb,:snapshot,USE_PREPARED_STATEMENTS)
   
   Mrg::Grid::Config::MAIN_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:default] }
   Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
+  Mrg::Grid::Config::USER_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:user] }
   
   if DO_CREATE
     classes = Mrg::Grid::Config::MAIN_DB_TABLES
@@ -148,6 +156,12 @@ begin
     puts "creating snapshot tables"
     Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
     Rhubarb::Persistence::dbs[:snapshot].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
+  end
+  
+  if DO_USERCREATE
+    puts "creating user tables"
+    Mrg::Grid::Config::USER_DB_TABLES.each {|cl| cl.create_table(:user)}
+    Rhubarb::Persistence::dbs[:user].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
   end
   
   options = {}
@@ -172,7 +186,7 @@ begin
     options = {}
     options["remove-spurious"] = "yes" if (ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] && ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] =~ /^(true|yes)/i)
     Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
-    [:default, :snapshot].each do |which|
+    [:default, :snapshot, :user].each do |which|
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
   rescue Exception => ex
@@ -181,7 +195,8 @@ begin
   end
   
   {:snapshot=>[::Mrg::Grid::Config::SNAP_DB_TABLES, snapdb, ::Mrg::Grid::Config::SNAPMIGRATIONS], 
-   :default=>[::Mrg::Grid::Config::MAIN_DB_TABLES, dbname, ::Mrg::Grid::Config::DBMIGRATIONS]}.each do |ds, meta|
+   :default=>[::Mrg::Grid::Config::MAIN_DB_TABLES, dbname, ::Mrg::Grid::Config::DBMIGRATIONS]
+   :user=>[::Mrg::Grid::Config::USER_DB_TABLES, dbname, ::Mrg::Grid::Config::USERMIGRATIONS]}.each do |ds, meta|
     begin
       table_list, db_file, migrations = meta
       
