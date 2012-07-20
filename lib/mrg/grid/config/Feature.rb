@@ -23,6 +23,8 @@ require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/InconsistencyDetecting'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 require 'mrg/grid/util/graph'
 
 require 'set'
@@ -33,6 +35,8 @@ module Mrg
       class Feature
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include MethodUtils
 
