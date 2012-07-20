@@ -19,12 +19,15 @@ require 'zlib'
 require 'sqlite3'
 require 'rhubarb/rhubarb'
 
+require 'mrg/grid/config/auth'
+
 module Mrg
   module Grid
     module Config
       class Snapshot
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
 
         MAX_DESCRIPTION_LENGTH = 8192
 

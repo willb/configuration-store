@@ -20,6 +20,7 @@ require 'mrg/grid/config-proxies'
 require 'mrg/grid/util/quiescent'
 require 'socket'
 
+require 'mrg/grid/config/auth'
 
 module Mrg
   module Grid
@@ -43,6 +44,7 @@ module Mrg
         include ::SPQR::Manageable
         include QmfV1Kludges
         include ::Mrg::Grid::Util::Quiescent
+        include ::Mrg::Grid::Config::Auth::ORIZING
         
         ENABLE_DEFAULT_GROUP = true
         quiescent :ENABLE_SKELETON_GROUP do

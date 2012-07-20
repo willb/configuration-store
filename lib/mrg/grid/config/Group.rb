@@ -20,6 +20,8 @@ require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 require 'digest/md5'
 
 module Mrg
@@ -32,6 +34,8 @@ module Mrg
       class Group
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include ConfigValidating
         include MethodUtils

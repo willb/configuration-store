@@ -17,12 +17,16 @@
 require 'mrg/grid/config'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 module Mrg
   module Grid
     module Config
       class Subsystem
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include MethodUtils
 
