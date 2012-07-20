@@ -21,6 +21,8 @@ module Mrg
     module Config
       module Auth
         module Priv
+          NONE = 0
+          
           READ_ONLY = 1
           WRITE_ONLY = 1 << 1
           ACTIVATE_ONLY = 1 << 2
