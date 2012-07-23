@@ -45,6 +45,10 @@ module Mrg
             priv = ::Mrg::Grid::Config::Auth::Priv.const_get(verb)
             $WALLABY_SKIP_AUTH || cache.empty? || (cache[user].to_i & priv == priv) || (cache["*"].to_i & priv == priv)
           end
+          
+          def self.cache
+            @cache ||= self.populate
+          end
         end
         
         # Currently authentication is handled by the messaging broker.  
