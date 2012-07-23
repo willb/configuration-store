@@ -185,7 +185,15 @@ begin
   begin
     options = {}
     options["remove-spurious"] = "yes" if (ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] && ENV["WALLABY_REMOVE_SPURIOUS_CONFIGS"] =~ /^(true|yes)/i)
-    Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
+
+    # because we're not running over QMF at this point, we must ensure that 
+    oldauth = $WALLABY_SKIP_AUTH
+    begin
+      $WALLABY_SKIP_AUTH = true
+      Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
+    ensure
+      $WALLABY_SKIP_AUTH = oldauth
+    end
     [:default, :snapshot, :user].each do |which|
       Rhubarb::Persistence::dbs[which].execute("vacuum")
     end
