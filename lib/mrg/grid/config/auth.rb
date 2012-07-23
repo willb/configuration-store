@@ -43,7 +43,7 @@ module Mrg
           
           def self.authorized_to(verb, user)
             priv = ::Mrg::Grid::Config::Auth::Priv.const_get(verb)
-            @cache.empty? || (@cache[user].to_i & priv == priv) || (@cache["*"].to_i & priv == priv)
+            $WALLABY_SKIP_AUTH || cache.empty? || (cache[user].to_i & priv == priv) || (cache["*"].to_i & priv == priv)
           end
         end
         
