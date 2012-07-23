@@ -40,8 +40,10 @@ module Mrg
         
         qmf_property :name, :sstr, :index=>true
         qmf_property :params, :list, :desc=>"A list representing the set of parameter names that this subsystem is interested in."
-        ### Schema method declarations
+
         include ::Mrg::Grid::Config::Annotatable
+
+        ### Schema method declarations
 
         # modifyParams 
         # * command (sstr/I)
@@ -60,6 +62,8 @@ module Mrg
           modify_arcs(command,params,options,:params,:params=,:explain=>"observe the param")
           DirtyElement.dirty_subsystem(self)
         end
+        
+        authorize_before :modifyParams, :WRITE
         
         expose :modifyParams do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."

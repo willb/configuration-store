@@ -189,6 +189,8 @@ module Mrg
             # NB: these don't change the dirty status of this node
           end
           
+          authorize_before name, :WRITE
+          
           expose name do |args| ; end
         end
         
@@ -197,8 +199,12 @@ module Mrg
           self.last_checkin = ::Rhubarb::Util::timestamp
         end
         
+        authorize_before :checkin, :READ
+        
         expose :checkin do |args|
         end
+        
+        authorize_before :getConfig, :READ
         
         expose :getConfig do |args|
           args.declare :options, :map, :in, "Valid options include 'version', which maps to a version number.  If this is supplied, return the latest version not newer than 'version'."
@@ -222,6 +228,8 @@ module Mrg
           explanation
         end
         
+        authorize_before :explain, :READ
+        
         expose :explain do |args|
           args.declare :explanation, :map, :out, "A structure representing where the parameters set on this node get their values."
         end
@@ -232,6 +240,8 @@ module Mrg
           # Print values of input parameters
           log.debug "checkConfigVersion: version => #{version.inspect}"
         end
+        
+        authorize_before :checkConfigVersion, :READ
         
         expose :checkConfigVersion do |args|
           args.declare :version, :uint32, :in, {}
@@ -294,6 +304,8 @@ module Mrg
           DirtyElement.dirty_node(self)
         end
         
+        authorize_before :modifyMemberships, :WRITE
+        
         expose :modifyMemberships do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :groups, :list, :in, "A list of groups, in inverse priority order (most important first)."
@@ -315,6 +327,8 @@ module Mrg
           rem = ReconfigEventMapBuilder.build(node_params)
           [node_params[self.name], rem.restart.keys, rem.reconfig.keys]
         end
+        
+        authorize_before :whatChanged, :READ
         
         expose :whatChanged do |args|
           args.declare :old_version, :uint64, :in, "The old version."

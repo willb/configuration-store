@@ -100,6 +100,8 @@ module Mrg
           expose "get#{special_group.capitalize}Group".to_sym do |args|
             args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the #{special_group} group."
           end
+          
+          authorize_before "get#{special_group.capitalize}Group".to_sym, :READ
         end
         
         # getGroup 
@@ -134,10 +136,14 @@ module Mrg
           getGroup({"NAME"=>name})
         end
         
+        authorize_before :getGroup, :WRITE
+        
         expose :getGroupByName do |args|
           args.declare :name, :sstr, :in, "The name of the group to search for."
           args.declare :obj, :objId, :out, "The object ID of the Group object corresponding to the requested group."
         end
+        
+        authorize_before :getGroupByName, :READ
         
         # addExplicitGroup 
         # * name (sstr/I)
@@ -156,6 +162,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the newly-created group.  Names beginning with '+++' are reserved for internal use."
         end
         
+        authorize_before :addExplicitGroup, :WRITE
+        
         # removeGroup 
         # * uid (uint32/I)
         def removeGroup(name)
@@ -171,6 +179,8 @@ module Mrg
         expose :removeGroup do |args|
           args.declare :name, :sstr, :in, "The name of the group to remove."
         end
+        
+        authorize_before :removeGroup, :WRITE
         
         # getFeature 
         # * name (sstr/I)
@@ -190,6 +200,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the feature to search for."
         end
         
+        authorize_before :getFeature, :READ
+        
         # addFeature 
         # * name (sstr/I)
         # * obj (objId/O)
@@ -206,6 +218,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the feature to create."
         end
         
+        authorize_before :addFeature, :WRITE
+        
         # removeFeature 
         # * uid (uint32/I)
         def removeFeature(name)
@@ -221,6 +235,8 @@ module Mrg
         expose :removeFeature do |args|
           args.declare :name, :sstr, :in, "The name of the feature to remove."
         end
+
+        authorize_before :removeFeature, :WRITE
         
         # activateConfiguration 
         # * explain (map/O)
@@ -237,6 +253,8 @@ module Mrg
           args.declare :explain, :map, :out, "A map containing an explanation of why the configuration isn't valid, or an empty map if the configuration was successfully activated."
           args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
         end
+
+        authorize_before :activateConfiguration, :ACTIVATE
         
         def validateConfiguration
           validate_and_activate(true)
@@ -247,6 +265,7 @@ module Mrg
           args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
         end
         
+        authorize_before :validateConfiguration, :READ
         
         def affectedEntities(options=nil)
           options = {"failfast"=>nil}.merge(options || {})
@@ -272,6 +291,8 @@ module Mrg
           args.declare :options, :map, :in, "Valid options include 'failfast', which will return a single-element list if the default group or the whole store is dirty."
           args.declare :result, :list, :out, "A list of TYPE, NAME pairs indicating elements that have changed since the last activation and are due for validation and activation.  May be truncated due to communication limitations."
         end
+
+        authorize_before :affectedEntities, :READ
         
         def affectedNodes(options=nil)
           options ||= {}
@@ -293,7 +314,8 @@ module Mrg
           args.declare :options, :map, :in, "No options are yet supported."
           args.declare :result, :list, :out, "A list of nodes that are due for validation and activation.  May be truncated due to communication limitations."
         end
-        
+
+        authorize_before :affectedNodes, :READ        
         
         # addNode 
         # * name (sstr/I)
@@ -334,6 +356,12 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the node to create."
         end
 
+        # XXX:  perhaps worth considering whether addNode and getNode demand WRITE access 
+        # or READ access (since adding a node doesn't affect config but getting a node can 
+        # result in node creation)
+        authorize_before :addNode, :WRITE
+        authorize_before :addNodeWithOptions, :WRITE
+
         # getNode 
         # * name (sstr/I)
         # * obj (objId/O)
@@ -357,6 +385,8 @@ module Mrg
           args.declare :obj, :objId, :out, "The object ID of the retrieved Node object."
           args.declare :name, :sstr, :in, "The name of the node to find.  If no node exists with this name, the store will create an unprovisioned node with the given name."
         end
+
+        authorize_before :getNode, :READ
         
         def createNode(name, is_provisioned=true, options=nil)
           options ||= {}
@@ -400,6 +430,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the node to remove."
         end
         
+        authorize_before :removeNode, :WRITE
+        
         # getParam 
         # * name (sstr/I)
         # * obj (objId/O)
@@ -418,6 +450,8 @@ module Mrg
           args.declare :obj, :objId, :out, "The object ID of the requested Parameter object."
           args.declare :name, :sstr, :in, "The name of the parameter to find."
         end
+        
+        authorize_before :getParam, :READ
         
         # addParam 
         # * name (sstr/I)
@@ -439,6 +473,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the parameter to create."
         end
         
+        authorize_before :addParam, :WRITE
+
         # getSubsys 
         # * name (sstr/I)
         # * obj (objId/O)
@@ -454,6 +490,8 @@ module Mrg
           args.declare :obj, :objId, :out, "The object ID of the requested Subsystem object."
           args.declare :name, :sstr, :in, "The name of the subsystem to find."
         end
+
+        authorize_before :getSubsys, :READ
 
         # addSubsys 
         # * name (sstr/I)
@@ -474,6 +512,7 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the subsystem to create."
         end
         
+        authorize_before :addSubsys, :WRITE
         
         # removeParam 
         # * name (sstr/I)
@@ -491,6 +530,8 @@ module Mrg
           args.declare :name, :sstr, :in, "The name of the parameter to remove."
         end
 
+        authorize_before :removeParam, :WRITE
+
         # removeSubsys 
         # * name (sstr/I)
         def removeSubsys(name)
@@ -502,6 +543,8 @@ module Mrg
         expose :removeSubsys do |args|
           args.declare :name, :sstr, :in, "The name of the subsystem to remove."
         end
+
+        authorize_before :removeSubsys, :WRITE
         
         def storeinit(kwargs=nil)
           kwargs ||= {}
@@ -522,6 +565,8 @@ module Mrg
           nil
         end
         
+        authorize_before :storeinit, :ADMIN
+        
         expose :storeinit do |args|
           args.declare :options, :map, :in, "Setting 'RESETDB' will reset the configuration database."
         end
@@ -536,6 +581,9 @@ module Mrg
           makeSnapshotWithOptions(name)
         end
         
+        # XXX: this could be "none" or "read," since making a snapshot has no observable effect on configuration
+        authorize_before :makeSnapshot, :WRITE
+        
         expose :makeSnapshot do |args|
           args.declare :name, :sstr, :in, "A name for this configuration.  A blank name will result in the store creating a name"
         end
@@ -549,6 +597,9 @@ module Mrg
           result.snaptext = snaptext
         end
         
+        # XXX: this could be "none" or "read," since making a snapshot has no observable effect on configuration
+        authorize_before :makeSnapshotWithOptions, :WRITE
+
         expose :makeSnapshotWithOptions do |args|
           args.declare :name, :sstr, :in, "A name for this configuration.  A blank name will result in the store creating a name"
           args.declare :options, :map, :in, "Options for this snapshot.  Valid options include 'annotation', which must map to a string containing an annotation for this snapshot."
@@ -570,6 +621,9 @@ module Mrg
           end
           
         end
+
+        # XXX: this could also be "ADMIN"
+        authorize_before :loadSnapshot, :WRITE
         
         expose :loadSnapshot do |args|
           args.declare :name, :sstr, :in, "A name for the snapshot to load."
@@ -579,6 +633,9 @@ module Mrg
           Snapshot.find_first_by_name(name).delete
         end
         
+        # XXX: erring on the restrictive side here
+        authorize_before :removeSnapshot, :ADMIN
+
         expose :removeSnapshot do |args|
           args.declare :name, :sstr, :in, "A name for the snapshot to remove."
         end
@@ -587,6 +644,8 @@ module Mrg
           Parameter.s_that_must_change
         end
         
+        authorize_before :getMustChangeParams, :READ
+
         expose :getMustChangeParams do |args|
           args.declare :params, :map, :out, "Parameters that must change; a map from names to (empty) default values"
         end
@@ -602,6 +661,8 @@ module Mrg
             args.declare :set, :list, :in, "A set of #{klass.name} names to check for validity"
             args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :list, :out, "A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
           end
+          
+          authorize_before "check#{klass.name.split("::").pop}Validity".to_sym, :READ
         end
         
         [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
