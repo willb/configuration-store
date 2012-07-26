@@ -157,7 +157,7 @@ module Mrg
         
         def clearFeatures
           DirtyElement.dirty_group(self);
-          self.modifyFeatures("REPLACE", {})
+          self.modifyFeatures("REPLACE", [])
           0
         end
         
