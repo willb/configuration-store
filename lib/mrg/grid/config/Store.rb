@@ -299,7 +299,7 @@ module Mrg
           result = Node.get_dirty_nodes
           bytes = OBJECT_OVERHEAD * 4 # XXX: this is conservative but perhaps unnecessarily so
           truncated_result = result.inject([]) do |acc, val|
-            this_val_size = OBJECT_OVERHEAD + val.length
+            this_val_size = OBJECT_OVERHEAD + val.name.length
             if bytes + this_val_size < MAX_ARG_SIZE
               bytes += this_val_size
               acc << val
