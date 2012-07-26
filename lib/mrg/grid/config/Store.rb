@@ -136,7 +136,7 @@ module Mrg
           getGroup({"NAME"=>name})
         end
         
-        authorize_before :getGroup, :WRITE
+        authorize_before :getGroup, :READ
         
         expose :getGroupByName do |args|
           args.declare :name, :sstr, :in, "The name of the group to search for."
@@ -622,8 +622,7 @@ module Mrg
           
         end
 
-        # XXX: this could also be "ADMIN"
-        authorize_before :loadSnapshot, :WRITE
+        authorize_before :loadSnapshot, :ADMIN
         
         expose :loadSnapshot do |args|
           args.declare :name, :sstr, :in, "A name for the snapshot to load."
