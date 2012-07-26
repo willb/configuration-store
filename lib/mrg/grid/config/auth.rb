@@ -69,7 +69,7 @@ module Mrg
               alias_method orig_method, method
               define_method(method) do |*args|
                 unless ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(action, qmf_user_id)
-                  raise "'#{qmf_user_id}' does not have #{action} access and cannot invoke #{method}"
+                  fail(::Mrg::Grid::Config::Errors.make(::Mrg::Grid::Config::Errors::UNAUTHORIZED), "'#{qmf_user_id}' does not have #{action} access and cannot invoke #{method}")
                 end
                 self.send(orig_method, *args)
               end
