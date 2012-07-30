@@ -115,11 +115,6 @@ module Mrg
       # 4.  users who are implicitly authorized and acting within their authority
       # 5.  users who are implicitly authorized but acting in excess of their authority
 
-      # [[:default, :authorized], [:default, :unauthorized]] +
-      #  [:explicit, :implicit].inject([]) {|acc,x| acc += %w{NONE READ WRITE ADMIN}.inject([]) {|acc,y| acc << [x,y]}} + 
-      #  %w{NONE READ WRITE ADMIN}.inject([]) {|acc, x| acc += %w{NONE READ WRITE ADMIN}.inject([]) {|acc, y| acc << [:hybrid, [x, y]]}}.each do |dbstate, access|
-
-            
       [[:default, :authorized], [:default, :unauthorized]] +
        [:explicit, :implicit].inject([]) {|acc,x| acc += %w{NONE READ WRITE ADMIN}.inject([]) {|acc,y| acc << [x,y]}} +
        (%w{NONE READ WRITE ADMIN}.inject([]) {|acc, x| acc += %w{NONE READ WRITE ADMIN}.inject([]) {|acc, y| acc << [:hybrid, [x, y]]}}).each do |dbstate, access|
