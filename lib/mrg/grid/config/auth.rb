@@ -31,6 +31,11 @@ module Mrg
           WRITE = WRITE_ONLY | READ_ONLY
           ACTIVATE = ACTIVATE_ONLY
           ADMIN = READ | WRITE | ACTIVATE
+          
+          def self.to_string(priv)
+            @PRIVS ||= Mrg::Grid::Config::Auth::Priv.constants.inject({}) {|acc, val| acc[Mrg::Grid::Config::Auth::Priv.const_get(val)] = val; acc}
+            @PRIVS[priv] || "NONE"
+          end
         end
         
         module RoleCache
@@ -76,8 +81,17 @@ module Mrg
             end
           end
           
+          module IM
+            def authorize_now(action)
+              unless ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(action, qmf_user_id)
+                fail(::Mrg::Grid::Config::Errors.make(::Mrg::Grid::Config::Errors::UNAUTHORIZED), "'#{qmf_user_id}' does not have #{action} access and cannot invoke #{self.class.name}##{caller[0][/`.*'/][1..-2]}")
+              end
+            end
+          end
+          
           def self.included(receiver)
             receiver.extend CM
+            receiver.include IM
           end
         end        
       end
