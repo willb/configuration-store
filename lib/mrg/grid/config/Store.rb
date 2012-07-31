@@ -76,7 +76,7 @@ module Mrg
         # property APIVersionNumber uint32 The version of the API the store supports
         qmf_property :apiMinorNumber, :uint32, :desc=>"The minor version (revision) of the API the store supports", :index=>false
         def apiMinorNumber
-          5
+          6
         end
 
         qmf_property :host_and_pid, :list, :desc=>"A tuple consisting of the hostname and process ID, identifying where this wallaby agent is currently running.  (Introduced in 20101031.1)", :index=>false
@@ -90,6 +90,66 @@ module Mrg
         end
 
         ### Schema method declarations
+        
+        # sets Wallaby privileges for a given user
+        def set_user_privs(username, privs, options=nil)
+          options ||= {}
+          
+          # note that we authorize here to allow use of WALLABY_SECRET
+          authorize_now(:ADMIN) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          
+          fail(Errors.make(Errors::BAD_ARGUMENT), "Invalid privilege level #{privs}") unless %w{READ WRITE ADMIN}.include?(privs)
+          
+          role = (::Mrg::Grid::Config::Auth::Role.find_first_by_username(username) || ::Mrg::Grid::Config::Auth::Role.create(:username=>username, :privs=>::Mrg::Grid::Config::Auth::Priv::NONE))
+          role.privs = ::Mrg::Grid::Config::Auth::Priv.const_get(privs)
+          
+          ::Mrg::Grid::Config::Auth::RoleCache.populate
+          
+          nil
+        end
+        
+        expose :set_user_privs do |args|
+          args.declare :username, :lstr, :in, "The username to set privileges for."
+          args.declare :privs, :sstr, :in, "One of 'READ', 'WRITE', or 'ADMIN.'"
+          args.declare :options, :map, :in, "Recognized options include 'secret', which is your installation's Wallaby secret."
+        end
+
+        # deletes role for a given user
+        def del_user(username, privs, options=nil)
+          options ||= {}
+          
+          # note that we authorize here to allow use of WALLABY_SECRET
+          authorize_now(:ADMIN) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          
+          role = ::Mrg::Grid::Config::Auth::Role.find_first_by_username(username)
+          role.delete if role
+          
+          ::Mrg::Grid::Config::Auth::RoleCache.populate
+          
+          nil
+        end
+        
+        expose :del_user do |args|
+          args.declare :username, :lstr, :in, "The username to set privileges for."
+          args.declare :options, :map, :in, "Recognized options include 'secret', which is your installation's Wallaby secret."
+        end
+
+        
+        def users(options=nil)
+          options ||= {}
+          
+          authorize_now(:READ) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          
+          ::Mrg::Grid::Config::Auth::Role.find_all.inject({}) do |acc, role|
+            acc[role.username] = ::Mrg::Grid::Config::Auth::Priv.to_string(role.privs)
+            acc
+          end
+        end
+
+        expose :users do |args|
+          args.declare :options, :map, :in, "Recognized options include 'secret', which is your installation's Wallaby secret."
+          args.declare :roles, :map, :out, "Map of user names to privilege levels"
+        end
         
         ["default", "skeleton"].each do |special_group|
           define_method "get#{special_group.capitalize}Group".to_sym do
