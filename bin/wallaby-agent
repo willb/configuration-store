@@ -43,6 +43,7 @@ explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
 logfile = ENV['WALLABY_LOGFILE']
 debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upcase)) || Logger::WARN
 do_daemonify = !ENV['WALLABY_FOREGROUND']
+$WALLABY_SECRET = ENV['WALLABY_SECRET']
 run_as = nil
 logoptions = nil
 
