@@ -87,6 +87,10 @@ module Mrg
                 fail(::Mrg::Grid::Config::Errors.make(::Mrg::Grid::Config::Errors::UNAUTHORIZED), "'#{qmf_user_id}' does not have #{action} access and cannot invoke #{self.class.name}##{caller[0][/`.*'/][1..-2]}")
               end
             end
+            
+            def authorized_via_secret(secret)
+              (secret && $WALLABY_SECRET && secret == $WALLABY_SECRET)
+            end
           end
           
           def self.included(receiver)
