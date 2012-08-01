@@ -96,7 +96,7 @@ module Mrg
           options ||= {}
           
           # note that we authorize here to allow use of WALLABY_SECRET
-          authorize_now(:ADMIN) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          authorize_now(:ADMIN) unless authorized_via_secret(options["secret"])
           
           fail(Errors.make(Errors::BAD_ARGUMENT), "Invalid privilege level #{privs}") unless %w{READ WRITE ADMIN}.include?(privs)
           
@@ -119,7 +119,7 @@ module Mrg
           options ||= {}
           
           # note that we authorize here to allow use of WALLABY_SECRET
-          authorize_now(:ADMIN) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          authorize_now(:ADMIN) unless authorized_via_secret(options["secret"])
           
           role = ::Mrg::Grid::Config::Auth::Role.find_first_by_username(username)
           role.delete if role
@@ -133,12 +133,11 @@ module Mrg
           args.declare :username, :lstr, :in, "The username to set privileges for."
           args.declare :options, :map, :in, "Recognized options include 'secret', which is your installation's Wallaby secret."
         end
-
         
         def users(options=nil)
           options ||= {}
           
-          authorize_now(:READ) unless (options["secret"] && options["secret"] == $WALLABY_SECRET)
+          authorize_now(:READ) unless authorized_via_secret(options["secret"])
           
           ::Mrg::Grid::Config::Auth::Role.find_all.inject({}) do |acc, role|
             acc[role.username] = ::Mrg::Grid::Config::Auth::Priv.to_string(role.privs)
