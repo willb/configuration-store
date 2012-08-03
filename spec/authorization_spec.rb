@@ -175,6 +175,73 @@ module Mrg
           end
         end
       end
+      
+      describe "role-related API methods" do
+        before(:all) do
+          @STRUCT = Struct.new(:username, :privs)
+        end
+        
+        before(:each) do
+          setup_rhubarb
+          @store = Store.new
+          
+          @saved_secret = $WALLABY_SECRET
+          $WALLABY_SECRET = rand()
+          
+          @saved_user = Thread.current[:qmf_user_id]
+          Thread.current[:qmf_user_id] = "foonly"
+        end
+        
+        after(:each) do
+          teardown_rhubarb
+          $WALLABY_SECRET = @saved_secret
+          Thread.current[:qmf_user_id] = @saved_user
+          ::Mrg::Grid::Config::Auth::RoleCache.populate([])
+        end
+        
+        it "should allow administrators to add users" do
+          ::Mrg::Grid::Config::Auth::RoleCache.populate([@STRUCT.new("foonly", ::Mrg::Grid::Config::Auth::Priv::ADMIN)])
+          @store.set_user_privs("foonly", "ADMIN")
+
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == true
+
+          @store.set_user_privs("configd", "READ")
+
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == true
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:READ, "configd").should == true
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:WRITE, "configd").should == false
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "configd").should == false          
+        end
+
+        it "should allow anyone to add users when no userdb exists" do
+          @store.set_user_privs("foonly", "ADMIN")
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == true
+        end
+
+        it "should allow anyone to add users when authorized by secret" do
+          @store.set_user_privs("super", "ADMIN")          
+          
+          @store.set_user_privs("foonly", "ADMIN", {"secret"=>$WALLABY_SECRET})
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == true
+        end
+
+        it "should not allow anyone to add users when authorized by bogus secret" do
+          @store.set_user_privs("super", "ADMIN")          
+          lambda { @store.set_user_privs("foonly", "ADMIN", {"secret"=>""}) }.should raise_error(SPQR::ManageableObjectError, /cannot invoke/)
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == false
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "super").should == true
+        end
+
+
+        it "should not allow anyone to add users when not authorized" do
+          @store.set_user_privs("super", "ADMIN")          
+          
+          lambda { @store.set_user_privs("foonly", "ADMIN") }.should raise_error(SPQR::ManageableObjectError, /cannot invoke/)
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "foonly").should == false
+          ::Mrg::Grid::Config::Auth::RoleCache.authorized_to(:ADMIN, "super").should == true
+        end
+
+      end
     end
   end
 end
