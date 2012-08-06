@@ -115,14 +115,16 @@ module Mrg
         end
 
         # deletes role for a given user
-        def del_user(username, privs, options=nil)
+        def del_user(username, options=nil)
           options ||= {}
           
           # note that we authorize here to allow use of WALLABY_SECRET
           authorize_now(:ADMIN) unless authorized_via_secret(options["secret"])
           
           role = ::Mrg::Grid::Config::Auth::Role.find_first_by_username(username)
-          role.delete if role
+          fail(Errors.make(Errors::BAD_ARGUMENT), "User #{username} does not exist in the Wallaby role database") unless role
+          
+          role.delete
           
           ::Mrg::Grid::Config::Auth::RoleCache.populate
           
