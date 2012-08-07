@@ -297,6 +297,8 @@ module Mrg
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
 
+        include ::Mrg::Grid::Config::Auth::ORIZING
+
         STORAGE_PLAN = :lw_serialized
 
         def self.whatchanged(node, old_version, new_version)
@@ -434,6 +436,8 @@ module Mrg
         def getNodeConfig(node, dofail=true)
           internal_get_node_config(node)
         end
+        
+        authorize_before :getNodeConfig, :READ
         
         expose :getNodeConfig do |args|
           args.declare :node, :lstr, :in, "The node name to inspect."

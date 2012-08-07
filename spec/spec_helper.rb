@@ -26,18 +26,20 @@ def setup_rhubarb(kwargs=nil)
   kwargs ||= {}
   dbname = kwargs[:dbname] || ":memory:"
   snapdbname = kwargs[:snapdb] || dbname
+  userdbname = kwargs[:userdb] || dbname
 
   db_classes = kwargs[:db_classes] || MAIN_DB_TABLES 
   snap_classes = kwargs[:snap_classes] || SNAP_DB_TABLES
+  user_classes = kwargs[:user_classes] || USER_DB_TABLES
 
   Rhubarb::Persistence::open(dbname, :default, false)
   Rhubarb::Persistence::open(snapdbname, :snapshots, false)
+  Rhubarb::Persistence::open(userdbname, :user, false)
 
-  {:default=>db_classes, :snapshots=>snap_classes}.each do |dbkey, klasses|  
+  {:default=>db_classes, :snapshots=>snap_classes, :user=>user_classes}.each do |dbkey, klasses|  
     klasses.each {|cl| cl.db = Rhubarb::Persistence::dbs[dbkey]}
     klasses.each {|cl| cl.create_table rescue nil}
   end
-
 
   Group.DEFAULT_GROUP
   Group.SKELETON_GROUP

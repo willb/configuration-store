@@ -395,6 +395,23 @@ module Mrg
           end
         end
 
+        def set_user_privs(user, role, options=nil)
+          options||={}
+          check_result(@qmfo.set_user_privs(user, role, options))
+          0
+        end
+
+        def del_user(user, options=nil)
+          options||={}
+          check_result(@qmfo.del_user(user, options))
+          0
+        end
+
+        def users(options=nil)
+          options||={}
+          check_result(@qmfo.users(options)).roles
+        end
+
         def getGroup(query)
           get_object(check_result(@qmfo.getGroup(query)).obj, Group)
         end

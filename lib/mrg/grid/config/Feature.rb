@@ -23,6 +23,8 @@ require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/InconsistencyDetecting'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 require 'mrg/grid/util/graph'
 
 require 'set'
@@ -33,6 +35,8 @@ module Mrg
       class Feature
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include MethodUtils
 
@@ -71,6 +75,8 @@ module Mrg
           self.name = name
         end
         
+        authorize_before :setName, :WRITE
+        
         expose :setName do |args|
           args.declare :name, :sstr, :in, "A new name for this feature; this name must not already be in use by another feature."
         end
@@ -101,6 +107,8 @@ module Mrg
           self_to_dirty_list
         end
         
+        authorize_before :modifyIncludedFeatures, :WRITE
+        
         expose :modifyIncludedFeatures do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :features, :list, :in, "A list, in inverse priority order, of the names of features that this feature should include (in the case of ADD or REPLACE), or should not include (in the case of REMOVE)."
@@ -116,6 +124,8 @@ module Mrg
           self_to_dirty_list
           0
         end
+        
+        authorize_before :clearParams, :WRITE
         
         expose :clearParams do |args|
           args.declare :ret, :int, :out, "0 if successful."
@@ -186,6 +196,8 @@ module Mrg
           self_to_dirty_list
         end
         
+        authorize_before :modifyParams, :WRITE
+        
         expose :modifyParams do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :params, :map, :in, "A map from parameter names to their corresponding values, as strings, for this feature.  To use the default value for a parameter, give it the value 0 (as an int)."
@@ -221,6 +233,8 @@ module Mrg
           self_to_dirty_list
         end
         
+        authorize_before :modifyConflicts, :WRITE
+        
         expose :modifyConflicts do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :conflicts, :list, :in, "A set of other feature names that conflict with the feature"
@@ -251,6 +265,8 @@ module Mrg
           self_to_dirty_list
         end
         
+        authorize_before :modifyDepends, :WRITE
+        
         expose :modifyDepends do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :depends, :list, :in, "A list of other features a feature depends on, in priority order.  ADD adds deps to the end of this feature's deps, in the order supplied, REMOVE removes features from the dependency list, and REPLACE replaces the dependency list with the supplied list."
@@ -274,6 +290,8 @@ module Mrg
           
           explanation
         end
+        
+        authorize_before :explain, :READ
         
         expose :explain do |args|
           args.declare :explanation, :map, :out, "A structure representing where the parameters set on this feature get their values."

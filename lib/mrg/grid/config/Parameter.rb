@@ -22,6 +22,8 @@ require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/InconsistencyDetecting'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 require 'set'
 
 module Mrg
@@ -30,6 +32,8 @@ module Mrg
       class Parameter
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include MethodUtils
 
@@ -87,6 +91,8 @@ module Mrg
           self.kind = ty
         end
         
+        authorize_before :setKind, :WRITE
+        
         expose :setKind do |args|
           args.declare :kind, :sstr, :in, "The type of this parameter."
         end
@@ -121,6 +127,8 @@ module Mrg
           self.default_val = default
         end
         
+        authorize_before :setDefault, :WRITE
+        
         expose :setDefault do |args|
           args.declare :default, :lstr, :in, "The new default value for this parameter."
         end
@@ -146,6 +154,8 @@ module Mrg
           self.db_description = description
         end
         
+        authorize_before :setDescription, :WRITE
+        
         expose :setDescription do |args|
           args.declare :description, :lstr, :in, "A new description of this parameter."
         end
@@ -166,6 +176,8 @@ module Mrg
 
           self.must_change = mustChange
         end
+        
+        authorize_before :setMustChange, :WRITE
         
         expose :setMustChange do |args|
           args.declare :mustChange, :bool, :in, "True if the user must supply a value for this parameter; false otherwise."
@@ -188,6 +200,8 @@ module Mrg
           self.level = level
         end
         
+        authorize_before :setVisibilityLevel, :WRITE
+        
         expose :setVisibilityLevel do |args|
           args.declare :level, :uint8, :in, "The new \"visibility level\" for this parameter."
         end
@@ -201,11 +215,7 @@ module Mrg
           # Return value
           return self.needsRestart
         end
-        
-        expose :getRequiresRestart do |args|
-          args.declare :needsRestart, :bool, :out, "True if the application must be restarted to see a change to this parameter; false otherwise."
-        end
-        
+                
         # setRequiresRestart 
         # * needsRestart (bool/I)
         def setRequiresRestart(needsRestart)
@@ -214,6 +224,8 @@ module Mrg
           DirtyElement.dirty_parameter(self)
           self.needsRestart = needsRestart
         end
+        
+        authorize_before :setRequiresRestart, :WRITE
         
         expose :setRequiresRestart do |args|
           args.declare :needsRestart, :bool, :in, "True if the application must be restarted to see a change to this parameter; false otherwise."
@@ -245,6 +257,8 @@ module Mrg
           DirtyElement.dirty_parameter(self)
         end
         
+        authorize_before :modifyDepends, :WRITE
+        
         expose :modifyDepends do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :depends, :list, :in, "A set of parameter names that this one depends on."
@@ -275,6 +289,8 @@ module Mrg
           modify_arcs(command,conflicts,options,:conflicts,:conflicts=,:explain=>"conflict with")
           DirtyElement.dirty_parameter(self)
         end
+        
+        authorize_before :modifyConflicts, :WRITE
         
         expose :modifyConflicts do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."

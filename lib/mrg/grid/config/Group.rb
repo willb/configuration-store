@@ -20,6 +20,8 @@ require 'mrg/grid/config/Feature'
 require 'mrg/grid/config/DataValidating'
 require 'mrg/grid/config/MethodUtils'
 
+require 'mrg/grid/config/auth'
+
 require 'digest/md5'
 
 module Mrg
@@ -32,6 +34,8 @@ module Mrg
       class Group
         include ::Rhubarb::Persisting
         include ::SPQR::Manageable
+        include ::Mrg::Grid::Config::Auth::ORIZING
+        
         include DataValidating
         include ConfigValidating
         include MethodUtils
@@ -84,6 +88,8 @@ module Mrg
           NodeMembership.find_by(:grp=>self).map{|nm| nm.node}
         end
 
+        authorize_before :membership, :READ
+
         expose :membership do |args|
           args.declare :nodes, :list, :out, "A list of node names from the nodes that are members of this group."
         end
@@ -120,6 +126,8 @@ module Mrg
           self.name = name
         end
         
+        authorize_before :setName, :WRITE
+        
         expose :setName do |args|
           args.declare :name, :sstr, :in, "A new name for this group; it must not be in use by another group."
         end
@@ -141,15 +149,19 @@ module Mrg
           0
         end
         
+        authorize_before :clearParams, :WRITE
+        
         expose :clearParams do |args|
           args.declare :ret, :int, :out, "0 if successful."
         end
         
         def clearFeatures
           DirtyElement.dirty_group(self);
-          self.modifyFeatures("REPLACE", {})
+          self.modifyFeatures("REPLACE", [])
           0
         end
+        
+        authorize_before :clearFeatures, :WRITE
         
         expose :clearFeatures do |args|
           args.declare :ret, :int, :out, "0 if successful."
@@ -205,6 +217,8 @@ module Mrg
           nil
         end
         
+        authorize_before :modifyFeatures, :WRITE
+        
         expose :modifyFeatures do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :features, :list, :in, "A list of features to apply to this group, in order of decreasing priority."
@@ -221,10 +235,15 @@ module Mrg
           self.modifyFeatures("REMOVE", [f])
         end
         
+
+        authorize_before :addFeature, :WRITE
+
         expose :addFeature do |args|
           args.declare :feature, :lstr, :in
         end
 
+        authorize_before :removeFeature, :WRITE
+        
         expose :removeFeature do |args|
           args.declare :feature, :lstr, :in
         end
@@ -278,6 +297,8 @@ module Mrg
           DirtyElement.dirty_group(self);
         end
         
+        authorize_before :modifyParams, :WRITE
+        
         expose :modifyParams do |args|
           args.declare :command, :sstr, :in, "Valid commands are 'ADD', 'REMOVE', and 'REPLACE'."
           args.declare :params, :map, :in, "A map from parameter names to values as set as custom parameter mappings for this group (i.e. independently of any features that are enabled on this group)"
@@ -319,6 +340,8 @@ module Mrg
           explanation
         end
 
+        authorize_before :explain, :READ
+
         expose :explain do |args|
           args.declare :explanation, :map, :out, "A structure representing where the parameters set on this group get their values."
         end
@@ -338,6 +361,8 @@ module Mrg
           # we're going to print out the config for this group.
           apply_to({}, true) 
         end
+        
+        authorize_before :getConfig, :READ
         
         expose :getConfig do |args|
           args.declare :config, :map, :out, "Current parameter-value mappings for this group, including those from all enabled features and group-specific parameter mappings."

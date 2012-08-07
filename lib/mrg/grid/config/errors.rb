@@ -26,7 +26,8 @@ module Mrg
         NOT_IMPLEMENTED = FAILURE << 2
         BAD_ARGUMENT = FAILURE << 3
         
-        # bits 4 -- 7 reserved for future high-level failures
+        # bits 4 -- 6 reserved for future high-level failures
+        UNAUTHORIZED = FAILURE << 7
         NAME_ALREADY_IN_USE = FAILURE << 8
         INVALID_NAME = FAILURE << 9
         NONEXISTENT_ENTITY = FAILURE << 10
