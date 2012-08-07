@@ -98,7 +98,7 @@ module Mrg
           # note that we authorize here to allow use of WALLABY_SECRET
           authorize_now(:ADMIN) unless authorized_via_secret(options["secret"])
           
-          fail(Errors.make(Errors::BAD_ARGUMENT), "Invalid privilege level #{privs}") unless %w{READ WRITE ADMIN}.include?(privs)
+          fail(Errors.make(Errors::BAD_ARGUMENT), "Invalid privilege level #{privs}") unless %w{READ WRITE ADMIN NONE}.include?(privs)
           
           role = (::Mrg::Grid::Config::Auth::Role.find_first_by_username(username) || ::Mrg::Grid::Config::Auth::Role.create(:username=>username, :privs=>::Mrg::Grid::Config::Auth::Priv::NONE))
           role.privs = ::Mrg::Grid::Config::Auth::Priv.const_get(privs)
