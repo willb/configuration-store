@@ -23,6 +23,8 @@ require 'mrg/grid/config'
 require 'mrg/grid/util/daemon'
 require 'mrg/grid/util/file'
 
+require 'digest/sha1'
+
 require 'logger'
 require 'syslog'
 require 'optparse'
@@ -43,7 +45,8 @@ explicit_mechanism = ENV['WALLABY_BROKER_MECHANISM']
 logfile = ENV['WALLABY_LOGFILE']
 debug = (ENV['WALLABY_LOGLEVEL'] && Logger.const_get(ENV['WALLABY_LOGLEVEL'].upcase)) || Logger::WARN
 do_daemonify = !ENV['WALLABY_FOREGROUND']
-$WALLABY_SECRET = ENV['WALLABY_SECRET']
+explicit_secret = ENV['WALLABY_SECRET']
+secret_file = ENV['WALLABY_SECRET_FILE']
 run_as = nil
 logoptions = nil
 
@@ -130,6 +133,26 @@ end
 DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
 DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
 DO_USERCREATE = (userdb == ":memory:" or not File.exist?(userdb))
+DO_SECRETFILECREATE = secret_file && !File.exist?(secret_file)
+
+def get_secret(sfile, explicit)
+  from_file = nil
+  
+  if sfile && File.exist?(sfile)
+    stat = File.stat(sfile)
+    ok = (stat.mode & 077 == 0 && stat.readable?)
+    if ok
+      from_file = open(sfile, "r") {|f| f.read}
+    else
+      Syslog.open do |s| 
+        s.notice "ignoring secret file #{sfile} #{stat.readable? ? "since it is not readable" : "due to insecure permissions"}"
+        puts "ignoring secret file #{sfile} #{stat.readable? ? "since it is not readable" : "due to insecure permissions"}" unless do_daemonify
+      end
+    end
+  end
+  
+  return explicit || from_file
+end
 
 begin
   Rhubarb::Persistence::open(dbname,:default,USE_PREPARED_STATEMENTS)
@@ -165,6 +188,21 @@ begin
     Rhubarb::Persistence::dbs[:user].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
   end
   
+  if DO_SECRETFILECREATE
+    puts "creating secret file"
+    old_umask = File.umask
+    begin
+      File.umask(0177)
+      bytes = open("/dev/urandom", "r") {|f| f.read(512)}
+      secret = Digest::SHA1.hexdigest(bytes)
+      open(secret_file, "w") {|f| f.write(secret)}
+    ensure
+      File.umask(old_umask)
+    end
+  end
+  
+  $WALLABY_SECRET = 
+  
   options = {}
   options[:loglevel] = debug
   options[:logfile] = logfile if logfile
@@ -174,6 +212,8 @@ begin
   options[:server] = host
   options[:port] = port
   options[:mechanism] = explicit_mechanism if explicit_mechanism
+
+  $WALLABY_SECRET = (get_secret(secret_file, explicit_secret) rescue nil)
 
   app = SPQR::App.new(options)
   app.register Mrg::Grid::Config::Store,Mrg::Grid::Config::Node,Mrg::Grid::Config::ConfigVersion,Mrg::Grid::Config::Feature,Mrg::Grid::Config::Group,Mrg::Grid::Config::Parameter,Mrg::Grid::Config::Subsystem,Mrg::Grid::Config::Snapshot,Mrg::Grid::Config::NodeUpdatedNotice,Mrg::Grid::Config::ConfigVersion
