@@ -64,7 +64,7 @@ module Mrg
           observed_version = db.get_first_value("PRAGMA user_version").to_i
           version = observed_version
 
-          to_apply = migrations.slice(observed_version + 1, migrations.size)
+          to_apply = migrations.slice(observed_version + 1, migrations.size) || []
         
           unless to_apply == []
             log.info "found #{to_apply.size} migrations"
