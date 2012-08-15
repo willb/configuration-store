@@ -1,5 +1,6 @@
 export WALLABY_CONFIGDB_NAME=/var/lib/wallaby/config.db
 export WALLABY_SNAPDB_NAME=/var/lib/wallaby/snap.db
+export WALLABY_USERDB_NAME=/var/lib/wallaby/user.db
 export WALLABY_SECRET_FILE=/var/lib/wallaby/secret
 export WALLABY_BROKER_HOST=localhost
 export WALLABY_BROKER_PORT=5672
