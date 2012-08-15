@@ -292,8 +292,12 @@ fi
 
 %changelog
 
+* Wed Aug 15 2012 willb <willb@redhat> - 0.16.0-2
+- Added default value for WALLABY_USERDB_NAME to supplied environment file
+- Minor fixes to authorization issues uncovered in development
+
 * Tue Aug 7 2012 willb <willb@redhat> - 0.16.0-1
-- per-method authentication support for wallaby API methods
+- per-method authorization support for wallaby API methods
 - API version bump to 20101031.6
 
 * Tue Jun 26 2012 willb <willb@redhat> - 0.15.1-3
