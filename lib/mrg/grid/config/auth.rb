@@ -44,6 +44,7 @@ module Mrg
             (fixture || ::Mrg::Grid::Config::Auth::Role.find_all).each do |r|
               @cache[r.username] = r.privs
             end
+            @cache
           end
           
           def self.authorized_to(verb, user)
