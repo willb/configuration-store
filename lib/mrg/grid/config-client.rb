@@ -107,7 +107,7 @@ module Mrg
         end
         
         def membership
-          @qmfo.membership.nodes
+          check_result(@qmfo.membership).nodes
         end
         
         def explain
@@ -257,7 +257,7 @@ module Mrg
         end
         
         def explain
-          @qmfo.explain.explanation
+          check_result(@qmfo.explain).explanation
         end
         
         def params()
@@ -374,7 +374,7 @@ module Mrg
         end
 
         def explain
-          @qmfo.explain.explanation
+          check_result(@qmfo.explain).explanation
         end
         
         private
@@ -385,7 +385,7 @@ module Mrg
         [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
           mname = "check#{klass}Validity".to_sym
           define_method mname.to_sym do |fset|
-            @qmfo.send(mname, fset).send("invalid#{klass}s")
+            check_result(@qmfo.send(mname, fset)).send("invalid#{klass}s")
           end
         end
         
