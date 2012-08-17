@@ -68,6 +68,7 @@ module Mrg
           def act(kwargs=nil)
             @comment ||= ""
             store.makeSnapshotWithOptions(@name, "annotation"=>@comment)
+            0
           end
 
           private
