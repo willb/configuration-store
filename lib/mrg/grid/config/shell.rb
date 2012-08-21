@@ -149,6 +149,10 @@ module Mrg
             puts ia
             puts @op
             exit(1)
+          rescue OptionParser::AmbiguousOption => ia
+            puts ia
+            puts @op
+            exit(1)
           end
 
           unless args.cmd
