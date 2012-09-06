@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Thu Sep 6 2012 willb <willb@redhat> - 0.16.0-3
+- Minor fixes to client library crashing bugs exposed by authorization support
+
 * Wed Aug 15 2012 willb <willb@redhat> - 0.16.0-2
 - Added default value for WALLABY_USERDB_NAME to supplied environment file
 - Minor fixes to authorization issues uncovered in development
