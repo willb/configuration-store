@@ -35,6 +35,8 @@ module Mrg
     module Config
       module Shell
         class Shebang < Command
+          documented_if_environment_has :WALLABY_TECH_PREVIEW
+          
           def self.opname
             "shebang"
           end
