@@ -30,11 +30,11 @@ module Mrg
           end
 
           def accessor_options
-            @accessor_options ||= {:annotation=>String}
+            @accessor_options ||= {:annotation=>String, :name=>String}
           end
           
           def supports_options
-            true
+            false
           end
         end
 
