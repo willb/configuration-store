@@ -130,9 +130,9 @@ Syslog.open do |s|
   puts "storing snapshots to #{snapdb}"
 end
 
-DO_CREATE = (dbname == ":memory:" or not File.exist?(dbname))
-DO_SNAPCREATE = (snapdb == ":memory:" or not File.exist?(snapdb))
-DO_USERCREATE = (userdb == ":memory:" or not File.exist?(userdb))
+DO_CREATE = (dbname == ":memory:" || !File.exist?(dbname))
+DO_SNAPCREATE = (snapdb == ":memory:" || !File.exist?(snapdb))
+DO_USERCREATE = (userdb == ":memory:" || !File.exist?(userdb))
 DO_SECRETFILECREATE = secret_file && !File.exist?(secret_file)
 
 def get_secret(sfile, explicit)
@@ -163,6 +163,12 @@ begin
   Mrg::Grid::Config::SNAP_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:snapshot] }
   Mrg::Grid::Config::USER_DB_TABLES.each {|tab| tab.db = Rhubarb::Persistence::dbs[:user] }
   
+  if DO_USERCREATE
+    puts "creating user tables"
+    Mrg::Grid::Config::USER_DB_TABLES.each {|cl| cl.create_table(:user)}
+    Rhubarb::Persistence::dbs[:user].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
+  end
+  
   if DO_CREATE
     classes = Mrg::Grid::Config::MAIN_DB_TABLES
     classes.each do |cl| 
@@ -173,19 +179,13 @@ begin
       cl.create_table
     end
     Rhubarb::Persistence::db.execute("PRAGMA user_version = #{Mrg::Grid::Config::DBVERSION}")
-    Mrg::Grid::Config::Store.find_by_id(0).storeinit
+    Mrg::Grid::Config::Store.find_by_id(0).internal_storeinit
   end
   
   if DO_SNAPCREATE
     puts "creating snapshot tables"
     Mrg::Grid::Config::SNAP_DB_TABLES.each {|cl| cl.create_table(:snapshot)}
     Rhubarb::Persistence::dbs[:snapshot].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
-  end
-  
-  if DO_USERCREATE
-    puts "creating user tables"
-    Mrg::Grid::Config::USER_DB_TABLES.each {|cl| cl.create_table(:user)}
-    Rhubarb::Persistence::dbs[:user].execute("PRAGMA user_version = #{Mrg::Grid::Config::SNAPVERSION}")
   end
   
   if DO_SECRETFILECREATE
@@ -231,7 +231,7 @@ begin
     oldauth = $WALLABY_SKIP_AUTH
     begin
       $WALLABY_SKIP_AUTH = true
-      Mrg::Grid::Config::Store.find_by_id(0).storeinit(options)
+      Mrg::Grid::Config::Store.find_by_id(0).internal_storeinit(options)
     ensure
       $WALLABY_SKIP_AUTH = oldauth
     end

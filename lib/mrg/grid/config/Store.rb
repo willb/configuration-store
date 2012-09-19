@@ -607,7 +607,7 @@ module Mrg
 
         authorize_before :removeSubsys, :WRITE
         
-        def storeinit(kwargs=nil)
+        def internal_storeinit(kwargs=nil)
           kwargs ||= {}
           options = kwargs.keys.map {|k| k.upcase}
           
@@ -624,6 +624,10 @@ module Mrg
           # There's no harm in always creating this.
           Group.SKELETON_GROUP
           nil
+        end
+        
+        def storeinit(kwargs=nil)
+          internal_storeinit(kwargs)
         end
         
         authorize_before :storeinit, :ADMIN
