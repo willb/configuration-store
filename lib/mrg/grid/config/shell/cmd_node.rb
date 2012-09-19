@@ -22,19 +22,19 @@ module Mrg
       module Shell
         module NodeOps
           def api_messages
-            @api_messages ||= {:annotation=>:setAnnotation}.freeze
+            @api_messages ||= {}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :provisioned, :last_checkin, :last_updated_version, :memberships, :annotation]
+            @api_accessors ||= [:name, :provisioned, :last_checkin, :last_updated_version, :memberships]
           end
 
           def accessor_options
-            @accessor_options ||= {:annotation=>String}
+            @accessor_options ||= {}
           end
 
           def supports_options
-            true
+            false
           end
 
           def noun

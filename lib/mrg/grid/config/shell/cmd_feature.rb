@@ -22,19 +22,19 @@ module Mrg
       module Shell
         module FeatureOps
           def api_messages
-            @api_messages ||= {:name=>:setName, :annotation=>:setAnnotation}.freeze
+            @api_messages ||= {:name=>:setName}.freeze
           end
 
           def api_accessors
-            @api_accessors ||= [:name, :params, :depends, :conflicts, :included_features, :annotation]
+            @api_accessors ||= [:name, :params, :depends, :conflicts, :included_features]
           end
 
           def accessor_options
-            @accessor_options ||= {:annotation=>String}
+            @accessor_options ||= {}
           end
           
           def supports_options
-            true
+            false
           end
         end
 
