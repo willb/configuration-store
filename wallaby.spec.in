@@ -57,8 +57,8 @@ BuildRequires: python2-devel
 Requires: ruby(abi) = %{?ruby_abi}
 BuildRequires: ruby
 Requires: ruby-qmf >= 0.7.929717
-Requires: ruby-spqr >= 0.3.6
-Requires: ruby-rhubarb >= 0.4.3
+Requires: ruby-spqr >= 0.3.5
+Requires: ruby-rhubarb >= 0.2.6
 Requires: ruby-wallaby = %{version}-%{release}
 Requires: logrotate >= 0.3
 %if %{want_systemd}
@@ -291,6 +291,9 @@ fi
 %endif
 
 %changelog
+
+* Tue Sep 18 2012 willb <willb@redhat> - 0.16.0-4
+- Addresses issues uncovered while testing authentication support (incorporates the "arno" patchset)
 
 * Thu Sep 6 2012 willb <willb@redhat> - 0.16.0-3
 - Minor fixes to client library crashing bugs exposed by authorization support
