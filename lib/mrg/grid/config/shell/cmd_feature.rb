@@ -30,7 +30,7 @@ module Mrg
           end
 
           def accessor_options
-            @accessor_options ||= {}
+            @accessor_options ||= {:name=>String}
           end
           
           def supports_options
