@@ -19,13 +19,12 @@ require 'sqlite3'
 module Mrg
   module Grid
     module Config
-
-      SNAPMIGRATIONS[1] = Proc.new do |db|
-        [Snapshot].each do |klass|
+      DBMIGRATIONS[6] = Proc.new do |db|
+        [Feature, Group, Node, Parameter, Subsystem].each do |klass|
           db.execute("ALTER TABLE #{klass.quoted_table_name} ADD COLUMN annotation text default ''")
           db.execute("UPDATE #{klass.quoted_table_name} SET annotation = ?", "''")
         end
-        db.execute("PRAGMA user_version = 1")
+        db.execute("PRAGMA user_version = 6")
       end
     end
   end
