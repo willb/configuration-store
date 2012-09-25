@@ -90,7 +90,7 @@ module Mrg
           cm = @store.addNode('central-manager')
           
           # wallaby add-param COLLECTOR_UPDATE_INTERVAL (needs to go to base DB)
-          @store.addParam('COLLECTOR_UPDATE_INTERVAL')
+          @store.addParam('COLLECTOR_UPDATE_INTERVAL') if @store.checkParameterValidity(["COLLECTOR_UPDATE_INTERVAL"]) == ["COLLECTOR_UPDATE_INTERVAL"]
           
           # wallaby remove-nodes-from-group +++SKEL central-manager
           cm.modifyMemberships("REPLACE", cm.memberships - %w{+++SKEL}, {})
