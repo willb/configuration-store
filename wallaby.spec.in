@@ -292,6 +292,13 @@ fi
 
 %changelog
 
+* Tue Sep 25 2012 willb <willb@redhat> - 0.16.0-5
+- Addresses more issues uncovered in authentication support (incorporates the "arno" patchset and revisions)
+- Fixes for spurious test-suite failures
+
+* Tue Sep 18 2012 willb <willb@redhat> - 0.16.0-4
+- Addresses issues uncovered while testing authentication support (incorporates the "arno" patchset)
+
 * Thu Sep 6 2012 willb <willb@redhat> - 0.16.0-3
 - Minor fixes to client library crashing bugs exposed by authorization support
 
