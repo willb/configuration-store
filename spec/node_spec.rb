@@ -2,6 +2,12 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 require 'digest/md5'
 
+class Fixnum
+  def ord
+    self
+  end
+end
+
 module Mrg
   module Grid
     module Config
