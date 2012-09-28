@@ -27,6 +27,40 @@ module Mrg
             "Does nothing, successfully."
           end
           
+          def self.compatible_with?(major, minor)
+            if self.respond_to?(:__min_api_version)
+              needmajor, needminor = self.__min_api_version
+              return false unless major > needmajor || (major >= needmajor && minor >= needminor)
+            end
+            
+            if self.respond_to?(:__max_api_version)
+              needmajor, needminor = self.__max_api_version
+              return false unless major < meedmajor || (major <= needmajor && minor <= needminor)
+            end
+            
+            true
+          end
+          
+          def self.min_api_version(major, minor)
+            self.const_set(:MIN_MAJOR, major)
+            self.const_set(:MIN_MINOR, minor)
+            class << self
+              def __min_api_version
+                [MIN_MAJOR, MIN_MINOR]
+              end
+            end
+          end
+          
+          def self.max_api_version(major, minor)
+            self.const_set(:MAX_MAJOR, major)
+            self.const_set(:MAX_MINOR, minor)
+            class << self
+              def __max_api_version
+                [MAX_MAJOR, MAX_MINOR]
+              end
+            end
+          end
+          
           def self.is_documented?(name=nil)
             if self.respond_to?(:documented_if)
               self.documented_if(:name=>name)
@@ -122,6 +156,8 @@ module Mrg
             @wallaby_command_args ||= args
             
             begin
+              check_compatibility
+              
               act
             rescue ShellCommandFailure => scf
               puts "fatal:  #{scf.message}" if scf.message
@@ -173,6 +209,32 @@ module Mrg
             end
           end
 
+          def check_compatibility
+            major = store.apiVersionNumber
+            minor = store.apiMinorNumber
+            
+            unless self.class.compatible_with?(major, minor)
+              msg = "#{self.class.opname} is not compatible with this Wallaby service (API version #{major}.#{minor}); it requires "
+              atleast = false
+              
+              if self.class.respond_to?(:__min_api_version)
+                atleast = true
+                msg = msg + "at least version #{self.class.__min_api_version.map{|n| n.to_s}.join(".")}"
+              end
+              
+              if self.class.respond_to?(:__max_api_version)
+                msg = msg + " and " if atleast
+                msg = msg + "at most version #{self.class.__max_api_version.map{|n| n.to_s}.join(".")}"
+              end
+              
+              if ENV['WALLABY_IGNORE_COMPATIBILITY']
+                puts "warning: #{msg}"
+              else
+                exit!(1, msg)
+              end
+            end
+            
+          end
           
           def store
             if @store.is_a? Proc
