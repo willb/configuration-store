@@ -47,6 +47,16 @@ module Mrg
           end
         end
 
+        [:RemoveNodeParam, :RemoveGroupParam, :RemoveFeatureParam,
+         :AddNodeParam, :ReplaceNodeParam, :AddGroupParam, :ReplaceGroupParam,
+         :AddFeatureParam, :ReplaceFeatureParam].each do |klass|
+          it "should create Hash of arguments for #{klass}" do
+            cmd = Mrg::Grid::Config::Shell.const_get(klass).new(@store, "")
+            cmd.parse_args("TARGET", "NAME=VALUE")
+            cmd.instance_variable_get("@names").class.should == Hash
+          end
+        end
+
       end
     end
   end

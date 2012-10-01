@@ -66,7 +66,14 @@ module Mrg
           end
         end
 
+        module HashArgType
+          def arg_type
+            Hash
+          end
+        end
+
         module ParamOps
+          include HashArgType
           def options
             [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
              {:opt_name=>"#{name_type.upcase}-NAME[=VALUE]", :desc=>"the names[=values] of #{name_type.downcase}s to #{command.downcase}"}]
@@ -84,9 +91,14 @@ module Mrg
             true
           end
 
+
           def options
             [{:opt_name=>"#{target_type.upcase}-NAME", :desc=>"the name of the #{target_type.downcase} to act upon"},
              {:opt_name=>"#{name_type.upcase}-NAME", :desc=>"the names of #{name_type.downcase}s to #{command.downcase}"}]
+          end
+
+          def arg_type
+            Array
           end
 
           def opargs
@@ -124,7 +136,7 @@ module Mrg
               elsif opts < (self.options.length-1)
                 @target = input
               else
-                if (name_type == "param") && (target_type != "subsystem") && (command != "REMOVE")
+                if arg_type == Hash
                   @names = {}
                   args.unshift(input) if input
                   args.each do |a|
@@ -490,6 +502,7 @@ module Mrg
 
         class RemoveNodeParam < Command
           include RelationshipOps
+          include HashArgType
 
           def self.opname
             "remove-params-from-node"
@@ -528,6 +541,7 @@ module Mrg
 
         class RemoveGroupParam < Command
           include RelationshipOps
+          include HashArgType
 
           def self.opname
             "remove-params-from-group"
@@ -566,6 +580,7 @@ module Mrg
 
         class RemoveFeatureParam < Command
           include RelationshipOps
+          include HashArgType
 
           def self.opname
             "remove-params-from-feature"
