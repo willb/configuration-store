@@ -726,7 +726,7 @@ module Mrg
             args.declare "invalid#{klass.name.split("::").pop}s".to_sym, :list, :out, "A (possibly-empty) set consisting of all of the #{klass.name} names from the input set that do not correspond to valid #{klass.name}s"
           end
           
-          authorize_before "check#{klass.name.split("::").pop}Validity".to_sym, :READ
+          authorize_before "check#{klass.name.split("::").pop}Validity".to_sym, :NONE
         end
         
         [:Feature, :Group, :Node, :Parameter, :Subsystem].each do |klass|
