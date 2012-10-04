@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Thu Oct 4 2012 willb <willb@redhat> - 0.16.0-7
+- 0.16.0-6 built without an updated changelog
+
 * Thu Oct 4 2012 willb <willb@redhat> - 0.16.0-6
 - Fixes for database migration errors coming from 0.12.5-10 (but not earlier releases) 
 - Fixes for spurious error messages in agent failure cases related to the secret file
