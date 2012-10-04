@@ -145,9 +145,9 @@ def get_secret(sfile, explicit)
       from_file = open(sfile, "r") {|f| f.read}
     else
       Syslog.open do |s| 
-        s.notice "ignoring secret file #{sfile} #{stat.readable? ? "since it is not readable" : "due to insecure permissions"}"
-        puts "ignoring secret file #{sfile} #{stat.readable? ? "since it is not readable" : "due to insecure permissions"}" unless do_daemonify
+        s.notice "ignoring secret file #{sfile} #{!stat.readable? ? "since it is not readable" : "due to insecure permissions"}"
       end
+      puts "ignoring secret file #{sfile} #{!stat.readable? ? "since it is not readable" : "due to insecure permissions"}" unless do_daemonify
     end
   end
   
@@ -201,7 +201,7 @@ begin
     end
   end
   
-  $WALLABY_SECRET = 
+  $WALLABY_SECRET = nil
   
   options = {}
   options[:loglevel] = debug
