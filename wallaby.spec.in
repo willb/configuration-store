@@ -292,6 +292,11 @@ fi
 
 %changelog
 
+* Thu Oct 4 2012 willb <willb@redhat> - 0.16.0-6
+- Fixes for database migration errors coming from 0.12.5-10 (but not earlier releases) 
+- Fixes for spurious error messages in agent failure cases related to the secret file
+- Fixes for various API methods with incorrect or confusing permissions
+
 * Tue Sep 25 2012 willb <willb@redhat> - 0.16.0-5
 - Addresses more issues uncovered in authentication support (incorporates the "arno" patchset and revisions)
 - Fixes for spurious test-suite failures
