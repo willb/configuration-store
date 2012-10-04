@@ -315,7 +315,7 @@ module Mrg
           args.declare :warnings, :list, :out, "A set of warnings encountered during configuration activation."
         end
 
-        authorize_before :activateConfiguration, :ACTIVATE
+        authorize_before :activateConfiguration, :ADMIN
         
         def validateConfiguration
           validate_and_activate(true)
