@@ -47,7 +47,6 @@ module Mrg
             args.declare :name, :sstr, :in, "An updated annotation for this #{self.class.name.split("::").pop.downcase}.  This method was introduced in API version 20101031.4."
           end
           
-          receiver.authorize_before(:annotation, :READ) rescue log.warn "FIXME:  Annotatable included before Auth::ORIZING"
           receiver.authorize_before(:setAnnotation, :WRITE) rescue log.warn "FIXME:  Annotatable included before Auth::ORIZING"
           
         end
