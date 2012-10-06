@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Fri Oct 5 2012 willb <willb@redhat> - 0.16.1-1
+- Fixes BZs 786801, 796406, 802821, 850205, 851217, and incorporates all fixes from the 0.16.0 series.
+
 * Fri Oct 5 2012 willb <willb@redhat> - 0.16.0-9
 - Fixes BZ 861055
 
