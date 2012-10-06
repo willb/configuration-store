@@ -115,6 +115,10 @@ module Mrg
               puts ia
               puts oparser
               return 1
+            rescue OptionParser::AmbiguousOption => ao
+              puts ao
+              puts oparser
+              return 1
             end
 
             run_callbacks(:after_option_parsing, *args)
