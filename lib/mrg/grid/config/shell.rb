@@ -186,7 +186,19 @@ module Mrg
               exit!(1)
             end
 
-            store = console.object(:class=>"Store")
+            stores = console.objects(:class=>"Store")
+
+            if stores.size > 1
+              puts "fatal:  there is more than one Wallaby agent running on the specified broker (#{host}:#{port}); only one may run at a time"
+              puts "  Agents found:"
+              stores.each do |s|
+                host, pid = s.host_and_pid
+                puts "    pid #{pid} on #{host}"
+              end
+              exit(1)
+            end
+
+            store, = stores
 
             unless store
               puts "fatal:  cannot find a wallaby agent on the specified broker (#{host}:#{port}); is one running?"
