@@ -515,6 +515,24 @@ module Mrg
         
         alias activateConfiguration activateConfig
 
+        def makeSnapshotWithOptions(name, options=nil)
+          options ||= {}
+          check_result(@qmfo.makeSnapshotWithOptions(name, options))
+          0
+        end
+        
+        alias makeSnapshot makeSnapshotWithOptions
+        
+        def loadSnapshot(name)
+          check_result(@qmfo.loadSnapshot(name))
+          0
+        end
+
+        def removeSnapshot(name)
+          check_result(@qmfo.removeSnapshot(name))
+          0
+        end
+
         def storeinit(kwargs=nil)
           kwargs ||= {}
           check_result(@qmfo.storeinit(kwargs))
