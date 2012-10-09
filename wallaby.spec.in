@@ -292,6 +292,9 @@ fi
 
 %changelog
 
+* Tue Oct 9 2012 willb <willb@redhat> - 0.16.0-10
+- Fixes BZ 864421
+
 * Fri Oct 5 2012 willb <willb@redhat> - 0.16.0-9
 - Fixes BZ 861055
 
