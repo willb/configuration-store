@@ -12,8 +12,7 @@
 %global building_for_el5 0
 %endif
 
-%if (0%{?fedora} >= 17 && 0%{?rhel} >= 6)
-%global 
+%if (0%{?fedora} >= 17 || 0%{?rhel} >= 6)
 %global wallaby_uid -u 181
 %endif
 
@@ -291,6 +290,12 @@ fi
 %endif
 
 %changelog
+
+* Fri Oct 12 2012 willb <willb@redhat> - 0.16.1-2
+- Fixes BZs 820419, 825963, 802799, and 801632 (tool support and internal bugs)
+- Fixes BZ 864091 (cosmetic issue:  READ vs READ_ONLY role in list-users)
+- Fixes BZ 864421 (cosmetic issue:  authentication for snapshot commands)
+- This package now uses the designated Wallaby UID on EL6 (available since RHBA-2012:0778-1)
 
 * Fri Oct 5 2012 willb <willb@redhat> - 0.16.1-1
 - Fixes BZs 786801, 796406, 802821, 850205, 851217, and incorporates all fixes from the 0.16.0 series.
