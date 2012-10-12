@@ -187,7 +187,7 @@ end
 
 file "spec/base-db.yaml" do
   branch = ENV['WALLABY_DB_BRANCH'] || "master"
-  sh "curl 'http://git.fedorahosted.org/git/?p=grid/wallaby-condor-db.git;a=blob_plain;f=condor-base-db.snapshot.in;hb=#{branch}' -o spec/base-db.yaml"
+  sh "curl -L 'http://git.fedorahosted.org/git/?p=grid/wallaby-condor-db.git;a=blob_plain;f=condor-base-db.snapshot.in;hb=#{branch}' -o spec/base-db.yaml"
 end
 
 require 'spec/rake/spectask'
