@@ -23,13 +23,11 @@ module Mrg
         module Priv
           NONE = 0
           
-          READ_ONLY = 1
+          READ = 1
           WRITE_ONLY = 1 << 1
-          ACTIVATE_ONLY = 1 << 2
+          ACTIVATE = 1 << 2
           
-          READ = READ_ONLY
-          WRITE = WRITE_ONLY | READ_ONLY
-          ACTIVATE = ACTIVATE_ONLY
+          WRITE = WRITE_ONLY | READ
           ADMIN = READ | WRITE | ACTIVATE
           
           def self.to_string(priv)
