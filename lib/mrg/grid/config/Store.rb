@@ -630,7 +630,7 @@ module Mrg
           internal_storeinit(kwargs)
         end
         
-        authorize_before :storeinit, :ADMIN
+        authorize_before :storeinit, :WRITE
         
         expose :storeinit do |args|
           args.declare :options, :map, :in, "Setting 'RESETDB' will reset the configuration database."
