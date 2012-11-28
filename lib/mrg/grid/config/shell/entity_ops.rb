@@ -45,7 +45,7 @@ module Mrg
               
               if supports_options
                 accessor_options.each do |option, kind|
-                  opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind, "Sets the #{option} property of the #{verb=="add" ? "newly-created" : "modified"} #{noun}", "   (valid values are #{kind.is_a?(Hash) ? kind.keys.map {|k| '"' + k.downcase + '"'}.sort.uniq.reverse.join(", ") : "#{kind.to_s.downcase}s"})") do |value|
+                  opts.on("--#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} VALUE", kind==String ? Object : kind, "Sets the #{option} property of the #{verb=="add" ? "newly-created" : "modified"} #{noun}", "   (valid values are #{kind.is_a?(Hash) ? kind.keys.map {|k| '"' + k.downcase + '"'}.sort.uniq.reverse.join(", ") : "#{kind.to_s.downcase}s"})") do |value|
                     if @options[option]
                       exit!(1, "You may only specify one --#{option.to_s.gsub(/([A-Z])/) {|c| "_#{c.downcase}"}.sub("_","-")} option per invocation")
                     end
