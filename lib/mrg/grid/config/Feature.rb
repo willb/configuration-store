@@ -148,9 +148,17 @@ module Mrg
           # XXX: would be nice to use Parameter.select_invalid, but we don't want to look up each param twice
           invalid_params = []
           
+          pvmap = pvmap.dup
+          
           params = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
-            invalid_params << pn unless prow
+
+            if prow
+              pvmap[prow.name] = pvmap.delete(pn) if prow.name != pn
+            else 
+              invalid_params << pn unless prow
+            end
+            
             prow
           end
 

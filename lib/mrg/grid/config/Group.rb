@@ -262,9 +262,17 @@ module Mrg
 
           invalid_params = []
 
+          pvmap = pvmap.dup
+          
           prms = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
-            invalid_params << pn unless prow
+
+            if prow
+              pvmap[prow.name] = pvmap.delete(pn) if prow.name != pn
+            else 
+              invalid_params << pn unless prow
+            end
+            
             prow
           end
           
