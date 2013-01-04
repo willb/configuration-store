@@ -291,6 +291,10 @@ fi
 
 %changelog
 
+* Fri Jan 4 2012 willb <willb@redhat> - 0.16.2-1
+- Fixes BZs 850205, 885787, 872663, 881366
+- specfile descriptions updated to reflect upstream naming changes
+
 * Fri Oct 12 2012 willb <willb@redhat> - 0.16.1-2
 - Fixes BZs 820419, 825963, 802799, and 801632 (tool support and internal bugs)
 - Fixes BZ 864091 (cosmetic issue:  READ vs READ_ONLY role in list-users)
