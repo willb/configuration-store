@@ -40,7 +40,7 @@
 
 
 
-Summary: Condor pool configuration service with QMF interface
+Summary: HTCondor pool configuration service with QMF interface
 Name: wallaby
 Version: <%= pkg_version %>
 Release: <%= pkg_rel %>%{?dist}
@@ -74,8 +74,8 @@ Requires(postun): initscripts
 BuildArch: noarch
 
 %description
-Wallaby is a configuration service for Condor pools.  It provides a
-semantic model of Condor configuration, enabling administrators to
+Wallaby is a configuration service for HTCondor pools.  It provides a
+semantic model of HTCondor configurations, enabling administrators to
 apply high-level features to groups of nodes rather than set the
 values of low-level parameters in configuration files.  Wallaby also
 validates configurations before deploying them, pushes out
