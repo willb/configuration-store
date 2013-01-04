@@ -254,11 +254,13 @@ begin
       
       ::Mrg::Grid::Config::DBSchema.migrate(Rhubarb::Persistence::dbs[ds], table_list, migrations, $wallaby_log) do |version|
         Rhubarb::Persistence::dbs[ds].transaction(:immediate) do |db|
-          # starting a transaction with ":immediate" means we get a shared lock
-          # and thus any db writes (unlikely!) complete before we copy the file
-          backup_file = unique_name(db_file, "v#{version}_")
-          $wallaby_log.info "backing up db file to  #{backup_file} before applying migration...."
-          FileUtils.cp(db_file, backup_file, :preserve=>true)
+          unless db_file == ":memory:"
+            # starting a transaction with ":immediate" means we get a shared lock
+            # and thus any db writes (unlikely!) complete before we copy the file
+            backup_file = unique_name(db_file, "v#{version}_")
+            $wallaby_log.info "backing up db file to  #{backup_file} before applying migration...."
+            FileUtils.cp(db_file, backup_file, :preserve=>true)
+          end
         end
       end   
     end
