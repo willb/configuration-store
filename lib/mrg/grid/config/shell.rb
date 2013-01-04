@@ -153,6 +153,10 @@ module Mrg
             puts ia
             puts @op
             exit(1)
+          rescue OptionParser::MissingArgument => ia
+            puts "#{ia} requires an argument"
+            puts @op
+            exit(1)
           end
 
           unless args.cmd
