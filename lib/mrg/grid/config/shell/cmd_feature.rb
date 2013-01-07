@@ -30,12 +30,9 @@ module Mrg
           end
 
           def accessor_options
-            @accessor_options ||= {:annotation=>String, :name=>String}
+            @accessor_options ||= {:annotation=>String}
           end
           
-          def supports_options
-            false
-          end
         end
 
         class AddFeature < Command
