@@ -130,6 +130,33 @@ module Mrg
             0
           end
         end
+        
+        class ModifySubsys < Command
+          include EntityOps
+          include SubsysOps
+          
+          def self.opname
+            "modify-subsystem"
+          end
+
+          def self.description
+            "Alters metadata for a subsystem in the store."
+          end
+
+          def storeop
+            :getSubsys
+          end
+          
+          def supports_options
+            true
+          end
+
+          def multiple_targets
+            false
+          end
+
+          register_callback :after_option_parsing, :post_arg_callback
+        end
       end
     end
   end
