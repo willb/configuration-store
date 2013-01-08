@@ -61,7 +61,30 @@ module Mrg
           register_callback :after_option_parsing, :post_arg_callback
         end
 
-        # Note that there is no modify-node class
+        class ModifyNode < Command
+          include EntityOps
+          include NodeOps
+          
+          def self.opname
+            "modify-node"
+          end
+
+          def self.description
+            "Alters metadata for a node in the store."
+          end
+
+          def storeop
+            :getNode
+          end
+          
+          def supports_options
+            true
+          end
+
+          def multiple_targets
+            false
+          end
+        end
         
         class RemoveNode < Command
           include EntityOps

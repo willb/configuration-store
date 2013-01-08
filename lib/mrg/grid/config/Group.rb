@@ -262,9 +262,17 @@ module Mrg
 
           invalid_params = []
 
+          pvmap = pvmap.dup if ENV['WALLABY_TECH_PREVIEW']
+          
           prms = pvmap.keys.map do |pn|
             prow = Parameter.find_first_by_name(pn)
-            invalid_params << pn unless prow
+
+            if prow && ENV['WALLABY_TECH_PREVIEW']
+              pvmap[prow.name] = pvmap.delete(pn) if prow.name != pn
+            else 
+              invalid_params << pn unless prow
+            end
+            
             prow
           end
           
