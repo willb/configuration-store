@@ -291,6 +291,9 @@ fi
 
 %changelog
 
+* Mon Jan 7 2013 willb <willb@redhat> - 0.16.3-1
+- Fixes edge cases reported in BZ 802821
+
 * Fri Jan 4 2013 willb <willb@redhat> - 0.16.2-1
 - Fixes BZs 850205, 885787, 872663, 881366
 - specfile descriptions updated to reflect upstream naming changes
